@@ -2,7 +2,7 @@ Package: ADS8192
 Title: ADS 8192 - Developing Scientific Applications (Course Materials)
 Version: 0.1.0
 Authors@R:
-    person("ADS 8192", "Instructor", email = "ads8192@example.edu",
+    person("Jared", "Andrews", email = "jared.andrews@stjude.org",
            role = c("aut", "cre"))
 Description: Course materials and reference implementation for ADS 8192:
     Developing Scientific Applications. Provides a complete example of the
@@ -37,6 +37,6 @@ Suggests:
     pkgdown
 Config/testthat/edition: 3
 VignetteBuilder: knitr
-URL: https://github.com/YOUR-USERNAME/ADS8192
-BugReports: https://github.com/YOUR-USERNAME/ADS8192/issues
+URL: https://github.com/St-Jude-MS-ABDS/ADS8192, https://automatic-engine-4qp7m5e.pages.github.io/
+BugReports: https://github.com/St-Jude-MS-ABDS/ADS8192/issues
 LazyData: true

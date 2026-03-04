@@ -37,13 +37,14 @@ each PC
 \seealso{
 Useful links:
 \itemize{
-  \item \url{https://github.com/YOUR-USERNAME/ADS8192}
-  \item Report bugs at \url{https://github.com/YOUR-USERNAME/ADS8192/issues}
+  \item \url{https://github.com/St-Jude-MS-ABDS/ADS8192}
+  \item \url{https://automatic-engine-4qp7m5e.pages.github.io/}
+  \item Report bugs at \url{https://github.com/St-Jude-MS-ABDS/ADS8192/issues}
 }
 
 }
 \author{
-\strong{Maintainer}: ADS 8192 Instructor \email{ads8192@example.edu}
+\strong{Maintainer}: Jared Andrews \email{jared.andrews@stjude.org}
 
 }
 \keyword{internal}
