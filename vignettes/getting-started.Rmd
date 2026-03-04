@@ -1,0 +1,114 @@
+---
+title: "Getting Started with ADS 8192"
+author: "Jared Andrews"
+date: sys.Date()
+output: rmarkdown::html_vignette
+vignette: >
+  %\VignetteIndexEntry{Getting Started with ADS 8192}
+  %\VignetteEngine{knitr::rmarkdown}
+  %\VignetteEncoding{UTF-8}
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(
+  collapse = TRUE,
+  comment = "#>",
+  fig.width = 7,
+  fig.height = 5
+)
+```
+
+## Overview
+
+**ADS 8192: Developing Scientific Applications** teaches the "three interfaces,
+one core" architecture for scientific software in R. This package provides the
+reference implementation: a set of PCA analysis functions for
+SummarizedExperiment objects, a Shiny interactive explorer, and a command-line
+interface.
+
+## Installation
+
+```{r install, eval=FALSE}
+# Install Bioconductor dependencies first
+if (!require("BiocManager", quietly = TRUE))
+    install.packages("BiocManager")
+BiocManager::install(c("SummarizedExperiment", "airway"))
+
+# Install the course package
+remotes::install_github("YOUR-USERNAME/ADS8192")
+```
+
+## Quick Start
+
+```{r quick-start}
+library(ADS8192)
+
+# Load the example dataset (100 genes, 8 samples)
+data(example_se)
+example_se
+```
+
+### Run PCA
+
+```{r run-pca}
+result <- run_pca(example_se, n_top = 50)
+
+# View the PCA scores merged with sample metadata
+head(result$scores)
+```
+
+### Visualize
+
+```{r plot-pca}
+plot_pca(result, color_by = "treatment")
+```
+
+```{r plot-pca-both}
+plot_pca(result, color_by = "treatment", shape_by = "batch")
+```
+
+### Check Variance Explained
+
+```{r variance}
+pca_variance_explained(result)
+```
+
+## The "Three Interfaces, One Core" Architecture
+
+```
+                Package Core
+  make_se() → run_pca() → plot_pca()
+        ↑            ↑            ↑
+   ┌────┴────┐  ┌────┴────┐  ┌───┴─────┐
+   │ R API   │  │ Shiny   │  │  CLI    │
+   │ (users) │  │ (web)   │  │(scripts)│
+   └─────────┘  └─────────┘  └─────────┘
+```
+
+All three interfaces call the **same core functions**. Fix a bug once, and it's
+fixed everywhere.
+
+### Interface 1: R API
+
+```{r r-api, eval=FALSE}
+library(ADS8192)
+result <- run_pca(se, n_top = 500)
+plot_pca(result, color_by = "treatment")
+```
+
+### Interface 2: Shiny App
+
+```{r shiny, eval=FALSE}
+ADS8192::run_app()
+```
+
+### Interface 3: CLI (via Rapp)
+
+```bash
+ADS8192 pca --counts counts.tsv --meta samples.tsv --output results/
+```
+
+## Course Lectures
+
+The package includes all lecture materials as pkgdown articles. See the
+"Course Materials" dropdown in the navigation bar.

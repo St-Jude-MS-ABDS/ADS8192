@@ -1,0 +1,92 @@
+url: https://YOUR-USERNAME.github.io/ADS8192/
+
+template:
+  bootstrap: 5
+  bootswatch: flatly
+
+navbar:
+  structure:
+    left:  [intro, reference, articles]
+    right: [search, github]
+  components:
+    articles:
+      text: Course Materials
+      menu:
+      - text: Getting Started
+        href: articles/getting-started.html
+      - text: Project Selection Guide
+        href: articles/project-selection.html
+      - text: ---
+      - text: "Lectures"
+      - text: "Lecture 03: Data Structures & Bioconductor"
+        href: articles/Lecture03_Data_Structures_Bioconductor.html
+      - text: "Lecture 05: Package Dev (devtools)"
+        href: articles/Lecture05_Package_Development_devtools.html
+      - text: "Lecture 06: Package Dev (pkgdown, testthat)"
+        href: articles/Lecture06_Package_Development_pkgdown_testthat.html
+      - text: "Lecture 07: Shiny Reactivity"
+        href: articles/Lecture07_Shiny_Reactivity.html
+      - text: "Lecture 08: Shiny Packaging & Deployment"
+        href: articles/Lecture08_Shiny_Packaging_Deployment.html
+      - text: "Lecture 09: CLI Design (Rapp)"
+        href: articles/Lecture09_CLI_Design_Rapp.html
+      - text: "Lecture 10: CLI Packaging & Installation"
+        href: articles/Lecture10_CLI_Packaging_Installation.html
+      - text: "Lecture 11: Review & Q/A"
+        href: articles/Lecture11_Review_QA.html
+
+reference:
+  - title: "Data Handling"
+    desc: "Create and manipulate SummarizedExperiment objects"
+    contents:
+      - make_se
+      - top_variable_features
+
+  - title: "PCA Analysis"
+    desc: "Run and analyze PCA"
+    contents:
+      - run_pca
+      - pca_variance_explained
+
+  - title: "Visualization"
+    desc: "Create plots"
+    contents:
+      - plot_pca
+
+  - title: "Export"
+    desc: "Save results to files"
+    contents:
+      - save_pca_results
+
+  - title: "Interactive App"
+    desc: "Shiny web application"
+    contents:
+      - run_app
+
+  - title: "Data"
+    desc: "Example datasets"
+    contents:
+      - example_se
+
+articles:
+  - title: "Getting Started"
+    navbar: ~
+    contents:
+      - getting-started
+
+  - title: "Assessments"
+    navbar: ~
+    contents:
+      - project-selection
+
+  - title: "Lectures"
+    navbar: ~
+    contents:
+      - Lecture03_Data_Structures_Bioconductor
+      - Lecture05_Package_Development_devtools
+      - Lecture06_Package_Development_pkgdown_testthat
+      - Lecture07_Shiny_Reactivity
+      - Lecture08_Shiny_Packaging_Deployment
+      - Lecture09_CLI_Design_Rapp
+      - Lecture10_CLI_Packaging_Installation
+      - Lecture11_Review_QA

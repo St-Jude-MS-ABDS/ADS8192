@@ -1,0 +1,42 @@
+Package: ADS8192
+Title: ADS 8192 - Developing Scientific Applications (Course Materials)
+Version: 0.1.0
+Authors@R:
+    person("ADS 8192", "Instructor", email = "ads8192@example.edu",
+           role = c("aut", "cre"))
+Description: Course materials and reference implementation for ADS 8192:
+    Developing Scientific Applications. Provides a complete example of the
+    'three interfaces, one core' architecture: PCA analysis functions for
+    SummarizedExperiment objects, a Shiny interactive explorer, and a
+    command-line interface via Rapp. Includes lectures, quizzes, and a
+    grading rubric. Students build their own packages following this model.
+License: MIT + file LICENSE
+Encoding: UTF-8
+Roxygen: list(markdown = TRUE)
+RoxygenNote: 7.3.3
+biocViews:
+Depends:
+    R (>= 4.1.0)
+Imports:
+    SummarizedExperiment,
+    ggplot2,
+    rlang,
+    methods,
+    stats,
+    utils
+Suggests:
+    testthat (>= 3.0.0),
+    airway,
+    shiny (>= 1.7.0),
+    bslib (>= 0.6.0),
+    DT,
+    Rapp,
+    knitr,
+    rmarkdown,
+    ComplexHeatmap,
+    pkgdown
+Config/testthat/edition: 3
+VignetteBuilder: knitr
+URL: https://github.com/YOUR-USERNAME/ADS8192
+BugReports: https://github.com/YOUR-USERNAME/ADS8192/issues
+LazyData: true

@@ -1,0 +1,636 @@
+---
+title: "Lecture 11: Review / Q&A (Homework 1 Support)"
+author: "Jared Andrews"
+date: "April 20, 2026"
+output:
+  html_document:
+    toc: true
+    toc_float: true
+    code_folding: show
+    theme: flatly
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(
+  echo = TRUE,
+  message = FALSE,
+  warning = FALSE,
+  eval = FALSE
+)
+```
+
+# Learning Objectives
+
+By the end of this session, you will be able to:
+
+1. Identify and resolve remaining blockers for Homework 1 submission
+2. Apply a systematic debugging workflow (reproduce → isolate → fix → test → document)
+3. Validate the end-to-end deliverable: install from GitHub, run core functions, run Shiny app, run CLI, and view pkgdown site
+
+**Course Learning Outcomes (CLOs):** CLO 1, 2, 3, 4, 5, 6
+
+---
+
+# Homework 1 Requirements Recap
+
+## What You're Submitting
+
+A GitHub repository containing an R package that:
+
+| Component | Status | Check |
+|-----------|--------|-------|
+| **Package structure** | Valid R package | `devtools::check()` passes |
+| **Core functions** | `make_se()`, `run_pca()`, `plot_pca()` | Functions work on test data |
+| **Documentation** | roxygen2 + README | `?function` works |
+| **Tests** | testthat | `devtools::test()` passes |
+| **pkgdown site** | Builds successfully | `pkgdown::build_site()` works |
+| **Shiny app** | `run_app()` | App launches and works |
+| **CLI** | `sePCA` (Rapp CLI) | CLI runs from fresh install |
+| **GitHub** | Public repo | `install_github()` works |
+
+---
+
+# Part 1: Readiness Checklist (10 min)
+
+## Run the Checklist
+
+Everyone run through this checklist right now. Mark each item ✅ or ❌:
+
+### 1. Install from GitHub
+
+```{r checklist-1}
+# Start a fresh R session (important!)
+.rs.restartR()
+
+# Remove local version if exists
+try(remove.packages("sePCA"), silent = TRUE)
+
+# Install from GitHub
+remotes::install_github("YOUR-USERNAME/sePCA")
+
+# ✅ Success / ❌ Failed
+```
+
+### 2. R CMD check
+
+```{r checklist-2}
+devtools::check()
+
+# Goal: 0 errors, 0 warnings
+# NOTEs are usually acceptable
+# ✅ 0 errors, 0 warnings / ❌ Has errors or warnings
+```
+
+### 3. Documentation
+
+```{r checklist-3}
+library(sePCA)
+
+# Help files work?
+?run_pca
+?plot_pca
+
+# Package help?
+?sePCA
+
+# ✅ Help displays / ❌ Missing docs
+```
+
+### 4. Tests
+
+```{r checklist-4}
+devtools::test()
+
+# Goal: All tests pass
+# ✅ All passed / ❌ Failures
+```
+
+### 5. pkgdown Site
+
+```{r checklist-5}
+pkgdown::build_site()
+
+# Opens in browser - check:
+# - Home page renders
+# - Reference pages work
+# - Articles/vignettes render
+
+# ✅ Site builds / ❌ Build fails
+```
+
+### 6. Shiny App
+
+```{r checklist-6}
+library(sePCA)
+run_app()
+
+# Check:
+# - App launches without error
+# - Plot renders
+# - Inputs change the plot
+
+# ✅ App works / ❌ App fails
+```
+
+### 7. CLI
+
+```bash
+# From terminal
+sePCA pca --help
+
+# If launchers are not installed
+# Rapp exec/sePCA pca --help
+
+# Should show help text
+# ✅ Help shows / ❌ Error
+```
+
+---
+
+# Part 2: Triage (10 min)
+
+## Categorize Your Blockers
+
+Based on your checklist results, identify which category your issues fall into:
+
+| Category | Examples |
+|----------|----------|
+| **Package/Check** | R CMD check errors, missing NAMESPACE entries, dependency issues |
+| **Documentation** | Missing roxygen2 tags, broken examples, README issues |
+| **Tests/CI** | Failing tests, CI not running, test setup issues |
+| **pkgdown** | Site build errors, missing vignettes, config issues |
+| **Shiny** | App crashes, missing dependencies, broken reactivity |
+| **CLI** | Argument parsing, file I/O, exit codes |
+
+## Form Groups
+
+We'll form debugging groups by category. Join the group matching your primary blocker.
+
+---
+
+# Part 3: Debugging Playbook
+
+## The Systematic Approach
+
+```
+┌─────────────┐     ┌─────────────┐     ┌─────────────┐
+│  Reproduce  │ ──→ │   Isolate   │ ──→ │     Fix     │
+└─────────────┘     └─────────────┘     └─────────────┘
+        │                                       │
+        └───────────────────────────────────────┘
+                         ↓
+                 ┌─────────────┐     ┌─────────────┐
+                 │    Test     │ ──→ │  Document   │
+                 └─────────────┘     └─────────────┘
+```
+
+### 1. Reproduce
+
+Can you reliably trigger the error?
+
+```{r reproduce}
+# Write down exact steps:
+# 1. Restart R
+# 2. Run: library(sePCA)
+# 3. Run: run_pca(example_se)
+# 4. Error appears: "could not find function..."
+```
+
+### 2. Isolate
+
+What's the minimal code that triggers it?
+
+```{r isolate}
+# Start removing parts until you find the core issue
+# Does this work?
+library(SummarizedExperiment)
+SummarizedExperiment(...)
+
+# Does this fail?
+sePCA::make_se(...)
+```
+
+### 3. Fix
+
+Apply the fix:
+
+```{r fix}
+# Common fixes by error type
+
+# "could not find function X" 
+# → Add @importFrom or use pkg::fun()
+
+# "missing argument" 
+# → Add @param tags in roxygen
+
+# "no visible binding for global variable"
+# → Use .data$variable in ggplot aes()
+```
+
+### 4. Test
+
+Verify the fix:
+
+```{r test}
+# Run the minimal reproduction case
+# Confirm error is gone
+# Run full test suite
+devtools::test()
+```
+
+### 5. Document
+
+Record what you learned:
+
+```{r document}
+# Add a comment explaining the fix
+# Update documentation if needed
+# Commit with descriptive message:
+# "Fix: Add SummarizedExperiment to Imports for make_se()"
+```
+
+---
+
+# Common Issues and Fixes
+
+## Package/Check Errors
+
+### "could not find function X"
+
+**Problem:** Function from another package isn't available.
+
+**Fix:**
+
+```{r fix-missing-function}
+# Option 1: Explicit namespace
+SummarizedExperiment::assay(se, "counts")
+
+# Option 2: Import via roxygen2
+#' @importFrom SummarizedExperiment assay
+```
+
+### "no visible binding for global variable"
+
+**Problem:** ggplot2 aesthetics trigger R CMD check notes.
+
+**Fix:**
+
+```{r fix-binding}
+# Instead of:
+ggplot(data, aes(x = PC1, y = PC2))
+
+# Use:
+ggplot(data, aes(x = .data$PC1, y = .data$PC2))
+
+# Or add to package (in R/globals.R):
+utils::globalVariables(c("PC1", "PC2"))
+```
+
+### Missing imports in DESCRIPTION
+
+**Fix:**
+
+```{r fix-imports}
+# Add missing packages
+usethis::use_package("ggplot2")
+usethis::use_package("SummarizedExperiment")
+```
+
+---
+
+## Documentation Issues
+
+### "Undocumented arguments"
+
+**Fix:** Add missing `@param` tags:
+
+```{r fix-params}
+#' @param se A SummarizedExperiment object
+#' @param n_top Number of top variable genes
+```
+
+### Examples fail
+
+**Fix:** Wrap long-running or interactive examples:
+
+```{r fix-examples}
+#' @examples
+#' \dontrun{
+#' # This example takes a while
+#' run_pca(large_dataset)
+#' }
+#'
+#' \donttest{
+#' # This is tested but not on CRAN
+#' run_app()
+#' }
+```
+
+---
+
+## Test Issues
+
+### Test can't find package functions
+
+**Fix:** Make sure you're using the package correctly in tests:
+
+```{r fix-test-loading}
+# tests/testthat/test-pca.R
+
+# Functions should be available without library()
+# But you may need to load package data:
+test_that("run_pca works", {
+    data(example_se, package = "sePCA")  # Explicit package
+    result <- run_pca(example_se)
+    expect_s3_class(result$scores, "data.frame")
+})
+```
+
+### Tests fail on CI but pass locally
+
+**Possible causes:**
+
+1. Missing Suggests dependency
+2. Different R version
+3. Missing system dependency
+4. Hardcoded paths
+
+**Fix:** Check CI logs and ensure all test dependencies are in Suggests.
+
+---
+
+## pkgdown Issues
+
+### Site won't build
+
+**Common fixes:**
+
+```{r fix-pkgdown}
+# Check pkgdown config is valid YAML
+yaml::read_yaml("_pkgdown.yml")
+
+# Rebuild from scratch
+pkgdown::clean_site()
+pkgdown::build_site()
+
+# Check for vignette issues
+devtools::build_vignettes()
+```
+
+### Missing reference pages
+
+**Fix:** Ensure functions are exported:
+
+```{r fix-export}
+#' @export
+run_pca <- function(...) {
+  ...
+}
+```
+
+---
+
+## Shiny Issues
+
+### App crashes on startup
+
+**Debug approach:**
+
+```{r debug-shiny}
+# Run with error tracing
+options(shiny.error = browser)
+run_app()
+
+# Or check the app components separately
+app_ui()      # Does UI build?
+# Server can't be tested as easily, but:
+devtools::load_all()  # Make sure package loads
+```
+
+### Reactivity not working
+
+**Common causes:**
+
+```{r debug-reactivity}
+# Forgot parentheses on reactive
+output$plot <- renderPlot({
+    plot_pca(pca_result)  # WRONG: missing ()
+    plot_pca(pca_result())  # RIGHT
+})
+
+# Wrong input name
+input$n_top  # Check this matches UI: numericInput("n_top", ...)
+```
+
+---
+
+## CLI Issues
+
+### Arguments not parsing
+
+**Debug:**
+
+```{r debug-cli}
+# Test the CLI directly from R
+Rapp::run(
+    system.file("exec", "sePCA", package = "sePCA"),
+    c("pca", "--counts", "test.tsv", "--meta", "meta.tsv", "--output", "out/")
+)
+```
+
+### Files not found
+
+**Check:**
+
+```{r debug-files}
+# Are you using absolute paths?
+# Relative paths are relative to working directory!
+getwd()
+
+# Better: require absolute paths
+normalizePath(args$counts)
+```
+
+---
+
+# Part 4: Show and Tell (20 min)
+
+## Share Your Wins
+
+2-3 volunteers will demo:
+
+1. What problem they had
+2. How they diagnosed it
+3. What the fix was
+
+## Capture Patterns
+
+As we discuss, we'll build a shared FAQ:
+
+```markdown
+## FAQ: Common Issues and Fixes
+
+### Q: My function works locally but not after install
+A: Make sure you're not using `devtools::load_all()` logic. Test with 
+a fresh `remotes::install_github()` install.
+
+### Q: R CMD check complains about global variables
+A: Use `.data$varname` in ggplot2 aes() calls, or add `globalVariables()`.
+
+### Q: CI fails but local passes
+A: Check that all dependencies are in DESCRIPTION. Look at the CI log
+for the specific error.
+
+... (add more as we discuss)
+```
+
+---
+
+# Part 5: Peer Review Exercise
+
+## Exercise A: Minimal Bug Report
+
+For one unresolved blocker, write an issue-style bug report:
+
+```markdown
+## Bug: [Short description]
+
+### Expected behavior
+[What should happen]
+
+### Actual behavior
+[What actually happens]
+
+### Steps to reproduce
+1. Start a fresh R session
+2. Run: `library(sePCA)`
+3. Run: `run_pca(example_se)`
+4. See error: [error message]
+
+### Environment
+```r
+sessionInfo()
+# Paste output here
+```
+
+### Additional context
+[Screenshots, log files, etc.]
+```
+
+## Exercise B: Swap and Review
+
+1. Pair up with a classmate
+2. Give them your GitHub repo URL
+3. They attempt to:
+   - Install from GitHub
+   - Run the README example
+   - Run `run_app()`
+   - Run the CLI
+
+4. They file one constructive GitHub issue:
+   - Be specific about what doesn't work
+   - Include exact error messages
+   - Suggest a fix if you can
+
+---
+
+# Final Submission Checklist
+
+## Before You Submit
+
+```markdown
+## HW1 Submission Checklist
+
+### Package Basics
+- [ ] Package installs from GitHub without errors
+- [ ] `devtools::check()` passes with 0 errors, 0 warnings
+- [ ] All exported functions have roxygen2 documentation
+- [ ] README exists and renders on GitHub
+
+### Core Functionality
+- [ ] `make_se()` creates a valid SummarizedExperiment
+- [ ] `run_pca()` returns list with `pca` and `scores`
+- [ ] `plot_pca()` returns a ggplot object
+
+### Testing
+- [ ] At least 5 test expectations across 2+ files
+- [ ] All tests pass with `devtools::test()`
+- [ ] CI runs on GitHub (Actions badge shows)
+
+### Shiny App
+- [ ] `run_app()` launches without errors
+- [ ] Plot updates when inputs change
+- [ ] App can be run from fresh R session
+
+### CLI
+- [ ] `exec/sePCA` exists in the package
+- [ ] `Rapp::install_pkg_cli_apps("sePCA")` installs a launcher
+- [ ] `--help` shows usage information
+- [ ] PCA command produces output files
+
+### Documentation
+- [ ] pkgdown site builds successfully
+- [ ] At least one vignette/article exists
+- [ ] README has installation and quick start
+
+### Final Verification
+- [ ] From fresh R: `remotes::install_github("user/repo")` works
+- [ ] From fresh R: `library(pkg); run_app()` works
+- [ ] From terminal: CLI produces expected outputs
+```
+
+## Optional Enhancements
+
+- [ ] Tag a release (v0.1.0)
+- [ ] Deploy Shiny app to shinyapps.io
+- [ ] Deploy pkgdown site to GitHub Pages
+- [ ] Add CI badges to README
+
+---
+
+# Summary
+
+Today we:
+
+1. Ran a comprehensive readiness checklist
+2. Triaged issues by category
+3. Applied systematic debugging workflows
+4. Shared solutions and built a FAQ
+5. Practiced peer code review
+6. Finalized submission checklists
+
+## You're Ready!
+
+If you've completed the checklist, your package is ready for submission.
+
+---
+
+# Resources
+
+## Getting Help
+
+- **Stack Overflow**: Tag with `r`, `r-package-devel`
+- **RStudio Community**: https://community.rstudio.com/
+- **R-pkg-devel mailing list**: For package development questions
+- **Course Slack/Discord**: Ask classmates!
+
+## Essential References
+
+- **R Packages book**: https://r-pkgs.org/
+- **Mastering Shiny**: https://mastering-shiny.org/
+- **pkgdown docs**: https://pkgdown.r-lib.org/
+- **testthat docs**: https://testthat.r-lib.org/
+
+## Example Packages to Study
+
+- **usethis**: Great example of devtools conventions
+- **ggplot2**: Excellent documentation
+- **shiny**: See how they structure the app
+
+---
+
+# Session Info
+
+```{r session-info, eval=TRUE}
+sessionInfo()
+```
