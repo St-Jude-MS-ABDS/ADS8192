@@ -1,0 +1,4 @@
+# License
+
+    YEAR: 2026
+    COPYRIGHT HOLDER: St. Jude Children's Research Hospital
