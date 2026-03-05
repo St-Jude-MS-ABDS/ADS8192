@@ -404,7 +404,7 @@ vignette: >
   %\VignetteEncoding{UTF-8}
 ---
 
-```{r setup, include=FALSE}
+`r ''````{r setup, include=FALSE}
 knitr::opts_chunk$set(
   collapse = TRUE,
   comment = "#>"
@@ -417,7 +417,7 @@ sePCA makes it easy to run PCA on RNA-seq data stored in SummarizedExperiment ob
 
 ## Quick Example
 
-```{r example}
+`r ''````{r example}
 library(sePCA)
 
 # Load example data
@@ -433,7 +433,7 @@ plot_pca(result, color_by = "treatment")
 
 ## Using Real Data
 
-```{r airway}
+`r ''````{r airway}
 library(airway)
 data(airway)
 
