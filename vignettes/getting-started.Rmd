@@ -1,7 +1,7 @@
 ---
 title: "Getting Started with ADS 8192"
 author: "Jared Andrews"
-date: sys.Date()
+date: "`r Sys.Date()`"
 output: rmarkdown::html_vignette
 vignette: >
   %\VignetteIndexEntry{Getting Started with ADS 8192}
