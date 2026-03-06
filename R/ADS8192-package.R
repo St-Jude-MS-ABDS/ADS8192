@@ -8,7 +8,7 @@
 #'
 #' @description
 #' Course materials and reference implementation for ADS 8192.
-#' Demonstrates the "three interfaces, one core" architecture:
+#' Demonstrates separation of concerns and layered architecture:
 #' PCA analysis functions for SummarizedExperiment objects,
 #' a Shiny interactive explorer, and a command-line interface via Rapp.
 #'

@@ -7,17 +7,19 @@ Course materials and reference implementation for **ADS 8192: Developing Scienti
 
 ## Unit 1 Overview
 
-Unit 1 teaches graduate students to build **complete, reproducible scientific software in R** — from raw analysis functions through a fully packaged, documented, and deployable application. The unit is organized around a single architectural idea:
+Unit 1 teaches graduate students to build **complete, reproducible scientific software in R** — from raw analysis functions through a fully packaged, documented, and deployable application. The unit is organized around core software engineering principles that apply in any language or domain:
 
-> **Flexible interfaces, one core.** Write your analysis logic once as exported R functions, then surface it through three delivery mechanisms — an R API, a Shiny web app, and a command-line interface — with zero duplicated logic.
+> **Separation of concerns.** Write your analysis logic once as small, testable, composable R functions. Then add thin presentation layers — an R API, a Shiny web app, and a command-line interface — that delegate to those functions without duplicating logic.
+
+This is the same layered-architecture idea you'll find in well-engineered software everywhere: keep the _what_ (computation) separate from the _how_ (delivery to users). Different audiences — scientists who want point-and-click exploration, developers who want composable functions, and bioinformatics cores who want scriptable CLI tools — all benefit from the same tested core.
 
 ### Fundamental Unit Objectives
 
 After completing Unit 1, students will be able to:
 
-- **Build software for multiple audiences.** Scientists want point-and-click exploration (Shiny); package/pipeline developers want composable R functions they can call programmatically; bioinformatics cores want non-interactive CLI tools that slot into automated workflows. One codebase should serve all three.
 - **Design small, testable, composable functions** that operate on robust data containers (`SummarizedExperiment` / `SingleCellExperiment`) and return well-defined types — making them easy to reason about, test, and reuse.
-- **Separate analysis logic from interface logic.** Core computation lives in exported R functions; Shiny, CLI, and scripting layers are thin wrappers that delegate to the core. This prevents copy-paste drift and keeps every interface consistent.
+- **Separate analysis logic from presentation logic.** Core computation lives in exported R functions; Shiny, CLI, and scripting layers are thin wrappers that delegate to the core. This prevents copy-paste drift (DRY) and keeps every interface consistent.
+- **Build software for multiple audiences.** Scientists want point-and-click exploration (Shiny); package/pipeline developers want composable R functions they can call programmatically; bioinformatics cores want non-interactive CLI tools that slot into automated workflows. One codebase should serve all of them.
 - **Package R code for distribution.** Turn loose scripts into a valid, installable R package using `devtools` / `usethis` workflows so that others can `install_github()` and immediately use your work. Pave the road for submission to CRAN or Bioconductor and publication.
 - **Document thoroughly.** Every exported function gets `roxygen2` documentation; the package ships a `pkgdown` site; a README and vignette provide onboarding for new users.
 - **Test meaningfully.** `testthat` (edition 3) tests cover both expected behavior and informative error cases, giving confidence that changes don't silently break results.
@@ -28,7 +30,7 @@ After completing Unit 1, students will be able to:
 
 | Theme | Key Tools / Concepts |
 |-------|----------------------|
-| Multi-audience software design | One analysis core → R API (developers), Shiny (end-users/scientists), CLI (pipelines/automation) |
+| Separation of concerns & layered design | Core analysis functions → thin presentation layers: R API (developers), Shiny (end-users/scientists), CLI (pipelines/automation) |
 | Robust data modeling | `SummarizedExperiment`, `SingleCellExperiment`, S4 classes |
 | R package development | `devtools`, `usethis`, `roxygen2`, `DESCRIPTION`, `NAMESPACE` |
 | Automated testing | `testthat` (edition 3), happy-path + error-case coverage |
@@ -79,7 +81,7 @@ Projects span bulk RNA-seq (`SummarizedExperiment`) and single-cell RNA-seq (`Si
 
 ## Reference Implementation (This Package)
 
-This repository **is** the reference implementation (Project 0: PCA Explorer). Students cannot choose this project but use it as a structural guide. It demonstrates the full "three interfaces, one core" architecture on the Bioconductor `airway` dataset (human airway smooth muscle RNA-seq, 8 samples, dexamethasone treatment vs. control).
+This repository **is** the reference implementation (Project 0: PCA Explorer). Students cannot choose this project but use it as a structural guide. It demonstrates the full layered architecture — core analysis functions with R API, Shiny, and CLI presentation layers — on the Bioconductor `airway` dataset (human airway smooth muscle RNA-seq, 8 samples, dexamethasone treatment vs. control).
 
 ### Installation
 
@@ -110,7 +112,7 @@ plot_pca(result, color_by = "dex", shape_by = "cell")
 pca_variance_explained(result)
 ```
 
-### Three Interfaces
+### Presentation Layers
 
 **R API**
 
