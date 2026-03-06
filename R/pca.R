@@ -23,8 +23,8 @@
 #' @importFrom SummarizedExperiment assay colData
 #'
 #' @examples
-#' data(example_se)
-#' result <- run_pca(example_se, n_top = 50)
+#' data(airway, package = "airway")
+#' result <- run_pca(airway, n_top = 50)
 #' head(result$scores)
 run_pca <- function(se, assay_name = "counts", n_top = 500,
                     scale = TRUE, log_transform = TRUE) {
@@ -81,8 +81,8 @@ run_pca <- function(se, assay_name = "counts", n_top = 500,
 #' @export
 #'
 #' @examples
-#' data(example_se)
-#' result <- run_pca(example_se, n_top = 50)
+#' data(airway, package = "airway")
+#' result <- run_pca(airway, n_top = 50)
 #' var_df <- pca_variance_explained(result)
 #' head(var_df)
 pca_variance_explained <- function(pca_result) {

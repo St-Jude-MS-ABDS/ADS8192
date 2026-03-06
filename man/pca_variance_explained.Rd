@@ -21,8 +21,8 @@ Extracts the percentage of variance explained by each principal component
 from the output of \code{\link{run_pca}}.
 }
 \examples{
-data(example_se)
-result <- run_pca(example_se, n_top = 50)
+data(airway, package = "airway")
+result <- run_pca(airway, n_top = 50)
 var_df <- pca_variance_explained(result)
 head(var_df)
 }

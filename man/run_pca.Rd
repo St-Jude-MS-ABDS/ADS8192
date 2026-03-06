@@ -38,7 +38,7 @@ Performs principal component analysis on a
 the top variable features, optionally log-transforming and scaling.
 }
 \examples{
-data(example_se)
-result <- run_pca(example_se, n_top = 50)
+data(airway, package = "airway")
+result <- run_pca(airway, n_top = 50)
 head(result$scores)
 }

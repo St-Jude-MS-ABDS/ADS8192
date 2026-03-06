@@ -14,7 +14,8 @@ knitr::opts_chunk$set(
   collapse = TRUE,
   comment = "#>",
   fig.width = 7,
-  fig.height = 5
+  fig.height = 5,
+  eval = FALSE
 )
 ```
 
@@ -35,23 +36,24 @@ if (!require("BiocManager", quietly = TRUE))
 BiocManager::install(c("SummarizedExperiment", "airway"))
 
 # Install the course package
-remotes::install_github("YOUR-USERNAME/ADS8192")
+remotes::install_github("St-Jude-MS-ABDS/ADS8192")
 ```
 
 ## Quick Start
 
 ```{r quick-start}
 library(ADS8192)
+library(airway)
 
-# Load the example dataset (100 genes, 8 samples)
-data(example_se)
-example_se
+# Load the airway dataset (RNA-seq, dexamethasone treatment vs. control)
+data("airway", package = "airway")
+airway
 ```
 
 ### Run PCA
 
 ```{r run-pca}
-result <- run_pca(example_se, n_top = 50)
+result <- run_pca(airway, n_top = 500)
 
 # View the PCA scores merged with sample metadata
 head(result$scores)
@@ -60,11 +62,11 @@ head(result$scores)
 ### Visualize
 
 ```{r plot-pca}
-plot_pca(result, color_by = "treatment")
+plot_pca(result, color_by = "dex")
 ```
 
 ```{r plot-pca-both}
-plot_pca(result, color_by = "treatment", shape_by = "batch")
+plot_pca(result, color_by = "dex", shape_by = "cell")
 ```
 
 ### Check Variance Explained
@@ -92,8 +94,10 @@ fixed everywhere.
 
 ```{r r-api, eval=FALSE}
 library(ADS8192)
-result <- run_pca(se, n_top = 500)
-plot_pca(result, color_by = "treatment")
+library(airway)
+data("airway", package = "airway")
+result <- run_pca(airway, n_top = 500)
+plot_pca(result, color_by = "dex")
 ```
 
 ### Interface 2: Shiny App

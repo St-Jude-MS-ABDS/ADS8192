@@ -19,6 +19,8 @@ navbar:
         href: articles/getting-started.html
       - text: Project Selection Guide
         href: articles/project-selection.html
+      - text: 'HW1 Rubric'
+        href: articles/HW1_Rubric.html
       - text: '---'
       - text: Lectures
       - text: 'Lecture 03: Data Structures & Bioconductor'
@@ -66,7 +68,9 @@ articles:
   contents: "`getting-started`"
 - title: Assessments
   navbar: ~
-  contents: "`articles/project-selection`"
+  contents:
+  - "`articles/project-selection`"
+  - "`articles/HW1_Rubric`"
 - title: Lectures
   navbar: ~
   contents:

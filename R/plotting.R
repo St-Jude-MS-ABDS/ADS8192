@@ -20,9 +20,9 @@
 #' @importFrom rlang .data
 #'
 #' @examples
-#' data(example_se)
-#' result <- run_pca(example_se, n_top = 50)
-#' plot_pca(result, color_by = "treatment")
+#' data(airway, package = "airway")
+#' result <- run_pca(airway, n_top = 50)
+#' plot_pca(result, color_by = "dex")
 plot_pca <- function(pca_result, color_by = NULL, shape_by = NULL,
                      pcs = c(1, 2), point_size = 4) {
     scores <- pca_result$scores

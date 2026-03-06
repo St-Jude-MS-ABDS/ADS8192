@@ -86,8 +86,8 @@ make_se <- function(counts, col_data, row_data = NULL) {
 #' @importFrom SummarizedExperiment assay
 #'
 #' @examples
-#' data(example_se)
-#' se_top <- top_variable_features(example_se, n = 50)
+#' data(airway, package = "airway")
+#' se_top <- top_variable_features(airway, n = 50)
 #' dim(se_top)
 top_variable_features <- function(se, n = 500, assay_name = "counts") {
     mat <- assay(se, assay_name)

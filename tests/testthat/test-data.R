@@ -121,31 +121,31 @@ test_that("make_se coerces non-matrix input", {
 # --- top_variable_features ---
 
 test_that("top_variable_features returns correct subset size", {
-    data(example_se, package = "ADS8192")
+    data(airway, package = "airway")
 
-    se_top <- top_variable_features(example_se, n = 50)
+    se_top <- top_variable_features(airway, n = 50)
 
     expect_equal(nrow(se_top), 50)
-    expect_equal(ncol(se_top), ncol(example_se))
+    expect_equal(ncol(se_top), ncol(airway))
 })
 
 test_that("top_variable_features handles n > nrow gracefully", {
-    data(example_se, package = "ADS8192")
+    data(airway, package = "airway")
 
-    se_all <- top_variable_features(example_se, n = 9999)
+    se_all <- top_variable_features(airway, n = 9999)
 
-    expect_equal(nrow(se_all), nrow(example_se))
+    expect_equal(nrow(se_all), nrow(airway))
 })
 
 test_that("top_variable_features returns most variable genes first", {
-    data(example_se, package = "ADS8192")
+    data(airway, package = "airway")
 
-    se_top <- top_variable_features(example_se, n = 10)
+    se_top <- top_variable_features(airway, n = 10)
     mat <- SummarizedExperiment::assay(se_top, "counts")
     vars <- apply(mat, 1, var)
 
     # All variances in top-10 should be >= the 11th highest
-    full_mat <- SummarizedExperiment::assay(example_se, "counts")
+    full_mat <- SummarizedExperiment::assay(airway, "counts")
     full_vars <- sort(apply(full_mat, 1, var), decreasing = TRUE)
     expect_true(all(vars >= full_vars[11]))
 })

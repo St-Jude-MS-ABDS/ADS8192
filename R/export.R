@@ -17,8 +17,8 @@
 #'
 #' @examples
 #' \dontrun{
-#' data(example_se)
-#' result <- run_pca(example_se, n_top = 50)
+#' data(airway, package = "airway")
+#' result <- run_pca(airway, n_top = 50)
 #' save_pca_results(result, tempdir())
 #' }
 save_pca_results <- function(pca_result, output_dir, prefix = "pca") {

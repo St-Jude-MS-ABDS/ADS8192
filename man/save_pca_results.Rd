@@ -26,8 +26,8 @@ Optionally saves a PCA plot as PNG.
 }
 \examples{
 \dontrun{
-data(example_se)
-result <- run_pca(example_se, n_top = 50)
+data(airway, package = "airway")
+result <- run_pca(airway, n_top = 50)
 save_pca_results(result, tempdir())
 }
 }
