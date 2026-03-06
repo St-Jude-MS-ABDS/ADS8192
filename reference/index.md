@@ -38,10 +38,3 @@ Shiny web application
 
 - [`run_app()`](https://automatic-engine-4qp7m5e.pages.github.io/reference/run_app.md)
   : Run the PCA Explorer Shiny Application
-
-## Data
-
-Example datasets
-
-- [`example_se`](https://automatic-engine-4qp7m5e.pages.github.io/reference/example_se.md)
-  : Example SummarizedExperiment for testing

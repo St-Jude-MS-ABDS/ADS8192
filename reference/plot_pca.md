@@ -49,7 +49,7 @@ object.
 ## Examples
 
 ``` r
-data(example_se)
-result <- run_pca(example_se, n_top = 50)
-plot_pca(result, color_by = "treatment")
+data(airway, package = "airway")
+result <- run_pca(airway, n_top = 50)
+plot_pca(result, color_by = "dex")
 ```

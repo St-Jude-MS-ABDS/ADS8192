@@ -17,25 +17,21 @@ By the end of this session, you will be able to:
 
 ## Where We Are
 
-In Lecture 9, we built CLI functions that work during development:
+In Lecture 9, we built CLI functions that work during development and
+**exported a launcher installer** (`install_sePCA_cli()`) so users can
+run the CLI directly from the terminal:
 
 ``` bash
 # Works in development mode
 Rapp exec/sePCA pca --help
+
+# Works after installing launchers (Lecture 9)
+sePCA pca --help
 ```
 
-**Problem:** After installing from GitHub, users need a simpler way to
-run the CLI.
-
-**Goal:** After `install_github("you/sePCA")`, users can run:
-
-``` bash
-# Option 1: Launcher (after installing with Rapp)
-sePCA pca --counts counts.tsv --meta meta.tsv --output out/
-
-# Option 2: Direct exec (no launcher)
-Rapp exec/sePCA pca --counts counts.tsv --meta meta.tsv --output out/
-```
+**Goal:** Verify that the full install-from-GitHub workflow works
+end-to-end — package installation, launcher installation, and CLI
+execution — in a clean R session.
 
 ------------------------------------------------------------------------
 
@@ -74,9 +70,15 @@ usethis::use_package("Rapp")
 
 ### Install CLI Launchers
 
-Rapp can install launchers on your PATH:
+In Lecture 9 we exported an `install_sePCA_cli()` function that wraps
+[`Rapp::install_pkg_cli_apps()`](https://rdrr.io/pkg/Rapp/man/install_pkg_cli_apps.html).
+Verify it works after a fresh install:
 
 ``` r
+# Your exported wrapper (preferred)
+sePCA::install_sePCA_cli()
+
+# Or the direct Rapp call
 Rapp::install_pkg_cli_apps("sePCA")
 ```
 
@@ -100,17 +102,23 @@ Or from R:
 Rapp::run(system.file("exec", "sePCA", package = "sePCA"), c("pca", "--help"))
 ```
 
-#### Optional Helper Function
+#### Required: Export the Launcher Installer
 
-Add a small helper in `R/cli_install.R` if you want a one-liner for
-users:
+In Lecture 9 you created `R/install_cli.R` with an exported wrapper.
+Make sure it is present and documented — this is a **rubric
+requirement**:
 
 ``` r
 #' Install sePCA CLI launchers
 #'
+#' Places lightweight launcher scripts on the user's `PATH` so the
+#' sePCA CLI can be invoked directly from a terminal
+#' (e.g. `sePCA pca --help`).
+#'
+#' @inheritDotParams Rapp::install_pkg_cli_apps -package -lib.loc
 #' @export
 install_sePCA_cli <- function(...) {
-    Rapp::install_pkg_cli_apps("sePCA", ...)
+    Rapp::install_pkg_cli_apps(package = "sePCA", lib.loc = NULL, ...)
 }
 ```
 
@@ -614,7 +622,7 @@ workflows/ ├── R-CMD-check.yaml └── pkgdown.yaml
     ##  [1] digest_0.6.39     desc_1.4.3        R6_2.6.1          fastmap_1.2.0    
     ##  [5] xfun_0.56         cachem_1.1.0      knitr_1.51        htmltools_0.5.9  
     ##  [9] rmarkdown_2.30    lifecycle_1.0.5   cli_3.6.5         sass_0.4.10      
-    ## [13] pkgdown_2.2.0     textshaping_1.0.4 jquerylib_0.1.4   systemfonts_1.3.1
+    ## [13] pkgdown_2.2.0     textshaping_1.0.4 jquerylib_0.1.4   systemfonts_1.3.2
     ## [17] compiler_4.5.2    tools_4.5.2       ragg_1.5.0        bslib_0.10.0     
     ## [21] evaluate_1.0.5    yaml_2.3.12       otel_0.2.0        jsonlite_2.0.0   
     ## [25] rlang_1.1.7       fs_1.6.6          htmlwidgets_1.6.4

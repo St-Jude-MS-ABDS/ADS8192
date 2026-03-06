@@ -6,7 +6,7 @@
 <meta http-equiv="X-UA-Compatible" content="IE=edge">
 <meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
 <title>ADS 8192 - Developing Scientific Applications (Course Materials) • ADS8192</title>
-<script src="deps/jquery-3.6.0/jquery-3.6.0.min.js"></script><meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
+<script src="lightswitch.js"></script><script src="deps/jquery-3.6.0/jquery-3.6.0.min.js"></script><meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
 <link href="deps/bootstrap-5.3.1/bootstrap.min.css" rel="stylesheet">
 <script src="deps/bootstrap-5.3.1/bootstrap.bundle.min.js"></script><link href="deps/font-awesome-6.5.2/css/all.min.css" rel="stylesheet">
 <link href="deps/font-awesome-6.5.2/css/v4-shims.min.css" rel="stylesheet">
@@ -18,7 +18,7 @@
     <a href="#main" class="visually-hidden-focusable">Skip to contents</a>
 
 
-    <nav class="navbar navbar-expand-lg fixed-top bg-primary" data-bs-theme="dark" aria-label="Site navigation"><div class="container">
+    <nav class="navbar navbar-expand-lg fixed-top " aria-label="Site navigation"><div class="container">
 
     <a class="navbar-brand me-2" href="index.html">ADS8192</a>
 
@@ -37,6 +37,7 @@
   <ul class="dropdown-menu" aria-labelledby="dropdown-course-materials">
 <li><a class="dropdown-item" href="articles/getting-started.html">Getting Started</a></li>
     <li><a class="dropdown-item" href="articles/project-selection.html">Project Selection Guide</a></li>
+    <li><a class="dropdown-item" href="articles/HW1_Rubric.html">HW1 Rubric</a></li>
     <li><hr class="dropdown-divider"></li>
     <li><h6 class="dropdown-header" data-toc-skip>Lectures</h6></li>
     <li><a class="dropdown-item" href="articles/Lecture03_Data_Structures_Bioconductor.html">Lecture 03: Data Structures &amp; Bioconductor</a></li>
@@ -67,10 +68,240 @@
 </h1></div>
 <!-- badges: start -->
 <!-- badges: end -->
-<p>Course materials and reference implementation for <strong>ADS 8192: Developing Scientific Applications</strong>. This R package demonstrates the “three interfaces, one core” architecture for scientific software.</p>
+<p>Course materials and reference implementation for <strong>ADS 8192: Developing Scientific Applications — Unit 1</strong>. This R package serves as both the source of all Unit 1 lecture content and the living reference implementation that students follow as they build their own packages.</p>
 <div class="section level2">
-<h2 id="installation">Installation<a class="anchor" aria-label="anchor" href="#installation"></a>
+<h2 id="unit-1-overview">Unit 1 Overview<a class="anchor" aria-label="anchor" href="#unit-1-overview"></a>
 </h2>
+<p>Unit 1 teaches graduate students to build <strong>complete, reproducible scientific software in R</strong> — from raw analysis functions through a fully packaged, documented, and deployable application. The unit is organized around a single architectural idea:</p>
+<blockquote>
+<p><strong>Flexible interfaces, one core.</strong> Write your analysis logic once as exported R functions, then surface it through three delivery mechanisms — an R API, a Shiny web app, and a command-line interface — with zero duplicated logic.</p>
+</blockquote>
+<div class="section level3">
+<h3 id="fundamental-unit-objectives">Fundamental Unit Objectives<a class="anchor" aria-label="anchor" href="#fundamental-unit-objectives"></a>
+</h3>
+<p>After completing Unit 1, students will be able to:</p>
+<ul>
+<li>
+<strong>Build software for multiple audiences.</strong> Scientists want point-and-click exploration (Shiny); package/pipeline developers want composable R functions they can call programmatically; bioinformatics cores want non-interactive CLI tools that slot into automated workflows. One codebase should serve all three.</li>
+<li>
+<strong>Design small, testable, composable functions</strong> that operate on robust data containers (<code>SummarizedExperiment</code> / <code>SingleCellExperiment</code>) and return well-defined types — making them easy to reason about, test, and reuse.</li>
+<li>
+<strong>Separate analysis logic from interface logic.</strong> Core computation lives in exported R functions; Shiny, CLI, and scripting layers are thin wrappers that delegate to the core. This prevents copy-paste drift and keeps every interface consistent.</li>
+<li>
+<strong>Package R code for distribution.</strong> Turn loose scripts into a valid, installable R package using <code>devtools</code> / <code>usethis</code> workflows so that others can <code>install_github()</code> and immediately use your work. Pave the road for submission to CRAN or Bioconductor and publication.</li>
+<li>
+<strong>Document thoroughly.</strong> Every exported function gets <code>roxygen2</code> documentation; the package ships a <code>pkgdown</code> site; a README and vignette provide onboarding for new users.</li>
+<li>
+<strong>Test meaningfully.</strong> <code>testthat</code> (edition 3) tests cover both expected behavior and informative error cases, giving confidence that changes don’t silently break results.</li>
+<li>
+<strong>Think about user experience.</strong> Shiny apps include input validation with friendly messages; CLIs print help text and produce standard file formats (TSV); error messages tell the user <em>what went wrong and what to do about it</em>.</li>
+<li>
+<strong>Practice reproducibility and collaboration.</strong> Version control with Git/GitHub, CI/CD via GitHub Actions, reproducible data preparation (<code>data-raw/</code> scripts), and tagged releases make the work shareable and auditable.</li>
+</ul>
+</div>
+<div class="section level3">
+<h3 id="paradigms--themes">Paradigms &amp; Themes<a class="anchor" aria-label="anchor" href="#paradigms--themes"></a>
+</h3>
+<table class="table">
+<colgroup>
+<col width="24%">
+<col width="75%">
+</colgroup>
+<thead><tr class="header">
+<th>Theme</th>
+<th>Key Tools / Concepts</th>
+</tr></thead>
+<tbody>
+<tr class="odd">
+<td>Multi-audience software design</td>
+<td>One analysis core → R API (developers), Shiny (end-users/scientists), CLI (pipelines/automation)</td>
+</tr>
+<tr class="even">
+<td>Robust data modeling</td>
+<td>
+<code>SummarizedExperiment</code>, <code>SingleCellExperiment</code>, S4 classes</td>
+</tr>
+<tr class="odd">
+<td>R package development</td>
+<td>
+<code>devtools</code>, <code>usethis</code>, <code>roxygen2</code>, <code>DESCRIPTION</code>, <code>NAMESPACE</code>
+</td>
+</tr>
+<tr class="even">
+<td>Automated testing</td>
+<td>
+<code>testthat</code> (edition 3), happy-path + error-case coverage</td>
+</tr>
+<tr class="odd">
+<td>Documentation &amp; publishing</td>
+<td>
+<code>roxygen2</code>, <code>pkgdown</code>, vignettes, README-driven onboarding</td>
+</tr>
+<tr class="even">
+<td>User experience &amp; input validation</td>
+<td>Informative errors (<code>rlang</code>/<code><a href="https://rdrr.io/r/base/stop.html" class="external-link">stop()</a></code>), Shiny validation, CLI <code>--help</code>
+</td>
+</tr>
+<tr class="odd">
+<td>Interactive applications</td>
+<td>
+<code>shiny</code>, <code>bslib</code>, <code>DT</code>, reactive programming</td>
+</tr>
+<tr class="even">
+<td>CLI design</td>
+<td>
+<code>Rapp</code> (argument parsing, subcommands, launcher installation)</td>
+</tr>
+<tr class="odd">
+<td>Visualization</td>
+<td>
+<code>ggplot2</code>, <code>ComplexHeatmap</code>
+</td>
+</tr>
+<tr class="even">
+<td>Reproducibility &amp; collaboration</td>
+<td>Git/GitHub, GitHub Actions CI/CD, <code>data-raw/</code> scripts, tagged releases</td>
+</tr>
+</tbody>
+</table>
+</div>
+</div>
+<div class="section level2">
+<h2 id="lectures">Lectures<a class="anchor" aria-label="anchor" href="#lectures"></a>
+</h2>
+<p>All lectures are available as pkgdown articles on the <a href="https://st-jude-ms-abds.github.io/ADS8192/" class="external-link">course site</a>. Source <code>.Rmd</code> files live in <code>vignettes/articles/</code>.</p>
+<table class="table">
+<colgroup>
+<col width="9%">
+<col width="22%">
+<col width="67%">
+</colgroup>
+<thead><tr class="header">
+<th>#</th>
+<th>Topic</th>
+<th>What Students Learn</th>
+</tr></thead>
+<tbody>
+<tr class="odd">
+<td>03</td>
+<td>Data Structures &amp; Bioconductor</td>
+<td>Build a <code>SummarizedExperiment</code> from scratch; write constructor, analysis, plotting, and export functions with input validation</td>
+</tr>
+<tr class="even">
+<td>05</td>
+<td>Package Development (devtools)</td>
+<td>Turn loose scripts into a valid R package; <code>DESCRIPTION</code>, <code>NAMESPACE</code>, <code>roxygen2</code> exports/imports, <code>devtools::check()</code>
+</td>
+</tr>
+<tr class="odd">
+<td>06</td>
+<td>Package Development (pkgdown, testthat)</td>
+<td>Write <code>testthat</code> tests (happy path + error cases); build and deploy a <code>pkgdown</code> documentation site</td>
+</tr>
+<tr class="even">
+<td>07</td>
+<td>Shiny Reactivity</td>
+<td>Understand the reactive graph; build a UI with <code>bslib</code>; connect inputs → reactive expressions → outputs</td>
+</tr>
+<tr class="odd">
+<td>08</td>
+<td>Shiny Packaging &amp; Deployment</td>
+<td>Embed a Shiny app inside an R package (<code><a href="reference/run_app.html">run_app()</a></code>); deploy to Posit Connect</td>
+</tr>
+<tr class="even">
+<td>09</td>
+<td>CLI Design (Rapp)</td>
+<td>Design a CLI with <code>Rapp</code>; argument types, defaults, help text; call package functions from <code>exec/</code> scripts</td>
+</tr>
+<tr class="odd">
+<td>10</td>
+<td>CLI Packaging &amp; Installation</td>
+<td>Ship the CLI with the package; <code><a href="https://rdrr.io/pkg/Rapp/man/install_pkg_cli_apps.html" class="external-link">Rapp::install_pkg_cli_apps()</a></code>; launcher functions; README documentation</td>
+</tr>
+<tr class="even">
+<td>11</td>
+<td>Review &amp; Q/A</td>
+<td>Systematic debugging workflow; end-to-end validation of all deliverables before submission</td>
+</tr>
+</tbody>
+</table>
+<p>Each lecture includes working code examples (using the <code>airway</code> dataset), in-class exercises, discussion prompts, and after-class micro-tasks.</p>
+</div>
+<div class="section level2">
+<h2 id="assessments">Assessments<a class="anchor" aria-label="anchor" href="#assessments"></a>
+</h2>
+<ul>
+<li>
+<strong>Quizzes</strong> (one per lecture): theory, design rationale, and conceptual understanding</li>
+<li>
+<strong>Homework 1</strong> (25 pts): Build a complete R package implementing one of 13 small computational analyses with all three interfaces. See the <a href="https://st-jude-ms-abds.github.io/ADS8192/articles/HW1_Rubric.html" class="external-link">HW1 Rubric</a> and <a href="https://st-jude-ms-abds.github.io/ADS8192/articles/project-selection.html" class="external-link">Project Selection Guide</a>.</li>
+</ul>
+<div class="section level3">
+<h3 id="hw1--culminating-project">HW1 — Culminating Project<a class="anchor" aria-label="anchor" href="#hw1--culminating-project"></a>
+</h3>
+<p>HW1 is the capstone deliverable for Unit 1. Each student selects a project (or proposes a custom one) and delivers a public GitHub repository containing an R package with:</p>
+<table class="table">
+<colgroup>
+<col width="27%">
+<col width="22%">
+<col width="50%">
+</colgroup>
+<thead><tr class="header">
+<th>Category</th>
+<th>Points</th>
+<th>Key Requirements</th>
+</tr></thead>
+<tbody>
+<tr class="odd">
+<td>Package Structure &amp; Installation</td>
+<td>4</td>
+<td>Valid <code>DESCRIPTION</code>, <code>NAMESPACE</code>, installs from GitHub, bundled example data</td>
+</tr>
+<tr class="even">
+<td>Core Analysis Functions</td>
+<td>5</td>
+<td>Constructor (<code><a href="reference/make_se.html">make_se()</a></code> / <code>make_sce()</code>), analysis, summary, and plotting functions</td>
+</tr>
+<tr class="odd">
+<td>Testing</td>
+<td>4</td>
+<td>≥ 8 <code>testthat</code> expectations, happy-path + error-case coverage</td>
+</tr>
+<tr class="even">
+<td>Documentation</td>
+<td>4</td>
+<td>
+<code>roxygen2</code> help pages, README, deployed <code>pkgdown</code> site</td>
+</tr>
+<tr class="odd">
+<td>Shiny App</td>
+<td>4</td>
+<td>
+<code><a href="reference/run_app.html">run_app()</a></code> calls core functions reactively; deployed on Posit Connect</td>
+</tr>
+<tr class="even">
+<td>Command-Line Interface</td>
+<td>4</td>
+<td>
+<code>Rapp</code> entry point in <code>exec/</code>, <code>--help</code>, TSV output files</td>
+</tr>
+<tr class="odd">
+<td><strong>Total</strong></td>
+<td><strong>25</strong></td>
+<td></td>
+</tr>
+</tbody>
+</table>
+<p>Projects span bulk RNA-seq (<code>SummarizedExperiment</code>) and single-cell RNA-seq (<code>SingleCellExperiment</code>) analyses — PCA, UMAP, differential expression, clustering, QC, normalization, heatmaps, gene set scoring, correlation networks, and more. All use real Bioconductor datasets.</p>
+</div>
+</div>
+<div class="section level2">
+<h2 id="reference-implementation-this-package">Reference Implementation (This Package)<a class="anchor" aria-label="anchor" href="#reference-implementation-this-package"></a>
+</h2>
+<p>This repository <strong>is</strong> the reference implementation (Project 0: PCA Explorer). Students cannot choose this project but use it as a structural guide. It demonstrates the full “three interfaces, one core” architecture on the Bioconductor <code>airway</code> dataset (human airway smooth muscle RNA-seq, 8 samples, dexamethasone treatment vs. control).</p>
+<div class="section level3">
+<h3 id="installation">Installation<a class="anchor" aria-label="anchor" href="#installation"></a>
+</h3>
 <div class="sourceCode" id="cb1"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="co"># Install Bioconductor dependencies</span></span>
 <span><span class="kw">if</span> <span class="op">(</span><span class="op">!</span><span class="kw"><a href="https://rdrr.io/r/base/library.html" class="external-link">require</a></span><span class="op">(</span><span class="st"><a href="https://bioconductor.github.io/BiocManager/" class="external-link">"BiocManager"</a></span>, quietly <span class="op">=</span> <span class="cn">TRUE</span><span class="op">)</span><span class="op">)</span></span>
@@ -78,62 +309,48 @@
 <span><span class="fu">BiocManager</span><span class="fu">::</span><span class="fu">install</span><span class="op">(</span><span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="st">"SummarizedExperiment"</span>, <span class="st">"airway"</span><span class="op">)</span><span class="op">)</span></span>
 <span></span>
 <span><span class="co"># Install the course package</span></span>
-<span><span class="fu">remotes</span><span class="fu">::</span><span class="fu">install_github</span><span class="op">(</span><span class="st">"YOUR-USERNAME/ADS8192"</span><span class="op">)</span></span></code></pre></div>
+<span><span class="fu">remotes</span><span class="fu">::</span><span class="fu">install_github</span><span class="op">(</span><span class="st">"St-Jude-MS-ABDS/ADS8192"</span><span class="op">)</span></span></code></pre></div>
 </div>
-<div class="section level2">
-<h2 id="quick-start">Quick Start<a class="anchor" aria-label="anchor" href="#quick-start"></a>
-</h2>
+<div class="section level3">
+<h3 id="quick-start">Quick Start<a class="anchor" aria-label="anchor" href="#quick-start"></a>
+</h3>
 <div class="sourceCode" id="cb2"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="kw"><a href="https://rdrr.io/r/base/library.html" class="external-link">library</a></span><span class="op">(</span><span class="va"><a href="https://github.com/St-Jude-MS-ABDS/ADS8192" class="external-link">ADS8192</a></span><span class="op">)</span></span>
+<span><span class="kw"><a href="https://rdrr.io/r/base/library.html" class="external-link">library</a></span><span class="op">(</span><span class="va">airway</span><span class="op">)</span></span>
+<span><span class="fu"><a href="https://rdrr.io/r/utils/data.html" class="external-link">data</a></span><span class="op">(</span><span class="va">airway</span><span class="op">)</span></span>
 <span></span>
-<span><span class="co"># Load example data (100 genes, 8 samples with treatment effect)</span></span>
-<span><span class="fu"><a href="https://rdrr.io/r/utils/data.html" class="external-link">data</a></span><span class="op">(</span><span class="va">example_se</span><span class="op">)</span></span>
-<span></span>
-<span><span class="co"># Run PCA on the top 50 variable genes</span></span>
-<span><span class="va">result</span> <span class="op">&lt;-</span> <span class="fu"><a href="reference/run_pca.html">run_pca</a></span><span class="op">(</span><span class="va">example_se</span>, n_top <span class="op">=</span> <span class="fl">50</span><span class="op">)</span></span>
+<span><span class="co"># Run PCA on the top 500 variable genes</span></span>
+<span><span class="va">result</span> <span class="op">&lt;-</span> <span class="fu"><a href="reference/run_pca.html">run_pca</a></span><span class="op">(</span><span class="va">airway</span>, n_top <span class="op">=</span> <span class="fl">500</span><span class="op">)</span></span>
 <span></span>
 <span><span class="co"># Visualize</span></span>
-<span><span class="fu"><a href="reference/plot_pca.html">plot_pca</a></span><span class="op">(</span><span class="va">result</span>, color_by <span class="op">=</span> <span class="st">"treatment"</span><span class="op">)</span></span>
+<span><span class="fu"><a href="reference/plot_pca.html">plot_pca</a></span><span class="op">(</span><span class="va">result</span>, color_by <span class="op">=</span> <span class="st">"dex"</span>, shape_by <span class="op">=</span> <span class="st">"cell"</span><span class="op">)</span></span>
 <span></span>
 <span><span class="co"># Check variance explained</span></span>
 <span><span class="fu"><a href="reference/pca_variance_explained.html">pca_variance_explained</a></span><span class="op">(</span><span class="va">result</span><span class="op">)</span></span></code></pre></div>
 </div>
-<div class="section level2">
-<h2 id="three-interfaces-one-core">Three Interfaces, One Core<a class="anchor" aria-label="anchor" href="#three-interfaces-one-core"></a>
-</h2>
-<p>All three interfaces call the <strong>same core functions</strong> — no duplicated logic.</p>
 <div class="section level3">
-<h3 id="r-api">R API<a class="anchor" aria-label="anchor" href="#r-api"></a>
+<h3 id="three-interfaces">Three Interfaces<a class="anchor" aria-label="anchor" href="#three-interfaces"></a>
 </h3>
+<p><strong>R API</strong></p>
 <div class="sourceCode" id="cb3"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="kw"><a href="https://rdrr.io/r/base/library.html" class="external-link">library</a></span><span class="op">(</span><span class="va"><a href="https://github.com/St-Jude-MS-ABDS/ADS8192" class="external-link">ADS8192</a></span><span class="op">)</span></span>
-<span><span class="kw"><a href="https://rdrr.io/r/base/library.html" class="external-link">library</a></span><span class="op">(</span><span class="va">airway</span><span class="op">)</span></span>
-<span><span class="fu"><a href="https://rdrr.io/r/utils/data.html" class="external-link">data</a></span><span class="op">(</span><span class="va">airway</span><span class="op">)</span></span>
+<span><span class="fu"><a href="https://rdrr.io/r/utils/data.html" class="external-link">data</a></span><span class="op">(</span><span class="va">airway</span>, package <span class="op">=</span> <span class="st">"airway"</span><span class="op">)</span></span>
 <span><span class="va">result</span> <span class="op">&lt;-</span> <span class="fu"><a href="reference/run_pca.html">run_pca</a></span><span class="op">(</span><span class="va">airway</span>, n_top <span class="op">=</span> <span class="fl">500</span><span class="op">)</span></span>
-<span><span class="fu"><a href="reference/plot_pca.html">plot_pca</a></span><span class="op">(</span><span class="va">result</span>, color_by <span class="op">=</span> <span class="st">"dex"</span>, shape_by <span class="op">=</span> <span class="st">"cell"</span><span class="op">)</span></span></code></pre></div>
-</div>
-<div class="section level3">
-<h3 id="shiny-app">Shiny App<a class="anchor" aria-label="anchor" href="#shiny-app"></a>
-</h3>
+<span><span class="fu"><a href="reference/plot_pca.html">plot_pca</a></span><span class="op">(</span><span class="va">result</span>, color_by <span class="op">=</span> <span class="st">"dex"</span>, shape_by <span class="op">=</span> <span class="st">"cell"</span><span class="op">)</span></span>
+<span><span class="fu"><a href="reference/save_pca_results.html">save_pca_results</a></span><span class="op">(</span><span class="va">result</span>, output_dir <span class="op">=</span> <span class="st">"results/"</span><span class="op">)</span></span></code></pre></div>
+<p><strong>Shiny App</strong></p>
 <div class="sourceCode" id="cb4"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="fu">ADS8192</span><span class="fu">::</span><span class="fu"><a href="reference/run_app.html">run_app</a></span><span class="op">(</span><span class="op">)</span></span></code></pre></div>
-</div>
-<div class="section level3">
-<h3 id="command-line-interface-via-rapp">Command-Line Interface (via Rapp)<a class="anchor" aria-label="anchor" href="#command-line-interface-via-rapp"></a>
-</h3>
+<p><strong>Command-Line Interface (via Rapp)</strong></p>
 <div class="sourceCode" id="cb5"><pre class="sourceCode bash"><code class="sourceCode bash"><span id="cb5-1"><a href="#cb5-1" tabindex="-1"></a><span class="co"># Install CLI launcher (one-time)</span></span>
 <span id="cb5-2"><a href="#cb5-2" tabindex="-1"></a><span class="ex">Rscript</span> <span class="at">-e</span> <span class="st">"Rapp::install_pkg_cli_apps('ADS8192')"</span></span>
 <span id="cb5-3"><a href="#cb5-3" tabindex="-1"></a></span>
-<span id="cb5-4"><a href="#cb5-4" tabindex="-1"></a><span class="co"># Run PCA</span></span>
-<span id="cb5-5"><a href="#cb5-5" tabindex="-1"></a><span class="ex">ADS8192</span> pca <span class="at">--counts</span> counts.tsv <span class="at">--meta</span> samples.tsv <span class="at">--output</span> results/ <span class="at">--color-by</span> treatment</span>
-<span id="cb5-6"><a href="#cb5-6" tabindex="-1"></a></span>
-<span id="cb5-7"><a href="#cb5-7" tabindex="-1"></a><span class="co"># Validate inputs</span></span>
-<span id="cb5-8"><a href="#cb5-8" tabindex="-1"></a><span class="ex">ADS8192</span> validate <span class="at">--counts</span> counts.tsv <span class="at">--meta</span> samples.tsv</span></code></pre></div>
+<span id="cb5-4"><a href="#cb5-4" tabindex="-1"></a><span class="co"># Run PCA from the terminal</span></span>
+<span id="cb5-5"><a href="#cb5-5" tabindex="-1"></a><span class="ex">ADS8192</span> pca <span class="at">--counts</span> counts.tsv <span class="at">--meta</span> samples.tsv <span class="at">--output</span> results/ <span class="at">--color-by</span> treatment</span></code></pre></div>
 </div>
-</div>
-<div class="section level2">
-<h2 id="core-functions">Core Functions<a class="anchor" aria-label="anchor" href="#core-functions"></a>
-</h2>
+<div class="section level3">
+<h3 id="core-functions">Core Functions<a class="anchor" aria-label="anchor" href="#core-functions"></a>
+</h3>
 <table class="table">
 <thead><tr class="header">
 <th>Function</th>
@@ -142,11 +359,11 @@
 <tbody>
 <tr class="odd">
 <td><code><a href="reference/make_se.html">make_se()</a></code></td>
-<td>Create SummarizedExperiment from counts + metadata</td>
+<td>Create a <code>SummarizedExperiment</code> from counts + metadata</td>
 </tr>
 <tr class="even">
 <td><code><a href="reference/top_variable_features.html">top_variable_features()</a></code></td>
-<td>Select N most variable genes</td>
+<td>Select the N most variable genes</td>
 </tr>
 <tr class="odd">
 <td><code><a href="reference/run_pca.html">run_pca()</a></code></td>
@@ -154,11 +371,11 @@
 </tr>
 <tr class="even">
 <td><code><a href="reference/pca_variance_explained.html">pca_variance_explained()</a></code></td>
-<td>Variance % per PC</td>
+<td>Variance explained per PC</td>
 </tr>
 <tr class="odd">
 <td><code><a href="reference/plot_pca.html">plot_pca()</a></code></td>
-<td>PCA scatter plot (ggplot2)</td>
+<td>PCA scatter plot (<code>ggplot2</code>)</td>
 </tr>
 <tr class="even">
 <td><code><a href="reference/save_pca_results.html">save_pca_results()</a></code></td>
@@ -166,84 +383,26 @@
 </tr>
 <tr class="odd">
 <td><code><a href="reference/run_app.html">run_app()</a></code></td>
-<td>Launch Shiny PCA Explorer</td>
+<td>Launch the Shiny PCA Explorer</td>
 </tr>
 </tbody>
 </table>
 </div>
-<div class="section level2">
-<h2 id="course-materials">Course Materials<a class="anchor" aria-label="anchor" href="#course-materials"></a>
-</h2>
-<p>Lectures are in <code>Unit1/Lectures/</code> and available as pkgdown articles:</p>
-<table class="table">
-<thead><tr class="header">
-<th>#</th>
-<th>Topic</th>
-</tr></thead>
-<tbody>
-<tr class="odd">
-<td>03</td>
-<td>Data Structures &amp; Bioconductor</td>
-</tr>
-<tr class="even">
-<td>05</td>
-<td>Package Development (devtools)</td>
-</tr>
-<tr class="odd">
-<td>06</td>
-<td>Package Development (pkgdown, testthat)</td>
-</tr>
-<tr class="even">
-<td>07</td>
-<td>Shiny Reactivity</td>
-</tr>
-<tr class="odd">
-<td>08</td>
-<td>Shiny Packaging &amp; Deployment</td>
-</tr>
-<tr class="even">
-<td>09</td>
-<td>CLI Design (Rapp)</td>
-</tr>
-<tr class="odd">
-<td>10</td>
-<td>CLI Packaging &amp; Installation</td>
-</tr>
-<tr class="even">
-<td>11</td>
-<td>Review &amp; Q/A</td>
-</tr>
-</tbody>
-</table>
 </div>
 <div class="section level2">
-<h2 id="assessments">Assessments<a class="anchor" aria-label="anchor" href="#assessments"></a>
+<h2 id="links">Links<a class="anchor" aria-label="anchor" href="#links"></a>
 </h2>
 <ul>
-<li>Quizzes: <code>Unit1/Assessments/Quiz*.docx</code>
+<li>
+<strong>pkgdown site:</strong> <a href="https://st-jude-ms-abds.github.io/ADS8192/" class="external-link uri">https://st-jude-ms-abds.github.io/ADS8192/</a>
 </li>
 <li>
-<strong><a href="Unit1/Assessments/HW1_Rubric.html">HW1 Grading Rubric</a></strong> (25 points)</li>
+<strong>GitHub:</strong> <a href="https://github.com/St-Jude-MS-ABDS/ADS8192" class="external-link uri">https://github.com/St-Jude-MS-ABDS/ADS8192</a>
+</li>
+<li>
+<strong>Issues:</strong> <a href="https://github.com/St-Jude-MS-ABDS/ADS8192/issues" class="external-link uri">https://github.com/St-Jude-MS-ABDS/ADS8192/issues</a>
+</li>
 </ul>
-</div>
-<div class="section level2">
-<h2 id="repository-structure">Repository Structure<a class="anchor" aria-label="anchor" href="#repository-structure"></a>
-</h2>
-<pre><code>ADS8192/
-├── R/                      # Package source code (core functions + Shiny app)
-├── exec/                   # Rapp CLI entry point
-├── inst/app/               # Shiny app.R entry point
-├── data/                   # Example dataset (example_se.rda)
-├── tests/testthat/         # Unit tests
-├── vignettes/              # Getting started guide + lecture articles
-├── man/                    # Generated help files
-├── Unit1/
-│   ├── Lectures/           # RMarkdown lecture documents
-│   └── Assessments/        # Quizzes (.docx) and HW1 rubric
-├── DESCRIPTION             # Package metadata
-├── NAMESPACE               # Exports/imports
-├── _pkgdown.yml            # Documentation site config
-└── generate_quizzes.py     # Quiz generation script</code></pre>
 </div>
 <div class="section level2">
 <h2 id="license">License<a class="anchor" aria-label="anchor" href="#license"></a>

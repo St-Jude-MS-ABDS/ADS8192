@@ -6,7 +6,7 @@
 <meta http-equiv="X-UA-Compatible" content="IE=edge">
 <meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
 <title>Lecture 3: Data Structures &amp; R Ecosystems (Bioconductor) • ADS8192</title>
-<script src="../deps/jquery-3.6.0/jquery-3.6.0.min.js"></script><meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
+<script src="../lightswitch.js"></script><script src="../deps/jquery-3.6.0/jquery-3.6.0.min.js"></script><meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
 <link href="../deps/bootstrap-5.3.1/bootstrap.min.css" rel="stylesheet">
 <script src="../deps/bootstrap-5.3.1/bootstrap.bundle.min.js"></script><link href="../deps/font-awesome-6.5.2/css/all.min.css" rel="stylesheet">
 <link href="../deps/font-awesome-6.5.2/css/v4-shims.min.css" rel="stylesheet">
@@ -16,7 +16,7 @@
     <a href="#main" class="visually-hidden-focusable">Skip to contents</a>
 
 
-    <nav class="navbar navbar-expand-lg fixed-top bg-primary" data-bs-theme="dark" aria-label="Site navigation"><div class="container">
+    <nav class="navbar navbar-expand-lg fixed-top " aria-label="Site navigation"><div class="container">
 
     <a class="navbar-brand me-2" href="../index.html">ADS8192</a>
 
@@ -35,6 +35,7 @@
   <ul class="dropdown-menu" aria-labelledby="dropdown-course-materials">
 <li><a class="dropdown-item" href="../articles/getting-started.html">Getting Started</a></li>
     <li><a class="dropdown-item" href="../articles/project-selection.html">Project Selection Guide</a></li>
+    <li><a class="dropdown-item" href="../articles/HW1_Rubric.html">HW1 Rubric</a></li>
     <li><hr class="dropdown-divider"></li>
     <li><h6 class="dropdown-header" data-toc-skip>Lectures</h6></li>
     <li><a class="dropdown-item" href="../articles/Lecture03_Data_Structures_Bioconductor.html">Lecture 03: Data Structures &amp; Bioconductor</a></li>
@@ -87,12 +88,14 @@ Andrews</h4>
 data and sample metadata</li>
 <li>Find and use Bioconductor package documentation (vignettes/manuals)
 to select appropriate tools</li>
-<li>Visualize elements of a <code>SummarizedExperiment</code> (assays,
-rowData, colData) with a Bioconductor visualization package</li>
-<li>Extract assay data from a <code>SummarizedExperiment</code> and use
-it to run PCA</li>
-<li>Write small, testable functions that take structured objects as
-input and return well-defined outputs</li>
+<li>Build a complete analysis core: constructor, feature selection,
+analysis, summary, plotting, and export functions</li>
+<li>Prepare a bundled example dataset using a <code>data-raw/</code>
+script</li>
+<li>Write small, testable functions with input validation that take
+structured objects as input and return well-defined outputs</li>
+<li>See how one set of core functions powers three interfaces (R API,
+Shiny, CLI)</li>
 </ol>
 <p><strong>Course Learning Outcomes (CLOs):</strong> CLO 1, 3</p>
 <hr>
@@ -639,13 +642,79 @@ instead of PC1 vs PC2. What do you observe?</p>
 <hr>
 </div>
 </div>
+<div class="section level3">
+<h3 id="function-6-save_pca_results-export-results-to-files">Function 6: <code>save_pca_results()</code> — Export Results to
+Files<a class="anchor" aria-label="anchor" href="#function-6-save_pca_results-export-results-to-files"></a>
+</h3>
+<p>The CLI and reproducible scripts need to write analysis outputs to
+disk. This function exports PCA scores, variance, and optionally a plot
+— the same outputs your CLI subcommand will produce:</p>
+<div class="sourceCode" id="cb25"><pre class="downlit sourceCode r">
+<code class="sourceCode R"><span><span class="co">#' Save PCA results to files</span></span>
+<span><span class="co">#'</span></span>
+<span><span class="co">#' @param pca_result Output from run_pca()</span></span>
+<span><span class="co">#' @param output_dir Directory to save files (created if it doesn't exist)</span></span>
+<span><span class="co">#' @param color_by Optional: metadata column for PCA plot coloring</span></span>
+<span><span class="co">#'</span></span>
+<span><span class="co">#' @return Invisible NULL; called for side effects (writing files)</span></span>
+<span><span class="va">save_pca_results</span> <span class="op">&lt;-</span> <span class="kw">function</span><span class="op">(</span><span class="va">pca_result</span>, <span class="va">output_dir</span>, <span class="va">color_by</span> <span class="op">=</span> <span class="cn">NULL</span><span class="op">)</span> <span class="op">{</span></span>
+<span>    <span class="kw">if</span> <span class="op">(</span><span class="op">!</span><span class="fu"><a href="https://rdrr.io/r/base/character.html" class="external-link">is.character</a></span><span class="op">(</span><span class="va">output_dir</span><span class="op">)</span> <span class="op">||</span> <span class="fu"><a href="https://rdrr.io/r/base/length.html" class="external-link">length</a></span><span class="op">(</span><span class="va">output_dir</span><span class="op">)</span> <span class="op">!=</span> <span class="fl">1</span><span class="op">)</span> <span class="op">{</span></span>
+<span>        <span class="kw"><a href="https://rdrr.io/r/base/stop.html" class="external-link">stop</a></span><span class="op">(</span><span class="st">"output_dir must be a single directory path"</span><span class="op">)</span></span>
+<span>    <span class="op">}</span></span>
+<span>    </span>
+<span>    <span class="kw">if</span> <span class="op">(</span><span class="op">!</span><span class="fu"><a href="https://rdrr.io/r/base/files2.html" class="external-link">dir.exists</a></span><span class="op">(</span><span class="va">output_dir</span><span class="op">)</span><span class="op">)</span> <span class="op">{</span></span>
+<span>        <span class="fu"><a href="https://rdrr.io/r/base/files2.html" class="external-link">dir.create</a></span><span class="op">(</span><span class="va">output_dir</span>, recursive <span class="op">=</span> <span class="cn">TRUE</span><span class="op">)</span></span>
+<span>    <span class="op">}</span></span>
+<span>    </span>
+<span>    <span class="co"># Export PCA scores</span></span>
+<span>    <span class="va">scores_file</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/base/file.path.html" class="external-link">file.path</a></span><span class="op">(</span><span class="va">output_dir</span>, <span class="st">"pca_scores.tsv"</span><span class="op">)</span></span>
+<span>    <span class="fu"><a href="https://rdrr.io/r/utils/write.table.html" class="external-link">write.table</a></span><span class="op">(</span><span class="va">pca_result</span><span class="op">$</span><span class="va">scores</span>, <span class="va">scores_file</span>, sep <span class="op">=</span> <span class="st">"\t"</span>,</span>
+<span>                row.names <span class="op">=</span> <span class="cn">FALSE</span>, quote <span class="op">=</span> <span class="cn">FALSE</span><span class="op">)</span></span>
+<span>    <span class="fu"><a href="https://rdrr.io/r/base/message.html" class="external-link">message</a></span><span class="op">(</span><span class="st">"Wrote: "</span>, <span class="va">scores_file</span><span class="op">)</span></span>
+<span>    </span>
+<span>    <span class="co"># Export variance explained</span></span>
+<span>    <span class="va">var_df</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/pca_variance_explained.html">pca_variance_explained</a></span><span class="op">(</span><span class="va">pca_result</span><span class="op">)</span></span>
+<span>    <span class="va">var_file</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/base/file.path.html" class="external-link">file.path</a></span><span class="op">(</span><span class="va">output_dir</span>, <span class="st">"pca_variance.tsv"</span><span class="op">)</span></span>
+<span>    <span class="fu"><a href="https://rdrr.io/r/utils/write.table.html" class="external-link">write.table</a></span><span class="op">(</span><span class="va">var_df</span>, <span class="va">var_file</span>, sep <span class="op">=</span> <span class="st">"\t"</span>,</span>
+<span>                row.names <span class="op">=</span> <span class="cn">FALSE</span>, quote <span class="op">=</span> <span class="cn">FALSE</span><span class="op">)</span></span>
+<span>    <span class="fu"><a href="https://rdrr.io/r/base/message.html" class="external-link">message</a></span><span class="op">(</span><span class="st">"Wrote: "</span>, <span class="va">var_file</span><span class="op">)</span></span>
+<span>    </span>
+<span>    <span class="co"># Optionally save the plot</span></span>
+<span>    <span class="kw">if</span> <span class="op">(</span><span class="op">!</span><span class="fu"><a href="https://rdrr.io/r/base/NULL.html" class="external-link">is.null</a></span><span class="op">(</span><span class="va">color_by</span><span class="op">)</span><span class="op">)</span> <span class="op">{</span></span>
+<span>        <span class="va">plot_file</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/base/file.path.html" class="external-link">file.path</a></span><span class="op">(</span><span class="va">output_dir</span>, <span class="st">"pca_plot.png"</span><span class="op">)</span></span>
+<span>        <span class="va">p</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/plot_pca.html">plot_pca</a></span><span class="op">(</span><span class="va">pca_result</span>, color_by <span class="op">=</span> <span class="va">color_by</span><span class="op">)</span></span>
+<span>        <span class="fu">ggplot2</span><span class="fu">::</span><span class="fu"><a href="https://ggplot2.tidyverse.org/reference/ggsave.html" class="external-link">ggsave</a></span><span class="op">(</span><span class="va">plot_file</span>, <span class="va">p</span>, width <span class="op">=</span> <span class="fl">8</span>, height <span class="op">=</span> <span class="fl">6</span>, dpi <span class="op">=</span> <span class="fl">150</span><span class="op">)</span></span>
+<span>        <span class="fu"><a href="https://rdrr.io/r/base/message.html" class="external-link">message</a></span><span class="op">(</span><span class="st">"Wrote: "</span>, <span class="va">plot_file</span><span class="op">)</span></span>
+<span>    <span class="op">}</span></span>
+<span>    </span>
+<span>    <span class="fu"><a href="https://rdrr.io/r/base/invisible.html" class="external-link">invisible</a></span><span class="op">(</span><span class="cn">NULL</span><span class="op">)</span></span>
+<span><span class="op">}</span></span></code></pre></div>
+<div class="sourceCode" id="cb26"><pre class="downlit sourceCode r">
+<code class="sourceCode R"><span><span class="co"># Save results to a temporary directory</span></span>
+<span><span class="va">tmp_out</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/base/file.path.html" class="external-link">file.path</a></span><span class="op">(</span><span class="fu"><a href="https://rdrr.io/r/base/tempfile.html" class="external-link">tempdir</a></span><span class="op">(</span><span class="op">)</span>, <span class="st">"pca_output"</span><span class="op">)</span></span>
+<span><span class="fu"><a href="../reference/save_pca_results.html">save_pca_results</a></span><span class="op">(</span><span class="va">pca_result</span>, <span class="va">tmp_out</span>, color_by <span class="op">=</span> <span class="st">"dex"</span><span class="op">)</span></span>
+<span></span>
+<span><span class="co"># Check what was created</span></span>
+<span><span class="fu"><a href="https://rdrr.io/r/base/list.files.html" class="external-link">list.files</a></span><span class="op">(</span><span class="va">tmp_out</span><span class="op">)</span></span>
+<span></span>
+<span><span class="co"># Read back and verify</span></span>
+<span><span class="va">scores_back</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/utils/read.table.html" class="external-link">read.table</a></span><span class="op">(</span><span class="fu"><a href="https://rdrr.io/r/base/file.path.html" class="external-link">file.path</a></span><span class="op">(</span><span class="va">tmp_out</span>, <span class="st">"pca_scores.tsv"</span><span class="op">)</span>,</span>
+<span>                          header <span class="op">=</span> <span class="cn">TRUE</span>, sep <span class="op">=</span> <span class="st">"\t"</span><span class="op">)</span></span>
+<span><span class="fu"><a href="https://rdrr.io/r/utils/head.html" class="external-link">head</a></span><span class="op">(</span><span class="va">scores_back</span><span class="op">)</span></span></code></pre></div>
+<blockquote>
+<p><strong>Note:</strong> Every project in the <a href="project-selection.html">Project Selection Guide</a> must produce
+TSV files from the CLI. Your export function is the bridge between the
+analysis core and the command line.</p>
+</blockquote>
+<hr>
+</div>
 </div>
 <div class="section level2">
 <h2 id="visualization-with-complexheatmap">Visualization with ComplexHeatmap<a class="anchor" aria-label="anchor" href="#visualization-with-complexheatmap"></a>
 </h2>
 <p>Let’s visualize the top variable genes using a heatmap. This is a
 common way to explore patterns in gene expression data.</p>
-<div class="sourceCode" id="cb25"><pre class="downlit sourceCode r">
+<div class="sourceCode" id="cb27"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="co"># Get top 20 most variable genes for visualization</span></span>
 <span><span class="va">se_top20</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/top_variable_features.html">top_variable_features</a></span><span class="op">(</span><span class="va">airway</span>, n <span class="op">=</span> <span class="fl">20</span><span class="op">)</span></span>
 <span></span>
@@ -654,7 +723,7 @@ common way to explore patterns in gene expression data.</p>
 <span></span>
 <span><span class="co"># Scale by row (gene) for better visualization</span></span>
 <span><span class="va">heatmap_mat</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/base/t.html" class="external-link">t</a></span><span class="op">(</span><span class="fu"><a href="https://rdrr.io/r/base/scale.html" class="external-link">scale</a></span><span class="op">(</span><span class="fu"><a href="https://rdrr.io/r/base/t.html" class="external-link">t</a></span><span class="op">(</span><span class="va">heatmap_mat</span><span class="op">)</span><span class="op">)</span><span class="op">)</span></span></code></pre></div>
-<div class="sourceCode" id="cb26"><pre class="downlit sourceCode r">
+<div class="sourceCode" id="cb28"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="co"># Create annotation for columns (samples)</span></span>
 <span><span class="va">col_anno</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/pkg/ComplexHeatmap/man/HeatmapAnnotation.html" class="external-link">HeatmapAnnotation</a></span><span class="op">(</span></span>
 <span>    treatment <span class="op">=</span> <span class="va">airway</span><span class="op">$</span><span class="va">dex</span>,</span>
@@ -684,56 +753,109 @@ readability.</p>
 <hr>
 </div>
 <div class="section level2">
+<h2 id="preparing-example-data-data-raw">Preparing Example Data (<code>data-raw/</code>)<a class="anchor" aria-label="anchor" href="#preparing-example-data-data-raw"></a>
+</h2>
+<p>Every package you build for <a href="HW1_Rubric.html">HW1</a> must
+include a <strong>bundled example dataset</strong> in <code>data/</code>
+that is loadable via <code><a href="https://rdrr.io/r/utils/data.html" class="external-link">data()</a></code>. The dataset should be
+generated by a reproducible script in <code>data-raw/</code>. Here is
+the pattern for our reference package, starting from the full
+<code>airway</code> dataset:</p>
+<div class="sourceCode" id="cb29"><pre class="downlit sourceCode r">
+<code class="sourceCode R"><span><span class="co">## data-raw/example_se.R</span></span>
+<span><span class="co">## -----------------------------------------------------------</span></span>
+<span><span class="co">## This script creates a small example SummarizedExperiment</span></span>
+<span><span class="co">## from the airway dataset for use in package examples and tests.</span></span>
+<span><span class="co">## -----------------------------------------------------------</span></span>
+<span><span class="kw"><a href="https://rdrr.io/r/base/library.html" class="external-link">library</a></span><span class="op">(</span><span class="va"><a href="https://bioconductor.org/packages/SummarizedExperiment" class="external-link">SummarizedExperiment</a></span><span class="op">)</span></span>
+<span><span class="kw"><a href="https://rdrr.io/r/base/library.html" class="external-link">library</a></span><span class="op">(</span><span class="va">airway</span><span class="op">)</span></span>
+<span></span>
+<span><span class="fu"><a href="https://rdrr.io/r/utils/data.html" class="external-link">data</a></span><span class="op">(</span><span class="st">"airway"</span><span class="op">)</span></span>
+<span></span>
+<span><span class="co"># Keep top 100 most variable genes + 400 random genes = 500 total</span></span>
+<span><span class="va">counts</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/pkg/SummarizedExperiment/man/SummarizedExperiment-class.html" class="external-link">assay</a></span><span class="op">(</span><span class="va">airway</span>, <span class="st">"counts"</span><span class="op">)</span></span>
+<span><span class="va">vars</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/base/apply.html" class="external-link">apply</a></span><span class="op">(</span><span class="va">counts</span>, <span class="fl">1</span>, <span class="va">var</span><span class="op">)</span></span>
+<span><span class="va">top100</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/base/names.html" class="external-link">names</a></span><span class="op">(</span><span class="fu"><a href="https://rdrr.io/r/base/sort.html" class="external-link">sort</a></span><span class="op">(</span><span class="va">vars</span>, decreasing <span class="op">=</span> <span class="cn">TRUE</span><span class="op">)</span><span class="op">)</span><span class="op">[</span><span class="fl">1</span><span class="op">:</span><span class="fl">100</span><span class="op">]</span></span>
+<span></span>
+<span><span class="fu"><a href="https://rdrr.io/r/base/Random.html" class="external-link">set.seed</a></span><span class="op">(</span><span class="fl">42</span><span class="op">)</span></span>
+<span><span class="va">rest</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/base/sample.html" class="external-link">sample</a></span><span class="op">(</span><span class="fu"><a href="https://generics.r-lib.org/reference/setops.html" class="external-link">setdiff</a></span><span class="op">(</span><span class="fu"><a href="https://rdrr.io/r/base/colnames.html" class="external-link">rownames</a></span><span class="op">(</span><span class="va">counts</span><span class="op">)</span>, <span class="va">top100</span><span class="op">)</span>, <span class="fl">400</span><span class="op">)</span></span>
+<span></span>
+<span><span class="va">example_se</span> <span class="op">&lt;-</span> <span class="va">airway</span><span class="op">[</span><span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="va">top100</span>, <span class="va">rest</span><span class="op">)</span>, <span class="op">]</span></span>
+<span></span>
+<span><span class="co"># Simplify colData to the columns students will use</span></span>
+<span><span class="fu"><a href="https://rdrr.io/pkg/SummarizedExperiment/man/SummarizedExperiment-class.html" class="external-link">colData</a></span><span class="op">(</span><span class="va">example_se</span><span class="op">)</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/pkg/SummarizedExperiment/man/SummarizedExperiment-class.html" class="external-link">colData</a></span><span class="op">(</span><span class="va">example_se</span><span class="op">)</span><span class="op">[</span>, <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="st">"cell"</span>, <span class="st">"dex"</span><span class="op">)</span><span class="op">]</span></span>
+<span><span class="fu"><a href="https://rdrr.io/r/base/colnames.html" class="external-link">colnames</a></span><span class="op">(</span><span class="fu"><a href="https://rdrr.io/pkg/SummarizedExperiment/man/SummarizedExperiment-class.html" class="external-link">colData</a></span><span class="op">(</span><span class="va">example_se</span><span class="op">)</span><span class="op">)</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="st">"cell_line"</span>, <span class="st">"treatment"</span><span class="op">)</span></span>
+<span></span>
+<span><span class="co"># Save to data/</span></span>
+<span><span class="fu">usethis</span><span class="fu">::</span><span class="fu">use_data</span><span class="op">(</span><span class="va">example_se</span>, overwrite <span class="op">=</span> <span class="cn">TRUE</span><span class="op">)</span></span></code></pre></div>
+<p>After running this script, <code>data/example_se.rda</code> is
+created and users can load it with <code>data("example_se")</code>.</p>
+<blockquote>
+<p><strong>For your project:</strong> Adapt this pattern for your chosen
+dataset. See the <code>data-raw/</code> scripts in each <a href="project-selection.html">project description</a>. Single-cell
+projects will save an <code>example_sce</code> instead.</p>
+</blockquote>
+<hr>
+</div>
+<div class="section level2">
 <h2 id="summary-the-analysis-core">Summary: The Analysis Core<a class="anchor" aria-label="anchor" href="#summary-the-analysis-core"></a>
 </h2>
-<p>We now have five core functions that work together:</p>
+<p>We now have six core functions that work together — everything a
+student package needs for the <a href="HW1_Rubric.html">HW1
+rubric</a>:</p>
 <table class="table">
 <colgroup>
-<col width="29%">
-<col width="26%">
-<col width="20%">
-<col width="23%">
+<col width="39%">
+<col width="24%">
+<col width="17%">
+<col width="19%">
 </colgroup>
 <thead><tr class="header">
+<th>Rubric Category</th>
 <th>Function</th>
-<th>Purpose</th>
 <th>Input</th>
 <th>Output</th>
 </tr></thead>
 <tbody>
 <tr class="odd">
+<td>Constructor (1 pt)</td>
 <td><code><a href="../reference/make_se.html">make_se()</a></code></td>
-<td>Create SE from raw data</td>
 <td>counts matrix + metadata</td>
 <td>SummarizedExperiment</td>
 </tr>
 <tr class="even">
+<td>Analysis #1 (1 pt)</td>
 <td><code><a href="../reference/top_variable_features.html">top_variable_features()</a></code></td>
-<td>Select variable genes</td>
 <td>SE + n</td>
 <td>Subsetted SE</td>
 </tr>
 <tr class="odd">
+<td>Analysis #2 (1 pt)</td>
 <td><code><a href="../reference/run_pca.html">run_pca()</a></code></td>
-<td>Perform PCA</td>
 <td>SE + parameters</td>
 <td>list(pca, scores)</td>
 </tr>
 <tr class="even">
+<td>Summary/metric (1 pt)</td>
 <td><code><a href="../reference/pca_variance_explained.html">pca_variance_explained()</a></code></td>
-<td>Get variance stats</td>
 <td>PCA result</td>
 <td>data.frame</td>
 </tr>
 <tr class="odd">
+<td>Plotting (1 pt)</td>
 <td><code><a href="../reference/plot_pca.html">plot_pca()</a></code></td>
-<td>Visualize PCA</td>
 <td>PCA result + aesthetics</td>
 <td>ggplot</td>
 </tr>
+<tr class="even">
+<td>Export (CLI)</td>
+<td><code><a href="../reference/save_pca_results.html">save_pca_results()</a></code></td>
+<td>PCA result + output dir</td>
+<td>TSV files on disk</td>
+</tr>
 </tbody>
 </table>
-<p>These functions:</p>
+<p>Design principles shared by all six:</p>
 <ul>
 <li>
 <strong>Take structured objects as input</strong> — Not loose
@@ -741,6 +863,9 @@ matrices that can get out of sync</li>
 <li>
 <strong>Return well-defined outputs</strong> — Predictable return
 types make them composable</li>
+<li>
+<strong>Validate inputs with <code><a href="https://rdrr.io/r/base/stop.html" class="external-link">stop()</a></code></strong> —
+Informative error messages, not silent failures</li>
 <li>
 <strong>Are small and testable</strong> — Each does one thing
 well</li>
@@ -751,22 +876,110 @@ variables or specific file paths</li>
 <hr>
 </div>
 <div class="section level2">
+<h2 id="three-interfaces-one-core">Three Interfaces, One Core<a class="anchor" aria-label="anchor" href="#three-interfaces-one-core"></a>
+</h2>
+<p>The six functions above form the <strong>analysis core</strong>. For
+HW1, you will expose them through <strong>three interfaces</strong> —
+each calling the same core functions:</p>
+<pre><code>                    Analysis Core
+  make_se() → run_pca() → plot_pca() → save_pca_results()
+        ↑            ↑            ↑            ↑
+   ┌────┴────┐  ┌────┴────┐  ┌───┴─────┐ ┌───┴─────┐
+   │ R API   │  │ Shiny   │  │  CLI    │ │  Tests  │
+   │ (users) │  │ (web)   │  │(scripts)│ │(testthat)│
+   └─────────┘  └─────────┘  └─────────┘ └─────────┘</code></pre>
+<div class="section level4">
+<h4 id="interface-1-r-api-lectures-56">Interface 1: R API (Lectures 5–6)<a class="anchor" aria-label="anchor" href="#interface-1-r-api-lectures-56"></a>
+</h4>
+<p>Users call your exported functions directly from R:</p>
+<div class="sourceCode" id="cb31"><pre class="downlit sourceCode r">
+<code class="sourceCode R"><span><span class="kw"><a href="https://rdrr.io/r/base/library.html" class="external-link">library</a></span><span class="op">(</span><span class="va">sePCA</span><span class="op">)</span></span>
+<span><span class="fu"><a href="https://rdrr.io/r/utils/data.html" class="external-link">data</a></span><span class="op">(</span><span class="st">"example_se"</span><span class="op">)</span></span>
+<span><span class="va">result</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/run_pca.html">run_pca</a></span><span class="op">(</span><span class="va">example_se</span>, n_top <span class="op">=</span> <span class="fl">500</span><span class="op">)</span></span>
+<span><span class="fu"><a href="../reference/plot_pca.html">plot_pca</a></span><span class="op">(</span><span class="va">result</span>, color_by <span class="op">=</span> <span class="st">"treatment"</span><span class="op">)</span></span>
+<span><span class="fu"><a href="../reference/save_pca_results.html">save_pca_results</a></span><span class="op">(</span><span class="va">result</span>, <span class="st">"results/"</span><span class="op">)</span></span></code></pre></div>
+</div>
+<div class="section level4">
+<h4 id="interface-2-shiny-app-lectures-78">Interface 2: Shiny App (Lectures 7–8)<a class="anchor" aria-label="anchor" href="#interface-2-shiny-app-lectures-78"></a>
+</h4>
+<p>The Shiny server calls the same functions reactively:</p>
+<div class="sourceCode" id="cb32"><pre class="downlit sourceCode r">
+<code class="sourceCode R"><span><span class="co"># Inside app_server.R (simplified)</span></span>
+<span><span class="va">result</span> <span class="op">&lt;-</span> <span class="fu">reactive</span><span class="op">(</span><span class="op">{</span></span>
+<span>    <span class="fu"><a href="../reference/run_pca.html">run_pca</a></span><span class="op">(</span><span class="fu"><a href="https://rdrr.io/r/utils/data.html" class="external-link">data</a></span><span class="op">(</span><span class="op">)</span>, n_top <span class="op">=</span> <span class="va">input</span><span class="op">$</span><span class="va">n_top</span><span class="op">)</span></span>
+<span><span class="op">}</span><span class="op">)</span></span>
+<span></span>
+<span><span class="va">output</span><span class="op">$</span><span class="va">pca_plot</span> <span class="op">&lt;-</span> <span class="fu">renderPlot</span><span class="op">(</span><span class="op">{</span></span>
+<span>    <span class="fu"><a href="../reference/plot_pca.html">plot_pca</a></span><span class="op">(</span><span class="fu">result</span><span class="op">(</span><span class="op">)</span>, color_by <span class="op">=</span> <span class="va">input</span><span class="op">$</span><span class="va">color_by</span><span class="op">)</span></span>
+<span><span class="op">}</span><span class="op">)</span></span></code></pre></div>
+</div>
+<div class="section level4">
+<h4 id="interface-3-cli-via-rapp-lectures-910">Interface 3: CLI via Rapp (Lectures 9–10)<a class="anchor" aria-label="anchor" href="#interface-3-cli-via-rapp-lectures-910"></a>
+</h4>
+<p>The CLI script in <code>exec/</code> parses arguments and calls the
+same functions:</p>
+<div class="sourceCode" id="cb33"><pre class="downlit sourceCode r">
+<code class="sourceCode R"><span><span class="co">#!/usr/bin/env Rapp</span></span>
+<span><span class="co">#| name: sePCA</span></span>
+<span><span class="co">#| description: PCA analysis for SummarizedExperiment data.</span></span>
+<span></span>
+<span><span class="fu"><a href="https://rdrr.io/r/base/message.html" class="external-link">suppressPackageStartupMessages</a></span><span class="op">(</span><span class="kw"><a href="https://rdrr.io/r/base/library.html" class="external-link">library</a></span><span class="op">(</span><span class="va">sePCA</span><span class="op">)</span><span class="op">)</span></span>
+<span></span>
+<span><span class="va">counts</span> <span class="op">&lt;-</span> <span class="st">""</span>   <span class="co"># --counts FILE</span></span>
+<span><span class="va">meta</span>   <span class="op">&lt;-</span> <span class="st">""</span>   <span class="co"># --meta   FILE</span></span>
+<span><span class="va">output</span> <span class="op">&lt;-</span> <span class="st">""</span>   <span class="co"># --output DIR</span></span>
+<span><span class="va">n_top</span>  <span class="op">&lt;-</span> <span class="fl">500L</span> <span class="co"># --n-top  INT</span></span>
+<span></span>
+<span><span class="co"># Read data, build SE, run analysis, save results</span></span>
+<span><span class="va">counts_df</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/utils/read.table.html" class="external-link">read.table</a></span><span class="op">(</span><span class="va">counts</span>, sep <span class="op">=</span> <span class="st">"\t"</span>, header <span class="op">=</span> <span class="cn">TRUE</span>, row.names <span class="op">=</span> <span class="fl">1</span><span class="op">)</span></span>
+<span><span class="va">meta_df</span>   <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/utils/read.table.html" class="external-link">read.table</a></span><span class="op">(</span><span class="va">meta</span>,   sep <span class="op">=</span> <span class="st">"\t"</span>, header <span class="op">=</span> <span class="cn">TRUE</span>, row.names <span class="op">=</span> <span class="fl">1</span><span class="op">)</span></span>
+<span><span class="va">se</span>     <span class="op">&lt;-</span> <span class="fu"><a href="../reference/make_se.html">make_se</a></span><span class="op">(</span><span class="fu"><a href="https://rdrr.io/r/base/matrix.html" class="external-link">as.matrix</a></span><span class="op">(</span><span class="va">counts_df</span><span class="op">)</span>, <span class="va">meta_df</span><span class="op">)</span></span>
+<span><span class="va">result</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/run_pca.html">run_pca</a></span><span class="op">(</span><span class="va">se</span>, n_top <span class="op">=</span> <span class="va">n_top</span><span class="op">)</span></span>
+<span><span class="fu"><a href="../reference/save_pca_results.html">save_pca_results</a></span><span class="op">(</span><span class="va">result</span>, <span class="va">output</span><span class="op">)</span></span></code></pre></div>
+<blockquote>
+<p><strong>Key insight:</strong> Fix a bug in <code><a href="../reference/run_pca.html">run_pca()</a></code> and
+it’s fixed in all three interfaces. Add a feature to
+<code><a href="../reference/plot_pca.html">plot_pca()</a></code> and the Shiny app and CLI both benefit. This is
+the power of the “three interfaces, one core” architecture.</p>
+</blockquote>
+<hr>
+</div>
+</div>
+<div class="section level2">
 <h2 id="after-class-tasks">After-Class Tasks<a class="anchor" aria-label="anchor" href="#after-class-tasks"></a>
 </h2>
 <div class="section level3">
 <h3 id="micro-task-1-create-analysis_core-r">Micro-task 1: Create <code>analysis_core.R</code><a class="anchor" aria-label="anchor" href="#micro-task-1-create-analysis_core-r"></a>
 </h3>
-<p>Put all five functions into a single script called
-<code>analysis_core.R</code> with:</p>
+<p>Put all six functions into a single script called
+<code>analysis_core.R</code>: <code><a href="../reference/make_se.html">make_se()</a></code>,
+<code><a href="../reference/top_variable_features.html">top_variable_features()</a></code>, <code><a href="../reference/run_pca.html">run_pca()</a></code>,
+<code><a href="../reference/pca_variance_explained.html">pca_variance_explained()</a></code>, <code><a href="../reference/plot_pca.html">plot_pca()</a></code>, and
+<code><a href="../reference/save_pca_results.html">save_pca_results()</a></code>.</p>
+<p>Requirements:</p>
 <ul>
-<li>Clear function signatures</li>
-<li>Short comments describing inputs and outputs</li>
+<li>roxygen2-style comment header for every function
+(<code>#' @param</code>, <code>#' @return</code>)</li>
+<li>Input validation using <code><a href="https://rdrr.io/r/base/stop.html" class="external-link">stop()</a></code> in <code><a href="../reference/make_se.html">make_se()</a></code>
+and <code><a href="../reference/save_pca_results.html">save_pca_results()</a></code>
+</li>
 <li>No <code><a href="https://rdrr.io/r/base/library.html" class="external-link">library()</a></code> calls inside the functions (we’ll handle
 dependencies properly in Lecture 5)</li>
 </ul>
 </div>
 <div class="section level3">
-<h3 id="micro-task-2-reflection">Micro-task 2: Reflection<a class="anchor" aria-label="anchor" href="#micro-task-2-reflection"></a>
+<h3 id="micro-task-2-choose-your-project-write-data-raw">Micro-task 2: Choose Your Project &amp; Write
+<code>data-raw/</code><a class="anchor" aria-label="anchor" href="#micro-task-2-choose-your-project-write-data-raw"></a>
+</h3>
+<p>Browse the <a href="project-selection.html">Project Selection
+Guide</a> and pick your HW1 project. Then write the
+<code>data-raw/example_se.R</code> (or <code>example_sce.R</code>)
+script that downloads your chosen Bioconductor dataset and prepares a
+bundled example object. Verify that your script runs end-to-end and that
+you can call <code>usethis::use_data()</code> on the result.</p>
+</div>
+<div class="section level3">
+<h3 id="micro-task-3-reflection">Micro-task 3: Reflection<a class="anchor" aria-label="anchor" href="#micro-task-3-reflection"></a>
 </h3>
 <p>Write 3-5 sentences describing why a structured container
 (<code>SummarizedExperiment</code>) is preferable to passing 3 separate
@@ -781,6 +994,11 @@ dependencies properly in Lecture 5)</li>
 <h3 id="reading">Reading<a class="anchor" aria-label="anchor" href="#reading"></a>
 </h3>
 <ul>
+<li>
+<a href="project-selection.html">Project Selection Guide</a> —
+choose your project!</li>
+<li>
+<a href="HW1_Rubric.html">HW1 Rubric</a> — the grading criteria</li>
 <li>Advanced R sections on OOP + S4 (alignment workbook links)</li>
 <li>SummarizedExperiment vignette (run
 <code><a href="https://bioconductor.org/packages/release/bioc/vignettes/SummarizedExperiment/inst/doc/SummarizedExperiment.html" class="external-link">vignette("SummarizedExperiment")</a></code>)</li>
@@ -791,7 +1009,7 @@ dependencies properly in Lecture 5)</li>
 <div class="section level2">
 <h2 id="appendix-complete-function-reference">Appendix: Complete Function Reference<a class="anchor" aria-label="anchor" href="#appendix-complete-function-reference"></a>
 </h2>
-<div class="sourceCode" id="cb27"><pre class="downlit sourceCode r">
+<div class="sourceCode" id="cb34"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="co"># SAVE THIS AS: analysis_core.R</span></span>
 <span></span>
 <span><span class="co">#' Create a SummarizedExperiment from counts and metadata</span></span>
@@ -863,13 +1081,34 @@ dependencies properly in Lecture 5)</li>
 <span>    <span class="kw">if</span> <span class="op">(</span><span class="op">!</span><span class="fu"><a href="https://rdrr.io/r/base/NULL.html" class="external-link">is.null</a></span><span class="op">(</span><span class="va">color_by</span><span class="op">)</span><span class="op">)</span> <span class="va">p</span> <span class="op">&lt;-</span> <span class="va">p</span> <span class="op">+</span> <span class="fu"><a href="https://ggplot2.tidyverse.org/reference/aes.html" class="external-link">aes</a></span><span class="op">(</span>color <span class="op">=</span> <span class="va">.data</span><span class="op">[[</span><span class="va">color_by</span><span class="op">]</span><span class="op">]</span><span class="op">)</span></span>
 <span>    <span class="kw">if</span> <span class="op">(</span><span class="op">!</span><span class="fu"><a href="https://rdrr.io/r/base/NULL.html" class="external-link">is.null</a></span><span class="op">(</span><span class="va">shape_by</span><span class="op">)</span><span class="op">)</span> <span class="va">p</span> <span class="op">&lt;-</span> <span class="va">p</span> <span class="op">+</span> <span class="fu"><a href="https://ggplot2.tidyverse.org/reference/aes.html" class="external-link">aes</a></span><span class="op">(</span>shape <span class="op">=</span> <span class="va">.data</span><span class="op">[[</span><span class="va">shape_by</span><span class="op">]</span><span class="op">]</span><span class="op">)</span></span>
 <span>    <span class="va">p</span> <span class="op">+</span> <span class="fu"><a href="https://ggplot2.tidyverse.org/reference/geom_point.html" class="external-link">geom_point</a></span><span class="op">(</span>size <span class="op">=</span> <span class="va">point_size</span><span class="op">)</span></span>
+<span><span class="op">}</span></span>
+<span></span>
+<span><span class="co">#' Save PCA results to files</span></span>
+<span><span class="va">save_pca_results</span> <span class="op">&lt;-</span> <span class="kw">function</span><span class="op">(</span><span class="va">pca_result</span>, <span class="va">output_dir</span>, <span class="va">color_by</span> <span class="op">=</span> <span class="cn">NULL</span><span class="op">)</span> <span class="op">{</span></span>
+<span>    <span class="kw">if</span> <span class="op">(</span><span class="op">!</span><span class="fu"><a href="https://rdrr.io/r/base/character.html" class="external-link">is.character</a></span><span class="op">(</span><span class="va">output_dir</span><span class="op">)</span> <span class="op">||</span> <span class="fu"><a href="https://rdrr.io/r/base/length.html" class="external-link">length</a></span><span class="op">(</span><span class="va">output_dir</span><span class="op">)</span> <span class="op">!=</span> <span class="fl">1</span><span class="op">)</span> <span class="op">{</span></span>
+<span>        <span class="kw"><a href="https://rdrr.io/r/base/stop.html" class="external-link">stop</a></span><span class="op">(</span><span class="st">"output_dir must be a single directory path"</span><span class="op">)</span></span>
+<span>    <span class="op">}</span></span>
+<span>    <span class="kw">if</span> <span class="op">(</span><span class="op">!</span><span class="fu"><a href="https://rdrr.io/r/base/files2.html" class="external-link">dir.exists</a></span><span class="op">(</span><span class="va">output_dir</span><span class="op">)</span><span class="op">)</span> <span class="fu"><a href="https://rdrr.io/r/base/files2.html" class="external-link">dir.create</a></span><span class="op">(</span><span class="va">output_dir</span>, recursive <span class="op">=</span> <span class="cn">TRUE</span><span class="op">)</span></span>
+<span>    <span class="va">scores_file</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/base/file.path.html" class="external-link">file.path</a></span><span class="op">(</span><span class="va">output_dir</span>, <span class="st">"pca_scores.tsv"</span><span class="op">)</span></span>
+<span>    <span class="fu"><a href="https://rdrr.io/r/utils/write.table.html" class="external-link">write.table</a></span><span class="op">(</span><span class="va">pca_result</span><span class="op">$</span><span class="va">scores</span>, <span class="va">scores_file</span>, sep <span class="op">=</span> <span class="st">"\t"</span>,</span>
+<span>                row.names <span class="op">=</span> <span class="cn">FALSE</span>, quote <span class="op">=</span> <span class="cn">FALSE</span><span class="op">)</span></span>
+<span>    <span class="va">var_df</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/pca_variance_explained.html">pca_variance_explained</a></span><span class="op">(</span><span class="va">pca_result</span><span class="op">)</span></span>
+<span>    <span class="va">var_file</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/base/file.path.html" class="external-link">file.path</a></span><span class="op">(</span><span class="va">output_dir</span>, <span class="st">"pca_variance.tsv"</span><span class="op">)</span></span>
+<span>    <span class="fu"><a href="https://rdrr.io/r/utils/write.table.html" class="external-link">write.table</a></span><span class="op">(</span><span class="va">var_df</span>, <span class="va">var_file</span>, sep <span class="op">=</span> <span class="st">"\t"</span>,</span>
+<span>                row.names <span class="op">=</span> <span class="cn">FALSE</span>, quote <span class="op">=</span> <span class="cn">FALSE</span><span class="op">)</span></span>
+<span>    <span class="kw">if</span> <span class="op">(</span><span class="op">!</span><span class="fu"><a href="https://rdrr.io/r/base/NULL.html" class="external-link">is.null</a></span><span class="op">(</span><span class="va">color_by</span><span class="op">)</span><span class="op">)</span> <span class="op">{</span></span>
+<span>        <span class="va">plot_file</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/base/file.path.html" class="external-link">file.path</a></span><span class="op">(</span><span class="va">output_dir</span>, <span class="st">"pca_plot.png"</span><span class="op">)</span></span>
+<span>        <span class="va">p</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/plot_pca.html">plot_pca</a></span><span class="op">(</span><span class="va">pca_result</span>, color_by <span class="op">=</span> <span class="va">color_by</span><span class="op">)</span></span>
+<span>        <span class="fu">ggplot2</span><span class="fu">::</span><span class="fu"><a href="https://ggplot2.tidyverse.org/reference/ggsave.html" class="external-link">ggsave</a></span><span class="op">(</span><span class="va">plot_file</span>, <span class="va">p</span>, width <span class="op">=</span> <span class="fl">8</span>, height <span class="op">=</span> <span class="fl">6</span>, dpi <span class="op">=</span> <span class="fl">150</span><span class="op">)</span></span>
+<span>    <span class="op">}</span></span>
+<span>    <span class="fu"><a href="https://rdrr.io/r/base/invisible.html" class="external-link">invisible</a></span><span class="op">(</span><span class="cn">NULL</span><span class="op">)</span></span>
 <span><span class="op">}</span></span></code></pre></div>
 <hr>
 </div>
 <div class="section level2">
 <h2 id="session-info">Session Info<a class="anchor" aria-label="anchor" href="#session-info"></a>
 </h2>
-<div class="sourceCode" id="cb28"><pre class="downlit sourceCode r">
+<div class="sourceCode" id="cb35"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="fu"><a href="https://rdrr.io/r/utils/sessionInfo.html" class="external-link">sessionInfo</a></span><span class="op">(</span><span class="op">)</span></span></code></pre></div>
 </div>
   </main><aside class="col-md-3"><nav id="toc" aria-label="Table of contents"><h2>On this page</h2>

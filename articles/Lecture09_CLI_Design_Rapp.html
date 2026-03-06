@@ -6,7 +6,7 @@
 <meta http-equiv="X-UA-Compatible" content="IE=edge">
 <meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
 <title>Lecture 9: Lab – CLI Tool Development (R) – CLI Design and Rapp Basics • ADS8192</title>
-<script src="../deps/jquery-3.6.0/jquery-3.6.0.min.js"></script><meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
+<script src="../lightswitch.js"></script><script src="../deps/jquery-3.6.0/jquery-3.6.0.min.js"></script><meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
 <link href="../deps/bootstrap-5.3.1/bootstrap.min.css" rel="stylesheet">
 <script src="../deps/bootstrap-5.3.1/bootstrap.bundle.min.js"></script><link href="../deps/font-awesome-6.5.2/css/all.min.css" rel="stylesheet">
 <link href="../deps/font-awesome-6.5.2/css/v4-shims.min.css" rel="stylesheet">
@@ -16,7 +16,7 @@
     <a href="#main" class="visually-hidden-focusable">Skip to contents</a>
 
 
-    <nav class="navbar navbar-expand-lg fixed-top bg-primary" data-bs-theme="dark" aria-label="Site navigation"><div class="container">
+    <nav class="navbar navbar-expand-lg fixed-top " aria-label="Site navigation"><div class="container">
 
     <a class="navbar-brand me-2" href="../index.html">ADS8192</a>
 
@@ -35,6 +35,7 @@
   <ul class="dropdown-menu" aria-labelledby="dropdown-course-materials">
 <li><a class="dropdown-item" href="../articles/getting-started.html">Getting Started</a></li>
     <li><a class="dropdown-item" href="../articles/project-selection.html">Project Selection Guide</a></li>
+    <li><a class="dropdown-item" href="../articles/HW1_Rubric.html">HW1 Rubric</a></li>
     <li><hr class="dropdown-divider"></li>
     <li><h6 class="dropdown-header" data-toc-skip>Lectures</h6></li>
     <li><a class="dropdown-item" href="../articles/Lecture03_Data_Structures_Bioconductor.html">Lecture 03: Data Structures &amp; Bioconductor</a></li>
@@ -467,6 +468,68 @@ kebab-case flags (<code>n_top</code> -&gt; <code>--n-top</code>).</p>
 <span><span class="op">)</span><span class="op">)</span></span></code></pre></div>
 <hr>
 </div>
+<div class="section level3">
+<h3 id="step-4-export-a-launcher-installer">Step 4: Export a Launcher Installer<a class="anchor" aria-label="anchor" href="#step-4-export-a-launcher-installer"></a>
+</h3>
+<p>Running <code>Rapp exec/sePCA pca --help</code> works during
+development, but after a user installs your package from GitHub, the
+<code>exec/</code> directory is buried inside the R library tree. Rapp
+solves this with <strong>launchers</strong> — lightweight shell scripts
+(<code>.bat</code> on Windows) that live on <code>PATH</code> and
+forward to the installed Rapp app.</p>
+<div class="section level4">
+<h4 id="how-it-works">How It Works<a class="anchor" aria-label="anchor" href="#how-it-works"></a>
+</h4>
+<div class="sourceCode" id="cb12"><pre class="downlit sourceCode r">
+<code class="sourceCode R"><span><span class="co"># One-liner: install launchers for every Rapp in a package's exec/</span></span>
+<span><span class="fu">Rapp</span><span class="fu">::</span><span class="fu"><a href="https://rdrr.io/pkg/Rapp/man/install_pkg_cli_apps.html" class="external-link">install_pkg_cli_apps</a></span><span class="op">(</span><span class="st">"sePCA"</span><span class="op">)</span></span></code></pre></div>
+<p>After this, users can invoke the CLI directly:</p>
+<div class="sourceCode" id="cb13"><pre class="sourceCode bash"><code class="sourceCode bash"><span id="cb13-1"><a href="#cb13-1" tabindex="-1"></a><span class="ex">sePCA</span> pca <span class="at">--help</span></span>
+<span id="cb13-2"><a href="#cb13-2" tabindex="-1"></a><span class="ex">sePCA</span> pca <span class="at">--counts</span> counts.tsv <span class="at">--meta</span> meta.tsv <span class="at">--output</span> results/</span></code></pre></div>
+<p>On Windows, <code>install_pkg_cli_apps()</code> creates
+<code>.bat</code> wrappers in
+<code>%LOCALAPPDATA%\Programs\R\Rapp\bin</code> and adds that directory
+to <code>PATH</code>. On macOS / Linux, launchers land in
+<code>~/.local/bin</code> (usually already on <code>PATH</code>).</p>
+</div>
+<div class="section level4">
+<h4 id="export-a-thin-wrapper">Export a Thin Wrapper<a class="anchor" aria-label="anchor" href="#export-a-thin-wrapper"></a>
+</h4>
+<p>Rather than asking users to remember the
+<code><a href="https://rdrr.io/pkg/Rapp/man/install_pkg_cli_apps.html" class="external-link">Rapp::install_pkg_cli_apps()</a></code> call, export your own
+convenience function. Create <code>R/install_cli.R</code>:</p>
+<div class="sourceCode" id="cb14"><pre class="downlit sourceCode r">
+<code class="sourceCode R"><span><span class="co">#' Install sePCA CLI launchers</span></span>
+<span><span class="co">#'</span></span>
+<span><span class="co">#' Places lightweight launcher scripts on the user's `PATH` so the</span></span>
+<span><span class="co">#' sePCA CLI can be invoked directly from a terminal (e.g. `sePCA pca --help`).</span></span>
+<span><span class="co">#'</span></span>
+<span><span class="co">#' @inheritDotParams Rapp::install_pkg_cli_apps -package -lib.loc</span></span>
+<span><span class="co">#' @export</span></span>
+<span><span class="va">install_sePCA_cli</span> <span class="op">&lt;-</span> <span class="kw">function</span><span class="op">(</span><span class="va">...</span><span class="op">)</span> <span class="op">{</span></span>
+<span>    <span class="fu">Rapp</span><span class="fu">::</span><span class="fu"><a href="https://rdrr.io/pkg/Rapp/man/install_pkg_cli_apps.html" class="external-link">install_pkg_cli_apps</a></span><span class="op">(</span>package <span class="op">=</span> <span class="st">"sePCA"</span>, lib.loc <span class="op">=</span> <span class="cn">NULL</span>, <span class="va">...</span><span class="op">)</span></span>
+<span><span class="op">}</span></span></code></pre></div>
+<p>Then document it, <code>devtools::document()</code>, and users
+get:</p>
+<div class="sourceCode" id="cb15"><pre class="downlit sourceCode r">
+<code class="sourceCode R"><span><span class="fu">remotes</span><span class="fu">::</span><span class="fu">install_github</span><span class="op">(</span><span class="st">"you/sePCA"</span><span class="op">)</span></span>
+<span><span class="fu">sePCA</span><span class="fu">::</span><span class="fu">install_sePCA_cli</span><span class="op">(</span><span class="op">)</span></span></code></pre></div>
+<p>…followed by seamless terminal usage.</p>
+</div>
+<div class="section level4">
+<h4 id="try-it-now">Try It Now<a class="anchor" aria-label="anchor" href="#try-it-now"></a>
+</h4>
+<div class="sourceCode" id="cb16"><pre class="sourceCode bash"><code class="sourceCode bash"><span id="cb16-1"><a href="#cb16-1" tabindex="-1"></a><span class="co"># Install launchers for sePCA (run once after installation)</span></span>
+<span id="cb16-2"><a href="#cb16-2" tabindex="-1"></a><span class="ex">Rscript</span> <span class="at">-e</span> <span class="st">"Rapp::install_pkg_cli_apps('sePCA')"</span></span>
+<span id="cb16-3"><a href="#cb16-3" tabindex="-1"></a></span>
+<span id="cb16-4"><a href="#cb16-4" tabindex="-1"></a><span class="co"># Now use the CLI directly</span></span>
+<span id="cb16-5"><a href="#cb16-5" tabindex="-1"></a><span class="ex">sePCA</span> <span class="at">--help</span></span>
+<span id="cb16-6"><a href="#cb16-6" tabindex="-1"></a><span class="ex">sePCA</span> pca <span class="at">--help</span></span></code></pre></div>
+<p>Add the install instructions to your README so users know about
+it.</p>
+<hr>
+</div>
+</div>
 </div>
 <div class="section level2">
 <h2 id="part-4-testing-the-cli">Part 4: Testing the CLI<a class="anchor" aria-label="anchor" href="#part-4-testing-the-cli"></a>
@@ -477,7 +540,7 @@ kebab-case flags (<code>n_top</code> -&gt; <code>--n-top</code>).</p>
 <div class="section level4">
 <h4 id="create-test-data">Create Test Data<a class="anchor" aria-label="anchor" href="#create-test-data"></a>
 </h4>
-<div class="sourceCode" id="cb12"><pre class="downlit sourceCode r">
+<div class="sourceCode" id="cb17"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="co"># Create small test files</span></span>
 <span><span class="kw"><a href="https://rdrr.io/r/base/library.html" class="external-link">library</a></span><span class="op">(</span><span class="va"><a href="https://bioconductor.org/packages/SummarizedExperiment" class="external-link">SummarizedExperiment</a></span><span class="op">)</span></span>
 <span><span class="kw"><a href="https://rdrr.io/r/base/library.html" class="external-link">library</a></span><span class="op">(</span><span class="va">airway</span><span class="op">)</span></span>
@@ -504,50 +567,50 @@ kebab-case flags (<code>n_top</code> -&gt; <code>--n-top</code>).</p>
 <div class="section level4">
 <h4 id="run-from-terminal">Run from Terminal<a class="anchor" aria-label="anchor" href="#run-from-terminal"></a>
 </h4>
-<div class="sourceCode" id="cb13"><pre class="sourceCode bash"><code class="sourceCode bash"><span id="cb13-1"><a href="#cb13-1" tabindex="-1"></a><span class="co"># Navigate to package directory</span></span>
-<span id="cb13-2"><a href="#cb13-2" tabindex="-1"></a><span class="bu">cd</span> sePCA</span>
-<span id="cb13-3"><a href="#cb13-3" tabindex="-1"></a></span>
-<span id="cb13-4"><a href="#cb13-4" tabindex="-1"></a><span class="co"># Test help</span></span>
-<span id="cb13-5"><a href="#cb13-5" tabindex="-1"></a><span class="ex">Rapp</span> exec/sePCA <span class="at">--help</span></span>
-<span id="cb13-6"><a href="#cb13-6" tabindex="-1"></a></span>
-<span id="cb13-7"><a href="#cb13-7" tabindex="-1"></a><span class="co"># Test PCA command help</span></span>
-<span id="cb13-8"><a href="#cb13-8" tabindex="-1"></a><span class="ex">Rapp</span> exec/sePCA pca <span class="at">--help</span></span>
-<span id="cb13-9"><a href="#cb13-9" tabindex="-1"></a></span>
-<span id="cb13-10"><a href="#cb13-10" tabindex="-1"></a><span class="co"># Run PCA</span></span>
-<span id="cb13-11"><a href="#cb13-11" tabindex="-1"></a><span class="ex">Rapp</span> exec/sePCA pca <span class="dt">\</span></span>
-<span id="cb13-12"><a href="#cb13-12" tabindex="-1"></a>    <span class="at">--counts</span> tests/testdata/counts.tsv <span class="dt">\</span></span>
-<span id="cb13-13"><a href="#cb13-13" tabindex="-1"></a>    <span class="at">--meta</span> tests/testdata/meta.tsv <span class="dt">\</span></span>
-<span id="cb13-14"><a href="#cb13-14" tabindex="-1"></a>    <span class="at">--output</span> tests/testdata/output/</span>
-<span id="cb13-15"><a href="#cb13-15" tabindex="-1"></a></span>
-<span id="cb13-16"><a href="#cb13-16" tabindex="-1"></a><span class="co"># Check outputs</span></span>
-<span id="cb13-17"><a href="#cb13-17" tabindex="-1"></a><span class="fu">ls</span> tests/testdata/output/</span>
-<span id="cb13-18"><a href="#cb13-18" tabindex="-1"></a><span class="fu">cat</span> tests/testdata/output/pca_variance.tsv</span>
-<span id="cb13-19"><a href="#cb13-19" tabindex="-1"></a></span>
-<span id="cb13-20"><a href="#cb13-20" tabindex="-1"></a><span class="co"># Test with plot</span></span>
-<span id="cb13-21"><a href="#cb13-21" tabindex="-1"></a><span class="ex">Rapp</span> exec/sePCA pca <span class="dt">\</span></span>
-<span id="cb13-22"><a href="#cb13-22" tabindex="-1"></a>    <span class="at">--counts</span> tests/testdata/counts.tsv <span class="dt">\</span></span>
-<span id="cb13-23"><a href="#cb13-23" tabindex="-1"></a>    <span class="at">--meta</span> tests/testdata/meta.tsv <span class="dt">\</span></span>
-<span id="cb13-24"><a href="#cb13-24" tabindex="-1"></a>    <span class="at">--output</span> tests/testdata/output2/ <span class="dt">\</span></span>
-<span id="cb13-25"><a href="#cb13-25" tabindex="-1"></a>    <span class="at">--color-by</span> dex</span></code></pre></div>
+<div class="sourceCode" id="cb18"><pre class="sourceCode bash"><code class="sourceCode bash"><span id="cb18-1"><a href="#cb18-1" tabindex="-1"></a><span class="co"># Navigate to package directory</span></span>
+<span id="cb18-2"><a href="#cb18-2" tabindex="-1"></a><span class="bu">cd</span> sePCA</span>
+<span id="cb18-3"><a href="#cb18-3" tabindex="-1"></a></span>
+<span id="cb18-4"><a href="#cb18-4" tabindex="-1"></a><span class="co"># Test help</span></span>
+<span id="cb18-5"><a href="#cb18-5" tabindex="-1"></a><span class="ex">Rapp</span> exec/sePCA <span class="at">--help</span></span>
+<span id="cb18-6"><a href="#cb18-6" tabindex="-1"></a></span>
+<span id="cb18-7"><a href="#cb18-7" tabindex="-1"></a><span class="co"># Test PCA command help</span></span>
+<span id="cb18-8"><a href="#cb18-8" tabindex="-1"></a><span class="ex">Rapp</span> exec/sePCA pca <span class="at">--help</span></span>
+<span id="cb18-9"><a href="#cb18-9" tabindex="-1"></a></span>
+<span id="cb18-10"><a href="#cb18-10" tabindex="-1"></a><span class="co"># Run PCA</span></span>
+<span id="cb18-11"><a href="#cb18-11" tabindex="-1"></a><span class="ex">Rapp</span> exec/sePCA pca <span class="dt">\</span></span>
+<span id="cb18-12"><a href="#cb18-12" tabindex="-1"></a>    <span class="at">--counts</span> tests/testdata/counts.tsv <span class="dt">\</span></span>
+<span id="cb18-13"><a href="#cb18-13" tabindex="-1"></a>    <span class="at">--meta</span> tests/testdata/meta.tsv <span class="dt">\</span></span>
+<span id="cb18-14"><a href="#cb18-14" tabindex="-1"></a>    <span class="at">--output</span> tests/testdata/output/</span>
+<span id="cb18-15"><a href="#cb18-15" tabindex="-1"></a></span>
+<span id="cb18-16"><a href="#cb18-16" tabindex="-1"></a><span class="co"># Check outputs</span></span>
+<span id="cb18-17"><a href="#cb18-17" tabindex="-1"></a><span class="fu">ls</span> tests/testdata/output/</span>
+<span id="cb18-18"><a href="#cb18-18" tabindex="-1"></a><span class="fu">cat</span> tests/testdata/output/pca_variance.tsv</span>
+<span id="cb18-19"><a href="#cb18-19" tabindex="-1"></a></span>
+<span id="cb18-20"><a href="#cb18-20" tabindex="-1"></a><span class="co"># Test with plot</span></span>
+<span id="cb18-21"><a href="#cb18-21" tabindex="-1"></a><span class="ex">Rapp</span> exec/sePCA pca <span class="dt">\</span></span>
+<span id="cb18-22"><a href="#cb18-22" tabindex="-1"></a>    <span class="at">--counts</span> tests/testdata/counts.tsv <span class="dt">\</span></span>
+<span id="cb18-23"><a href="#cb18-23" tabindex="-1"></a>    <span class="at">--meta</span> tests/testdata/meta.tsv <span class="dt">\</span></span>
+<span id="cb18-24"><a href="#cb18-24" tabindex="-1"></a>    <span class="at">--output</span> tests/testdata/output2/ <span class="dt">\</span></span>
+<span id="cb18-25"><a href="#cb18-25" tabindex="-1"></a>    <span class="at">--color-by</span> dex</span></code></pre></div>
 </div>
 </div>
 <div class="section level3">
 <h3 id="testing-error-handling">Testing Error Handling<a class="anchor" aria-label="anchor" href="#testing-error-handling"></a>
 </h3>
-<div class="sourceCode" id="cb14"><pre class="sourceCode bash"><code class="sourceCode bash"><span id="cb14-1"><a href="#cb14-1" tabindex="-1"></a><span class="co"># Missing required argument</span></span>
-<span id="cb14-2"><a href="#cb14-2" tabindex="-1"></a><span class="ex">Rapp</span> exec/sePCA pca <span class="at">--counts</span> counts.tsv</span>
-<span id="cb14-3"><a href="#cb14-3" tabindex="-1"></a><span class="co"># Should error: --counts, --meta, and --output are required</span></span>
-<span id="cb14-4"><a href="#cb14-4" tabindex="-1"></a></span>
-<span id="cb14-5"><a href="#cb14-5" tabindex="-1"></a><span class="co"># Missing file</span></span>
-<span id="cb14-6"><a href="#cb14-6" tabindex="-1"></a><span class="ex">Rapp</span> exec/sePCA pca <span class="dt">\</span></span>
-<span id="cb14-7"><a href="#cb14-7" tabindex="-1"></a>    <span class="at">--counts</span> nonexistent.tsv <span class="dt">\</span></span>
-<span id="cb14-8"><a href="#cb14-8" tabindex="-1"></a>    <span class="at">--meta</span> meta.tsv <span class="dt">\</span></span>
-<span id="cb14-9"><a href="#cb14-9" tabindex="-1"></a>    <span class="at">--output</span> out/</span>
-<span id="cb14-10"><a href="#cb14-10" tabindex="-1"></a><span class="co"># Should error: File not found: nonexistent.tsv</span></span>
-<span id="cb14-11"><a href="#cb14-11" tabindex="-1"></a></span>
-<span id="cb14-12"><a href="#cb14-12" tabindex="-1"></a><span class="co"># Check exit code</span></span>
-<span id="cb14-13"><a href="#cb14-13" tabindex="-1"></a><span class="ex">Rapp</span> exec/sePCA pca <span class="at">--counts</span> nonexistent.tsv <span class="at">--meta</span> meta.tsv <span class="at">--output</span> out/</span>
-<span id="cb14-14"><a href="#cb14-14" tabindex="-1"></a><span class="bu">echo</span> <span class="va">$?</span>  <span class="co"># Should be 1</span></span></code></pre></div>
+<div class="sourceCode" id="cb19"><pre class="sourceCode bash"><code class="sourceCode bash"><span id="cb19-1"><a href="#cb19-1" tabindex="-1"></a><span class="co"># Missing required argument</span></span>
+<span id="cb19-2"><a href="#cb19-2" tabindex="-1"></a><span class="ex">Rapp</span> exec/sePCA pca <span class="at">--counts</span> counts.tsv</span>
+<span id="cb19-3"><a href="#cb19-3" tabindex="-1"></a><span class="co"># Should error: --counts, --meta, and --output are required</span></span>
+<span id="cb19-4"><a href="#cb19-4" tabindex="-1"></a></span>
+<span id="cb19-5"><a href="#cb19-5" tabindex="-1"></a><span class="co"># Missing file</span></span>
+<span id="cb19-6"><a href="#cb19-6" tabindex="-1"></a><span class="ex">Rapp</span> exec/sePCA pca <span class="dt">\</span></span>
+<span id="cb19-7"><a href="#cb19-7" tabindex="-1"></a>    <span class="at">--counts</span> nonexistent.tsv <span class="dt">\</span></span>
+<span id="cb19-8"><a href="#cb19-8" tabindex="-1"></a>    <span class="at">--meta</span> meta.tsv <span class="dt">\</span></span>
+<span id="cb19-9"><a href="#cb19-9" tabindex="-1"></a>    <span class="at">--output</span> out/</span>
+<span id="cb19-10"><a href="#cb19-10" tabindex="-1"></a><span class="co"># Should error: File not found: nonexistent.tsv</span></span>
+<span id="cb19-11"><a href="#cb19-11" tabindex="-1"></a></span>
+<span id="cb19-12"><a href="#cb19-12" tabindex="-1"></a><span class="co"># Check exit code</span></span>
+<span id="cb19-13"><a href="#cb19-13" tabindex="-1"></a><span class="ex">Rapp</span> exec/sePCA pca <span class="at">--counts</span> nonexistent.tsv <span class="at">--meta</span> meta.tsv <span class="at">--output</span> out/</span>
+<span id="cb19-14"><a href="#cb19-14" tabindex="-1"></a><span class="bu">echo</span> <span class="va">$?</span>  <span class="co"># Should be 1</span></span></code></pre></div>
 <hr>
 </div>
 <div class="section level3">
@@ -561,23 +624,23 @@ kebab-case flags (<code>n_top</code> -&gt; <code>--n-top</code>).</p>
 <li>Checks for sample ID matches</li>
 </ol>
 <p>Example output:</p>
-<div class="sourceCode" id="cb15"><pre class="sourceCode bash"><code class="sourceCode bash"><span id="cb15-1"><a href="#cb15-1" tabindex="-1"></a><span class="ex">$</span> Rapp exec/sePCA validate <span class="at">--counts</span> counts.tsv <span class="at">--meta</span> meta.tsv</span>
-<span id="cb15-2"><a href="#cb15-2" tabindex="-1"></a></span>
-<span id="cb15-3"><a href="#cb15-3" tabindex="-1"></a><span class="ex">Validating</span> counts file: counts.tsv</span>
-<span id="cb15-4"><a href="#cb15-4" tabindex="-1"></a>  <span class="ex">✓</span> File exists</span>
-<span id="cb15-5"><a href="#cb15-5" tabindex="-1"></a>  <span class="ex">✓</span> Can be parsed</span>
-<span id="cb15-6"><a href="#cb15-6" tabindex="-1"></a>  <span class="ex">✓</span> Dimensions: 10000 genes × 8 samples</span>
-<span id="cb15-7"><a href="#cb15-7" tabindex="-1"></a></span>
-<span id="cb15-8"><a href="#cb15-8" tabindex="-1"></a><span class="ex">Validating</span> metadata file: meta.tsv</span>
-<span id="cb15-9"><a href="#cb15-9" tabindex="-1"></a>  <span class="ex">✓</span> File exists</span>
-<span id="cb15-10"><a href="#cb15-10" tabindex="-1"></a>  <span class="ex">✓</span> Can be parsed</span>
-<span id="cb15-11"><a href="#cb15-11" tabindex="-1"></a>  <span class="ex">✓</span> Rows: 8</span>
-<span id="cb15-12"><a href="#cb15-12" tabindex="-1"></a></span>
-<span id="cb15-13"><a href="#cb15-13" tabindex="-1"></a><span class="ex">Checking</span> consistency:</span>
-<span id="cb15-14"><a href="#cb15-14" tabindex="-1"></a>  <span class="ex">✓</span> Sample IDs match</span>
-<span id="cb15-15"><a href="#cb15-15" tabindex="-1"></a>  <span class="ex">✓</span> Metadata columns: cell, dex, albut, Run, avgLength, Experiment, Sample, BioSample</span>
-<span id="cb15-16"><a href="#cb15-16" tabindex="-1"></a></span>
-<span id="cb15-17"><a href="#cb15-17" tabindex="-1"></a><span class="ex">Ready</span> for analysis!</span></code></pre></div>
+<div class="sourceCode" id="cb20"><pre class="sourceCode bash"><code class="sourceCode bash"><span id="cb20-1"><a href="#cb20-1" tabindex="-1"></a><span class="ex">$</span> Rapp exec/sePCA validate <span class="at">--counts</span> counts.tsv <span class="at">--meta</span> meta.tsv</span>
+<span id="cb20-2"><a href="#cb20-2" tabindex="-1"></a></span>
+<span id="cb20-3"><a href="#cb20-3" tabindex="-1"></a><span class="ex">Validating</span> counts file: counts.tsv</span>
+<span id="cb20-4"><a href="#cb20-4" tabindex="-1"></a>  <span class="ex">✓</span> File exists</span>
+<span id="cb20-5"><a href="#cb20-5" tabindex="-1"></a>  <span class="ex">✓</span> Can be parsed</span>
+<span id="cb20-6"><a href="#cb20-6" tabindex="-1"></a>  <span class="ex">✓</span> Dimensions: 10000 genes × 8 samples</span>
+<span id="cb20-7"><a href="#cb20-7" tabindex="-1"></a></span>
+<span id="cb20-8"><a href="#cb20-8" tabindex="-1"></a><span class="ex">Validating</span> metadata file: meta.tsv</span>
+<span id="cb20-9"><a href="#cb20-9" tabindex="-1"></a>  <span class="ex">✓</span> File exists</span>
+<span id="cb20-10"><a href="#cb20-10" tabindex="-1"></a>  <span class="ex">✓</span> Can be parsed</span>
+<span id="cb20-11"><a href="#cb20-11" tabindex="-1"></a>  <span class="ex">✓</span> Rows: 8</span>
+<span id="cb20-12"><a href="#cb20-12" tabindex="-1"></a></span>
+<span id="cb20-13"><a href="#cb20-13" tabindex="-1"></a><span class="ex">Checking</span> consistency:</span>
+<span id="cb20-14"><a href="#cb20-14" tabindex="-1"></a>  <span class="ex">✓</span> Sample IDs match</span>
+<span id="cb20-15"><a href="#cb20-15" tabindex="-1"></a>  <span class="ex">✓</span> Metadata columns: cell, dex, albut, Run, avgLength, Experiment, Sample, BioSample</span>
+<span id="cb20-16"><a href="#cb20-16" tabindex="-1"></a></span>
+<span id="cb20-17"><a href="#cb20-17" tabindex="-1"></a><span class="ex">Ready</span> for analysis!</span></code></pre></div>
 <hr>
 </div>
 <div class="section level3">
@@ -684,14 +747,17 @@ codes)</li>
 <li>Built a CLI using Rapp with commands and options</li>
 <li>Implemented the <code>pca</code> command that calls our package
 functions</li>
+<li>Exported a launcher installer (<code>install_sePCA_cli()</code>) for
+seamless terminal use</li>
 <li>Tested error handling and exit codes</li>
 <li>Discussed versioning and stability</li>
 </ol>
 <div class="section level3">
 <h3 id="package-milestone">Package Milestone<a class="anchor" aria-label="anchor" href="#package-milestone"></a>
 </h3>
-<p>✅ A working CLI prototype that produces outputs using the same
-package core.</p>
+<p>✅ A working CLI prototype with an exported launcher installer —
+users can run <code>sePCA pca --help</code> directly from the terminal
+after installing your package.</p>
 <hr>
 </div>
 </div>
@@ -706,20 +772,24 @@ package core.</p>
 appropriately.</p>
 </div>
 <div class="section level3">
-<h3 id="micro-task-2-document-cli-in-readme">Micro-task 2: Document CLI in README<a class="anchor" aria-label="anchor" href="#micro-task-2-document-cli-in-readme"></a>
+<h3 id="micro-task-2-document-cli-launcher-in-readme">Micro-task 2: Document CLI + Launcher in README<a class="anchor" aria-label="anchor" href="#micro-task-2-document-cli-launcher-in-readme"></a>
 </h3>
 <p>Add a “Command Line Interface” section to README with:</p>
 <ul>
-<li>Basic usage example</li>
+<li>Launcher installation command
+(<code>yourpkg::install_yourpkg_cli()</code>)</li>
+<li>Basic usage example using the launcher (e.g.,
+<code>sePCA pca --help</code>)</li>
 <li>List of available commands</li>
-<li>Link to more detailed docs</li>
+<li>Fallback instructions (<code>Rapp exec/sePCA pca --help</code>) for
+users who skip the launcher</li>
 </ul>
 </div>
 <div class="section level3">
 <h3 id="micro-task-3-pkgdown-article">Micro-task 3: pkgdown Article<a class="anchor" aria-label="anchor" href="#micro-task-3-pkgdown-article"></a>
 </h3>
 <p>Add a vignette/article for CLI usage:</p>
-<div class="sourceCode" id="cb16"><pre class="downlit sourceCode r">
+<div class="sourceCode" id="cb21"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="fu">usethis</span><span class="fu">::</span><span class="fu">use_vignette</span><span class="op">(</span><span class="st">"cli"</span>, title <span class="op">=</span> <span class="st">"Command Line Interface"</span><span class="op">)</span></span></code></pre></div>
 <hr>
 </div>
@@ -727,32 +797,36 @@ appropriately.</p>
 <div class="section level2">
 <h2 id="cli-quick-reference">CLI Quick Reference<a class="anchor" aria-label="anchor" href="#cli-quick-reference"></a>
 </h2>
-<div class="sourceCode" id="cb17"><pre class="sourceCode bash"><code class="sourceCode bash"><span id="cb17-1"><a href="#cb17-1" tabindex="-1"></a><span class="co"># Get help</span></span>
-<span id="cb17-2"><a href="#cb17-2" tabindex="-1"></a><span class="ex">Rapp</span> exec/sePCA <span class="at">--help</span></span>
-<span id="cb17-3"><a href="#cb17-3" tabindex="-1"></a><span class="ex">Rapp</span> exec/sePCA pca <span class="at">--help</span></span>
-<span id="cb17-4"><a href="#cb17-4" tabindex="-1"></a></span>
-<span id="cb17-5"><a href="#cb17-5" tabindex="-1"></a><span class="co"># Run PCA</span></span>
-<span id="cb17-6"><a href="#cb17-6" tabindex="-1"></a><span class="ex">Rapp</span> exec/sePCA pca <span class="dt">\</span></span>
-<span id="cb17-7"><a href="#cb17-7" tabindex="-1"></a>    <span class="at">--counts</span> counts.tsv <span class="dt">\</span></span>
-<span id="cb17-8"><a href="#cb17-8" tabindex="-1"></a>    <span class="at">--meta</span> samples.tsv <span class="dt">\</span></span>
-<span id="cb17-9"><a href="#cb17-9" tabindex="-1"></a>    <span class="at">--output</span> results/ <span class="dt">\</span></span>
-<span id="cb17-10"><a href="#cb17-10" tabindex="-1"></a>    <span class="at">--n-top</span> 500 <span class="dt">\</span></span>
-<span id="cb17-11"><a href="#cb17-11" tabindex="-1"></a>    <span class="at">--color-by</span> treatment</span>
-<span id="cb17-12"><a href="#cb17-12" tabindex="-1"></a></span>
-<span id="cb17-13"><a href="#cb17-13" tabindex="-1"></a><span class="co"># After installing launchers (Lecture 10)</span></span>
-<span id="cb17-14"><a href="#cb17-14" tabindex="-1"></a><span class="co"># sePCA pca --help</span></span>
-<span id="cb17-15"><a href="#cb17-15" tabindex="-1"></a></span>
-<span id="cb17-16"><a href="#cb17-16" tabindex="-1"></a><span class="co"># Check exit code</span></span>
-<span id="cb17-17"><a href="#cb17-17" tabindex="-1"></a><span class="bu">echo</span> <span class="va">$?</span></span>
-<span id="cb17-18"><a href="#cb17-18" tabindex="-1"></a></span>
-<span id="cb17-19"><a href="#cb17-19" tabindex="-1"></a><span class="co"># Redirect stderr (messages) vs stdout (none in our design)</span></span>
-<span id="cb17-20"><a href="#cb17-20" tabindex="-1"></a><span class="ex">Rapp</span> exec/sePCA pca ... <span class="dv">2</span><span class="op">&gt;</span> log.txt</span></code></pre></div>
+<div class="sourceCode" id="cb22"><pre class="sourceCode bash"><code class="sourceCode bash"><span id="cb22-1"><a href="#cb22-1" tabindex="-1"></a><span class="co"># Install launchers (one-time, after package installation)</span></span>
+<span id="cb22-2"><a href="#cb22-2" tabindex="-1"></a><span class="ex">Rscript</span> <span class="at">-e</span> <span class="st">"sePCA::install_sePCA_cli()"</span></span>
+<span id="cb22-3"><a href="#cb22-3" tabindex="-1"></a><span class="co"># Or equivalently:</span></span>
+<span id="cb22-4"><a href="#cb22-4" tabindex="-1"></a><span class="ex">Rscript</span> <span class="at">-e</span> <span class="st">"Rapp::install_pkg_cli_apps('sePCA')"</span></span>
+<span id="cb22-5"><a href="#cb22-5" tabindex="-1"></a></span>
+<span id="cb22-6"><a href="#cb22-6" tabindex="-1"></a><span class="co"># After installing launchers — the primary way to use the CLI</span></span>
+<span id="cb22-7"><a href="#cb22-7" tabindex="-1"></a><span class="ex">sePCA</span> <span class="at">--help</span></span>
+<span id="cb22-8"><a href="#cb22-8" tabindex="-1"></a><span class="ex">sePCA</span> pca <span class="at">--help</span></span>
+<span id="cb22-9"><a href="#cb22-9" tabindex="-1"></a><span class="ex">sePCA</span> pca <span class="dt">\</span></span>
+<span id="cb22-10"><a href="#cb22-10" tabindex="-1"></a>    <span class="at">--counts</span> counts.tsv <span class="dt">\</span></span>
+<span id="cb22-11"><a href="#cb22-11" tabindex="-1"></a>    <span class="at">--meta</span> samples.tsv <span class="dt">\</span></span>
+<span id="cb22-12"><a href="#cb22-12" tabindex="-1"></a>    <span class="at">--output</span> results/ <span class="dt">\</span></span>
+<span id="cb22-13"><a href="#cb22-13" tabindex="-1"></a>    <span class="at">--n-top</span> 500 <span class="dt">\</span></span>
+<span id="cb22-14"><a href="#cb22-14" tabindex="-1"></a>    <span class="at">--color-by</span> treatment</span>
+<span id="cb22-15"><a href="#cb22-15" tabindex="-1"></a></span>
+<span id="cb22-16"><a href="#cb22-16" tabindex="-1"></a><span class="co"># During development (before launchers are installed)</span></span>
+<span id="cb22-17"><a href="#cb22-17" tabindex="-1"></a><span class="ex">Rapp</span> exec/sePCA <span class="at">--help</span></span>
+<span id="cb22-18"><a href="#cb22-18" tabindex="-1"></a><span class="ex">Rapp</span> exec/sePCA pca <span class="at">--help</span></span>
+<span id="cb22-19"><a href="#cb22-19" tabindex="-1"></a></span>
+<span id="cb22-20"><a href="#cb22-20" tabindex="-1"></a><span class="co"># Check exit code</span></span>
+<span id="cb22-21"><a href="#cb22-21" tabindex="-1"></a><span class="bu">echo</span> <span class="va">$?</span></span>
+<span id="cb22-22"><a href="#cb22-22" tabindex="-1"></a></span>
+<span id="cb22-23"><a href="#cb22-23" tabindex="-1"></a><span class="co"># Redirect stderr (messages) vs stdout (none in our design)</span></span>
+<span id="cb22-24"><a href="#cb22-24" tabindex="-1"></a><span class="ex">sePCA</span> pca ... <span class="dv">2</span><span class="op">&gt;</span> log.txt</span></code></pre></div>
 <hr>
 </div>
 <div class="section level2">
 <h2 id="session-info">Session Info<a class="anchor" aria-label="anchor" href="#session-info"></a>
 </h2>
-<div class="sourceCode" id="cb18"><pre class="downlit sourceCode r">
+<div class="sourceCode" id="cb23"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="fu"><a href="https://rdrr.io/r/utils/sessionInfo.html" class="external-link">sessionInfo</a></span><span class="op">(</span><span class="op">)</span></span></code></pre></div>
 <pre><code><span><span class="co">## R version 4.5.2 (2025-10-31)</span></span>
 <span><span class="co">## Platform: x86_64-pc-linux-gnu</span></span>
@@ -778,7 +852,7 @@ appropriately.</p>
 <span><span class="co">##  [1] digest_0.6.39     desc_1.4.3        R6_2.6.1          fastmap_1.2.0    </span></span>
 <span><span class="co">##  [5] xfun_0.56         cachem_1.1.0      knitr_1.51        htmltools_0.5.9  </span></span>
 <span><span class="co">##  [9] rmarkdown_2.30    lifecycle_1.0.5   cli_3.6.5         sass_0.4.10      </span></span>
-<span><span class="co">## [13] pkgdown_2.2.0     textshaping_1.0.4 jquerylib_0.1.4   systemfonts_1.3.1</span></span>
+<span><span class="co">## [13] pkgdown_2.2.0     textshaping_1.0.4 jquerylib_0.1.4   systemfonts_1.3.2</span></span>
 <span><span class="co">## [17] compiler_4.5.2    tools_4.5.2       ragg_1.5.0        bslib_0.10.0     </span></span>
 <span><span class="co">## [21] evaluate_1.0.5    yaml_2.3.12       otel_0.2.0        jsonlite_2.0.0   </span></span>
 <span><span class="co">## [25] rlang_1.1.7       fs_1.6.6          htmlwidgets_1.6.4</span></span></code></pre>

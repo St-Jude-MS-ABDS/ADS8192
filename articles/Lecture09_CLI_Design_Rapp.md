@@ -351,6 +351,76 @@ Rapp::run("exec/sePCA", c(
 
 ------------------------------------------------------------------------
 
+### Step 4: Export a Launcher Installer
+
+Running `Rapp exec/sePCA pca --help` works during development, but after
+a user installs your package from GitHub, the `exec/` directory is
+buried inside the R library tree. Rapp solves this with **launchers** —
+lightweight shell scripts (`.bat` on Windows) that live on `PATH` and
+forward to the installed Rapp app.
+
+#### How It Works
+
+``` r
+# One-liner: install launchers for every Rapp in a package's exec/
+Rapp::install_pkg_cli_apps("sePCA")
+```
+
+After this, users can invoke the CLI directly:
+
+``` bash
+sePCA pca --help
+sePCA pca --counts counts.tsv --meta meta.tsv --output results/
+```
+
+On Windows, `install_pkg_cli_apps()` creates `.bat` wrappers in
+`%LOCALAPPDATA%\Programs\R\Rapp\bin` and adds that directory to `PATH`.
+On macOS / Linux, launchers land in `~/.local/bin` (usually already on
+`PATH`).
+
+#### Export a Thin Wrapper
+
+Rather than asking users to remember the
+[`Rapp::install_pkg_cli_apps()`](https://rdrr.io/pkg/Rapp/man/install_pkg_cli_apps.html)
+call, export your own convenience function. Create `R/install_cli.R`:
+
+``` r
+#' Install sePCA CLI launchers
+#'
+#' Places lightweight launcher scripts on the user's `PATH` so the
+#' sePCA CLI can be invoked directly from a terminal (e.g. `sePCA pca --help`).
+#'
+#' @inheritDotParams Rapp::install_pkg_cli_apps -package -lib.loc
+#' @export
+install_sePCA_cli <- function(...) {
+    Rapp::install_pkg_cli_apps(package = "sePCA", lib.loc = NULL, ...)
+}
+```
+
+Then document it, `devtools::document()`, and users get:
+
+``` r
+remotes::install_github("you/sePCA")
+sePCA::install_sePCA_cli()
+```
+
+…followed by seamless terminal usage.
+
+#### Try It Now
+
+``` bash
+# Install launchers for sePCA (run once after installation)
+Rscript -e "Rapp::install_pkg_cli_apps('sePCA')"
+
+# Now use the CLI directly
+sePCA --help
+sePCA pca --help
+```
+
+Add the install instructions to your README so users know about it.
+
+------------------------------------------------------------------------
+
 ## Part 4: Testing the CLI
 
 ### Manual Testing
@@ -519,13 +589,16 @@ Today we:
 1.  Learned CLI design principles (help text, explicit I/O, exit codes)
 2.  Built a CLI using Rapp with commands and options
 3.  Implemented the `pca` command that calls our package functions
-4.  Tested error handling and exit codes
-5.  Discussed versioning and stability
+4.  Exported a launcher installer (`install_sePCA_cli()`) for seamless
+    terminal use
+5.  Tested error handling and exit codes
+6.  Discussed versioning and stability
 
 ### Package Milestone
 
-✅ A working CLI prototype that produces outputs using the same package
-core.
+✅ A working CLI prototype with an exported launcher installer — users
+can run `sePCA pca --help` directly from the terminal after installing
+your package.
 
 ------------------------------------------------------------------------
 
@@ -536,13 +609,15 @@ core.
 Add one additional CLI flag (e.g., `--pcs 1,2` or `--n-top 500`) and
 ensure it changes outputs appropriately.
 
-### Micro-task 2: Document CLI in README
+### Micro-task 2: Document CLI + Launcher in README
 
 Add a “Command Line Interface” section to README with:
 
-- Basic usage example
+- Launcher installation command (`yourpkg::install_yourpkg_cli()`)
+- Basic usage example using the launcher (e.g., `sePCA pca --help`)
 - List of available commands
-- Link to more detailed docs
+- Fallback instructions (`Rapp exec/sePCA pca --help`) for users who
+  skip the launcher
 
 ### Micro-task 3: pkgdown Article
 
@@ -557,26 +632,30 @@ usethis::use_vignette("cli", title = "Command Line Interface")
 ## CLI Quick Reference
 
 ``` bash
-# Get help
-Rapp exec/sePCA --help
-Rapp exec/sePCA pca --help
+# Install launchers (one-time, after package installation)
+Rscript -e "sePCA::install_sePCA_cli()"
+# Or equivalently:
+Rscript -e "Rapp::install_pkg_cli_apps('sePCA')"
 
-# Run PCA
-Rapp exec/sePCA pca \
+# After installing launchers — the primary way to use the CLI
+sePCA --help
+sePCA pca --help
+sePCA pca \
     --counts counts.tsv \
     --meta samples.tsv \
     --output results/ \
     --n-top 500 \
     --color-by treatment
 
-# After installing launchers (Lecture 10)
-# sePCA pca --help
+# During development (before launchers are installed)
+Rapp exec/sePCA --help
+Rapp exec/sePCA pca --help
 
 # Check exit code
 echo $?
 
 # Redirect stderr (messages) vs stdout (none in our design)
-Rapp exec/sePCA pca ... 2> log.txt
+sePCA pca ... 2> log.txt
 ```
 
 ------------------------------------------------------------------------
@@ -611,7 +690,7 @@ sessionInfo()
     ##  [1] digest_0.6.39     desc_1.4.3        R6_2.6.1          fastmap_1.2.0    
     ##  [5] xfun_0.56         cachem_1.1.0      knitr_1.51        htmltools_0.5.9  
     ##  [9] rmarkdown_2.30    lifecycle_1.0.5   cli_3.6.5         sass_0.4.10      
-    ## [13] pkgdown_2.2.0     textshaping_1.0.4 jquerylib_0.1.4   systemfonts_1.3.1
+    ## [13] pkgdown_2.2.0     textshaping_1.0.4 jquerylib_0.1.4   systemfonts_1.3.2
     ## [17] compiler_4.5.2    tools_4.5.2       ragg_1.5.0        bslib_0.10.0     
     ## [21] evaluate_1.0.5    yaml_2.3.12       otel_0.2.0        jsonlite_2.0.0   
     ## [25] rlang_1.1.7       fs_1.6.6          htmlwidgets_1.6.4

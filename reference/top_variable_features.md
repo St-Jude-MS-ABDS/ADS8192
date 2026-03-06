@@ -35,8 +35,8 @@ subset to the top `n` variable features, preserving all sample metadata.
 ## Examples
 
 ``` r
-data(example_se)
-se_top <- top_variable_features(example_se, n = 50)
+data(airway, package = "airway")
+se_top <- top_variable_features(airway, n = 50)
 dim(se_top)
 #> [1] 50  8
 ```

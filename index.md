@@ -1,10 +1,135 @@
 # ADS 8192 — Developing Scientific Applications
 
 Course materials and reference implementation for **ADS 8192: Developing
-Scientific Applications**. This R package demonstrates the “three
-interfaces, one core” architecture for scientific software.
+Scientific Applications — Unit 1**. This R package serves as both the
+source of all Unit 1 lecture content and the living reference
+implementation that students follow as they build their own packages.
 
-## Installation
+## Unit 1 Overview
+
+Unit 1 teaches graduate students to build **complete, reproducible
+scientific software in R** — from raw analysis functions through a fully
+packaged, documented, and deployable application. The unit is organized
+around a single architectural idea:
+
+> **Flexible interfaces, one core.** Write your analysis logic once as
+> exported R functions, then surface it through three delivery
+> mechanisms — an R API, a Shiny web app, and a command-line interface —
+> with zero duplicated logic.
+
+### Fundamental Unit Objectives
+
+After completing Unit 1, students will be able to:
+
+- **Build software for multiple audiences.** Scientists want
+  point-and-click exploration (Shiny); package/pipeline developers want
+  composable R functions they can call programmatically; bioinformatics
+  cores want non-interactive CLI tools that slot into automated
+  workflows. One codebase should serve all three.
+- **Design small, testable, composable functions** that operate on
+  robust data containers (`SummarizedExperiment` /
+  `SingleCellExperiment`) and return well-defined types — making them
+  easy to reason about, test, and reuse.
+- **Separate analysis logic from interface logic.** Core computation
+  lives in exported R functions; Shiny, CLI, and scripting layers are
+  thin wrappers that delegate to the core. This prevents copy-paste
+  drift and keeps every interface consistent.
+- **Package R code for distribution.** Turn loose scripts into a valid,
+  installable R package using `devtools` / `usethis` workflows so that
+  others can `install_github()` and immediately use your work. Pave the
+  road for submission to CRAN or Bioconductor and publication.
+- **Document thoroughly.** Every exported function gets `roxygen2`
+  documentation; the package ships a `pkgdown` site; a README and
+  vignette provide onboarding for new users.
+- **Test meaningfully.** `testthat` (edition 3) tests cover both
+  expected behavior and informative error cases, giving confidence that
+  changes don’t silently break results.
+- **Think about user experience.** Shiny apps include input validation
+  with friendly messages; CLIs print help text and produce standard file
+  formats (TSV); error messages tell the user *what went wrong and what
+  to do about it*.
+- **Practice reproducibility and collaboration.** Version control with
+  Git/GitHub, CI/CD via GitHub Actions, reproducible data preparation
+  (`data-raw/` scripts), and tagged releases make the work shareable and
+  auditable.
+
+### Paradigms & Themes
+
+| Theme                              | Key Tools / Concepts                                                                                      |
+|------------------------------------|-----------------------------------------------------------------------------------------------------------|
+| Multi-audience software design     | One analysis core → R API (developers), Shiny (end-users/scientists), CLI (pipelines/automation)          |
+| Robust data modeling               | `SummarizedExperiment`, `SingleCellExperiment`, S4 classes                                                |
+| R package development              | `devtools`, `usethis`, `roxygen2`, `DESCRIPTION`, `NAMESPACE`                                             |
+| Automated testing                  | `testthat` (edition 3), happy-path + error-case coverage                                                  |
+| Documentation & publishing         | `roxygen2`, `pkgdown`, vignettes, README-driven onboarding                                                |
+| User experience & input validation | Informative errors (`rlang`/[`stop()`](https://rdrr.io/r/base/stop.html)), Shiny validation, CLI `--help` |
+| Interactive applications           | `shiny`, `bslib`, `DT`, reactive programming                                                              |
+| CLI design                         | `Rapp` (argument parsing, subcommands, launcher installation)                                             |
+| Visualization                      | `ggplot2`, `ComplexHeatmap`                                                                               |
+| Reproducibility & collaboration    | Git/GitHub, GitHub Actions CI/CD, `data-raw/` scripts, tagged releases                                    |
+
+## Lectures
+
+All lectures are available as pkgdown articles on the [course
+site](https://st-jude-ms-abds.github.io/ADS8192/). Source `.Rmd` files
+live in `vignettes/articles/`.
+
+| \#  | Topic                                   | What Students Learn                                                                                                                                               |
+|-----|-----------------------------------------|-------------------------------------------------------------------------------------------------------------------------------------------------------------------|
+| 03  | Data Structures & Bioconductor          | Build a `SummarizedExperiment` from scratch; write constructor, analysis, plotting, and export functions with input validation                                    |
+| 05  | Package Development (devtools)          | Turn loose scripts into a valid R package; `DESCRIPTION`, `NAMESPACE`, `roxygen2` exports/imports, `devtools::check()`                                            |
+| 06  | Package Development (pkgdown, testthat) | Write `testthat` tests (happy path + error cases); build and deploy a `pkgdown` documentation site                                                                |
+| 07  | Shiny Reactivity                        | Understand the reactive graph; build a UI with `bslib`; connect inputs → reactive expressions → outputs                                                           |
+| 08  | Shiny Packaging & Deployment            | Embed a Shiny app inside an R package ([`run_app()`](https://automatic-engine-4qp7m5e.pages.github.io/reference/run_app.md)); deploy to Posit Connect             |
+| 09  | CLI Design (Rapp)                       | Design a CLI with `Rapp`; argument types, defaults, help text; call package functions from `exec/` scripts                                                        |
+| 10  | CLI Packaging & Installation            | Ship the CLI with the package; [`Rapp::install_pkg_cli_apps()`](https://rdrr.io/pkg/Rapp/man/install_pkg_cli_apps.html); launcher functions; README documentation |
+| 11  | Review & Q/A                            | Systematic debugging workflow; end-to-end validation of all deliverables before submission                                                                        |
+
+Each lecture includes working code examples (using the `airway`
+dataset), in-class exercises, discussion prompts, and after-class
+micro-tasks.
+
+## Assessments
+
+- **Quizzes** (one per lecture): theory, design rationale, and
+  conceptual understanding
+- **Homework 1** (25 pts): Build a complete R package implementing one
+  of 13 small computational analyses with all three interfaces. See the
+  [HW1
+  Rubric](https://st-jude-ms-abds.github.io/ADS8192/articles/HW1_Rubric.html)
+  and [Project Selection
+  Guide](https://st-jude-ms-abds.github.io/ADS8192/articles/project-selection.html).
+
+### HW1 — Culminating Project
+
+HW1 is the capstone deliverable for Unit 1. Each student selects a
+project (or proposes a custom one) and delivers a public GitHub
+repository containing an R package with:
+
+| Category                         | Points | Key Requirements                                                                                                                                             |
+|----------------------------------|--------|--------------------------------------------------------------------------------------------------------------------------------------------------------------|
+| Package Structure & Installation | 4      | Valid `DESCRIPTION`, `NAMESPACE`, installs from GitHub, bundled example data                                                                                 |
+| Core Analysis Functions          | 5      | Constructor ([`make_se()`](https://automatic-engine-4qp7m5e.pages.github.io/reference/make_se.md) / `make_sce()`), analysis, summary, and plotting functions |
+| Testing                          | 4      | ≥ 8 `testthat` expectations, happy-path + error-case coverage                                                                                                |
+| Documentation                    | 4      | `roxygen2` help pages, README, deployed `pkgdown` site                                                                                                       |
+| Shiny App                        | 4      | [`run_app()`](https://automatic-engine-4qp7m5e.pages.github.io/reference/run_app.md) calls core functions reactively; deployed on Posit Connect              |
+| Command-Line Interface           | 4      | `Rapp` entry point in `exec/`, `--help`, TSV output files                                                                                                    |
+| **Total**                        | **25** |                                                                                                                                                              |
+
+Projects span bulk RNA-seq (`SummarizedExperiment`) and single-cell
+RNA-seq (`SingleCellExperiment`) analyses — PCA, UMAP, differential
+expression, clustering, QC, normalization, heatmaps, gene set scoring,
+correlation networks, and more. All use real Bioconductor datasets.
+
+## Reference Implementation (This Package)
+
+This repository **is** the reference implementation (Project 0: PCA
+Explorer). Students cannot choose this project but use it as a
+structural guide. It demonstrates the full “three interfaces, one core”
+architecture on the Bioconductor `airway` dataset (human airway smooth
+muscle RNA-seq, 8 samples, dexamethasone treatment vs. control).
+
+### Installation
 
 ``` r
 # Install Bioconductor dependencies
@@ -13,112 +138,71 @@ if (!require("BiocManager", quietly = TRUE))
 BiocManager::install(c("SummarizedExperiment", "airway"))
 
 # Install the course package
-remotes::install_github("YOUR-USERNAME/ADS8192")
+remotes::install_github("St-Jude-MS-ABDS/ADS8192")
 ```
 
-## Quick Start
-
-``` r
-library(ADS8192)
-
-# Load example data (100 genes, 8 samples with treatment effect)
-data(example_se)
-
-# Run PCA on the top 50 variable genes
-result <- run_pca(example_se, n_top = 50)
-
-# Visualize
-plot_pca(result, color_by = "treatment")
-
-# Check variance explained
-pca_variance_explained(result)
-```
-
-## Three Interfaces, One Core
-
-All three interfaces call the **same core functions** — no duplicated
-logic.
-
-### R API
+### Quick Start
 
 ``` r
 library(ADS8192)
 library(airway)
 data(airway)
+
+# Run PCA on the top 500 variable genes
 result <- run_pca(airway, n_top = 500)
+
+# Visualize
 plot_pca(result, color_by = "dex", shape_by = "cell")
+
+# Check variance explained
+pca_variance_explained(result)
 ```
 
-### Shiny App
+### Three Interfaces
+
+**R API**
+
+``` r
+library(ADS8192)
+data(airway, package = "airway")
+result <- run_pca(airway, n_top = 500)
+plot_pca(result, color_by = "dex", shape_by = "cell")
+save_pca_results(result, output_dir = "results/")
+```
+
+**Shiny App**
 
 ``` r
 ADS8192::run_app()
 ```
 
-### Command-Line Interface (via Rapp)
+**Command-Line Interface (via Rapp)**
 
 ``` bash
 # Install CLI launcher (one-time)
 Rscript -e "Rapp::install_pkg_cli_apps('ADS8192')"
 
-# Run PCA
+# Run PCA from the terminal
 ADS8192 pca --counts counts.tsv --meta samples.tsv --output results/ --color-by treatment
-
-# Validate inputs
-ADS8192 validate --counts counts.tsv --meta samples.tsv
 ```
 
-## Core Functions
+### Core Functions
 
-| Function                                                                                                           | Purpose                                            |
-|--------------------------------------------------------------------------------------------------------------------|----------------------------------------------------|
-| [`make_se()`](https://automatic-engine-4qp7m5e.pages.github.io/reference/make_se.md)                               | Create SummarizedExperiment from counts + metadata |
-| [`top_variable_features()`](https://automatic-engine-4qp7m5e.pages.github.io/reference/top_variable_features.md)   | Select N most variable genes                       |
-| [`run_pca()`](https://automatic-engine-4qp7m5e.pages.github.io/reference/run_pca.md)                               | Run PCA, return scores + metadata                  |
-| [`pca_variance_explained()`](https://automatic-engine-4qp7m5e.pages.github.io/reference/pca_variance_explained.md) | Variance % per PC                                  |
-| [`plot_pca()`](https://automatic-engine-4qp7m5e.pages.github.io/reference/plot_pca.md)                             | PCA scatter plot (ggplot2)                         |
-| [`save_pca_results()`](https://automatic-engine-4qp7m5e.pages.github.io/reference/save_pca_results.md)             | Export results to TSV files                        |
-| [`run_app()`](https://automatic-engine-4qp7m5e.pages.github.io/reference/run_app.md)                               | Launch Shiny PCA Explorer                          |
+| Function                                                                                                           | Purpose                                                |
+|--------------------------------------------------------------------------------------------------------------------|--------------------------------------------------------|
+| [`make_se()`](https://automatic-engine-4qp7m5e.pages.github.io/reference/make_se.md)                               | Create a `SummarizedExperiment` from counts + metadata |
+| [`top_variable_features()`](https://automatic-engine-4qp7m5e.pages.github.io/reference/top_variable_features.md)   | Select the N most variable genes                       |
+| [`run_pca()`](https://automatic-engine-4qp7m5e.pages.github.io/reference/run_pca.md)                               | Run PCA, return scores + metadata                      |
+| [`pca_variance_explained()`](https://automatic-engine-4qp7m5e.pages.github.io/reference/pca_variance_explained.md) | Variance explained per PC                              |
+| [`plot_pca()`](https://automatic-engine-4qp7m5e.pages.github.io/reference/plot_pca.md)                             | PCA scatter plot (`ggplot2`)                           |
+| [`save_pca_results()`](https://automatic-engine-4qp7m5e.pages.github.io/reference/save_pca_results.md)             | Export results to TSV files                            |
+| [`run_app()`](https://automatic-engine-4qp7m5e.pages.github.io/reference/run_app.md)                               | Launch the Shiny PCA Explorer                          |
 
-## Course Materials
+## Links
 
-Lectures are in `Unit1/Lectures/` and available as pkgdown articles:
-
-| \#  | Topic                                   |
-|-----|-----------------------------------------|
-| 03  | Data Structures & Bioconductor          |
-| 05  | Package Development (devtools)          |
-| 06  | Package Development (pkgdown, testthat) |
-| 07  | Shiny Reactivity                        |
-| 08  | Shiny Packaging & Deployment            |
-| 09  | CLI Design (Rapp)                       |
-| 10  | CLI Packaging & Installation            |
-| 11  | Review & Q/A                            |
-
-## Assessments
-
-- Quizzes: `Unit1/Assessments/Quiz*.docx`
-- **[HW1 Grading
-  Rubric](https://automatic-engine-4qp7m5e.pages.github.io/Unit1/Assessments/HW1_Rubric.md)**
-  (25 points)
-
-## Repository Structure
-
-    ADS8192/
-    ├── R/                      # Package source code (core functions + Shiny app)
-    ├── exec/                   # Rapp CLI entry point
-    ├── inst/app/               # Shiny app.R entry point
-    ├── data/                   # Example dataset (example_se.rda)
-    ├── tests/testthat/         # Unit tests
-    ├── vignettes/              # Getting started guide + lecture articles
-    ├── man/                    # Generated help files
-    ├── Unit1/
-    │   ├── Lectures/           # RMarkdown lecture documents
-    │   └── Assessments/        # Quizzes (.docx) and HW1 rubric
-    ├── DESCRIPTION             # Package metadata
-    ├── NAMESPACE               # Exports/imports
-    ├── _pkgdown.yml            # Documentation site config
-    └── generate_quizzes.py     # Quiz generation script
+- **pkgdown site:** <https://st-jude-ms-abds.github.io/ADS8192/>
+- **GitHub:** <https://github.com/St-Jude-MS-ABDS/ADS8192>
+- **Issues:** <https://github.com/St-Jude-MS-ABDS/ADS8192/issues>
 
 ## License
 

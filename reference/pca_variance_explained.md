@@ -32,15 +32,15 @@ A data.frame with columns:
 ## Examples
 
 ``` r
-data(example_se)
-result <- run_pca(example_se, n_top = 50)
+data(airway, package = "airway")
+result <- run_pca(airway, n_top = 50)
 var_df <- pca_variance_explained(result)
 head(var_df)
 #>    PC variance_percent
-#> 1 PC1        44.818328
-#> 2 PC2        15.015215
-#> 3 PC3        13.465500
-#> 4 PC4         9.167293
-#> 5 PC5         7.225522
-#> 6 PC6         5.971530
+#> 1 PC1        49.168360
+#> 2 PC2        27.958056
+#> 3 PC3        11.167149
+#> 4 PC4         6.293835
+#> 5 PC5         2.284729
+#> 6 PC6         2.114628
 ```

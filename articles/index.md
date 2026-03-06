@@ -9,6 +9,8 @@
 
 - [Project Selection
   Guide](https://automatic-engine-4qp7m5e.pages.github.io/articles/project-selection.md):
+- [Homework 1 Grading Rubric (25
+  points)](https://automatic-engine-4qp7m5e.pages.github.io/articles/HW1_Rubric.md):
 
 ### Lectures
 

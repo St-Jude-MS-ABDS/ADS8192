@@ -6,7 +6,7 @@
 <meta http-equiv="X-UA-Compatible" content="IE=edge">
 <meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
 <title>Getting Started with ADS 8192 • ADS8192</title>
-<script src="../deps/jquery-3.6.0/jquery-3.6.0.min.js"></script><meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
+<script src="../lightswitch.js"></script><script src="../deps/jquery-3.6.0/jquery-3.6.0.min.js"></script><meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
 <link href="../deps/bootstrap-5.3.1/bootstrap.min.css" rel="stylesheet">
 <script src="../deps/bootstrap-5.3.1/bootstrap.bundle.min.js"></script><link href="../deps/font-awesome-6.5.2/css/all.min.css" rel="stylesheet">
 <link href="../deps/font-awesome-6.5.2/css/v4-shims.min.css" rel="stylesheet">
@@ -16,7 +16,7 @@
     <a href="#main" class="visually-hidden-focusable">Skip to contents</a>
 
 
-    <nav class="navbar navbar-expand-lg fixed-top bg-primary" data-bs-theme="dark" aria-label="Site navigation"><div class="container">
+    <nav class="navbar navbar-expand-lg fixed-top " aria-label="Site navigation"><div class="container">
 
     <a class="navbar-brand me-2" href="../index.html">ADS8192</a>
 
@@ -35,6 +35,7 @@
   <ul class="dropdown-menu" aria-labelledby="dropdown-course-materials">
 <li><a class="dropdown-item" href="../articles/getting-started.html">Getting Started</a></li>
     <li><a class="dropdown-item" href="../articles/project-selection.html">Project Selection Guide</a></li>
+    <li><a class="dropdown-item" href="../articles/HW1_Rubric.html">HW1 Rubric</a></li>
     <li><hr class="dropdown-divider"></li>
     <li><h6 class="dropdown-header" data-toc-skip>Lectures</h6></li>
     <li><a class="dropdown-item" href="../articles/Lecture03_Data_Structures_Bioconductor.html">Lecture 03: Data Structures &amp; Bioconductor</a></li>
@@ -70,7 +71,7 @@
                         <h4 data-toc-skip class="author">Jared
 Andrews</h4>
             
-            <h4 data-toc-skip class="date">2026-03-05</h4>
+            <h4 data-toc-skip class="date">2026-03-06</h4>
       
       <small class="dont-index">Source: <a href="https://github.com/St-Jude-MS-ABDS/ADS8192/blob/main/vignettes/getting-started.Rmd" class="external-link"><code>vignettes/getting-started.Rmd</code></a></small>
       <div class="d-none name"><code>getting-started.Rmd</code></div>
@@ -97,72 +98,40 @@ explorer, and a command-line interface.</p>
 <span><span class="fu">BiocManager</span><span class="fu">::</span><span class="fu">install</span><span class="op">(</span><span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="st">"SummarizedExperiment"</span>, <span class="st">"airway"</span><span class="op">)</span><span class="op">)</span></span>
 <span></span>
 <span><span class="co"># Install the course package</span></span>
-<span><span class="fu">remotes</span><span class="fu">::</span><span class="fu">install_github</span><span class="op">(</span><span class="st">"YOUR-USERNAME/ADS8192"</span><span class="op">)</span></span></code></pre></div>
+<span><span class="fu">remotes</span><span class="fu">::</span><span class="fu">install_github</span><span class="op">(</span><span class="st">"St-Jude-MS-ABDS/ADS8192"</span><span class="op">)</span></span></code></pre></div>
 </div>
 <div class="section level2">
 <h2 id="quick-start">Quick Start<a class="anchor" aria-label="anchor" href="#quick-start"></a>
 </h2>
 <div class="sourceCode" id="cb2"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="kw"><a href="https://rdrr.io/r/base/library.html" class="external-link">library</a></span><span class="op">(</span><span class="va"><a href="https://github.com/St-Jude-MS-ABDS/ADS8192" class="external-link">ADS8192</a></span><span class="op">)</span></span>
+<span><span class="kw"><a href="https://rdrr.io/r/base/library.html" class="external-link">library</a></span><span class="op">(</span><span class="va">airway</span><span class="op">)</span></span>
 <span></span>
-<span><span class="co"># Load the example dataset (100 genes, 8 samples)</span></span>
-<span><span class="fu"><a href="https://rdrr.io/r/utils/data.html" class="external-link">data</a></span><span class="op">(</span><span class="va">example_se</span><span class="op">)</span></span>
-<span><span class="va">example_se</span></span>
-<span><span class="co">#&gt; class: SummarizedExperiment </span></span>
-<span><span class="co">#&gt; dim: 100 8 </span></span>
-<span><span class="co">#&gt; metadata(0):</span></span>
-<span><span class="co">#&gt; assays(1): counts</span></span>
-<span><span class="co">#&gt; rownames(100): gene1 gene2 ... gene99 gene100</span></span>
-<span><span class="co">#&gt; rowData names(2): gene_id gene_symbol</span></span>
-<span><span class="co">#&gt; colnames(8): sample1 sample2 ... sample7 sample8</span></span>
-<span><span class="co">#&gt; colData names(3): sample_id treatment batch</span></span></code></pre></div>
+<span><span class="co"># Load the airway dataset (RNA-seq, dexamethasone treatment vs. control)</span></span>
+<span><span class="fu"><a href="https://rdrr.io/r/utils/data.html" class="external-link">data</a></span><span class="op">(</span><span class="st">"airway"</span>, package <span class="op">=</span> <span class="st">"airway"</span><span class="op">)</span></span>
+<span><span class="va">airway</span></span></code></pre></div>
 <div class="section level3">
 <h3 id="run-pca">Run PCA<a class="anchor" aria-label="anchor" href="#run-pca"></a>
 </h3>
 <div class="sourceCode" id="cb3"><pre class="downlit sourceCode r">
-<code class="sourceCode R"><span><span class="va">result</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/run_pca.html">run_pca</a></span><span class="op">(</span><span class="va">example_se</span>, n_top <span class="op">=</span> <span class="fl">50</span><span class="op">)</span></span>
+<code class="sourceCode R"><span><span class="va">result</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/run_pca.html">run_pca</a></span><span class="op">(</span><span class="va">airway</span>, n_top <span class="op">=</span> <span class="fl">500</span><span class="op">)</span></span>
 <span></span>
 <span><span class="co"># View the PCA scores merged with sample metadata</span></span>
-<span><span class="fu"><a href="https://rdrr.io/r/utils/head.html" class="external-link">head</a></span><span class="op">(</span><span class="va">result</span><span class="op">$</span><span class="va">scores</span><span class="op">)</span></span>
-<span><span class="co">#&gt;   sample_id       PC1       PC2        PC3        PC4        PC5        PC6</span></span>
-<span><span class="co">#&gt; 1   sample1 -3.661089  1.400546  1.1513110 -2.9495180 -2.9900017  0.8073388</span></span>
-<span><span class="co">#&gt; 2   sample2 -4.690739 -2.460840 -2.0430942  3.2092803 -0.9257690  1.9138380</span></span>
-<span><span class="co">#&gt; 3   sample3 -5.210003 -2.364561  0.1337717 -0.8679711  0.5684443 -3.1293259</span></span>
-<span><span class="co">#&gt; 4   sample4 -4.068511  3.959228  1.0888244  0.3559802  3.1898969  0.7659579</span></span>
-<span><span class="co">#&gt; 5   sample5  4.404284  1.097518 -3.2408775 -1.8398335  0.2241627  1.0180449</span></span>
-<span><span class="co">#&gt; 6   sample6  4.321797 -3.339700 -1.0686472 -1.3597673  1.6525663  0.1609117</span></span>
-<span><span class="co">#&gt;          PC7          PC8 treatment batch</span></span>
-<span><span class="co">#&gt; 1  1.0179046 6.865967e-15   control     A</span></span>
-<span><span class="co">#&gt; 2 -0.1096081 7.192660e-15   control     B</span></span>
-<span><span class="co">#&gt; 3 -1.1712973 7.213094e-15   control     A</span></span>
-<span><span class="co">#&gt; 4  0.4207278 6.214588e-15   control     B</span></span>
-<span><span class="co">#&gt; 5 -2.2998585 6.303431e-15   treated     A</span></span>
-<span><span class="co">#&gt; 6  2.3134294 6.697588e-15   treated     B</span></span></code></pre></div>
+<span><span class="fu"><a href="https://rdrr.io/r/utils/head.html" class="external-link">head</a></span><span class="op">(</span><span class="va">result</span><span class="op">$</span><span class="va">scores</span><span class="op">)</span></span></code></pre></div>
 </div>
 <div class="section level3">
 <h3 id="visualize">Visualize<a class="anchor" aria-label="anchor" href="#visualize"></a>
 </h3>
 <div class="sourceCode" id="cb4"><pre class="downlit sourceCode r">
-<code class="sourceCode R"><span><span class="fu"><a href="../reference/plot_pca.html">plot_pca</a></span><span class="op">(</span><span class="va">result</span>, color_by <span class="op">=</span> <span class="st">"treatment"</span><span class="op">)</span></span></code></pre></div>
-<p><img src="getting-started_files/figure-html/plot-pca-1.png" class="r-plt" alt="" width="672"></p>
+<code class="sourceCode R"><span><span class="fu"><a href="../reference/plot_pca.html">plot_pca</a></span><span class="op">(</span><span class="va">result</span>, color_by <span class="op">=</span> <span class="st">"dex"</span><span class="op">)</span></span></code></pre></div>
 <div class="sourceCode" id="cb5"><pre class="downlit sourceCode r">
-<code class="sourceCode R"><span><span class="fu"><a href="../reference/plot_pca.html">plot_pca</a></span><span class="op">(</span><span class="va">result</span>, color_by <span class="op">=</span> <span class="st">"treatment"</span>, shape_by <span class="op">=</span> <span class="st">"batch"</span><span class="op">)</span></span></code></pre></div>
-<p><img src="getting-started_files/figure-html/plot-pca-both-1.png" class="r-plt" alt="" width="672"></p>
+<code class="sourceCode R"><span><span class="fu"><a href="../reference/plot_pca.html">plot_pca</a></span><span class="op">(</span><span class="va">result</span>, color_by <span class="op">=</span> <span class="st">"dex"</span>, shape_by <span class="op">=</span> <span class="st">"cell"</span><span class="op">)</span></span></code></pre></div>
 </div>
 <div class="section level3">
 <h3 id="check-variance-explained">Check Variance Explained<a class="anchor" aria-label="anchor" href="#check-variance-explained"></a>
 </h3>
 <div class="sourceCode" id="cb6"><pre class="downlit sourceCode r">
-<code class="sourceCode R"><span><span class="fu"><a href="../reference/pca_variance_explained.html">pca_variance_explained</a></span><span class="op">(</span><span class="va">result</span><span class="op">)</span></span>
-<span><span class="co">#&gt;    PC variance_percent</span></span>
-<span><span class="co">#&gt; 1 PC1     4.481833e+01</span></span>
-<span><span class="co">#&gt; 2 PC2     1.501521e+01</span></span>
-<span><span class="co">#&gt; 3 PC3     1.346550e+01</span></span>
-<span><span class="co">#&gt; 4 PC4     9.167293e+00</span></span>
-<span><span class="co">#&gt; 5 PC5     7.225522e+00</span></span>
-<span><span class="co">#&gt; 6 PC6     5.971530e+00</span></span>
-<span><span class="co">#&gt; 7 PC7     4.336612e+00</span></span>
-<span><span class="co">#&gt; 8 PC8     1.049730e-28</span></span></code></pre></div>
+<code class="sourceCode R"><span><span class="fu"><a href="../reference/pca_variance_explained.html">pca_variance_explained</a></span><span class="op">(</span><span class="va">result</span><span class="op">)</span></span></code></pre></div>
 </div>
 </div>
 <div class="section level2">
@@ -182,8 +151,10 @@ Fix a bug once, and it’s fixed everywhere.</p>
 </h3>
 <div class="sourceCode" id="cb8"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="kw"><a href="https://rdrr.io/r/base/library.html" class="external-link">library</a></span><span class="op">(</span><span class="va"><a href="https://github.com/St-Jude-MS-ABDS/ADS8192" class="external-link">ADS8192</a></span><span class="op">)</span></span>
-<span><span class="va">result</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/run_pca.html">run_pca</a></span><span class="op">(</span><span class="va">se</span>, n_top <span class="op">=</span> <span class="fl">500</span><span class="op">)</span></span>
-<span><span class="fu"><a href="../reference/plot_pca.html">plot_pca</a></span><span class="op">(</span><span class="va">result</span>, color_by <span class="op">=</span> <span class="st">"treatment"</span><span class="op">)</span></span></code></pre></div>
+<span><span class="kw"><a href="https://rdrr.io/r/base/library.html" class="external-link">library</a></span><span class="op">(</span><span class="va">airway</span><span class="op">)</span></span>
+<span><span class="fu"><a href="https://rdrr.io/r/utils/data.html" class="external-link">data</a></span><span class="op">(</span><span class="st">"airway"</span>, package <span class="op">=</span> <span class="st">"airway"</span><span class="op">)</span></span>
+<span><span class="va">result</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/run_pca.html">run_pca</a></span><span class="op">(</span><span class="va">airway</span>, n_top <span class="op">=</span> <span class="fl">500</span><span class="op">)</span></span>
+<span><span class="fu"><a href="../reference/plot_pca.html">plot_pca</a></span><span class="op">(</span><span class="va">result</span>, color_by <span class="op">=</span> <span class="st">"dex"</span><span class="op">)</span></span></code></pre></div>
 </div>
 <div class="section level3">
 <h3 id="interface-2-shiny-app">Interface 2: Shiny App<a class="anchor" aria-label="anchor" href="#interface-2-shiny-app"></a>

@@ -11,10 +11,11 @@ architecture taught in class:
     [`run_app()`](https://automatic-engine-4qp7m5e.pages.github.io/reference/run_app.md)
 3.  **CLI** — command-line interface via Rapp in `exec/`
 
-All projects share the same rubric (25 points) and structural
-requirements. What differs is the **core analysis** and the **dataset**.
-Choose one of the 13 projects below, or propose your own (see [Custom
-Projects](#custom-projects) at the end).
+All projects share the same
+[rubric](https://automatic-engine-4qp7m5e.pages.github.io/articles/HW1_Rubric.md)
+(25 points) and structural requirements. What differs is the **core
+analysis** and the **dataset**. Choose one of the 13 projects below, or
+propose your own (see [Custom Projects](#custom-projects) at the end).
 
 Each project uses a **different Bioconductor dataset** chosen to be
 biologically appropriate for the analysis. Depending on the project,
@@ -22,8 +23,9 @@ your primary data structure will be either a **SummarizedExperiment**
 (bulk experiments) or a **SingleCellExperiment** (single-cell
 experiments). Your package must include:
 
-- [`make_se()`](https://automatic-engine-4qp7m5e.pages.github.io/reference/make_se.md)
-  or `make_sce()` to construct the appropriate container from raw inputs
+- A constructor function
+  ([`make_se()`](https://automatic-engine-4qp7m5e.pages.github.io/reference/make_se.md)
+  or `make_sce()`) to build the appropriate container from raw inputs
 - 3–5 additional exported analysis/visualization functions
 - At least 8 testthat expectations across 2+ test files
 - A pkgdown documentation site
@@ -35,15 +37,15 @@ experiments). Your package must include:
 
 ## How to Read Each Project Description
 
-| Section            | What it tells you                                                |
-|--------------------|------------------------------------------------------------------|
-| **Rationale**      | Why this analysis matters in genomics                            |
-| **Dataset**        | The Bioconductor dataset you will use, with a `data-raw/` script |
-| **Data structure** | `SummarizedExperiment` or `SingleCellExperiment`                 |
-| **Core functions** | The exported R functions you must implement                      |
-| **Key parameters** | User-facing arguments adjustable in all three interfaces         |
-| **CLI outputs**    | The TSV files your CLI subcommand must produce                   |
-| **Shiny inputs**   | What the user should be able to change interactively             |
+| Section                             | What it tells you                                                |
+|-------------------------------------|------------------------------------------------------------------|
+| **Rationale**                       | Why this analysis matters in genomics                            |
+| **Dataset**                         | The Bioconductor dataset you will use, with a `data-raw/` script |
+| **Data structure**                  | `SummarizedExperiment` or `SingleCellExperiment`                 |
+| **What users should be able to do** | The capabilities your package must provide                       |
+| **Key parameters**                  | User-facing arguments adjustable in all three interfaces         |
+| **CLI outputs**                     | The TSV files your CLI subcommand must produce                   |
+| **Shiny inputs**                    | What the user should be able to change interactively             |
 
 The shared stack that every project uses: `ggplot2`, `rlang`, `shiny`,
 `bslib`, `DT`, `Rapp`, `testthat`, `roxygen2`, `pkgdown`, plus either
@@ -58,9 +60,10 @@ The shared stack that every project uses: `ggplot2`, `rlang`, `shiny`,
 
 **Package name:** ADS8192 (this repo)
 
-**Rationale:** PCA is the most common first step in exploratory analysis
-of high-dimensional data. It reduces thousands of gene measurements to a
-few principal components that capture the dominant sources of variation.
+**Rationale:** PCA is a very common first step in exploratory analysis
+of high-dimensional data. It reduces thousands of features to a few
+principal components that capture the dominant sources of variation for
+the dataset.
 
 ### Dataset: Airway (Human bulk RNA-seq)
 
@@ -69,32 +72,24 @@ smooth muscle cell lines treated with dexamethasone (a glucocorticoid).
 8 samples, 4 treated and 4 untreated, with ~64,000 genes.
 
 ``` r
-## data-raw/example_se.R
 BiocManager::install("airway")
 library(airway)
 library(SummarizedExperiment)
 
 data("airway")
-set.seed(42)
-# Subset to 500 genes for package size: top 100 by variance + 400 random
-counts <- assay(airway)
-vars <- apply(counts, 1, var)
-top100 <- names(sort(vars, decreasing = TRUE))[1:100]
-rest <- sample(setdiff(rownames(counts), top100), 400)
-example_se <- airway[c(top100, rest), ]
-
-usethis::use_data(example_se, overwrite = TRUE)
 ```
 
 **Data structure:** `SummarizedExperiment`
 
-**Core functions:**
-[`make_se()`](https://automatic-engine-4qp7m5e.pages.github.io/reference/make_se.md),
-[`top_variable_features()`](https://automatic-engine-4qp7m5e.pages.github.io/reference/top_variable_features.md),
-[`run_pca()`](https://automatic-engine-4qp7m5e.pages.github.io/reference/run_pca.md),
-[`pca_variance_explained()`](https://automatic-engine-4qp7m5e.pages.github.io/reference/pca_variance_explained.md),
-[`plot_pca()`](https://automatic-engine-4qp7m5e.pages.github.io/reference/plot_pca.md),
-[`save_pca_results()`](https://automatic-engine-4qp7m5e.pages.github.io/reference/save_pca_results.md)
+**What users should be able to do:**
+
+- Construct a SummarizedExperiment from a counts matrix and sample
+  metadata
+- Select the most variable genes from the dataset
+- Run PCA on filtered, optionally transformed expression data
+- Summarize variance explained per principal component
+- Visualize samples in PC space, colored and shaped by metadata columns
+- Export PCA scores and variance summaries to TSV files
 
 **Key parameters:** `n_top`, `log_transform`, `scale`, `color_by`,
 `shape_by`
@@ -141,15 +136,16 @@ usethis::use_data(example_sce, overwrite = TRUE)
 
 **Data structure:** `SingleCellExperiment`
 
-**Core functions:**
+**What users should be able to do:**
 
-| Function                                                                                                         | Purpose                                                         | Returns                                                                              |
-|------------------------------------------------------------------------------------------------------------------|-----------------------------------------------------------------|--------------------------------------------------------------------------------------|
-| `make_sce()`                                                                                                     | Construct SCE from counts matrix + cell metadata                | `SingleCellExperiment`                                                               |
-| [`top_variable_features()`](https://automatic-engine-4qp7m5e.pages.github.io/reference/top_variable_features.md) | Select N most variable genes by variance                        | `SingleCellExperiment` (subset)                                                      |
-| `run_umap()`                                                                                                     | Run UMAP via `uwot::umap()` on filtered, log-transformed matrix | `list(umap, scores)` — uwot result + data.frame with UMAP1/UMAP2 merged with colData |
-| `umap_summary()`                                                                                                 | Summarize embedding spread and parameter values                 | `data.frame` with n_neighbors, min_dist, metric, spread statistics                   |
-| `plot_umap()`                                                                                                    | 2D scatter of UMAP coordinates colored/shaped by metadata       | `ggplot`                                                                             |
+- Construct a SingleCellExperiment from a counts matrix and cell
+  metadata
+- Select the most variable genes for downstream analysis
+- Run UMAP dimensionality reduction with configurable parameters
+  (neighbors, min_dist, metric)
+- Summarize the embedding (parameter values, spread statistics)
+- Visualize cells in UMAP space, colored/shaped by metadata columns
+- Export UMAP coordinates and parameter summaries to TSV files
 
 **Key parameters:** `n_top`, `n_neighbors`, `min_dist`, `metric`
 (euclidean/cosine), `color_by`, `shape_by`
@@ -203,15 +199,17 @@ usethis::use_data(example_se, overwrite = TRUE)
 
 **Data structure:** `SummarizedExperiment`
 
-**Core functions:**
+**What users should be able to do:**
 
-| Function                                                                                                         | Purpose                                                                                         | Returns                                        |
-|------------------------------------------------------------------------------------------------------------------|-------------------------------------------------------------------------------------------------|------------------------------------------------|
-| [`make_se()`](https://automatic-engine-4qp7m5e.pages.github.io/reference/make_se.md)                             | Construct SE from counts + sample metadata                                                      | `SummarizedExperiment`                         |
-| [`top_variable_features()`](https://automatic-engine-4qp7m5e.pages.github.io/reference/top_variable_features.md) | Select N most variable genes                                                                    | `SummarizedExperiment` (subset)                |
-| `compute_similarity()`                                                                                           | Pairwise sample correlation or distance matrix                                                  | `matrix` (symmetric, samples × samples)        |
-| `cluster_samples()`                                                                                              | Run [`hclust()`](https://rdrr.io/r/stats/hclust.html), cut tree at k, compute silhouette widths | `list(hclust, assignments, silhouette_widths)` |
-| `plot_similarity()`                                                                                              | Annotated heatmap with dendrogram sidebars and metadata color bars                              | `ggplot` or base graphics                      |
+- Construct a SummarizedExperiment from a counts matrix and sample
+  metadata
+- Select the most variable genes
+- Compute pairwise sample similarity (correlation or distance matrix)
+- Perform hierarchical clustering, cut at a chosen k, and compute
+  silhouette widths to assess cluster quality
+- Visualize an annotated heatmap with dendrogram sidebars and metadata
+  color bars
+- Export the similarity matrix and cluster assignments to TSV files
 
 **Key parameters:** `n_top`, `method` (pearson/spearman), `linkage`
 (ward.D2/complete/average), `k`
@@ -232,31 +230,40 @@ which genes change between conditions? Per-gene statistical testing with
 fold-change estimation, followed by volcano and MA plot visualization,
 is the foundational analysis in transcriptomics.
 
-### Dataset: Leukemia Subtypes (Human microarray)
+### Dataset: Bottomly (Mouse bulk RNA-seq)
 
-The `leukemiasEset` Bioconductor package contains microarray expression
-data from 60 patients across 5 leukemia subtypes: ALL, AML, CLL, CML,
-and NoL (healthy controls). This is one of the most well-characterized
-gene expression datasets for supervised analysis, and the strong
-transcriptional differences between myeloid (AML, CML) and lymphoid
-(ALL, CLL) lineages make it ideal for differential expression testing.
+The Bottomly et al. (2011) dataset contains bulk RNA-seq data from two
+inbred mouse strains — C57BL/6J and DBA/2J — with 10 and 11 biological
+replicates respectively (21 samples total). These two strains have
+well-characterized gene expression differences, making this a clean,
+real-world dataset for demonstrating per-gene differential expression
+testing. The balanced design and moderate sample size are ideal for both
+t-test and Wilcoxon approaches. Available via `recount3` (project
+SRP001540).
 
 ``` r
 ## data-raw/example_se.R
-BiocManager::install("leukemiasEset")
-library(leukemiasEset)
+BiocManager::install("recount3")
+library(recount3)
 library(SummarizedExperiment)
 
-data(leukemiasEset)
-exprs_mat <- Biobase::exprs(leukemiasEset)
-meta <- Biobase::pData(leukemiasEset)
+# Access the Bottomly et al. dataset via recount3
+human_projects <- available_projects()
+proj <- subset(human_projects, file_source == "sra" &
+                 project == "SRP001540")
+rse <- create_rse(proj)
 
-example_se <- SummarizedExperiment(
-  assays  = list(exprs = exprs_mat),
-  colData = DataFrame(
-    sample_id     = rownames(meta),
-    leukemia_type = factor(meta$LeukemiaType)
-  )
+# Transform raw counts
+assay(rse, "counts") <- transform_counts(rse)
+
+# Simplify colData - extract strain from attributes
+example_se <- rse
+cd <- colData(example_se)
+strain <- ifelse(grepl("C57BL/6J", cd$sra.sample_attributes),
+                 "C57BL_6J", "DBA_2J")
+colData(example_se) <- DataFrame(
+  sample_id = colnames(example_se),
+  strain = factor(strain)
 )
 
 usethis::use_data(example_se, overwrite = TRUE)
@@ -264,15 +271,19 @@ usethis::use_data(example_se, overwrite = TRUE)
 
 **Data structure:** `SummarizedExperiment`
 
-**Core functions:**
+**What users should be able to do:**
 
-| Function                                                                             | Purpose                                                                          | Returns                                      |
-|--------------------------------------------------------------------------------------|----------------------------------------------------------------------------------|----------------------------------------------|
-| [`make_se()`](https://automatic-engine-4qp7m5e.pages.github.io/reference/make_se.md) | Construct SE from counts + sample metadata                                       | `SummarizedExperiment`                       |
-| `filter_low_counts()`                                                                | Remove genes below minimum expression threshold                                  | `SummarizedExperiment` (subset)              |
-| `run_de()`                                                                           | Per-gene t-test or Wilcoxon between two groups; log2FC + p-value + BH-adjusted p | `data.frame` with gene, log2FC, pvalue, padj |
-| `de_summary()`                                                                       | Count up/down/NS genes at given thresholds                                       | `data.frame` with direction, count           |
-| `plot_de()`                                                                          | Volcano (log2FC vs. −log10 p) or MA (A vs. M) plot, colored by significance      | `ggplot`                                     |
+- Construct a SummarizedExperiment from a counts matrix and sample
+  metadata
+- Filter out genes with low expression across samples
+- Run per-gene statistical testing (t-test or Wilcoxon) between two
+  groups, computing log2 fold changes, p-values, and BH-adjusted
+  p-values
+- Summarize the number of significantly up/down/non-significant genes at
+  given thresholds
+- Visualize results as a volcano plot (log2FC vs. −log10 p) or MA plot
+  (average expression vs. log2FC), with significant genes highlighted
+- Export differential expression results and summary counts to TSV files
 
 **Key parameters:** `group_column`, `ref_level`, `fc_threshold`,
 `p_threshold`, `test_method` (t.test/wilcox), `plot_type` (volcano/ma)
@@ -282,7 +293,7 @@ usethis::use_data(example_se, overwrite = TRUE)
 **Shiny inputs:** Grouping column, reference level, FC threshold slider,
 p-value threshold slider, test method toggle, volcano ↔︎ MA radio button
 
-**Dependencies:** `SummarizedExperiment`, `leukemiasEset` (data only)
+**Dependencies:** `SummarizedExperiment`, `recount3` (data only)
 
 ------------------------------------------------------------------------
 
@@ -320,16 +331,18 @@ usethis::use_data(example_sce, overwrite = TRUE)
 
 **Data structure:** `SingleCellExperiment`
 
-**Core functions:**
+**What users should be able to do:**
 
-| Function                                                                                                         | Purpose                                                                                   | Returns                                        |
-|------------------------------------------------------------------------------------------------------------------|-------------------------------------------------------------------------------------------|------------------------------------------------|
-| `make_sce()`                                                                                                     | Construct SCE from counts + cell metadata                                                 | `SingleCellExperiment`                         |
-| [`top_variable_features()`](https://automatic-engine-4qp7m5e.pages.github.io/reference/top_variable_features.md) | Select N most variable genes                                                              | `SingleCellExperiment` (subset)                |
-| `run_kmeans()`                                                                                                   | Run [`kmeans()`](https://rdrr.io/r/stats/kmeans.html) for k = 2..max_k, store all results | `list` of kmeans objects                       |
-| `kmeans_metrics()`                                                                                               | Total WSS and silhouette width per k                                                      | `data.frame` with k, total_wss, avg_silhouette |
-| `plot_clusters()`                                                                                                | PCA-projected scatter colored by cluster assignment                                       | `ggplot`                                       |
-| `plot_elbow()`                                                                                                   | WSS vs. k line plot with elbow annotation                                                 | `ggplot`                                       |
+- Construct a SingleCellExperiment from a counts matrix and cell
+  metadata
+- Select the most variable genes
+- Run k-means clustering across a range of k values (2..max_k)
+- Compute clustering quality metrics (total within-cluster sum of
+  squares, average silhouette width) for each k
+- Visualize clusters on a PCA projection, colored by cluster assignment
+- Generate an elbow plot (WSS vs. k) for choosing the optimal number of
+  clusters
+- Export cluster assignments and quality metrics to TSV files
 
 **Key parameters:** `n_top`, `max_k`, `n_starts`, `selected_k`
 
@@ -380,14 +393,17 @@ usethis::use_data(example_sce, overwrite = TRUE)
 
 **Data structure:** `SingleCellExperiment`
 
-**Core functions:**
+**What users should be able to do:**
 
-| Function               | Purpose                                                                                                    | Returns                                     |
-|------------------------|------------------------------------------------------------------------------------------------------------|---------------------------------------------|
-| `make_sce()`           | Construct SCE from counts + cell metadata                                                                  | `SingleCellExperiment`                      |
-| `compute_qc_metrics()` | Library size, genes detected, spike-in %, Shannon entropy; add to colData                                  | `SingleCellExperiment` (with QC columns)    |
-| `qc_summary()`         | Flag outliers via MAD-based thresholds; pass/fail table                                                    | `data.frame` with cell, metric, value, pass |
-| `plot_qc()`            | Multi-panel: library size bars, genes vs. library size scatter, spike-in % histogram; outliers highlighted | `ggplot` (patchwork or faceted)             |
+- Construct a SingleCellExperiment from a counts matrix and cell
+  metadata
+- Compute per-cell QC metrics: library size, number of genes detected,
+  spike-in percentage, and Shannon entropy
+- Flag outlier cells using MAD-based thresholds on QC metrics
+- Visualize QC results in a multi-panel display: library size
+  distribution, genes vs. library size scatter, spike-in percentage
+  histogram, with outliers highlighted
+- Export QC metrics and pass/fail flags to TSV files
 
 **Key parameters:** `mad_threshold`, `min_genes`, `min_library_size`,
 `max_spike_pct`
@@ -440,15 +456,18 @@ usethis::use_data(example_sce, overwrite = TRUE)
 
 **Data structure:** `SingleCellExperiment`
 
-**Core functions:**
+**What users should be able to do:**
 
-| Function               | Purpose                                                      | Returns                                                |
-|------------------------|--------------------------------------------------------------|--------------------------------------------------------|
-| `make_sce()`           | Construct SCE from counts + cell metadata                    | `SingleCellExperiment`                                 |
-| `filter_low_counts()`  | Remove genes below minimum mean expression                   | `SingleCellExperiment` (subset)                        |
-| `compute_gene_stats()` | Per-gene mean, variance, CV, dispersion; ranked              | `data.frame` with gene, mean, variance, cv, dispersion |
-| `gene_stats_summary()` | Count HVGs at various thresholds, fit mean-variance trend    | `list(counts, trend)`                                  |
-| `plot_mean_variance()` | Mean vs. variance scatter with loess trend; HVGs highlighted | `ggplot`                                               |
+- Construct a SingleCellExperiment from a counts matrix and cell
+  metadata
+- Filter out genes below a minimum mean expression threshold
+- Compute per-gene statistics: mean, variance, coefficient of variation,
+  and dispersion, with ranking
+- Summarize the number of highly variable genes at different thresholds
+  and fit a mean-variance trend
+- Visualize the mean-variance relationship as a scatter plot with a
+  loess trend line, highlighting selected HVGs
+- Export gene statistics and the HVG list to TSV files
 
 **Key parameters:** `min_mean`, `variance_threshold`, `n_top_genes`
 
@@ -470,50 +489,50 @@ pathway to a single number per sample, enabling group comparisons. This
 project combines expression data with external pathway knowledge from
 MSigDB.
 
-### Dataset: ALL Leukemia (Human microarray) + MSigDB Hallmark Gene Sets
+### Dataset: TCGA BRCA (Human bulk RNA-seq) + MSigDB Hallmark Gene Sets
 
-The `ALL` package contains Affymetrix microarray data from 128 patients
-with acute lymphoblastic leukemia, classified as B-cell (B1–B4) or
-T-cell (T1–T4) subtypes. Immune-related gene sets from MSigDB — such as
-IL2/STAT5 signaling, inflammatory response, and MYC targets — clearly
-distinguish B-cell from T-cell lineages, making pathway-level scoring
-biologically compelling.
+The `curatedTCGAData` package provides access to The Cancer Genome Atlas
+data. The BRCA (breast cancer) cohort includes RNA-seq expression data
+from ~1,200 patients with rich clinical annotations (ER/PR/HER2 status,
+PAM50 subtype, stage). Immune and proliferation-related gene sets from
+MSigDB clearly distinguish molecular subtypes — making pathway-level
+scoring biologically compelling. We subset to a manageable number of
+samples for the example data.
 
 ``` r
 ## data-raw/example_se.R
-BiocManager::install(c("ALL", "hgu95av2.db", "AnnotationDbi"))
+BiocManager::install(c("curatedTCGAData", "TCGAutils"))
 install.packages("msigdbr")
-library(ALL)
+library(curatedTCGAData)
+library(TCGAutils)
 library(SummarizedExperiment)
-library(AnnotationDbi)
 
-data(ALL)
-# Map probe IDs to gene symbols
-probe2gene <- AnnotationDbi::mapIds(
-  hgu95av2.db::hgu95av2.db,
-  keys    = rownames(ALL),
-  column  = "SYMBOL",
-  keytype = "PROBEID",
-  multiVals = "first"
-)
+# Download BRCA RNA-seq data
+brca <- curatedTCGAData("BRCA", "RNASeq2*", version = "2.0.1",
+                         dry.run = FALSE)
+rse <- experiments(brca)[[1]]
 
-# Remove unmapped probes, collapse duplicates by mean
-exprs_mat <- Biobase::exprs(ALL)
-mapped <- !is.na(probe2gene)
-exprs_mat <- exprs_mat[mapped, ]
-rownames(exprs_mat) <- probe2gene[mapped]
-exprs_mat <- do.call(rbind, lapply(
-  split(seq_len(nrow(exprs_mat)), rownames(exprs_mat)),
-  function(idx) colMeans(exprs_mat[idx, , drop = FALSE])
-))
+# Subset to 200 samples for package size
+set.seed(42)
+keep_samples <- sample(ncol(rse), 200)
+rse <- rse[, keep_samples]
 
-# Build SE with clinical metadata
-meta <- Biobase::pData(ALL)[, c("BT", "mol.biol", "sex", "age")]
-meta$lineage <- ifelse(grepl("^B", meta$BT), "B-cell", "T-cell")
+# Subset to top 5000 variable genes
+vars <- apply(assay(rse), 1, var, na.rm = TRUE)
+keep_genes <- names(sort(vars, decreasing = TRUE))[1:5000]
+rse <- rse[keep_genes, ]
+
+# Get clinical data
+clin <- colData(brca)
+clin <- clin[colnames(rse), ]
 
 example_se <- SummarizedExperiment(
-  assays  = list(exprs = exprs_mat),
-  colData = DataFrame(meta)
+  assays = list(exprs = assay(rse)),
+  colData = DataFrame(
+    sample_id   = colnames(rse),
+    er_status   = clin$pathologic_stage,
+    pam50       = clin$subtype_PAM50.mRNA
+  )
 )
 
 # Bundle a small set of hallmark gene sets
@@ -535,15 +554,17 @@ usethis::use_data(example_se, example_gene_sets, overwrite = TRUE)
 
 **Data structure:** `SummarizedExperiment`
 
-**Core functions:**
+**What users should be able to do:**
 
-| Function                                                                             | Purpose                                                     | Returns                                                    |
-|--------------------------------------------------------------------------------------|-------------------------------------------------------------|------------------------------------------------------------|
-| [`make_se()`](https://automatic-engine-4qp7m5e.pages.github.io/reference/make_se.md) | Construct SE from expression matrix + sample metadata       | `SummarizedExperiment`                                     |
-| `read_gene_sets()`                                                                   | Parse GMT file or named list into list of character vectors | `list` of gene name vectors                                |
-| `score_gene_set()`                                                                   | Per-sample mean z-score of gene set members                 | `data.frame` with sample, set_name, score                  |
-| `scoring_summary()`                                                                  | Mean score per group, effect size between conditions        | `data.frame` with set_name, group, mean_score, effect_size |
-| `plot_scores()`                                                                      | Boxplot or violin of scores by group, faceted by gene set   | `ggplot`                                                   |
+- Construct a SummarizedExperiment from an expression matrix and sample
+  metadata
+- Read gene sets from a GMT file or named list of character vectors
+- Compute per-sample gene set scores (e.g., mean z-score of set members)
+- Summarize mean scores per group and compute effect sizes between
+  conditions
+- Visualize gene set scores as boxplots or violin plots, grouped by a
+  clinical variable and faceted by gene set
+- Export per-sample scores and group summaries to TSV files
 
 **Key parameters:** `gene_sets` (list or GMT path), `score_method`
 (mean_z, median_z), `group_column`
@@ -551,11 +572,11 @@ usethis::use_data(example_se, example_gene_sets, overwrite = TRUE)
 **CLI outputs:** `geneset_scores.tsv`, `scoring_summary.tsv`
 
 **Shiny inputs:** Select built-in sets or upload GMT, score method
-dropdown, grouping variable dropdown (lineage, BT subtype), gene set
-selector, boxplot ↔︎ violin toggle
+dropdown, grouping variable dropdown (ER status, PAM50 subtype), gene
+set selector, boxplot ↔︎ violin toggle
 
-**Dependencies:** `SummarizedExperiment`, `ALL`, `hgu95av2.db`,
-`AnnotationDbi` (data prep), `msigdbr` (gene sets)
+**Dependencies:** `SummarizedExperiment`, `curatedTCGAData` (data only),
+`msigdbr` (gene sets)
 
 ------------------------------------------------------------------------
 
@@ -594,15 +615,18 @@ usethis::use_data(example_sce, overwrite = TRUE)
 
 **Data structure:** `SingleCellExperiment`
 
-**Core functions:**
+**What users should be able to do:**
 
-| Function                  | Purpose                                                                              | Returns                                         |
-|---------------------------|--------------------------------------------------------------------------------------|-------------------------------------------------|
-| `make_sce()`              | Construct SCE from counts + cell metadata                                            | `SingleCellExperiment`                          |
-| `filter_low_counts()`     | Remove low-expression genes                                                          | `SingleCellExperiment` (subset)                 |
-| `normalize_counts()`      | Apply CPM, log2-CPM, or quantile normalization; return new SCE with normalized assay | `SingleCellExperiment`                          |
-| `normalization_summary()` | Per-cell median, IQR, CV before and after normalization                              | `data.frame` with cell, method, median, iqr, cv |
-| `plot_distributions()`    | Side-by-side boxplots or density curves per method                                   | `ggplot`                                        |
+- Construct a SingleCellExperiment from a counts matrix and cell
+  metadata
+- Filter out low-expression genes
+- Apply multiple normalization methods (CPM, log2-CPM, quantile) and
+  store the normalized values as new assays in the SCE
+- Compute per-cell distributional statistics (median, IQR, CV) before
+  and after each normalization method
+- Visualize side-by-side distributions across methods as boxplots or
+  density curves
+- Export normalized counts and normalization statistics to TSV files
 
 **Key parameters:** `methods` (character vector: “cpm”, “log2”,
 “quantile”), `min_count`
@@ -621,58 +645,66 @@ toggle, per-cell or per-method view
 **Rationale:** Co-expressed genes often share biological functions.
 Building a gene-gene correlation network — computing pairwise
 correlations, thresholding to an adjacency matrix, and identifying hub
-genes — is a lightweight introduction to network biology. Patient
-cohorts with many samples provide stable pairwise gene correlations that
-reveal known co-regulation patterns.
+genes — is a lightweight introduction to network biology. Cohorts with
+many samples provide stable pairwise gene correlations that reveal known
+co-regulation patterns.
 
-### Dataset: Golub Leukemia (Human microarray)
+### Dataset: GTEx Skeletal Muscle (Human bulk RNA-seq)
 
-The Golub et al. (1999) dataset is arguably the most famous gene
-expression dataset in bioinformatics — the paper that launched
-supervised classification in genomics. The `golubEsets` Bioconductor
-package provides microarray data from 72 leukemia patients (47 ALL, 25
-AML). With 72 samples, pairwise gene correlations are reasonably stable,
-and known co-expression modules (e.g., B-cell receptor signaling genes,
-myeloid differentiation genes) are recoverable.
+The `recount3` package provides access to the GTEx (Genotype-Tissue
+Expression) project. The skeletal muscle tissue has one of the largest
+sample sizes in GTEx (~800 samples), providing highly stable gene-gene
+correlations. Known co-expression modules — such as mitochondrial
+respiration genes, sarcomere components, and extracellular matrix genes
+— are recoverable, making this a biologically rich dataset for network
+analysis.
 
 ``` r
 ## data-raw/example_se.R
-BiocManager::install("golubEsets")
-library(golubEsets)
+BiocManager::install("recount3")
+library(recount3)
 library(SummarizedExperiment)
 
-data(Golub_Merge)
-exprs_mat <- Biobase::exprs(Golub_Merge)
-meta <- Biobase::pData(Golub_Merge)
+# Access GTEx skeletal muscle data
+human_projects <- available_projects()
+proj <- subset(human_projects, file_source == "gtex" &
+                 project == "MUSCLE")
+rse <- create_rse(proj)
+
+# Transform raw counts
+assay(rse, "counts") <- transform_counts(rse)
 
 # Subset to top 2000 genes by variance for tractable network computation
-vars <- apply(exprs_mat, 1, var)
+vars <- apply(assay(rse, "counts"), 1, var)
 keep_genes <- names(sort(vars, decreasing = TRUE))[1:2000]
-exprs_mat <- exprs_mat[keep_genes, ]
 
-example_se <- SummarizedExperiment(
-  assays  = list(exprs = exprs_mat),
-  colData = DataFrame(
-    sample_id = rownames(meta),
-    cancer    = factor(meta$ALL.AML)
-  )
-)
+# Subset to 200 samples for package size
+set.seed(42)
+keep_samples <- sample(ncol(rse), min(200, ncol(rse)))
+
+example_se <- rse[keep_genes, keep_samples]
+assays(example_se) <- list(counts = assay(example_se, "counts"))
+colData(example_se) <- colData(example_se)[, c("gtex.age", "gtex.sex"),
+                                            drop = FALSE]
 
 usethis::use_data(example_se, overwrite = TRUE)
 ```
 
 **Data structure:** `SummarizedExperiment`
 
-**Core functions:**
+**What users should be able to do:**
 
-| Function                                                                                                         | Purpose                                                                  | Returns                         |
-|------------------------------------------------------------------------------------------------------------------|--------------------------------------------------------------------------|---------------------------------|
-| [`make_se()`](https://automatic-engine-4qp7m5e.pages.github.io/reference/make_se.md)                             | Construct SE from counts + sample metadata                               | `SummarizedExperiment`          |
-| [`top_variable_features()`](https://automatic-engine-4qp7m5e.pages.github.io/reference/top_variable_features.md) | Select top N genes                                                       | `SummarizedExperiment` (subset) |
-| `compute_gene_cor()`                                                                                             | Pairwise gene-gene correlation matrix                                    | `matrix` (gene × gene)          |
-| `build_adjacency()`                                                                                              | Threshold correlation → binary adjacency; compute degree and betweenness | `list(adjacency, node_stats)`   |
-| `network_summary()`                                                                                              | Edge count, mean degree, hub genes above threshold                       | `data.frame`                    |
-| `plot_network()`                                                                                                 | Adjacency heatmap with gene clustering, or force-directed layout         | `ggplot` or base plot           |
+- Construct a SummarizedExperiment from a counts matrix and sample
+  metadata
+- Select the most variable genes for network construction
+- Compute a pairwise gene-gene correlation matrix
+- Threshold the correlation matrix into a binary adjacency matrix and
+  compute per-gene network statistics (degree, betweenness centrality)
+- Summarize the network: total edge count, mean degree, hub genes above
+  a connectivity threshold
+- Visualize the network as a correlation heatmap with gene clustering,
+  or as a force-directed layout
+- Export correlations, network summary, and hub gene lists to TSV files
 
 **Key parameters:** `n_top`, `cor_method` (pearson/spearman),
 `cor_threshold`
@@ -684,7 +716,7 @@ usethis::use_data(example_se, overwrite = TRUE)
 slider, hub gene table, heatmap redraws on threshold change
 
 **Dependencies:** `SummarizedExperiment`, `igraph` (Suggests, for
-force-directed layout), `golubEsets` (data only)
+force-directed layout), `recount3` (data only)
 
 ------------------------------------------------------------------------
 
@@ -696,31 +728,43 @@ hierarchical clustering of both axes, clinical annotation bars —
 requires integrating several analysis steps into a single
 publication-quality visualization.
 
-### Dataset: Breast Cancer NKI (Human microarray)
+### Dataset: TCGA GBM (Human bulk RNA-seq)
 
-The `breastCancerNKI` package contains microarray gene expression data
-from 337 breast cancer patients (van de Vijver et al., 2002) with rich
-clinical annotations: ER status, histological grade, lymph node
-involvement, age, and survival. The multiple clinical variables make
-ideal column annotation bars, and the known molecular subtypes (luminal,
-basal, HER2-enriched) produce distinctive gene module patterns in
-unsupervised clustering.
+The `curatedTCGAData` package provides RNA-seq expression data from The
+Cancer Genome Atlas. The GBM (glioblastoma multiforme) cohort includes
+~170 patients with rich clinical annotations: transcriptional subtype
+(Classical, Mesenchymal, Proneural, Neural), IDH mutation status, MGMT
+methylation, age, and survival. The multiple clinical variables make
+ideal column annotation bars, and the known molecular subtypes produce
+distinctive gene module patterns in unsupervised clustering.
 
 ``` r
 ## data-raw/example_se.R
-BiocManager::install("breastCancerNKI")
-library(breastCancerNKI)
+BiocManager::install(c("curatedTCGAData", "TCGAutils"))
+library(curatedTCGAData)
+library(TCGAutils)
 library(SummarizedExperiment)
 
-data(nki)
-exprs_mat <- Biobase::exprs(nki)
-meta <- Biobase::pData(nki)
+# Download GBM RNA-seq data
+gbm <- curatedTCGAData("GBM", "RNASeq2*", version = "2.0.1",
+                        dry.run = FALSE)
+rse <- experiments(gbm)[[1]]
 
-meta <- meta[, c("er", "grade", "node", "age")]
+# Subset to top 2000 variable genes
+vars <- apply(assay(rse), 1, var, na.rm = TRUE)
+keep_genes <- names(sort(vars, decreasing = TRUE))[1:2000]
+rse <- rse[keep_genes, ]
+
+# Get clinical data
+clin <- colData(gbm)
 
 example_se <- SummarizedExperiment(
-  assays  = list(exprs = exprs_mat),
-  colData = DataFrame(meta)
+  assays = list(exprs = assay(rse)),
+  colData = DataFrame(
+    sample_id = colnames(rse),
+    subtype   = clin[colnames(rse), "subtype_Transcriptome.Subtype"],
+    age       = clin[colnames(rse), "years_to_birth"]
+  )
 )
 
 usethis::use_data(example_se, overwrite = TRUE)
@@ -728,15 +772,18 @@ usethis::use_data(example_se, overwrite = TRUE)
 
 **Data structure:** `SummarizedExperiment`
 
-**Core functions:**
+**What users should be able to do:**
 
-| Function                                                                                                         | Purpose                                                                                | Returns                         |
-|------------------------------------------------------------------------------------------------------------------|----------------------------------------------------------------------------------------|---------------------------------|
-| [`make_se()`](https://automatic-engine-4qp7m5e.pages.github.io/reference/make_se.md)                             | Construct SE from expression matrix + sample metadata                                  | `SummarizedExperiment`          |
-| [`top_variable_features()`](https://automatic-engine-4qp7m5e.pages.github.io/reference/top_variable_features.md) | Select top N genes                                                                     | `SummarizedExperiment` (subset) |
-| `scale_expression()`                                                                                             | Row z-score or min-max scale the assay; return new SE                                  | `SummarizedExperiment`          |
-| `cluster_genes()`                                                                                                | Hierarchical clustering of rows, cut at k → gene module assignments                    | `list(hclust, modules)`         |
-| `plot_heatmap()`                                                                                                 | Genes × samples heatmap with row dendrogram, column annotation bars, gene module strip | plot object                     |
+- Construct a SummarizedExperiment from an expression matrix and sample
+  metadata
+- Select the most variable genes
+- Row-scale the expression matrix (z-score or min-max normalization)
+- Perform hierarchical clustering on rows (genes) and cut at k to assign
+  gene modules
+- Generate a genes × samples heatmap with row dendrogram, column
+  annotation bars from clinical metadata, and a gene module color strip
+- Export the scaled expression matrix and gene module assignments to TSV
+  files
 
 **Key parameters:** `n_top`, `scale_method` (zscore/minmax/none),
 `gene_k`, `column_split_by` (metadata column)
@@ -747,7 +794,7 @@ usethis::use_data(example_se, overwrite = TRUE)
 metadata column selector for annotation, heatmap updates reactively
 
 **Dependencies:** `SummarizedExperiment`, `ComplexHeatmap` (Suggests),
-`breastCancerNKI` (data only)
+`curatedTCGAData` (data only)
 
 ------------------------------------------------------------------------
 
@@ -785,15 +832,19 @@ usethis::use_data(example_sce, overwrite = TRUE)
 
 **Data structure:** `SingleCellExperiment`
 
-**Core functions:**
+**What users should be able to do:**
 
-| Function                                                                                                         | Purpose                                                              | Returns                                                                |
-|------------------------------------------------------------------------------------------------------------------|----------------------------------------------------------------------|------------------------------------------------------------------------|
-| `make_sce()`                                                                                                     | Construct SCE from counts + cell metadata                            | `SingleCellExperiment`                                                 |
-| [`top_variable_features()`](https://automatic-engine-4qp7m5e.pages.github.io/reference/top_variable_features.md) | Select top N genes                                                   | `SingleCellExperiment` (subset)                                        |
-| `compute_eigenvalues()`                                                                                          | Run PCA, extract eigenvalues (sdev²)                                 | `data.frame` with PC, eigenvalue, variance_percent, cumulative_percent |
-| `estimate_dimensions()`                                                                                          | Apply broken-stick, Kaiser, elbow heuristics; recommend k per method | `data.frame` with method, recommended_k, criterion                     |
-| `plot_scree()`                                                                                                   | Scree plot with broken-stick overlay, Kaiser line, elbow annotation  | `ggplot`                                                               |
+- Construct a SingleCellExperiment from a counts matrix and cell
+  metadata
+- Select the most variable genes
+- Run PCA and extract eigenvalues (variance per component, cumulative
+  variance)
+- Apply multiple dimensionality estimation methods (broken-stick model,
+  Kaiser criterion, elbow heuristic) and report recommended number of
+  components from each
+- Visualize a scree plot with overlays for each estimation method
+  (broken-stick curve, Kaiser line, elbow annotation)
+- Export eigenvalue tables and dimensionality estimates to TSV files
 
 **Key parameters:** `n_top`, `methods` (broken_stick/kaiser/elbow),
 `max_pcs`
@@ -815,48 +866,46 @@ Quantifying how much variance each PC attributes to batch (via linear
 regression R²) is the standard diagnostic before deciding whether
 correction is needed.
 
-### Dataset: Bladder Cancer Batches (Human microarray)
+### Dataset: Grun Human Pancreas (Human scRNA-seq)
 
-The `bladderbatch` package is THE canonical batch-effect dataset: 57
-bladder cancer microarray samples processed in 5 batches, with 3 cancer
-subtypes (Normal, Biopsy, Cancer). Batch effects are strong and
-well-characterized — this is the dataset used in the original ComBat
-paper and the `sva` vignette. PCA colored by batch vs. cancer type
-reveals the problem immediately.
+The `scRNAseq` package provides the Grun et al. (2016) dataset: ~1,700
+human pancreatic cells profiled across multiple donors using CEL-Seq.
+The combination of donor (batch) and cell type (biology) creates a
+realistic scenario where students must distinguish technical from
+biological variation in PCA space. PCA colored by donor vs. cell type
+reveals the batch effect immediately.
 
 ``` r
-## data-raw/example_se.R
-BiocManager::install("bladderbatch")
-library(bladderbatch)
-library(SummarizedExperiment)
+## data-raw/example_sce.R
+BiocManager::install("scRNAseq")
+library(scRNAseq)
+library(SingleCellExperiment)
 
-data(bladderdata)
-exprs_mat <- Biobase::exprs(bladderEset)
-meta <- Biobase::pData(bladderEset)
+sce <- GrunPancreasData()
+example_sce <- sce
 
-example_se <- SummarizedExperiment(
-  assays  = list(exprs = exprs_mat),
-  colData = DataFrame(
-    sample_id = rownames(meta),
-    batch     = factor(meta$batch),
-    cancer    = factor(meta$cancer)
-  )
-)
+assays(example_sce) <- list(counts = counts(example_sce))
+colData(example_sce) <- colData(example_sce)[, c("donor", "sample")]
+colnames(colData(example_sce)) <- c("batch", "cell_type")
 
-usethis::use_data(example_se, overwrite = TRUE)
+usethis::use_data(example_sce, overwrite = TRUE)
 ```
 
-**Data structure:** `SummarizedExperiment`
+**Data structure:** `SingleCellExperiment`
 
-**Core functions:**
+**What users should be able to do:**
 
-| Function                                                                                                         | Purpose                                                           | Returns                                      |
-|------------------------------------------------------------------------------------------------------------------|-------------------------------------------------------------------|----------------------------------------------|
-| [`make_se()`](https://automatic-engine-4qp7m5e.pages.github.io/reference/make_se.md)                             | Construct SE from expression matrix + sample metadata             | `SummarizedExperiment`                       |
-| [`top_variable_features()`](https://automatic-engine-4qp7m5e.pages.github.io/reference/top_variable_features.md) | Select top N genes                                                | `SummarizedExperiment` (subset)              |
-| `quantify_batch_effect()`                                                                                        | For each PC, fit `lm(PC ~ batch)`, extract R²                     | `data.frame` with PC, batch_r2, residual_var |
-| `correct_batch()`                                                                                                | Median-centering batch correction; return corrected SE            | `SummarizedExperiment`                       |
-| `plot_batch()`                                                                                                   | Dual-panel: PCA by batch before & after correction + R² bar chart | `ggplot` (patchwork or faceted)              |
+- Construct a SingleCellExperiment from a counts matrix and cell
+  metadata
+- Select the most variable genes
+- Quantify batch effects by fitting a linear model of each PC against
+  the batch variable and extracting R² values
+- Apply a simple batch correction (e.g., median-centering per batch) and
+  return a corrected object
+- Visualize dual-panel PCA plots (before and after correction) colored
+  by batch, plus an R² bar chart showing the proportion of variance
+  attributable to batch per PC
+- Export batch variance quantification and corrected counts to TSV files
 
 **Key parameters:** `batch_column`, `n_top`, `correct` (logical),
 `bio_column`
@@ -866,7 +915,7 @@ usethis::use_data(example_se, overwrite = TRUE)
 **Shiny inputs:** Batch column dropdown, biological column dropdown,
 n_top slider, correction toggle, before/after PCA panels, R² bar chart
 
-**Dependencies:** `SummarizedExperiment`, `bladderbatch` (data only)
+**Dependencies:** `SingleCellExperiment`, `scRNAseq` (data only)
 
 ------------------------------------------------------------------------
 
@@ -907,15 +956,19 @@ usethis::use_data(example_sce, overwrite = TRUE)
 
 **Data structure:** `SingleCellExperiment`
 
-**Core functions:**
+**What users should be able to do:**
 
-| Function              | Purpose                                                                                 | Returns                                                   |
-|-----------------------|-----------------------------------------------------------------------------------------|-----------------------------------------------------------|
-| `make_sce()`          | Construct SCE from counts + cell metadata                                               | `SingleCellExperiment`                                    |
-| `filter_low_counts()` | Remove low-expression genes                                                             | `SingleCellExperiment` (subset)                           |
-| `find_markers()`      | One-vs-rest log2FC + Wilcoxon p-value per group; BH-adjust; rank                        | `data.frame` with gene, group, log2FC, pvalue, padj, rank |
-| `marker_summary()`    | Top N markers per group, overlap counts between groups                                  | `list(top_markers, overlap_matrix)`                       |
-| `plot_markers()`      | Dot plot: genes on y, groups on x; dot size = % expressing, dot color = mean expression | `ggplot`                                                  |
+- Construct a SingleCellExperiment from a counts matrix and cell
+  metadata
+- Filter out low-expression genes
+- Perform one-vs-rest statistical testing per cell type: compute log2
+  fold changes, Wilcoxon p-values, BH-adjusted p-values, and rank genes
+  per group
+- Summarize the top N markers per group and compute overlap counts
+  between groups
+- Visualize markers as a dot plot: genes on y-axis, groups on x-axis,
+  dot size encodes detection rate, dot color encodes mean expression
+- Export marker gene lists and summaries to TSV files
 
 **Key parameters:** `group_column`, `n_markers`, `fc_threshold`,
 `detection_threshold`
@@ -932,24 +985,25 @@ table
 
 ## Quick Comparison
 
-| \#  | Project                 | Dataset                | Organism | Structure | Primary Plot            | Extra Deps           |
-|-----|-------------------------|------------------------|----------|-----------|-------------------------|----------------------|
-| 1   | UMAP Embedding          | Zeisel brain           | Mouse    | SCE       | 2D scatter              | uwot                 |
-| 2   | Sample Similarity       | Parathyroid adenoma    | Human    | SE        | heatmap + dendrogram    | —                    |
-| 3   | Differential Expression | Leukemia subtypes      | Human    | SE        | volcano / MA            | —                    |
-| 4   | K-means Clustering      | Baron human pancreas   | Human    | SCE       | scatter + elbow         | cluster              |
-| 5   | Cell QC Dashboard       | Lun spike-in           | Mouse    | SCE       | multi-panel             | —                    |
-| 6   | Gene Variance           | Macosko retina         | Mouse    | SCE       | mean-variance scatter   | —                    |
-| 7   | Gene Set Scoring        | ALL leukemia + MSigDB  | Human    | SE        | boxplot / violin        | msigdbr, hgu95av2.db |
-| 8   | Normalization           | Muraro pancreas        | Human    | SCE       | density / boxplot       | —                    |
-| 9   | Gene Corr Network       | Golub leukemia         | Human    | SE        | network / heatmap       | igraph (opt.)        |
-| 10  | Expression Heatmap      | Breast cancer NKI      | Human    | SE        | genes × samples heatmap | ComplexHeatmap       |
-| 11  | Dim Estimation          | PBMC 3k                | Human    | SCE       | scree + overlays        | —                    |
-| 12  | Batch Effect            | Bladder cancer batches | Human    | SE        | before/after PCA + R²   | —                    |
-| 13  | Marker Genes            | Baron mouse pancreas   | Mouse    | SCE       | dot plot                | —                    |
+| \#  | Project                 | Dataset                  | Organism | Structure | Primary Plot            | Extra Deps                      |
+|-----|-------------------------|--------------------------|----------|-----------|-------------------------|---------------------------------|
+| 1   | UMAP Embedding          | Zeisel brain             | Mouse    | SCE       | 2D scatter              | uwot                            |
+| 2   | Sample Similarity       | Parathyroid adenoma      | Human    | SE        | heatmap + dendrogram    | —                               |
+| 3   | Differential Expression | Bottomly (mouse strains) | Mouse    | SE        | volcano / MA            | —                               |
+| 4   | K-means Clustering      | Baron human pancreas     | Human    | SCE       | scatter + elbow         | cluster                         |
+| 5   | Cell QC Dashboard       | Lun spike-in             | Mouse    | SCE       | multi-panel             | —                               |
+| 6   | Gene Variance           | Macosko retina           | Mouse    | SCE       | mean-variance scatter   | —                               |
+| 7   | Gene Set Scoring        | TCGA BRCA + MSigDB       | Human    | SE        | boxplot / violin        | msigdbr, curatedTCGAData        |
+| 8   | Normalization           | Muraro pancreas          | Human    | SCE       | density / boxplot       | —                               |
+| 9   | Gene Corr Network       | GTEx skeletal muscle     | Human    | SE        | network / heatmap       | igraph (opt.), recount3         |
+| 10  | Expression Heatmap      | TCGA GBM                 | Human    | SE        | genes × samples heatmap | ComplexHeatmap, curatedTCGAData |
+| 11  | Dim Estimation          | PBMC 3k                  | Human    | SCE       | scree + overlays        | —                               |
+| 12  | Batch Effect            | Grun human pancreas      | Human    | SCE       | before/after PCA + R²   | —                               |
+| 13  | Marker Genes            | Baron mouse pancreas     | Mouse    | SCE       | dot plot                | —                               |
 
-- **13 unique datasets** — all **human or mouse**
-- **7 single-cell** (SCE) + **6 bulk** (SE) projects
+- **13 unique datasets** — all **human or mouse**, all **RNA-seq or
+  scRNA-seq**
+- **8 single-cell** (SCE) + **5 bulk** (SE) projects
 - No two projects share both the same computation **and** visualization
 
 ------------------------------------------------------------------------
@@ -958,7 +1012,7 @@ table
 
 Regardless of which project you choose, your package must satisfy
 **all** of the following. These map directly to the [HW1
-rubric](https://automatic-engine-4qp7m5e.pages.github.io/HW1_Rubric.md)
+rubric](https://automatic-engine-4qp7m5e.pages.github.io/articles/HW1_Rubric.md)
 (25 points).
 
 ### Package Structure (4 pts)
@@ -1022,8 +1076,8 @@ approved, your proposal must include:
 1.  **One paragraph** describing the biological or analytical rationale
 2.  **A Bioconductor dataset** with a `data-raw/` script showing how to
     prepare the example data
-3.  **A function table** listing 4–6 exported functions with their
-    inputs and return types (same format as the projects above)
+3.  **A capability list** describing what users should be able to do
+    with the package (4–6 bullet points)
 4.  **At least one non-trivial visualization** (not just a base R
     [`plot()`](https://rdrr.io/r/graphics/plot.default.html) call)
 5.  **CLI outputs** — what TSV files will be produced?
@@ -1036,11 +1090,9 @@ approval or suggested modifications.
 **Ground rules for custom projects:**
 
 - Must operate on `SummarizedExperiment` or `SingleCellExperiment` input
-- Must include
-  [`make_se()`](https://automatic-engine-4qp7m5e.pages.github.io/reference/make_se.md)
-  or `make_sce()` as the entry point
+- Must include a constructor function as the entry point
 - Must use a real human or mouse Bioconductor dataset (not simulated
-  data)
+  data); RNA-seq or scRNA-seq preferred (avoid microarray datasets)
 - Must produce at least one `ggplot`-based visualization
 - Must not duplicate an existing project from the list above
 - Scope should be comparable — roughly 4–6 exported functions, not a

@@ -40,8 +40,8 @@ Invisible `NULL`; files are written to `output_dir`:
 
 ``` r
 if (FALSE) { # \dontrun{
-data(example_se)
-result <- run_pca(example_se, n_top = 50)
+data(airway, package = "airway")
+result <- run_pca(airway, n_top = 50)
 save_pca_results(result, tempdir())
 } # }
 ```
