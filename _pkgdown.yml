@@ -2,6 +2,7 @@ url: https://automatic-engine-4qp7m5e.pages.github.io/
 template:
   bootstrap: 5
   bootswatch: flatly
+  light-switch: true
 navbar:
   structure:
     left:
@@ -59,9 +60,6 @@ reference:
 - title: Interactive App
   desc: Shiny web application
   contents: run_app
-- title: Data
-  desc: Example datasets
-  contents: example_se
 articles:
 - title: Getting Started
   navbar: ~
