@@ -83,10 +83,12 @@ Andrews</h4>
 <h2 id="overview">Overview<a class="anchor" aria-label="anchor" href="#overview"></a>
 </h2>
 <p><strong>ADS 8192: Developing Scientific Applications</strong> teaches
-the “three interfaces, one core” architecture for scientific software in
-R. This package provides the reference implementation: a set of PCA
-analysis functions for SummarizedExperiment objects, a Shiny interactive
-explorer, and a command-line interface.</p>
+graduate students to build scientific software in R using established
+software engineering principles — separation of concerns, DRY (Don’t
+Repeat Yourself), composability, and layered architecture. This package
+provides the reference implementation: a set of PCA analysis functions
+for SummarizedExperiment objects, a Shiny interactive explorer, and a
+command-line interface.</p>
 </div>
 <div class="section level2">
 <h2 id="installation">Installation<a class="anchor" aria-label="anchor" href="#installation"></a>
@@ -135,19 +137,42 @@ explorer, and a command-line interface.</p>
 </div>
 </div>
 <div class="section level2">
-<h2 id="the-three-interfaces-one-core-architecture">The “Three Interfaces, One Core” Architecture<a class="anchor" aria-label="anchor" href="#the-three-interfaces-one-core-architecture"></a>
+<h2 id="architecture-separation-of-concerns">Architecture: Separation of Concerns<a class="anchor" aria-label="anchor" href="#architecture-separation-of-concerns"></a>
 </h2>
-<pre><code>                Package Core
+<p>The package is organized around a principle that shows up in
+virtually every well-engineered codebase: <strong>separate <em>what</em>
+you compute from <em>how</em> users access it</strong>. The analysis
+logic lives in small, testable, composable R functions (the core layer).
+Presentation layers — an R API, a Shiny app, and a CLI — are thin
+wrappers that delegate to those same core functions.</p>
+<pre><code>             Core Analysis Functions
   make_se() → run_pca() → plot_pca()
         ↑            ↑            ↑
    ┌────┴────┐  ┌────┴────┐  ┌───┴─────┐
    │ R API   │  │ Shiny   │  │  CLI    │
    │ (users) │  │ (web)   │  │(scripts)│
    └─────────┘  └─────────┘  └─────────┘</code></pre>
-<p>All three interfaces call the <strong>same core functions</strong>.
-Fix a bug once, and it’s fixed everywhere.</p>
+<p>Because every interface calls the <strong>same core
+functions</strong>, you get several properties for free:</p>
+<ul>
+<li>
+<strong>DRY (Don’t Repeat Yourself)</strong> — fix a bug or add a
+feature once, and every interface benefits immediately.</li>
+<li>
+<strong>Testability</strong> — core functions are pure R with
+well-defined inputs and outputs, so unit tests cover the real
+computation regardless of how it’s invoked.</li>
+<li>
+<strong>Composability</strong> — each function does one thing, so
+users (and other packages) can recombine them in ways you didn’t
+anticipate.</li>
+</ul>
+<p>This layered design is why the package — and the course lectures —
+are structured the way they are: we build the core functions first
+(Lecture 03), package and test them (Lectures 05–06), then add
+presentation layers one at a time (Shiny in 07–08, CLI in 09–10).</p>
 <div class="section level3">
-<h3 id="interface-1-r-api">Interface 1: R API<a class="anchor" aria-label="anchor" href="#interface-1-r-api"></a>
+<h3 id="r-api">R API<a class="anchor" aria-label="anchor" href="#r-api"></a>
 </h3>
 <div class="sourceCode" id="cb8"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="kw"><a href="https://rdrr.io/r/base/library.html" class="external-link">library</a></span><span class="op">(</span><span class="va"><a href="https://github.com/St-Jude-MS-ABDS/ADS8192" class="external-link">ADS8192</a></span><span class="op">)</span></span>
@@ -157,13 +182,13 @@ Fix a bug once, and it’s fixed everywhere.</p>
 <span><span class="fu"><a href="../reference/plot_pca.html">plot_pca</a></span><span class="op">(</span><span class="va">result</span>, color_by <span class="op">=</span> <span class="st">"dex"</span><span class="op">)</span></span></code></pre></div>
 </div>
 <div class="section level3">
-<h3 id="interface-2-shiny-app">Interface 2: Shiny App<a class="anchor" aria-label="anchor" href="#interface-2-shiny-app"></a>
+<h3 id="shiny-app">Shiny App<a class="anchor" aria-label="anchor" href="#shiny-app"></a>
 </h3>
 <div class="sourceCode" id="cb9"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="fu">ADS8192</span><span class="fu">::</span><span class="fu"><a href="../reference/run_app.html">run_app</a></span><span class="op">(</span><span class="op">)</span></span></code></pre></div>
 </div>
 <div class="section level3">
-<h3 id="interface-3-cli-via-rapp">Interface 3: CLI (via Rapp)<a class="anchor" aria-label="anchor" href="#interface-3-cli-via-rapp"></a>
+<h3 id="cli-via-rapp">CLI (via Rapp)<a class="anchor" aria-label="anchor" href="#cli-via-rapp"></a>
 </h3>
 <div class="sourceCode" id="cb10"><pre class="sourceCode bash"><code class="sourceCode bash"><span id="cb10-1"><a href="#cb10-1" tabindex="-1"></a><span class="ex">ADS8192</span> pca <span class="at">--counts</span> counts.tsv <span class="at">--meta</span> samples.tsv <span class="at">--output</span> results/</span></code></pre></div>
 </div>

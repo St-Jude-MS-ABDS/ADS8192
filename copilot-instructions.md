@@ -97,8 +97,9 @@ interfaces.
 
 - Use Bioconductor ecosystem conventions (S4 classes, BiocManager,
   vignettes)
-- Emphasize the “three interfaces, one core” architecture: R functions →
-  Shiny app → CLI, all sharing the same analysis core
+- Emphasize separation of concerns and layered architecture: core
+  analysis functions in R, with thin presentation layers (Shiny
+  app, CLI) that delegate to the core
 - Prefer `devtools`/`usethis` workflows for package development
 - CLI lectures use Rapp (CRAN package from r-lib) for argument parsing
 - Testing uses `testthat` (edition 3)

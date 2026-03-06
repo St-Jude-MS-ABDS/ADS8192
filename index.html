@@ -11,8 +11,8 @@
 <script src="deps/bootstrap-5.3.1/bootstrap.bundle.min.js"></script><link href="deps/font-awesome-6.5.2/css/all.min.css" rel="stylesheet">
 <link href="deps/font-awesome-6.5.2/css/v4-shims.min.css" rel="stylesheet">
 <script src="deps/headroom-0.11.0/headroom.min.js"></script><script src="deps/headroom-0.11.0/jQuery.headroom.min.js"></script><script src="deps/bootstrap-toc-1.0.1/bootstrap-toc.min.js"></script><script src="deps/clipboard.js-2.0.11/clipboard.min.js"></script><script src="deps/search-1.0.0/autocomplete.jquery.min.js"></script><script src="deps/search-1.0.0/fuse.min.js"></script><script src="deps/search-1.0.0/mark.min.js"></script><!-- pkgdown --><script src="pkgdown.js"></script><meta property="og:title" content="ADS 8192 - Developing Scientific Applications (Course Materials)">
-<meta name="description" content="Course materials and reference implementation for ADS 8192: Developing Scientific Applications. Provides a complete example of the three interfaces, one core architecture: PCA analysis functions for SummarizedExperiment objects, a Shiny interactive explorer, and a command-line interface via Rapp. Includes lectures, quizzes, and a grading rubric. Students build their own packages following this model.">
-<meta property="og:description" content="Course materials and reference implementation for ADS 8192: Developing Scientific Applications. Provides a complete example of the three interfaces, one core architecture: PCA analysis functions for SummarizedExperiment objects, a Shiny interactive explorer, and a command-line interface via Rapp. Includes lectures, quizzes, and a grading rubric. Students build their own packages following this model.">
+<meta name="description" content="Course materials and reference implementation for ADS 8192: Developing Scientific Applications. Demonstrates separation of concerns and layered architecture: PCA analysis functions for SummarizedExperiment objects, a Shiny interactive explorer, and a command-line interface via Rapp. Includes lectures, quizzes, and a grading rubric. Students build their own packages following this model.">
+<meta property="og:description" content="Course materials and reference implementation for ADS 8192: Developing Scientific Applications. Demonstrates separation of concerns and layered architecture: PCA analysis functions for SummarizedExperiment objects, a Shiny interactive explorer, and a command-line interface via Rapp. Includes lectures, quizzes, and a grading rubric. Students build their own packages following this model.">
 </head>
 <body>
     <a href="#main" class="visually-hidden-focusable">Skip to contents</a>
@@ -72,21 +72,22 @@
 <div class="section level2">
 <h2 id="unit-1-overview">Unit 1 Overview<a class="anchor" aria-label="anchor" href="#unit-1-overview"></a>
 </h2>
-<p>Unit 1 teaches graduate students to build <strong>complete, reproducible scientific software in R</strong> — from raw analysis functions through a fully packaged, documented, and deployable application. The unit is organized around a single architectural idea:</p>
+<p>Unit 1 teaches graduate students to build <strong>complete, reproducible scientific software in R</strong> — from raw analysis functions through a fully packaged, documented, and deployable application. The unit is organized around core software engineering principles that apply in any language or domain:</p>
 <blockquote>
-<p><strong>Flexible interfaces, one core.</strong> Write your analysis logic once as exported R functions, then surface it through three delivery mechanisms — an R API, a Shiny web app, and a command-line interface — with zero duplicated logic.</p>
+<p><strong>Separation of concerns.</strong> Write your analysis logic once as small, testable, composable R functions. Then add thin presentation layers — an R API, a Shiny web app, and a command-line interface — that delegate to those functions without duplicating logic.</p>
 </blockquote>
+<p>This is the same layered-architecture idea you’ll find in well-engineered software everywhere: keep the <em>what</em> (computation) separate from the <em>how</em> (delivery to users). Different audiences — scientists who want point-and-click exploration, developers who want composable functions, and bioinformatics cores who want scriptable CLI tools — all benefit from the same tested core.</p>
 <div class="section level3">
 <h3 id="fundamental-unit-objectives">Fundamental Unit Objectives<a class="anchor" aria-label="anchor" href="#fundamental-unit-objectives"></a>
 </h3>
 <p>After completing Unit 1, students will be able to:</p>
 <ul>
 <li>
-<strong>Build software for multiple audiences.</strong> Scientists want point-and-click exploration (Shiny); package/pipeline developers want composable R functions they can call programmatically; bioinformatics cores want non-interactive CLI tools that slot into automated workflows. One codebase should serve all three.</li>
-<li>
 <strong>Design small, testable, composable functions</strong> that operate on robust data containers (<code>SummarizedExperiment</code> / <code>SingleCellExperiment</code>) and return well-defined types — making them easy to reason about, test, and reuse.</li>
 <li>
-<strong>Separate analysis logic from interface logic.</strong> Core computation lives in exported R functions; Shiny, CLI, and scripting layers are thin wrappers that delegate to the core. This prevents copy-paste drift and keeps every interface consistent.</li>
+<strong>Separate analysis logic from presentation logic.</strong> Core computation lives in exported R functions; Shiny, CLI, and scripting layers are thin wrappers that delegate to the core. This prevents copy-paste drift (DRY) and keeps every interface consistent.</li>
+<li>
+<strong>Build software for multiple audiences.</strong> Scientists want point-and-click exploration (Shiny); package/pipeline developers want composable R functions they can call programmatically; bioinformatics cores want non-interactive CLI tools that slot into automated workflows. One codebase should serve all of them.</li>
 <li>
 <strong>Package R code for distribution.</strong> Turn loose scripts into a valid, installable R package using <code>devtools</code> / <code>usethis</code> workflows so that others can <code>install_github()</code> and immediately use your work. Pave the road for submission to CRAN or Bioconductor and publication.</li>
 <li>
@@ -113,8 +114,8 @@
 </tr></thead>
 <tbody>
 <tr class="odd">
-<td>Multi-audience software design</td>
-<td>One analysis core → R API (developers), Shiny (end-users/scientists), CLI (pipelines/automation)</td>
+<td>Separation of concerns &amp; layered design</td>
+<td>Core analysis functions → thin presentation layers: R API (developers), Shiny (end-users/scientists), CLI (pipelines/automation)</td>
 </tr>
 <tr class="even">
 <td>Robust data modeling</td>
@@ -298,7 +299,7 @@
 <div class="section level2">
 <h2 id="reference-implementation-this-package">Reference Implementation (This Package)<a class="anchor" aria-label="anchor" href="#reference-implementation-this-package"></a>
 </h2>
-<p>This repository <strong>is</strong> the reference implementation (Project 0: PCA Explorer). Students cannot choose this project but use it as a structural guide. It demonstrates the full “three interfaces, one core” architecture on the Bioconductor <code>airway</code> dataset (human airway smooth muscle RNA-seq, 8 samples, dexamethasone treatment vs. control).</p>
+<p>This repository <strong>is</strong> the reference implementation (Project 0: PCA Explorer). Students cannot choose this project but use it as a structural guide. It demonstrates the full layered architecture — core analysis functions with R API, Shiny, and CLI presentation layers — on the Bioconductor <code>airway</code> dataset (human airway smooth muscle RNA-seq, 8 samples, dexamethasone treatment vs. control).</p>
 <div class="section level3">
 <h3 id="installation">Installation<a class="anchor" aria-label="anchor" href="#installation"></a>
 </h3>
@@ -329,7 +330,7 @@
 <span><span class="fu"><a href="reference/pca_variance_explained.html">pca_variance_explained</a></span><span class="op">(</span><span class="va">result</span><span class="op">)</span></span></code></pre></div>
 </div>
 <div class="section level3">
-<h3 id="three-interfaces">Three Interfaces<a class="anchor" aria-label="anchor" href="#three-interfaces"></a>
+<h3 id="presentation-layers">Presentation Layers<a class="anchor" aria-label="anchor" href="#presentation-layers"></a>
 </h3>
 <p><strong>R API</strong></p>
 <div class="sourceCode" id="cb3"><pre class="downlit sourceCode r">

@@ -2,11 +2,13 @@
 
 ## Overview
 
-**ADS 8192: Developing Scientific Applications** teaches the “three
-interfaces, one core” architecture for scientific software in R. This
-package provides the reference implementation: a set of PCA analysis
-functions for SummarizedExperiment objects, a Shiny interactive
-explorer, and a command-line interface.
+**ADS 8192: Developing Scientific Applications** teaches graduate
+students to build scientific software in R using established software
+engineering principles — separation of concerns, DRY (Don’t Repeat
+Yourself), composability, and layered architecture. This package
+provides the reference implementation: a set of PCA analysis functions
+for SummarizedExperiment objects, a Shiny interactive explorer, and a
+command-line interface.
 
 ## Installation
 
@@ -56,9 +58,16 @@ plot_pca(result, color_by = "dex", shape_by = "cell")
 pca_variance_explained(result)
 ```
 
-## The “Three Interfaces, One Core” Architecture
+## Architecture: Separation of Concerns
 
-                    Package Core
+The package is organized around a principle that shows up in virtually
+every well-engineered codebase: **separate *what* you compute from *how*
+users access it**. The analysis logic lives in small, testable,
+composable R functions (the core layer). Presentation layers — an R API,
+a Shiny app, and a CLI — are thin wrappers that delegate to those same
+core functions.
+
+                 Core Analysis Functions
       make_se() → run_pca() → plot_pca()
             ↑            ↑            ↑
        ┌────┴────┐  ┌────┴────┐  ┌───┴─────┐
@@ -66,10 +75,23 @@ pca_variance_explained(result)
        │ (users) │  │ (web)   │  │(scripts)│
        └─────────┘  └─────────┘  └─────────┘
 
-All three interfaces call the **same core functions**. Fix a bug once,
-and it’s fixed everywhere.
+Because every interface calls the **same core functions**, you get
+several properties for free:
 
-### Interface 1: R API
+- **DRY (Don’t Repeat Yourself)** — fix a bug or add a feature once, and
+  every interface benefits immediately.
+- **Testability** — core functions are pure R with well-defined inputs
+  and outputs, so unit tests cover the real computation regardless of
+  how it’s invoked.
+- **Composability** — each function does one thing, so users (and other
+  packages) can recombine them in ways you didn’t anticipate.
+
+This layered design is why the package — and the course lectures — are
+structured the way they are: we build the core functions first (Lecture
+03), package and test them (Lectures 05–06), then add presentation
+layers one at a time (Shiny in 07–08, CLI in 09–10).
+
+### R API
 
 ``` r
 library(ADS8192)
@@ -79,13 +101,13 @@ result <- run_pca(airway, n_top = 500)
 plot_pca(result, color_by = "dex")
 ```
 
-### Interface 2: Shiny App
+### Shiny App
 
 ``` r
 ADS8192::run_app()
 ```
 
-### Interface 3: CLI (via Rapp)
+### CLI (via Rapp)
 
 ``` bash
 ADS8192 pca --counts counts.tsv --meta samples.tsv --output results/

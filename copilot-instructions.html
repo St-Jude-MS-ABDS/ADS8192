@@ -139,7 +139,7 @@
 <div class="section level2">
 <h2 id="content-guidelines">Content Guidelines<a class="anchor" aria-label="anchor" href="#content-guidelines"></a></h2>
 <ul><li>Use Bioconductor ecosystem conventions (S4 classes, BiocManager, vignettes)</li>
-<li>Emphasize the “three interfaces, one core” architecture: R functions → Shiny app → CLI, all sharing the same analysis core</li>
+<li>Emphasize separation of concerns and layered architecture: core analysis functions in R, with thin presentation layers (Shiny app, CLI) that delegate to the core</li>
 <li>Prefer <code>devtools</code>/<code>usethis</code> workflows for package development</li>
 <li>CLI lectures use Rapp (CRAN package from r-lib) for argument parsing</li>
 <li>Testing uses <code>testthat</code> (edition 3)</li>
