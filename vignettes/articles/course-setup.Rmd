@@ -1,6 +1,6 @@
 ---
 title: "Course Setup"
-author: "ADS 8192"
+author: "Jared Andrews"
 date: "`r Sys.Date()`"
 output: rmarkdown::html_vignette
 vignette: >

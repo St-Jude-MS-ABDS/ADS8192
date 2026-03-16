@@ -1,6 +1,6 @@
 ---
 title: "Homework 1 Grading Rubric (25 points)"
-author: "ADS 8192"
+author: "Jared Andrews"
 date: "`r Sys.Date()`"
 output: rmarkdown::html_vignette
 vignette: >
