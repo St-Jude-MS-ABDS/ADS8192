@@ -51,3 +51,5 @@ docs
 
 # Remove assessments
 Unit1/Assessments/*.docx
+
+*.py
