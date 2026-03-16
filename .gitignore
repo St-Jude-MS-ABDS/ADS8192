@@ -50,4 +50,4 @@ rsconnect/
 docs
 
 # Remove assessments
-Unit1/
+Unit1/Assessments/*.docx

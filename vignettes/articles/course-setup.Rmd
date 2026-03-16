@@ -26,10 +26,8 @@ fresh R installation will get you fully set up.
 
 ## Prerequisites
 
-- **R ≥ 4.1.0** — install from [CRAN](https://cran.r-project.org/) or use
-  your institution's R distribution.
-- **RStudio** (recommended) or any editor with R terminal support.
-- A working internet connection for downloading packages.
+- **R ≥ 4.5.0** — install from [CRAN](https://cran.r-project.org/)
+- **RStudio** (recommended) or Positron
 
 ## Install All Packages
 
@@ -39,24 +37,8 @@ Copy and run the entire block below in your R console. It installs:
 3. Bioconductor packages (data containers, datasets, annotation tools)
 
 ```{r install-all}
-# --- 1. BiocManager (Bioconductor installer) --------------------------------
 if (!requireNamespace("BiocManager", quietly = TRUE))
   install.packages("BiocManager")
-
-# --- 2. CRAN packages -------------------------------------------------------
-# Development & documentation tools
-#   devtools, usethis, roxygen2, testthat, pkgdown, knitr, rmarkdown, remotes
-# Shiny stack
-#   shiny, bslib, DT
-# Core analysis
-#   ggplot2, rlang
-# CLI
-#   Rapp
-# Project-specific (CRAN)
-#   uwot        (Project 1 — UMAP)
-#   cluster     (Project 4 — K-means)
-#   msigdbr     (Project 7 — gene set scoring)
-#   igraph      (Project 9 — gene correlation network)
 
 cran_pkgs <- c(
   # Development & documentation
@@ -76,20 +58,6 @@ cran_pkgs <- c(
 )
 
 install.packages(cran_pkgs)
-
-# --- 3. Bioconductor packages -----------------------------------------------
-# Data containers
-#   SummarizedExperiment, SingleCellExperiment
-# Visualization
-#   ComplexHeatmap
-# Datasets (one per project)
-#   airway           (Project 0  — PCA Explorer, reference)
-#   scRNAseq         (Projects 1, 4, 5, 6, 8, 12, 13)
-#   parathyroidSE    (Project 2  — Sample Similarity)
-#   recount3         (Projects 3, 9 — Diff. Expression, Gene Corr Network)
-#   curatedTCGAData  (Projects 7, 10 — Gene Set Scoring, Expression Heatmap)
-#   TCGAutils        (Projects 7, 10 — helper for curatedTCGAData)
-#   TENxPBMCData     (Project 11 — Dimensionality Estimation)
 
 bioc_pkgs <- c(
   # Data containers
