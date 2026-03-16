@@ -59,12 +59,12 @@ Input validation with informative error messages
 
 ## 3. Testing (4 pts)
 
-| Points | Criterion                                         | Check                                         |
-|--------|---------------------------------------------------|-----------------------------------------------|
-| 1      | testthat infrastructure set up correctly          | `tests/testthat.R` + `tests/testthat/` exist  |
-| 1      | At least 8 test expectations across 2+ test files | `devtools::test()` shows pass count           |
-| 1      | Tests cover both “happy path” and error cases     | At least 1 `expect_error()` for invalid input |
-| 1      | All tests pass                                    | `devtools::test()` — 0 failures               |
+| Points | Criterion                                         | Check                                                                                                   |
+|--------|---------------------------------------------------|---------------------------------------------------------------------------------------------------------|
+| 1      | testthat infrastructure set up correctly          | `tests/testthat.R` + `tests/testthat/` exist                                                            |
+| 1      | At least 8 test expectations across 2+ test files | `devtools::test()` shows pass count                                                                     |
+| 1      | Tests cover both “happy path” and error cases     | At least 1 [`expect_error()`](https://testthat.r-lib.org/reference/expect_error.html) for invalid input |
+| 1      | All tests pass                                    | `devtools::test()` — 0 failures                                                                         |
 
 **Checklist:**
 

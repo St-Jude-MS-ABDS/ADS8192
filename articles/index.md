@@ -4,6 +4,8 @@
 
 - [Getting Started with ADS
   8192](https://automatic-engine-4qp7m5e.pages.github.io/articles/getting-started.md):
+- [Course
+  Setup](https://automatic-engine-4qp7m5e.pages.github.io/articles/course-setup.md):
 
 ### Assessments
 
