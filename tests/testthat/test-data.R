@@ -132,7 +132,7 @@ test_that("top_variable_features returns correct subset size", {
 test_that("top_variable_features handles n > nrow gracefully", {
     data(airway, package = "airway")
 
-    se_all <- top_variable_features(airway, n = 9999)
+    se_all <- top_variable_features(airway, n = 100000)
 
     expect_equal(nrow(se_all), nrow(airway))
 })

@@ -190,7 +190,7 @@ test_that("Project 7: msigdbr hallmark gene sets load correctly", {
 
   library(msigdbr)
 
-  hallmarks <- msigdbr(species = "Homo sapiens", category = "H")
+  hallmarks <- msigdbr(species = "Homo sapiens", collection = "H")
   expect_s3_class(hallmarks, "data.frame")
   expect_gt(nrow(hallmarks), 0)
   expect_true("gs_name" %in% colnames(hallmarks))
