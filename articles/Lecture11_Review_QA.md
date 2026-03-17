@@ -20,16 +20,16 @@ By the end of this session, you will be able to:
 
 A GitHub repository containing an R package that:
 
-| Component             | Status                                                                                                                                                                                                                                                             | Check                                                                                |
-|-----------------------|--------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------|--------------------------------------------------------------------------------------|
-| **Package structure** | Valid R package                                                                                                                                                                                                                                                    | `devtools::check()` passes                                                           |
-| **Core functions**    | [`make_se()`](https://automatic-engine-4qp7m5e.pages.github.io/reference/make_se.md), [`run_pca()`](https://automatic-engine-4qp7m5e.pages.github.io/reference/run_pca.md), [`plot_pca()`](https://automatic-engine-4qp7m5e.pages.github.io/reference/plot_pca.md) | Functions work on test data                                                          |
-| **Documentation**     | roxygen2 + README                                                                                                                                                                                                                                                  | `?function` works                                                                    |
-| **Tests**             | testthat                                                                                                                                                                                                                                                           | `devtools::test()` passes                                                            |
-| **pkgdown site**      | Builds successfully                                                                                                                                                                                                                                                | [`pkgdown::build_site()`](https://pkgdown.r-lib.org/reference/build_site.html) works |
-| **Shiny app**         | [`run_app()`](https://automatic-engine-4qp7m5e.pages.github.io/reference/run_app.md)                                                                                                                                                                               | App launches and works                                                               |
-| **CLI**               | `sePCA` (Rapp CLI)                                                                                                                                                                                                                                                 | CLI runs from fresh install                                                          |
-| **GitHub**            | Public repo                                                                                                                                                                                                                                                        | `install_github()` works                                                             |
+| Component             | Status                                                                                                                                                                             | Check                                                                                |
+|-----------------------|------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------|--------------------------------------------------------------------------------------|
+| **Package structure** | Valid R package                                                                                                                                                                    | `devtools::check()` passes                                                           |
+| **Core functions**    | [`run_pca()`](https://automatic-engine-4qp7m5e.pages.github.io/reference/run_pca.md), [`plot_pca()`](https://automatic-engine-4qp7m5e.pages.github.io/reference/plot_pca.md), etc. | Functions work on test data                                                          |
+| **Documentation**     | roxygen2 + README                                                                                                                                                                  | `?function` works                                                                    |
+| **Tests**             | testthat                                                                                                                                                                           | `devtools::test()` passes                                                            |
+| **pkgdown site**      | Builds successfully                                                                                                                                                                | [`pkgdown::build_site()`](https://pkgdown.r-lib.org/reference/build_site.html) works |
+| **Shiny app**         | [`run_app()`](https://automatic-engine-4qp7m5e.pages.github.io/reference/run_app.md)                                                                                               | App launches and works                                                               |
+| **CLI**               | `sePCA` (Rapp CLI)                                                                                                                                                                 | CLI runs from fresh install                                                          |
+| **GitHub**            | Public repo                                                                                                                                                                        | `install_github()` works                                                             |
 
 ------------------------------------------------------------------------
 
@@ -190,7 +190,7 @@ library(SummarizedExperiment)
 SummarizedExperiment(...)
 
 # Does this fail?
-sePCA::make_se(...)
+sePCA::run_pca(...)
 ```
 
 #### 3. Fix
@@ -229,7 +229,7 @@ Record what you learned:
 # Add a comment explaining the fix
 # Update documentation if needed
 # Commit with descriptive message:
-# "Fix: Add SummarizedExperiment to Imports for make_se()"
+# "Fix: Add SummarizedExperiment to Imports for run_pca()"
 ```
 
 ------------------------------------------------------------------------
@@ -531,7 +531,6 @@ sessionInfo()
     - [ ] README exists and renders on GitHub
 
     ### Core Functionality
-    - [ ] `make_se()` creates a valid SummarizedExperiment
     - [ ] `run_pca()` returns list with `pca` and `scores`
     - [ ] `plot_pca()` returns a ggplot object
 

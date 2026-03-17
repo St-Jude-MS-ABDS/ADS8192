@@ -37,13 +37,13 @@ complete, author info is provided, etc
 
 ## 2. Core Analysis Functions (5 pts)
 
-| Points | Criterion                                                                                                                                                     | Check                                         |
-|--------|---------------------------------------------------------------------------------------------------------------------------------------------------------------|-----------------------------------------------|
-| 1      | [`make_se()`](https://automatic-engine-4qp7m5e.pages.github.io/reference/make_se.md) or `make_sce()` creates a valid SE/SCE from expression matrix + metadata | Returns correct class, validates inputs       |
-| 1      | First analysis function (project-specific)                                                                                                                    | Correct return type, well-defined behavior    |
-| 1      | Second analysis function (project-specific)                                                                                                                   | Correct return type, well-defined behavior    |
-| 1      | Summary/metric function (project-specific)                                                                                                                    | Returns meaningful summary data.frame         |
-| 1      | Plotting function returns a ggplot with appropriate aesthetics                                                                                                | Returns ggplot object with informative labels |
+| Points | Criterion                                                      | Check                                         |
+|--------|----------------------------------------------------------------|-----------------------------------------------|
+| 1      | First analysis function (project-specific)                     | Correct return type, well-defined behavior    |
+| 1      | Second analysis function (project-specific)                    | Correct return type, well-defined behavior    |
+| 1      | Third analysis function (project-specific)                     | Correct return type, well-defined behavior    |
+| 1      | Summary/metric function (project-specific)                     | Returns meaningful summary data.frame         |
+| 1      | Plotting function returns a ggplot with appropriate aesthetics | Returns ggplot object with informative labels |
 
 **Checklist:**
 
@@ -89,8 +89,7 @@ Tests don’t depend on global state or specific file paths
 
 **Checklist:**
 
-[`?make_se`](https://automatic-engine-4qp7m5e.pages.github.io/reference/make_se.md)
-/ `?make_sce` and all exported functions display help
+All exported functions display help
 
 README includes install command + runnable example
 

@@ -396,7 +396,10 @@ kebab-case flags (<code>n_top</code> -&gt; <code>--n-top</code>).</p>
 <span></span>
 <span>        <span class="va">counts_df</span> <span class="op">&lt;-</span> <span class="fu">read_data_file</span><span class="op">(</span><span class="va">counts</span><span class="op">)</span></span>
 <span>        <span class="va">meta_df</span> <span class="op">&lt;-</span> <span class="fu">read_data_file</span><span class="op">(</span><span class="va">meta</span><span class="op">)</span></span>
-<span>        <span class="va">se</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/make_se.html">make_se</a></span><span class="op">(</span><span class="fu"><a href="https://rdrr.io/r/base/matrix.html" class="external-link">as.matrix</a></span><span class="op">(</span><span class="va">counts_df</span><span class="op">)</span>, <span class="va">meta_df</span><span class="op">)</span></span>
+<span>        <span class="va">se</span> <span class="op">&lt;-</span> <span class="fu">SummarizedExperiment</span><span class="fu">::</span><span class="fu"><a href="https://rdrr.io/pkg/SummarizedExperiment/man/SummarizedExperiment-class.html" class="external-link">SummarizedExperiment</a></span><span class="op">(</span></span>
+<span>            assays <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/list.html" class="external-link">list</a></span><span class="op">(</span>counts <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/matrix.html" class="external-link">as.matrix</a></span><span class="op">(</span><span class="va">counts_df</span><span class="op">)</span><span class="op">)</span>,</span>
+<span>            colData <span class="op">=</span> <span class="va">meta_df</span></span>
+<span>        <span class="op">)</span></span>
 <span></span>
 <span>        <span class="va">result</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/run_pca.html">run_pca</a></span><span class="op">(</span><span class="va">se</span>, n_top <span class="op">=</span> <span class="va">n_top</span>, log_transform <span class="op">=</span> <span class="va">log_transform</span><span class="op">)</span></span>
 <span></span>

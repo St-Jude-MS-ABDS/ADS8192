@@ -1,21 +1,18 @@
 # ADS8192: ADS 8192 - Developing Scientific Applications (Course Materials)
 
 Course materials and reference implementation for ADS 8192: Developing
-Scientific Applications. Provides a complete example of the 'three
-interfaces, one core' architecture: PCA analysis functions for
-SummarizedExperiment objects, a Shiny interactive explorer, and a
-command-line interface via Rapp. Includes lectures, quizzes, and a
-grading rubric. Students build their own packages following this model.
+Scientific Applications. Demonstrates separation of concerns and layered
+architecture: PCA analysis functions for SummarizedExperiment objects, a
+Shiny interactive explorer, and a command-line interface via Rapp.
+Includes lectures, quizzes, and a grading rubric. Students build their
+own packages following this model.
 
 Course materials and reference implementation for ADS 8192. Demonstrates
-the "three interfaces, one core" architecture: PCA analysis functions
+separation of concerns and layered architecture: PCA analysis functions
 for SummarizedExperiment objects, a Shiny interactive explorer, and a
 command-line interface via Rapp.
 
 ## Core Analysis Functions
-
-- [`make_se`](https://automatic-engine-4qp7m5e.pages.github.io/reference/make_se.md):
-  Create a SummarizedExperiment from counts and metadata
 
 - [`top_variable_features`](https://automatic-engine-4qp7m5e.pages.github.io/reference/top_variable_features.md):
   Select the most variable genes
@@ -28,6 +25,9 @@ command-line interface via Rapp.
 
 - [`plot_pca`](https://automatic-engine-4qp7m5e.pages.github.io/reference/plot_pca.md):
   Create PCA scatter plots
+
+- [`plot_variance_explained`](https://automatic-engine-4qp7m5e.pages.github.io/reference/plot_variance_explained.md):
+  Plot variance explained bar chart
 
 - [`save_pca_results`](https://automatic-engine-4qp7m5e.pages.github.io/reference/save_pca_results.md):
   Export PCA results to files

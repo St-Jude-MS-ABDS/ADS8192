@@ -46,6 +46,10 @@ plot_pca(
 A [`ggplot`](https://ggplot2.tidyverse.org/reference/ggplot.html)
 object.
 
+## Author
+
+Jared Andrews
+
 ## Examples
 
 ``` r

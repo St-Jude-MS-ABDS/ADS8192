@@ -4,8 +4,6 @@
 
 Create and manipulate SummarizedExperiment objects
 
-- [`make_se()`](https://automatic-engine-4qp7m5e.pages.github.io/reference/make_se.md)
-  : Create a SummarizedExperiment from counts and metadata
 - [`top_variable_features()`](https://automatic-engine-4qp7m5e.pages.github.io/reference/top_variable_features.md)
   : Select top variable features
 
@@ -24,6 +22,8 @@ Create plots
 
 - [`plot_pca()`](https://automatic-engine-4qp7m5e.pages.github.io/reference/plot_pca.md)
   : Create a PCA scatter plot
+- [`plot_variance_explained()`](https://automatic-engine-4qp7m5e.pages.github.io/reference/plot_variance_explained.md)
+  : Plot variance explained by principal components
 
 ## Export
 

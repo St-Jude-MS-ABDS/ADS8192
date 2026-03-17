@@ -73,7 +73,6 @@ Before writing code, let’s define the **user story** and **public API**.
 
 | Function                                                                                                           | Exported? | Reason                              |
 |--------------------------------------------------------------------------------------------------------------------|-----------|-------------------------------------|
-| [`make_se()`](https://automatic-engine-4qp7m5e.pages.github.io/reference/make_se.md)                               | Yes       | Users create SE from their data     |
 | [`top_variable_features()`](https://automatic-engine-4qp7m5e.pages.github.io/reference/top_variable_features.md)   | Yes       | Users may want to filter separately |
 | [`run_pca()`](https://automatic-engine-4qp7m5e.pages.github.io/reference/run_pca.md)                               | Yes       | Core analysis function              |
 | [`pca_variance_explained()`](https://automatic-engine-4qp7m5e.pages.github.io/reference/pca_variance_explained.md) | Yes       | Useful standalone                   |
@@ -220,7 +219,7 @@ All R code goes in the `R/` directory. You can organize it however you
 like, but a common pattern:
 
     R/
-    ├── data.R         # Functions for data handling (make_se)
+    ├── data.R         # Functions for data handling (top_variable_features)
     ├── pca.R          # PCA-related functions
     ├── plotting.R     # Visualization functions
     └── sePCA-package.R  # Package-level documentation
@@ -229,7 +228,7 @@ like, but a common pattern:
 
 ``` r
 # Create R files (this just opens them in RStudio)
-use_r("data")      # For make_se(), top_variable_features()
+use_r("data")      # For top_variable_features()
 use_r("pca")       # For run_pca(), pca_variance_explained()
 use_r("plotting")  # For plot_pca()
 ```
@@ -244,9 +243,9 @@ Copy your functions from `analysis_core.R`, but make these changes:
 library(SummarizedExperiment)  # DON'T do this in packages!
 library(ggplot2)
 
-make_se <- function(counts, col_data, row_data = NULL) {
-  # Uses SummarizedExperiment() directly
-  SummarizedExperiment(...)
+top_variable_features <- function(se, n = 500, assay_name = "counts") {
+  mat <- assay(se, assay_name)  # Uses assay() directly
+  # ...
 }
 ```
 
@@ -258,19 +257,21 @@ Two options for using functions from other packages:
 
 ``` r
 # In R/data.R
-make_se <- function(counts, col_data, row_data = NULL) {
+top_variable_features <- function(se, n = 500, assay_name = "counts") {
   # Use pkg::fun() syntax
-  SummarizedExperiment::SummarizedExperiment(...)
+  mat <- SummarizedExperiment::assay(se, assay_name)
+  # ...
 }
 ```
 
 **Option 2: Import via roxygen2**
 
 ``` r
-#' @importFrom SummarizedExperiment SummarizedExperiment assay assays colData rowData
-make_se <- function(counts, col_data, row_data = NULL) {
+#' @importFrom SummarizedExperiment assay colData rowData
+top_variable_features <- function(se, n = 500, assay_name = "counts") {
   # Can use function directly because it's imported
-  SummarizedExperiment(...)
+  mat <- assay(se, assay_name)
+  # ...
 }
 ```
 
@@ -278,57 +279,6 @@ make_se <- function(counts, col_data, row_data = NULL) {
 
 ``` r
 # R/data.R
-
-#' Create a SummarizedExperiment from counts and metadata
-#'
-#' @param counts A matrix of counts (genes × samples). Row names should be 
-#'   gene identifiers, column names should be sample identifiers.
-#' @param col_data A data.frame of sample metadata. Row names must match 
-#'   column names of counts.
-#' @param row_data Optional data.frame of gene metadata. Row names must match 
-#'   row names of counts.
-#'
-#' @return A SummarizedExperiment object
-#' @export
-#'
-#' @examples
-#' counts <- matrix(rpois(100, 50), nrow = 10, ncol = 10)
-#' rownames(counts) <- paste0("gene", 1:10)
-#' colnames(counts) <- paste0("sample", 1:10)
-#' meta <- data.frame(
-#'   treatment = rep(c("ctrl", "trt"), each = 5),
-#'   row.names = colnames(counts)
-#' )
-#' se <- make_se(counts, meta)
-make_se <- function(counts, col_data, row_data = NULL) {
-    if (!is.matrix(counts)) {
-        counts <- as.matrix(counts)
-    }
-    
-    if (!is.data.frame(col_data)) {
-        stop("col_data must be a data.frame")
-    }
-    
-    if (!all(colnames(counts) %in% rownames(col_data))) {
-        stop("Column names of counts must match row names of col_data")
-    }
-    
-    col_data <- col_data[colnames(counts), , drop = FALSE]
-    
-    if (is.null(row_data)) {
-        SummarizedExperiment::SummarizedExperiment(
-            assays = list(counts = counts),
-            colData = col_data
-        )
-    } else {
-        row_data <- row_data[rownames(counts), , drop = FALSE]
-        SummarizedExperiment::SummarizedExperiment(
-            assays = list(counts = counts),
-            colData = col_data,
-            rowData = row_data
-        )
-    }
-}
 
 #' Select top variable features
 #'
@@ -373,14 +323,14 @@ document()
 
 This creates:
 
-- `man/make_se.Rd` — Help file for each documented function
+- `man/top_variable_features.Rd` — Help file for each documented
+  function
 - `NAMESPACE` — Updated with exports and imports
 
 Check your `NAMESPACE` file:
 
     # Generated by roxygen2: do not edit by hand
 
-    export(make_se)
     export(pca_variance_explained)
     export(plot_pca)
     export(run_pca)
@@ -393,7 +343,7 @@ Check your `NAMESPACE` file:
 load_all()
 
 # Test help pages
-?make_se
+?top_variable_features
 ?run_pca
 ```
 
@@ -520,7 +470,7 @@ check()
 
 #### 2. Undocumented Arguments
 
-    Warning: Undocumented arguments in documentation object 'make_se'
+    Warning: Undocumented arguments in documentation object 'top_variable_features'
       'row_data'
 
 **Fix:** Add `@param row_data` to your roxygen2 block.

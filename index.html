@@ -262,7 +262,7 @@
 <tr class="even">
 <td>Core Analysis Functions</td>
 <td>5</td>
-<td>Constructor (<code><a href="reference/make_se.html">make_se()</a></code> / <code>make_sce()</code>), analysis, summary, and plotting functions</td>
+<td>Analysis, summary, and plotting functions operating on SE/SCE objects</td>
 </tr>
 <tr class="odd">
 <td>Testing</td>
@@ -354,30 +354,34 @@
 <h3 id="core-functions">Core Functions<a class="anchor" aria-label="anchor" href="#core-functions"></a>
 </h3>
 <table class="table">
+<colgroup>
+<col width="52%">
+<col width="47%">
+</colgroup>
 <thead><tr class="header">
 <th>Function</th>
 <th>Purpose</th>
 </tr></thead>
 <tbody>
 <tr class="odd">
-<td><code><a href="reference/make_se.html">make_se()</a></code></td>
-<td>Create a <code>SummarizedExperiment</code> from counts + metadata</td>
-</tr>
-<tr class="even">
 <td><code><a href="reference/top_variable_features.html">top_variable_features()</a></code></td>
 <td>Select the N most variable genes</td>
 </tr>
-<tr class="odd">
+<tr class="even">
 <td><code><a href="reference/run_pca.html">run_pca()</a></code></td>
 <td>Run PCA, return scores + metadata</td>
 </tr>
-<tr class="even">
+<tr class="odd">
 <td><code><a href="reference/pca_variance_explained.html">pca_variance_explained()</a></code></td>
 <td>Variance explained per PC</td>
 </tr>
-<tr class="odd">
+<tr class="even">
 <td><code><a href="reference/plot_pca.html">plot_pca()</a></code></td>
 <td>PCA scatter plot (<code>ggplot2</code>)</td>
+</tr>
+<tr class="odd">
+<td><code><a href="reference/plot_variance_explained.html">plot_variance_explained()</a></code></td>
+<td>Variance explained bar chart (<code>ggplot2</code>)</td>
 </tr>
 <tr class="even">
 <td><code><a href="reference/save_pca_results.html">save_pca_results()</a></code></td>

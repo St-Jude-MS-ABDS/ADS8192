@@ -36,6 +36,10 @@ Invisible `NULL`; files are written to `output_dir`:
 
   Variance explained by each PC.
 
+## Author
+
+Jared Andrews
+
 ## Examples
 
 ``` r

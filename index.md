@@ -114,15 +114,15 @@ HW1 is the capstone deliverable for Unit 1. Each student selects a
 project (or proposes a custom one) and delivers a public GitHub
 repository containing an R package with:
 
-| Category                         | Points | Key Requirements                                                                                                                                             |
-|----------------------------------|--------|--------------------------------------------------------------------------------------------------------------------------------------------------------------|
-| Package Structure & Installation | 4      | Valid `DESCRIPTION`, `NAMESPACE`, installs from GitHub, bundled example data                                                                                 |
-| Core Analysis Functions          | 5      | Constructor ([`make_se()`](https://automatic-engine-4qp7m5e.pages.github.io/reference/make_se.md) / `make_sce()`), analysis, summary, and plotting functions |
-| Testing                          | 4      | ≥ 8 `testthat` expectations, happy-path + error-case coverage                                                                                                |
-| Documentation                    | 4      | `roxygen2` help pages, README, deployed `pkgdown` site                                                                                                       |
-| Shiny App                        | 4      | [`run_app()`](https://automatic-engine-4qp7m5e.pages.github.io/reference/run_app.md) calls core functions reactively; deployed on Posit Connect              |
-| Command-Line Interface           | 4      | `Rapp` entry point in `exec/`, `--help`, TSV output files                                                                                                    |
-| **Total**                        | **25** |                                                                                                                                                              |
+| Category                         | Points | Key Requirements                                                                                                                                |
+|----------------------------------|--------|-------------------------------------------------------------------------------------------------------------------------------------------------|
+| Package Structure & Installation | 4      | Valid `DESCRIPTION`, `NAMESPACE`, installs from GitHub, bundled example data                                                                    |
+| Core Analysis Functions          | 5      | Analysis, summary, and plotting functions operating on SE/SCE objects                                                                           |
+| Testing                          | 4      | ≥ 8 `testthat` expectations, happy-path + error-case coverage                                                                                   |
+| Documentation                    | 4      | `roxygen2` help pages, README, deployed `pkgdown` site                                                                                          |
+| Shiny App                        | 4      | [`run_app()`](https://automatic-engine-4qp7m5e.pages.github.io/reference/run_app.md) calls core functions reactively; deployed on Posit Connect |
+| Command-Line Interface           | 4      | `Rapp` entry point in `exec/`, `--help`, TSV output files                                                                                       |
+| **Total**                        | **25** |                                                                                                                                                 |
 
 Projects span bulk RNA-seq (`SummarizedExperiment`) and single-cell
 RNA-seq (`SingleCellExperiment`) analyses — PCA, UMAP, differential
@@ -197,15 +197,15 @@ ADS8192 pca --counts counts.tsv --meta samples.tsv --output results/ --color-by 
 
 ### Core Functions
 
-| Function                                                                                                           | Purpose                                                |
-|--------------------------------------------------------------------------------------------------------------------|--------------------------------------------------------|
-| [`make_se()`](https://automatic-engine-4qp7m5e.pages.github.io/reference/make_se.md)                               | Create a `SummarizedExperiment` from counts + metadata |
-| [`top_variable_features()`](https://automatic-engine-4qp7m5e.pages.github.io/reference/top_variable_features.md)   | Select the N most variable genes                       |
-| [`run_pca()`](https://automatic-engine-4qp7m5e.pages.github.io/reference/run_pca.md)                               | Run PCA, return scores + metadata                      |
-| [`pca_variance_explained()`](https://automatic-engine-4qp7m5e.pages.github.io/reference/pca_variance_explained.md) | Variance explained per PC                              |
-| [`plot_pca()`](https://automatic-engine-4qp7m5e.pages.github.io/reference/plot_pca.md)                             | PCA scatter plot (`ggplot2`)                           |
-| [`save_pca_results()`](https://automatic-engine-4qp7m5e.pages.github.io/reference/save_pca_results.md)             | Export results to TSV files                            |
-| [`run_app()`](https://automatic-engine-4qp7m5e.pages.github.io/reference/run_app.md)                               | Launch the Shiny PCA Explorer                          |
+| Function                                                                                                             | Purpose                                  |
+|----------------------------------------------------------------------------------------------------------------------|------------------------------------------|
+| [`top_variable_features()`](https://automatic-engine-4qp7m5e.pages.github.io/reference/top_variable_features.md)     | Select the N most variable genes         |
+| [`run_pca()`](https://automatic-engine-4qp7m5e.pages.github.io/reference/run_pca.md)                                 | Run PCA, return scores + metadata        |
+| [`pca_variance_explained()`](https://automatic-engine-4qp7m5e.pages.github.io/reference/pca_variance_explained.md)   | Variance explained per PC                |
+| [`plot_pca()`](https://automatic-engine-4qp7m5e.pages.github.io/reference/plot_pca.md)                               | PCA scatter plot (`ggplot2`)             |
+| [`plot_variance_explained()`](https://automatic-engine-4qp7m5e.pages.github.io/reference/plot_variance_explained.md) | Variance explained bar chart (`ggplot2`) |
+| [`save_pca_results()`](https://automatic-engine-4qp7m5e.pages.github.io/reference/save_pca_results.md)               | Export results to TSV files              |
+| [`run_app()`](https://automatic-engine-4qp7m5e.pages.github.io/reference/run_app.md)                                 | Launch the Shiny PCA Explorer            |
 
 ## Links
 

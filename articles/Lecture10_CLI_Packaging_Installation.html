@@ -446,7 +446,10 @@ directly.</p>
 <span><span class="va">meta</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/utils/read.table.html" class="external-link">read.table</a></span><span class="op">(</span><span class="st">"/tmp/cli_test/meta.tsv"</span>, header <span class="op">=</span> <span class="cn">TRUE</span>, row.names <span class="op">=</span> <span class="fl">1</span>, sep <span class="op">=</span> <span class="st">"\t"</span><span class="op">)</span></span>
 <span></span>
 <span><span class="co"># Create SE and run PCA</span></span>
-<span><span class="va">se</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/make_se.html">make_se</a></span><span class="op">(</span><span class="fu"><a href="https://rdrr.io/r/base/matrix.html" class="external-link">as.matrix</a></span><span class="op">(</span><span class="va">counts</span><span class="op">)</span>, <span class="va">meta</span><span class="op">)</span></span>
+<span><span class="va">se</span> <span class="op">&lt;-</span> <span class="fu">SummarizedExperiment</span><span class="fu">::</span><span class="fu"><a href="https://rdrr.io/pkg/SummarizedExperiment/man/SummarizedExperiment-class.html" class="external-link">SummarizedExperiment</a></span><span class="op">(</span></span>
+<span>    assays <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/list.html" class="external-link">list</a></span><span class="op">(</span>counts <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/matrix.html" class="external-link">as.matrix</a></span><span class="op">(</span><span class="va">counts</span><span class="op">)</span><span class="op">)</span>,</span>
+<span>    colData <span class="op">=</span> <span class="va">meta</span></span>
+<span><span class="op">)</span></span>
 <span><span class="va">result</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/run_pca.html">run_pca</a></span><span class="op">(</span><span class="va">se</span>, n_top <span class="op">=</span> <span class="fl">5</span><span class="op">)</span></span>
 <span></span>
 <span><span class="co"># Get scores</span></span>
@@ -495,7 +498,10 @@ directly.</p>
 <span>    <span class="fu"><a href="https://rdrr.io/r/utils/write.table.html" class="external-link">write.table</a></span><span class="op">(</span><span class="va">meta</span>, <span class="va">meta_file</span>, sep <span class="op">=</span> <span class="st">"\t"</span>, quote <span class="op">=</span> <span class="cn">FALSE</span><span class="op">)</span></span>
 <span>    </span>
 <span>    <span class="co"># Run via R</span></span>
-<span>    <span class="va">se</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/make_se.html">make_se</a></span><span class="op">(</span><span class="va">counts</span>, <span class="va">meta</span><span class="op">)</span></span>
+<span>    <span class="va">se</span> <span class="op">&lt;-</span> <span class="fu">SummarizedExperiment</span><span class="fu">::</span><span class="fu"><a href="https://rdrr.io/pkg/SummarizedExperiment/man/SummarizedExperiment-class.html" class="external-link">SummarizedExperiment</a></span><span class="op">(</span></span>
+<span>        assays <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/list.html" class="external-link">list</a></span><span class="op">(</span>counts <span class="op">=</span> <span class="va">counts</span><span class="op">)</span>,</span>
+<span>        colData <span class="op">=</span> <span class="va">meta</span></span>
+<span>    <span class="op">)</span></span>
 <span>    <span class="va">r_result</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/run_pca.html">run_pca</a></span><span class="op">(</span><span class="va">se</span>, n_top <span class="op">=</span> <span class="fl">50</span><span class="op">)</span></span>
 <span>    </span>
 <span>    <span class="co"># Run via CLI</span></span>

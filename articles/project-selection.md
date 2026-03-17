@@ -23,10 +23,8 @@ your primary data structure will be either a **SummarizedExperiment**
 (bulk experiments) or a **SingleCellExperiment** (single-cell
 experiments). Your package must include:
 
-- A constructor function
-  ([`make_se()`](https://automatic-engine-4qp7m5e.pages.github.io/reference/make_se.md)
-  or `make_sce()`) to build the appropriate container from raw inputs
-- 3–5 additional exported analysis/visualization functions
+- 3–5 exported analysis/visualization functions that operate on SE or
+  SCE objects
 - At least 8 testthat expectations across 2+ test files
 - A pkgdown documentation site
 - TSV file exports via the CLI
@@ -1026,10 +1024,8 @@ rubric](https://automatic-engine-4qp7m5e.pages.github.io/articles/HW1_Rubric.md)
 
 ### Core Functions (5 pts)
 
-- [`make_se()`](https://automatic-engine-4qp7m5e.pages.github.io/reference/make_se.md)
-  or `make_sce()` that constructs the appropriate container from a
-  counts/expression matrix + metadata data.frame
-- 3–4 additional exported functions for your specific analysis
+- 3–5 exported functions for your specific analysis that operate on SE
+  or SCE objects
 - 1 plotting function returning a `ggplot` object
 - All functions accept SE or SCE input and return well-defined types
 - Input validation with informative

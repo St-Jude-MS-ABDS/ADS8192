@@ -193,26 +193,21 @@ data.</p>
 </tr></thead>
 <tbody>
 <tr class="odd">
-<td><code><a href="../reference/make_se.html">make_se()</a></code></td>
-<td>Yes</td>
-<td>Users create SE from their data</td>
-</tr>
-<tr class="even">
 <td><code><a href="../reference/top_variable_features.html">top_variable_features()</a></code></td>
 <td>Yes</td>
 <td>Users may want to filter separately</td>
 </tr>
-<tr class="odd">
+<tr class="even">
 <td><code><a href="../reference/run_pca.html">run_pca()</a></code></td>
 <td>Yes</td>
 <td>Core analysis function</td>
 </tr>
-<tr class="even">
+<tr class="odd">
 <td><code><a href="../reference/pca_variance_explained.html">pca_variance_explained()</a></code></td>
 <td>Yes</td>
 <td>Useful standalone</td>
 </tr>
-<tr class="odd">
+<tr class="even">
 <td><code><a href="../reference/plot_pca.html">plot_pca()</a></code></td>
 <td>Yes</td>
 <td>Core visualization</td>
@@ -354,7 +349,7 @@ Suggests rather than Imports? What’s the difference?</p>
 <p>All R code goes in the <code>R/</code> directory. You can organize it
 however you like, but a common pattern:</p>
 <pre><code>R/
-├── data.R         # Functions for data handling (make_se)
+├── data.R         # Functions for data handling (top_variable_features)
 ├── pca.R          # PCA-related functions
 ├── plotting.R     # Visualization functions
 └── sePCA-package.R  # Package-level documentation</code></pre>
@@ -364,7 +359,7 @@ however you like, but a common pattern:</p>
 </h3>
 <div class="sourceCode" id="cb11"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="co"># Create R files (this just opens them in RStudio)</span></span>
-<span><span class="fu">use_r</span><span class="op">(</span><span class="st">"data"</span><span class="op">)</span>      <span class="co"># For make_se(), top_variable_features()</span></span>
+<span><span class="fu">use_r</span><span class="op">(</span><span class="st">"data"</span><span class="op">)</span>      <span class="co"># For top_variable_features()</span></span>
 <span><span class="fu">use_r</span><span class="op">(</span><span class="st">"pca"</span><span class="op">)</span>       <span class="co"># For run_pca(), pca_variance_explained()</span></span>
 <span><span class="fu">use_r</span><span class="op">(</span><span class="st">"plotting"</span><span class="op">)</span>  <span class="co"># For plot_pca()</span></span></code></pre></div>
 </div>
@@ -380,9 +375,9 @@ changes:</p>
 <code class="sourceCode R"><span><span class="kw"><a href="https://rdrr.io/r/base/library.html" class="external-link">library</a></span><span class="op">(</span><span class="va"><a href="https://bioconductor.org/packages/SummarizedExperiment" class="external-link">SummarizedExperiment</a></span><span class="op">)</span>  <span class="co"># DON'T do this in packages!</span></span>
 <span><span class="kw"><a href="https://rdrr.io/r/base/library.html" class="external-link">library</a></span><span class="op">(</span><span class="va"><a href="https://ggplot2.tidyverse.org" class="external-link">ggplot2</a></span><span class="op">)</span></span>
 <span></span>
-<span><span class="va">make_se</span> <span class="op">&lt;-</span> <span class="kw">function</span><span class="op">(</span><span class="va">counts</span>, <span class="va">col_data</span>, <span class="va">row_data</span> <span class="op">=</span> <span class="cn">NULL</span><span class="op">)</span> <span class="op">{</span></span>
-<span>  <span class="co"># Uses SummarizedExperiment() directly</span></span>
-<span>  <span class="fu"><a href="https://rdrr.io/pkg/SummarizedExperiment/man/SummarizedExperiment-class.html" class="external-link">SummarizedExperiment</a></span><span class="op">(</span><span class="va">...</span><span class="op">)</span></span>
+<span><span class="va">top_variable_features</span> <span class="op">&lt;-</span> <span class="kw">function</span><span class="op">(</span><span class="va">se</span>, <span class="va">n</span> <span class="op">=</span> <span class="fl">500</span>, <span class="va">assay_name</span> <span class="op">=</span> <span class="st">"counts"</span><span class="op">)</span> <span class="op">{</span></span>
+<span>  <span class="va">mat</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/pkg/SummarizedExperiment/man/SummarizedExperiment-class.html" class="external-link">assay</a></span><span class="op">(</span><span class="va">se</span>, <span class="va">assay_name</span><span class="op">)</span>  <span class="co"># Uses assay() directly</span></span>
+<span>  <span class="co"># ...</span></span>
 <span><span class="op">}</span></span></code></pre></div>
 </div>
 <div class="section level4">
@@ -393,16 +388,18 @@ changes:</p>
 clarity)</strong></p>
 <div class="sourceCode" id="cb13"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="co"># In R/data.R</span></span>
-<span><span class="va">make_se</span> <span class="op">&lt;-</span> <span class="kw">function</span><span class="op">(</span><span class="va">counts</span>, <span class="va">col_data</span>, <span class="va">row_data</span> <span class="op">=</span> <span class="cn">NULL</span><span class="op">)</span> <span class="op">{</span></span>
+<span><span class="va">top_variable_features</span> <span class="op">&lt;-</span> <span class="kw">function</span><span class="op">(</span><span class="va">se</span>, <span class="va">n</span> <span class="op">=</span> <span class="fl">500</span>, <span class="va">assay_name</span> <span class="op">=</span> <span class="st">"counts"</span><span class="op">)</span> <span class="op">{</span></span>
 <span>  <span class="co"># Use pkg::fun() syntax</span></span>
-<span>  <span class="fu">SummarizedExperiment</span><span class="fu">::</span><span class="fu"><a href="https://rdrr.io/pkg/SummarizedExperiment/man/SummarizedExperiment-class.html" class="external-link">SummarizedExperiment</a></span><span class="op">(</span><span class="va">...</span><span class="op">)</span></span>
+<span>  <span class="va">mat</span> <span class="op">&lt;-</span> <span class="fu">SummarizedExperiment</span><span class="fu">::</span><span class="fu"><a href="https://rdrr.io/pkg/SummarizedExperiment/man/SummarizedExperiment-class.html" class="external-link">assay</a></span><span class="op">(</span><span class="va">se</span>, <span class="va">assay_name</span><span class="op">)</span></span>
+<span>  <span class="co"># ...</span></span>
 <span><span class="op">}</span></span></code></pre></div>
 <p><strong>Option 2: Import via roxygen2</strong></p>
 <div class="sourceCode" id="cb14"><pre class="downlit sourceCode r">
-<code class="sourceCode R"><span><span class="co">#' @importFrom SummarizedExperiment SummarizedExperiment assay assays colData rowData</span></span>
-<span><span class="va">make_se</span> <span class="op">&lt;-</span> <span class="kw">function</span><span class="op">(</span><span class="va">counts</span>, <span class="va">col_data</span>, <span class="va">row_data</span> <span class="op">=</span> <span class="cn">NULL</span><span class="op">)</span> <span class="op">{</span></span>
+<code class="sourceCode R"><span><span class="co">#' @importFrom SummarizedExperiment assay colData rowData</span></span>
+<span><span class="va">top_variable_features</span> <span class="op">&lt;-</span> <span class="kw">function</span><span class="op">(</span><span class="va">se</span>, <span class="va">n</span> <span class="op">=</span> <span class="fl">500</span>, <span class="va">assay_name</span> <span class="op">=</span> <span class="st">"counts"</span><span class="op">)</span> <span class="op">{</span></span>
 <span>  <span class="co"># Can use function directly because it's imported</span></span>
-<span>  <span class="fu"><a href="https://rdrr.io/pkg/SummarizedExperiment/man/SummarizedExperiment-class.html" class="external-link">SummarizedExperiment</a></span><span class="op">(</span><span class="va">...</span><span class="op">)</span></span>
+<span>  <span class="va">mat</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/pkg/SummarizedExperiment/man/SummarizedExperiment-class.html" class="external-link">assay</a></span><span class="op">(</span><span class="va">se</span>, <span class="va">assay_name</span><span class="op">)</span></span>
+<span>  <span class="co"># ...</span></span>
 <span><span class="op">}</span></span></code></pre></div>
 </div>
 <div class="section level4">
@@ -410,57 +407,6 @@ clarity)</strong></p>
 </h4>
 <div class="sourceCode" id="cb15"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="co"># R/data.R</span></span>
-<span></span>
-<span><span class="co">#' Create a SummarizedExperiment from counts and metadata</span></span>
-<span><span class="co">#'</span></span>
-<span><span class="co">#' @param counts A matrix of counts (genes × samples). Row names should be </span></span>
-<span><span class="co">#'   gene identifiers, column names should be sample identifiers.</span></span>
-<span><span class="co">#' @param col_data A data.frame of sample metadata. Row names must match </span></span>
-<span><span class="co">#'   column names of counts.</span></span>
-<span><span class="co">#' @param row_data Optional data.frame of gene metadata. Row names must match </span></span>
-<span><span class="co">#'   row names of counts.</span></span>
-<span><span class="co">#'</span></span>
-<span><span class="co">#' @return A SummarizedExperiment object</span></span>
-<span><span class="co">#' @export</span></span>
-<span><span class="co">#'</span></span>
-<span><span class="co">#' @examples</span></span>
-<span><span class="co">#' counts &lt;- matrix(rpois(100, 50), nrow = 10, ncol = 10)</span></span>
-<span><span class="co">#' rownames(counts) &lt;- paste0("gene", 1:10)</span></span>
-<span><span class="co">#' colnames(counts) &lt;- paste0("sample", 1:10)</span></span>
-<span><span class="co">#' meta &lt;- data.frame(</span></span>
-<span><span class="co">#'   treatment = rep(c("ctrl", "trt"), each = 5),</span></span>
-<span><span class="co">#'   row.names = colnames(counts)</span></span>
-<span><span class="co">#' )</span></span>
-<span><span class="co">#' se &lt;- make_se(counts, meta)</span></span>
-<span><span class="va">make_se</span> <span class="op">&lt;-</span> <span class="kw">function</span><span class="op">(</span><span class="va">counts</span>, <span class="va">col_data</span>, <span class="va">row_data</span> <span class="op">=</span> <span class="cn">NULL</span><span class="op">)</span> <span class="op">{</span></span>
-<span>    <span class="kw">if</span> <span class="op">(</span><span class="op">!</span><span class="fu"><a href="https://rdrr.io/r/base/matrix.html" class="external-link">is.matrix</a></span><span class="op">(</span><span class="va">counts</span><span class="op">)</span><span class="op">)</span> <span class="op">{</span></span>
-<span>        <span class="va">counts</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/base/matrix.html" class="external-link">as.matrix</a></span><span class="op">(</span><span class="va">counts</span><span class="op">)</span></span>
-<span>    <span class="op">}</span></span>
-<span>    </span>
-<span>    <span class="kw">if</span> <span class="op">(</span><span class="op">!</span><span class="fu"><a href="https://rdrr.io/r/base/as.data.frame.html" class="external-link">is.data.frame</a></span><span class="op">(</span><span class="va">col_data</span><span class="op">)</span><span class="op">)</span> <span class="op">{</span></span>
-<span>        <span class="kw"><a href="https://rdrr.io/r/base/stop.html" class="external-link">stop</a></span><span class="op">(</span><span class="st">"col_data must be a data.frame"</span><span class="op">)</span></span>
-<span>    <span class="op">}</span></span>
-<span>    </span>
-<span>    <span class="kw">if</span> <span class="op">(</span><span class="op">!</span><span class="fu"><a href="https://rdrr.io/r/base/all.html" class="external-link">all</a></span><span class="op">(</span><span class="fu"><a href="https://rdrr.io/r/base/colnames.html" class="external-link">colnames</a></span><span class="op">(</span><span class="va">counts</span><span class="op">)</span> <span class="op"><a href="https://rdrr.io/r/base/match.html" class="external-link">%in%</a></span> <span class="fu"><a href="https://rdrr.io/r/base/colnames.html" class="external-link">rownames</a></span><span class="op">(</span><span class="va">col_data</span><span class="op">)</span><span class="op">)</span><span class="op">)</span> <span class="op">{</span></span>
-<span>        <span class="kw"><a href="https://rdrr.io/r/base/stop.html" class="external-link">stop</a></span><span class="op">(</span><span class="st">"Column names of counts must match row names of col_data"</span><span class="op">)</span></span>
-<span>    <span class="op">}</span></span>
-<span>    </span>
-<span>    <span class="va">col_data</span> <span class="op">&lt;-</span> <span class="va">col_data</span><span class="op">[</span><span class="fu"><a href="https://rdrr.io/r/base/colnames.html" class="external-link">colnames</a></span><span class="op">(</span><span class="va">counts</span><span class="op">)</span>, , drop <span class="op">=</span> <span class="cn">FALSE</span><span class="op">]</span></span>
-<span>    </span>
-<span>    <span class="kw">if</span> <span class="op">(</span><span class="fu"><a href="https://rdrr.io/r/base/NULL.html" class="external-link">is.null</a></span><span class="op">(</span><span class="va">row_data</span><span class="op">)</span><span class="op">)</span> <span class="op">{</span></span>
-<span>        <span class="fu">SummarizedExperiment</span><span class="fu">::</span><span class="fu"><a href="https://rdrr.io/pkg/SummarizedExperiment/man/SummarizedExperiment-class.html" class="external-link">SummarizedExperiment</a></span><span class="op">(</span></span>
-<span>            assays <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/list.html" class="external-link">list</a></span><span class="op">(</span>counts <span class="op">=</span> <span class="va">counts</span><span class="op">)</span>,</span>
-<span>            colData <span class="op">=</span> <span class="va">col_data</span></span>
-<span>        <span class="op">)</span></span>
-<span>    <span class="op">}</span> <span class="kw">else</span> <span class="op">{</span></span>
-<span>        <span class="va">row_data</span> <span class="op">&lt;-</span> <span class="va">row_data</span><span class="op">[</span><span class="fu"><a href="https://rdrr.io/r/base/colnames.html" class="external-link">rownames</a></span><span class="op">(</span><span class="va">counts</span><span class="op">)</span>, , drop <span class="op">=</span> <span class="cn">FALSE</span><span class="op">]</span></span>
-<span>        <span class="fu">SummarizedExperiment</span><span class="fu">::</span><span class="fu"><a href="https://rdrr.io/pkg/SummarizedExperiment/man/SummarizedExperiment-class.html" class="external-link">SummarizedExperiment</a></span><span class="op">(</span></span>
-<span>            assays <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/list.html" class="external-link">list</a></span><span class="op">(</span>counts <span class="op">=</span> <span class="va">counts</span><span class="op">)</span>,</span>
-<span>            colData <span class="op">=</span> <span class="va">col_data</span>,</span>
-<span>            rowData <span class="op">=</span> <span class="va">row_data</span></span>
-<span>        <span class="op">)</span></span>
-<span>    <span class="op">}</span></span>
-<span><span class="op">}</span></span>
 <span></span>
 <span><span class="co">#' Select top variable features</span></span>
 <span><span class="co">#'</span></span>
@@ -511,15 +457,14 @@ clarity)</strong></p>
 <p>This creates:</p>
 <ul>
 <li>
-<code>man/make_se.Rd</code> — Help file for each documented
-function</li>
+<code>man/top_variable_features.Rd</code> — Help file for each
+documented function</li>
 <li>
 <code>NAMESPACE</code> — Updated with exports and imports</li>
 </ul>
 <p>Check your <code>NAMESPACE</code> file:</p>
 <pre><code><span><span class="co"># Generated by roxygen2: do not edit by hand</span></span>
 <span></span>
-<span><span class="fu">export</span><span class="op">(</span><span class="va">make_se</span><span class="op">)</span></span>
 <span><span class="fu">export</span><span class="op">(</span><span class="va">pca_variance_explained</span><span class="op">)</span></span>
 <span><span class="fu">export</span><span class="op">(</span><span class="va">plot_pca</span><span class="op">)</span></span>
 <span><span class="fu">export</span><span class="op">(</span><span class="va">run_pca</span><span class="op">)</span></span>
@@ -533,7 +478,7 @@ function</li>
 <span><span class="fu">load_all</span><span class="op">(</span><span class="op">)</span></span>
 <span></span>
 <span><span class="co"># Test help pages</span></span>
-<span><span class="op">?</span><span class="va">make_se</span></span>
+<span><span class="op">?</span><span class="va">top_variable_features</span></span>
 <span><span class="op">?</span><span class="va">run_pca</span></span></code></pre></div>
 <hr>
 </div>
@@ -646,7 +591,7 @@ to validate your package.</p>
 <div class="section level4">
 <h4 id="undocumented-arguments">2. Undocumented Arguments<a class="anchor" aria-label="anchor" href="#undocumented-arguments"></a>
 </h4>
-<pre><code>Warning: Undocumented arguments in documentation object 'make_se'
+<pre><code>Warning: Undocumented arguments in documentation object 'top_variable_features'
   'row_data'</code></pre>
 <p><strong>Fix:</strong> Add <code>@param row_data</code> to your
 roxygen2 block.</p>

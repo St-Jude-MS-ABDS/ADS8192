@@ -43,7 +43,7 @@ But this requires:
 
     ┌─────────────────────────────────────────────────────┐
     │                 Package Core                         │
-    │  make_se() → run_pca() → plot_pca()                 │
+    │  run_pca() → plot_pca() → save_pca_results()        │
     └─────────────────────────────────────────────────────┘
             ↑                    ↑                    ↑
             │                    │                    │

@@ -282,81 +282,23 @@ core” of our package. These functions will later be:
 2.  Wrapped by a Shiny app (Lectures 7-8)
 3.  Exposed via a CLI (Lectures 9-10)
 
-### Function 1: `make_se()` — Create a SummarizedExperiment
+### Creating a SummarizedExperiment from Components
 
-This function creates a `SummarizedExperiment` from a counts matrix and
-metadata data.frame:
-
-``` r
-#' Create a SummarizedExperiment from counts and metadata
-#'
-#' @param counts A matrix of counts (genes × samples). Row names should be 
-#'   gene identifiers, column names should be sample identifiers.
-#' @param col_data A data.frame of sample metadata. Row names must match 
-#'   column names of counts.
-#' @param row_data Optional data.frame of gene metadata. Row names must match 
-#'   row names of counts.
-#'
-#' @return A SummarizedExperiment object
-#' 
-#' @examples
-#' counts <- matrix(rpois(100, 50), nrow = 10, ncol = 10)
-#' rownames(counts) <- paste0("gene", 1:10)
-#' colnames(counts) <- paste0("sample", 1:10)
-#' meta <- data.frame(
-#'   treatment = rep(c("ctrl", "trt"), each = 5),
-#'   row.names = colnames(counts)
-#' )
-#' se <- make_se(counts, meta)
-make_se <- function(counts, col_data, row_data = NULL) {
-    # Validate inputs
-    if (!is.matrix(counts)) {
-        counts <- as.matrix(counts)
-    }
-    
-    if (!is.data.frame(col_data)) {
-        stop("col_data must be a data.frame")
-    }
-    
-    # Check that sample IDs match
-    if (!all(colnames(counts) %in% rownames(col_data))) {
-        stop("Column names of counts must match row names of col_data")
-    }
-    
-    # Reorder col_data to match counts column order
-    col_data <- col_data[colnames(counts), , drop = FALSE]
-    
-    # Build the SummarizedExperiment
-    if (is.null(row_data)) {
-        se <- SummarizedExperiment(
-            assays = list(counts = counts),
-            colData = col_data
-        )
-    } else {
-        row_data <- row_data[rownames(counts), , drop = FALSE]
-        se <- SummarizedExperiment(
-            assays = list(counts = counts),
-            colData = col_data,
-            rowData = row_data
-        )
-    }
-    
-    return(se)
-}
-```
-
-#### Testing `make_se()`
-
-Let’s verify our function works by recreating a SummarizedExperiment
-from the airway data:
+The
+[`SummarizedExperiment()`](https://rdrr.io/pkg/SummarizedExperiment/man/SummarizedExperiment-class.html)
+constructor is straightforward — pass a named list of assay matrices, a
+sample metadata data.frame, and optionally gene metadata:
 
 ``` r
 # Extract components from airway
 test_counts <- assay(airway, "counts")
 test_meta <- as.data.frame(colData(airway))
 
-# Create a new SE using our function
-my_se <- make_se(test_counts, test_meta)
+# Create a new SE directly — the constructor is already a clear one-liner
+my_se <- SummarizedExperiment(
+    assays = list(counts = test_counts),
+    colData = test_meta
+)
 
 # Verify it worked
 my_se
@@ -364,14 +306,13 @@ dim(my_se)
 colData(my_se)
 ```
 
-> **Exercise B:** Modify the call to
-> [`make_se()`](https://automatic-engine-4qp7m5e.pages.github.io/reference/make_se.md)
-> to also include `rowData`. Extract it from `airway` first, then pass
-> it as the `row_data` argument.
+> **Exercise B:** Modify the constructor call above to also include
+> `rowData`. Extract it from `airway` first, then pass it via the
+> `rowData` argument.
 
 ------------------------------------------------------------------------
 
-### Function 2: `top_variable_features()` — Select Most Variable Genes
+### Function 1: `top_variable_features()` — Select Most Variable Genes
 
 For PCA, we typically want to focus on the most variable genes:
 
@@ -409,7 +350,7 @@ dim(se_top)
 
 ------------------------------------------------------------------------
 
-### Function 3: `run_pca()` — Perform PCA
+### Function 2: `run_pca()` — Perform PCA
 
 Now let’s run PCA on our data:
 
@@ -473,7 +414,7 @@ summary(pca_result$pca)
 
 ------------------------------------------------------------------------
 
-### Function 4: `pca_variance_explained()` — Helper for Variance
+### Function 3: `pca_variance_explained()` — Helper for Variance
 
 ``` r
 #' Get variance explained by each PC
@@ -499,7 +440,7 @@ head(var_df)
 
 ------------------------------------------------------------------------
 
-### Function 5: `plot_pca()` — Visualize PCA Results
+### Function 4: `plot_pca()` — Visualize PCA Results
 
 ``` r
 #' Create a PCA scatter plot
@@ -567,7 +508,7 @@ plot_pca(pca_result, color_by = "dex", shape_by = "cell")
 
 ------------------------------------------------------------------------
 
-### Function 6: `save_pca_results()` — Export Results to Files
+### Function 5: `save_pca_results()` — Export Results to Files
 
 The CLI and reproducible scripts need to write analysis outputs to disk.
 This function exports PCA scores, variance, and optionally a plot — the
@@ -731,20 +672,19 @@ can load it with `data("example_se")`.
 
 ## Summary: The Analysis Core
 
-We now have six core functions that work together — everything a student
-package needs for the [HW1
+We now have five core functions that work together — everything a
+student package needs for the [HW1
 rubric](https://automatic-engine-4qp7m5e.pages.github.io/articles/HW1_Rubric.md):
 
-| Rubric Category       | Function                                                                                                           | Input                    | Output               |
-|-----------------------|--------------------------------------------------------------------------------------------------------------------|--------------------------|----------------------|
-| Constructor (1 pt)    | [`make_se()`](https://automatic-engine-4qp7m5e.pages.github.io/reference/make_se.md)                               | counts matrix + metadata | SummarizedExperiment |
-| Analysis \#1 (1 pt)   | [`top_variable_features()`](https://automatic-engine-4qp7m5e.pages.github.io/reference/top_variable_features.md)   | SE + n                   | Subsetted SE         |
-| Analysis \#2 (1 pt)   | [`run_pca()`](https://automatic-engine-4qp7m5e.pages.github.io/reference/run_pca.md)                               | SE + parameters          | list(pca, scores)    |
-| Summary/metric (1 pt) | [`pca_variance_explained()`](https://automatic-engine-4qp7m5e.pages.github.io/reference/pca_variance_explained.md) | PCA result               | data.frame           |
-| Plotting (1 pt)       | [`plot_pca()`](https://automatic-engine-4qp7m5e.pages.github.io/reference/plot_pca.md)                             | PCA result + aesthetics  | ggplot               |
-| Export (CLI)          | [`save_pca_results()`](https://automatic-engine-4qp7m5e.pages.github.io/reference/save_pca_results.md)             | PCA result + output dir  | TSV files on disk    |
+| Rubric Category       | Function                                                                                                           | Input                   | Output            |
+|-----------------------|--------------------------------------------------------------------------------------------------------------------|-------------------------|-------------------|
+| Analysis \#1 (1 pt)   | [`top_variable_features()`](https://automatic-engine-4qp7m5e.pages.github.io/reference/top_variable_features.md)   | SE + n                  | Subsetted SE      |
+| Analysis \#2 (1 pt)   | [`run_pca()`](https://automatic-engine-4qp7m5e.pages.github.io/reference/run_pca.md)                               | SE + parameters         | list(pca, scores) |
+| Summary/metric (1 pt) | [`pca_variance_explained()`](https://automatic-engine-4qp7m5e.pages.github.io/reference/pca_variance_explained.md) | PCA result              | data.frame        |
+| Plotting (1 pt)       | [`plot_pca()`](https://automatic-engine-4qp7m5e.pages.github.io/reference/plot_pca.md)                             | PCA result + aesthetics | ggplot            |
+| Export (CLI)          | [`save_pca_results()`](https://automatic-engine-4qp7m5e.pages.github.io/reference/save_pca_results.md)             | PCA result + output dir | TSV files on disk |
 
-Design principles shared by all six:
+Design principles shared by all five:
 
 - **Take structured objects as input** — Not loose matrices that can get
   out of sync
@@ -760,17 +700,17 @@ Design principles shared by all six:
 
 ## Three Interfaces, One Core
 
-The six functions above form the **analysis core**. For HW1, you will
+The five functions above form the **analysis core**. For HW1, you will
 expose them through **three interfaces** — each calling the same core
 functions:
 
                         Analysis Core
-      make_se() → run_pca() → plot_pca() → save_pca_results()
-            ↑            ↑            ↑            ↑
-       ┌────┴────┐  ┌────┴────┐  ┌───┴─────┐ ┌───┴─────┐
-       │ R API   │  │ Shiny   │  │  CLI    │ │  Tests  │
-       │ (users) │  │ (web)   │  │(scripts)│ │(testthat)│
-       └─────────┘  └─────────┘  └─────────┘ └─────────┘
+      run_pca() → plot_pca() → save_pca_results()
+            ↑            ↑            ↑            
+       ┌────┴────┐  ┌────┴────┐  ┌───┴─────┐
+       │ R API   │  │ Shiny   │  │  CLI    │
+       │ (users) │  │ (web)   │  │(scripts)│
+       └─────────┘  └─────────┘  └─────────┘
 
 #### Interface 1: R API (Lectures 5–6)
 
@@ -818,7 +758,10 @@ n_top  <- 500L # --n-top  INT
 # Read data, build SE, run analysis, save results
 counts_df <- read.table(counts, sep = "\t", header = TRUE, row.names = 1)
 meta_df   <- read.table(meta,   sep = "\t", header = TRUE, row.names = 1)
-se     <- make_se(as.matrix(counts_df), meta_df)
+se     <- SummarizedExperiment(
+    assays = list(counts = as.matrix(counts_df)),
+    colData = meta_df
+)
 result <- run_pca(se, n_top = n_top)
 save_pca_results(result, output)
 ```
@@ -836,8 +779,7 @@ save_pca_results(result, output)
 
 ### Micro-task 1: Create `analysis_core.R`
 
-Put all six functions into a single script called `analysis_core.R`:
-[`make_se()`](https://automatic-engine-4qp7m5e.pages.github.io/reference/make_se.md),
+Put all five functions into a single script called `analysis_core.R`:
 [`top_variable_features()`](https://automatic-engine-4qp7m5e.pages.github.io/reference/top_variable_features.md),
 [`run_pca()`](https://automatic-engine-4qp7m5e.pages.github.io/reference/run_pca.md),
 [`pca_variance_explained()`](https://automatic-engine-4qp7m5e.pages.github.io/reference/pca_variance_explained.md),
@@ -850,8 +792,6 @@ Requirements:
 - roxygen2-style comment header for every function (`#' @param`,
   `#' @return`)
 - Input validation using [`stop()`](https://rdrr.io/r/base/stop.html) in
-  [`make_se()`](https://automatic-engine-4qp7m5e.pages.github.io/reference/make_se.md)
-  and
   [`save_pca_results()`](https://automatic-engine-4qp7m5e.pages.github.io/reference/save_pca_results.md)
 - No [`library()`](https://rdrr.io/r/base/library.html) calls inside the
   functions (we’ll handle dependencies properly in Lecture 5)
@@ -893,26 +833,6 @@ Write 3-5 sentences describing why a structured container
 
 ``` r
 # SAVE THIS AS: analysis_core.R
-
-#' Create a SummarizedExperiment from counts and metadata
-make_se <- function(counts, col_data, row_data = NULL) {
-    if (!is.matrix(counts)) counts <- as.matrix(counts)
-    if (!is.data.frame(col_data)) stop("col_data must be a data.frame")
-    if (!all(colnames(counts) %in% rownames(col_data))) {
-        stop("Column names of counts must match row names of col_data")
-    }
-    col_data <- col_data[colnames(counts), , drop = FALSE]
-    if (is.null(row_data)) {
-        SummarizedExperiment(assays = list(counts = counts), colData = col_data)
-    } else {
-        row_data <- row_data[rownames(counts), , drop = FALSE]
-        SummarizedExperiment(
-            assays = list(counts = counts), 
-            colData = col_data, 
-            rowData = row_data
-        )
-    }
-}
 
 #' Select top variable features
 top_variable_features <- function(se, n = 500, assay_name = "counts") {

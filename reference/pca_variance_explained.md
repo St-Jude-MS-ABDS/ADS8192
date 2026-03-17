@@ -29,6 +29,10 @@ A data.frame with columns:
 
   Numeric, percentage of total variance explained.
 
+## Author
+
+Jared Andrews
+
 ## Examples
 
 ``` r

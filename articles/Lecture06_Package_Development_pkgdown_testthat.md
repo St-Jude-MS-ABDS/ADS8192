@@ -93,54 +93,43 @@ This creates `tests/testthat/test-data.R`. Edit it:
 ``` r
 # tests/testthat/test-data.R
 
-test_that("make_se creates correct class", {
-    counts <- matrix(rpois(100, 50), nrow = 10, ncol = 10)
-    rownames(counts) <- paste0("gene", 1:10)
-    colnames(counts) <- paste0("sample", 1:10)
-    meta <- data.frame(
-        treatment = rep(c("ctrl", "trt"), each = 5),
-        row.names = colnames(counts)
-    )
-    
-    se <- make_se(counts, meta)
-    
-    expect_s4_class(se, "SummarizedExperiment")
-})
-
-test_that("make_se has correct dimensions", {
-    counts <- matrix(rpois(100, 50), nrow = 10, ncol = 10)
-    rownames(counts) <- paste0("gene", 1:10)
-    colnames(counts) <- paste0("sample", 1:10)
-    meta <- data.frame(
-        treatment = rep(c("ctrl", "trt"), each = 5),
-        row.names = colnames(counts)
-    )
-    
-    se <- make_se(counts, meta)
-    
-    expect_equal(nrow(se), 10)
-    expect_equal(ncol(se), 10)
-})
-
-test_that("make_se errors on mismatched samples", {
-    counts <- matrix(rpois(100, 50), nrow = 10, ncol = 10)
-    rownames(counts) <- paste0("gene", 1:10)
-    colnames(counts) <- paste0("sample", 1:10)
-    meta <- data.frame(
-        treatment = rep(c("ctrl", "trt"), each = 5),
-        row.names = paste0("wrong", 1:10)  # Wrong names!
-    )
-    
-    expect_error(make_se(counts, meta), "must match")
-})
-
-test_that("top_variable_features returns subset", {
+test_that("top_variable_features returns correct subset size", {
     data(example_se, package = "sePCA")
     
     se_top <- top_variable_features(example_se, n = 50)
     
     expect_equal(nrow(se_top), 50)
     expect_equal(ncol(se_top), ncol(example_se))  # Same samples
+})
+
+test_that("top_variable_features returns most variable genes", {
+    data(example_se, package = "sePCA")
+    
+    se_top <- top_variable_features(example_se, n = 10)
+    mat <- SummarizedExperiment::assay(se_top, "counts")
+    vars <- apply(mat, 1, var)
+
+    # All variances in top-10 should be >= the 11th highest
+    full_mat <- SummarizedExperiment::assay(example_se, "counts")
+    full_vars <- sort(apply(full_mat, 1, var), decreasing = TRUE)
+    expect_true(all(vars >= full_vars[11]))
+})
+
+test_that("top_variable_features handles n > nrow gracefully", {
+    data(example_se, package = "sePCA")
+    
+    se_all <- top_variable_features(example_se, n = 100000)
+    
+    expect_equal(nrow(se_all), nrow(example_se))
+})
+
+test_that("run_pca returns correct structure", {
+    data(example_se, package = "sePCA")
+    
+    result <- run_pca(example_se, n_top = 50)
+    
+    expect_type(result, "list")
+    expect_named(result, c("pca", "scores"))
 })
 ```
 
@@ -151,13 +140,13 @@ Every test follows this pattern:
 ``` r
 test_that("description of what we're testing", {
     # ARRANGE - Set up data and conditions
-    counts <- matrix(...)
+    data(example_se, package = "sePCA")
     
     # ACT - Run the code being tested
-    result <- make_se(counts, meta)
+    result <- top_variable_features(example_se, n = 50)
     
     # ASSERT - Check the results
-    expect_equal(nrow(result), expected_value)
+    expect_equal(nrow(result), 50)
 })
 ```
 
@@ -192,22 +181,16 @@ fixing the bug.
 #### The Bug
 
 Currently,
-[`make_se()`](https://automatic-engine-4qp7m5e.pages.github.io/reference/make_se.md)
-doesn’t check if the counts matrix has numeric values. Let’s fix that.
+[`run_pca()`](https://automatic-engine-4qp7m5e.pages.github.io/reference/run_pca.md)
+doesn’t validate that `n_top` is a positive integer. Let’s fix that.
 
 #### Step 1: Write a Failing Test
 
 ``` r
-test_that("make_se errors on non-numeric counts", {
-    counts <- matrix(letters[1:100], nrow = 10, ncol = 10)  # Character!
-    rownames(counts) <- paste0("gene", 1:10)
-    colnames(counts) <- paste0("sample", 1:10)
-    meta <- data.frame(
-        treatment = rep(c("ctrl", "trt"), each = 5),
-        row.names = colnames(counts)
-    )
+test_that("run_pca errors on negative n_top", {
+    data(example_se, package = "sePCA")
     
-    expect_error(make_se(counts, meta), "numeric")
+    expect_error(run_pca(example_se, n_top = -5), "positive")
 })
 ```
 
@@ -220,17 +203,14 @@ test()  # This should show 1 failure
 #### Step 3: Fix the Code
 
 Add to
-[`make_se()`](https://automatic-engine-4qp7m5e.pages.github.io/reference/make_se.md):
+[`run_pca()`](https://automatic-engine-4qp7m5e.pages.github.io/reference/run_pca.md):
 
 ``` r
-make_se <- function(counts, col_data, row_data = NULL) {
-    if (!is.matrix(counts)) {
-        counts <- as.matrix(counts)
-    }
-    
+run_pca <- function(se, assay_name = "counts", n_top = 500,
+                    scale = TRUE, log_transform = TRUE) {
     # ADD THIS CHECK
-    if (!is.numeric(counts)) {
-        stop("counts must be a numeric matrix")
+    if (!is.numeric(n_top) || n_top <= 0) {
+        stop("n_top must be a positive number")
     }
     
     # ... rest of function
@@ -356,7 +336,6 @@ reference:
   - title: "Data Handling"
     desc: "Create and manipulate SummarizedExperiment objects"
     contents:
-      - make_se
       - top_variable_features
   
   - title: "PCA Analysis"

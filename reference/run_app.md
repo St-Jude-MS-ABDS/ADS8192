@@ -21,6 +21,10 @@ run_app(...)
 
 A Shiny app object (invisibly).
 
+## Author
+
+Jared Andrews
+
 ## Examples
 
 ``` r

@@ -68,7 +68,7 @@ a Shiny app, and a CLI — are thin wrappers that delegate to those same
 core functions.
 
                  Core Analysis Functions
-      make_se() → run_pca() → plot_pca()
+      run_pca() → plot_pca() → save_pca_results()
             ↑            ↑            ↑
        ┌────┴────┐  ┌────┴────┐  ┌───┴─────┐
        │ R API   │  │ Shiny   │  │  CLI    │

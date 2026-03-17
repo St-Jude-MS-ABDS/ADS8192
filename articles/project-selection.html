@@ -110,10 +110,8 @@ project, your primary data structure will be either a
 <strong>SingleCellExperiment</strong> (single-cell experiments). Your
 package must include:</p>
 <ul>
-<li>A constructor function (<code><a href="../reference/make_se.html">make_se()</a></code> or
-<code>make_sce()</code>) to build the appropriate container from raw
-inputs</li>
-<li>3–5 additional exported analysis/visualization functions</li>
+<li>3–5 exported analysis/visualization functions that operate on SE or
+SCE objects</li>
 <li>At least 8 testthat expectations across 2+ test files</li>
 <li>A pkgdown documentation site</li>
 <li>TSV file exports via the CLI</li>
@@ -1291,11 +1289,8 @@ example data</li>
 <h3 id="core-functions-5-pts">Core Functions (5 pts)<a class="anchor" aria-label="anchor" href="#core-functions-5-pts"></a>
 </h3>
 <ul>
-<li>
-<code><a href="../reference/make_se.html">make_se()</a></code> or <code>make_sce()</code> that constructs
-the appropriate container from a counts/expression matrix + metadata
-data.frame</li>
-<li>3–4 additional exported functions for your specific analysis</li>
+<li>3–5 exported functions for your specific analysis that operate on SE
+or SCE objects</li>
 <li>1 plotting function returning a <code>ggplot</code> object</li>
 <li>All functions accept SE or SCE input and return well-defined
 types</li>

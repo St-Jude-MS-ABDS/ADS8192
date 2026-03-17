@@ -124,9 +124,7 @@ functions, run Shiny app, run CLI, and view pkgdown site</li>
 <tr class="even">
 <td><strong>Core functions</strong></td>
 <td>
-<code><a href="../reference/make_se.html">make_se()</a></code>, <code><a href="../reference/run_pca.html">run_pca()</a></code>,
-<code><a href="../reference/plot_pca.html">plot_pca()</a></code>
-</td>
+<code><a href="../reference/run_pca.html">run_pca()</a></code>, <code><a href="../reference/plot_pca.html">plot_pca()</a></code>, etc.</td>
 <td>Functions work on test data</td>
 </tr>
 <tr class="odd">
@@ -359,7 +357,7 @@ primary blocker.</p>
 <span><span class="fu"><a href="https://rdrr.io/pkg/SummarizedExperiment/man/SummarizedExperiment-class.html" class="external-link">SummarizedExperiment</a></span><span class="op">(</span><span class="va">...</span><span class="op">)</span></span>
 <span></span>
 <span><span class="co"># Does this fail?</span></span>
-<span><span class="fu">sePCA</span><span class="fu">::</span><span class="fu">make_se</span><span class="op">(</span><span class="va">...</span><span class="op">)</span></span></code></pre></div>
+<span><span class="fu">sePCA</span><span class="fu">::</span><span class="fu">run_pca</span><span class="op">(</span><span class="va">...</span><span class="op">)</span></span></code></pre></div>
 </div>
 <div class="section level4">
 <h4 id="fix">3. Fix<a class="anchor" aria-label="anchor" href="#fix"></a>
@@ -395,7 +393,7 @@ primary blocker.</p>
 <code class="sourceCode R"><span><span class="co"># Add a comment explaining the fix</span></span>
 <span><span class="co"># Update documentation if needed</span></span>
 <span><span class="co"># Commit with descriptive message:</span></span>
-<span><span class="co"># "Fix: Add SummarizedExperiment to Imports for make_se()"</span></span></code></pre></div>
+<span><span class="co"># "Fix: Add SummarizedExperiment to Imports for run_pca()"</span></span></code></pre></div>
 <hr>
 </div>
 </div>
@@ -696,7 +694,6 @@ are in Suggests.</p>
 - [ ] README exists and renders on GitHub
 
 ### Core Functionality
-- [ ] `make_se()` creates a valid SummarizedExperiment
 - [ ] `run_pca()` returns list with `pca` and `scores`
 - [ ] `plot_pca()` returns a ggplot object
 

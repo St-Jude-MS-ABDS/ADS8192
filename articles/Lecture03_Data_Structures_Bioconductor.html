@@ -369,99 +369,39 @@ core” of our package. These functions will later be:</p>
 <li>Exposed via a CLI (Lectures 9-10)</li>
 </ol>
 <div class="section level3">
-<h3 id="function-1-make_se-create-a-summarizedexperiment">Function 1: <code>make_se()</code> — Create a
-SummarizedExperiment<a class="anchor" aria-label="anchor" href="#function-1-make_se-create-a-summarizedexperiment"></a>
+<h3 id="creating-a-summarizedexperiment-from-components">Creating a SummarizedExperiment from Components<a class="anchor" aria-label="anchor" href="#creating-a-summarizedexperiment-from-components"></a>
 </h3>
-<p>This function creates a <code>SummarizedExperiment</code> from a
-counts matrix and metadata data.frame:</p>
+<p>The <code><a href="https://rdrr.io/pkg/SummarizedExperiment/man/SummarizedExperiment-class.html" class="external-link">SummarizedExperiment()</a></code> constructor is
+straightforward — pass a named list of assay matrices, a sample metadata
+data.frame, and optionally gene metadata:</p>
 <div class="sourceCode" id="cb14"><pre class="downlit sourceCode r">
-<code class="sourceCode R"><span><span class="co">#' Create a SummarizedExperiment from counts and metadata</span></span>
-<span><span class="co">#'</span></span>
-<span><span class="co">#' @param counts A matrix of counts (genes × samples). Row names should be </span></span>
-<span><span class="co">#'   gene identifiers, column names should be sample identifiers.</span></span>
-<span><span class="co">#' @param col_data A data.frame of sample metadata. Row names must match </span></span>
-<span><span class="co">#'   column names of counts.</span></span>
-<span><span class="co">#' @param row_data Optional data.frame of gene metadata. Row names must match </span></span>
-<span><span class="co">#'   row names of counts.</span></span>
-<span><span class="co">#'</span></span>
-<span><span class="co">#' @return A SummarizedExperiment object</span></span>
-<span><span class="co">#' </span></span>
-<span><span class="co">#' @examples</span></span>
-<span><span class="co">#' counts &lt;- matrix(rpois(100, 50), nrow = 10, ncol = 10)</span></span>
-<span><span class="co">#' rownames(counts) &lt;- paste0("gene", 1:10)</span></span>
-<span><span class="co">#' colnames(counts) &lt;- paste0("sample", 1:10)</span></span>
-<span><span class="co">#' meta &lt;- data.frame(</span></span>
-<span><span class="co">#'   treatment = rep(c("ctrl", "trt"), each = 5),</span></span>
-<span><span class="co">#'   row.names = colnames(counts)</span></span>
-<span><span class="co">#' )</span></span>
-<span><span class="co">#' se &lt;- make_se(counts, meta)</span></span>
-<span><span class="va">make_se</span> <span class="op">&lt;-</span> <span class="kw">function</span><span class="op">(</span><span class="va">counts</span>, <span class="va">col_data</span>, <span class="va">row_data</span> <span class="op">=</span> <span class="cn">NULL</span><span class="op">)</span> <span class="op">{</span></span>
-<span>    <span class="co"># Validate inputs</span></span>
-<span>    <span class="kw">if</span> <span class="op">(</span><span class="op">!</span><span class="fu"><a href="https://rdrr.io/r/base/matrix.html" class="external-link">is.matrix</a></span><span class="op">(</span><span class="va">counts</span><span class="op">)</span><span class="op">)</span> <span class="op">{</span></span>
-<span>        <span class="va">counts</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/base/matrix.html" class="external-link">as.matrix</a></span><span class="op">(</span><span class="va">counts</span><span class="op">)</span></span>
-<span>    <span class="op">}</span></span>
-<span>    </span>
-<span>    <span class="kw">if</span> <span class="op">(</span><span class="op">!</span><span class="fu"><a href="https://rdrr.io/r/base/as.data.frame.html" class="external-link">is.data.frame</a></span><span class="op">(</span><span class="va">col_data</span><span class="op">)</span><span class="op">)</span> <span class="op">{</span></span>
-<span>        <span class="kw"><a href="https://rdrr.io/r/base/stop.html" class="external-link">stop</a></span><span class="op">(</span><span class="st">"col_data must be a data.frame"</span><span class="op">)</span></span>
-<span>    <span class="op">}</span></span>
-<span>    </span>
-<span>    <span class="co"># Check that sample IDs match</span></span>
-<span>    <span class="kw">if</span> <span class="op">(</span><span class="op">!</span><span class="fu"><a href="https://rdrr.io/r/base/all.html" class="external-link">all</a></span><span class="op">(</span><span class="fu"><a href="https://rdrr.io/r/base/colnames.html" class="external-link">colnames</a></span><span class="op">(</span><span class="va">counts</span><span class="op">)</span> <span class="op"><a href="https://rdrr.io/r/base/match.html" class="external-link">%in%</a></span> <span class="fu"><a href="https://rdrr.io/r/base/colnames.html" class="external-link">rownames</a></span><span class="op">(</span><span class="va">col_data</span><span class="op">)</span><span class="op">)</span><span class="op">)</span> <span class="op">{</span></span>
-<span>        <span class="kw"><a href="https://rdrr.io/r/base/stop.html" class="external-link">stop</a></span><span class="op">(</span><span class="st">"Column names of counts must match row names of col_data"</span><span class="op">)</span></span>
-<span>    <span class="op">}</span></span>
-<span>    </span>
-<span>    <span class="co"># Reorder col_data to match counts column order</span></span>
-<span>    <span class="va">col_data</span> <span class="op">&lt;-</span> <span class="va">col_data</span><span class="op">[</span><span class="fu"><a href="https://rdrr.io/r/base/colnames.html" class="external-link">colnames</a></span><span class="op">(</span><span class="va">counts</span><span class="op">)</span>, , drop <span class="op">=</span> <span class="cn">FALSE</span><span class="op">]</span></span>
-<span>    </span>
-<span>    <span class="co"># Build the SummarizedExperiment</span></span>
-<span>    <span class="kw">if</span> <span class="op">(</span><span class="fu"><a href="https://rdrr.io/r/base/NULL.html" class="external-link">is.null</a></span><span class="op">(</span><span class="va">row_data</span><span class="op">)</span><span class="op">)</span> <span class="op">{</span></span>
-<span>        <span class="va">se</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/pkg/SummarizedExperiment/man/SummarizedExperiment-class.html" class="external-link">SummarizedExperiment</a></span><span class="op">(</span></span>
-<span>            assays <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/list.html" class="external-link">list</a></span><span class="op">(</span>counts <span class="op">=</span> <span class="va">counts</span><span class="op">)</span>,</span>
-<span>            colData <span class="op">=</span> <span class="va">col_data</span></span>
-<span>        <span class="op">)</span></span>
-<span>    <span class="op">}</span> <span class="kw">else</span> <span class="op">{</span></span>
-<span>        <span class="va">row_data</span> <span class="op">&lt;-</span> <span class="va">row_data</span><span class="op">[</span><span class="fu"><a href="https://rdrr.io/r/base/colnames.html" class="external-link">rownames</a></span><span class="op">(</span><span class="va">counts</span><span class="op">)</span>, , drop <span class="op">=</span> <span class="cn">FALSE</span><span class="op">]</span></span>
-<span>        <span class="va">se</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/pkg/SummarizedExperiment/man/SummarizedExperiment-class.html" class="external-link">SummarizedExperiment</a></span><span class="op">(</span></span>
-<span>            assays <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/list.html" class="external-link">list</a></span><span class="op">(</span>counts <span class="op">=</span> <span class="va">counts</span><span class="op">)</span>,</span>
-<span>            colData <span class="op">=</span> <span class="va">col_data</span>,</span>
-<span>            rowData <span class="op">=</span> <span class="va">row_data</span></span>
-<span>        <span class="op">)</span></span>
-<span>    <span class="op">}</span></span>
-<span>    </span>
-<span>    <span class="kw"><a href="https://rdrr.io/r/base/function.html" class="external-link">return</a></span><span class="op">(</span><span class="va">se</span><span class="op">)</span></span>
-<span><span class="op">}</span></span></code></pre></div>
-<div class="section level4">
-<h4 id="testing-make_se">Testing <code>make_se()</code><a class="anchor" aria-label="anchor" href="#testing-make_se"></a>
-</h4>
-<p>Let’s verify our function works by recreating a SummarizedExperiment
-from the airway data:</p>
-<div class="sourceCode" id="cb15"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="co"># Extract components from airway</span></span>
 <span><span class="va">test_counts</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/pkg/SummarizedExperiment/man/SummarizedExperiment-class.html" class="external-link">assay</a></span><span class="op">(</span><span class="va">airway</span>, <span class="st">"counts"</span><span class="op">)</span></span>
 <span><span class="va">test_meta</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/base/as.data.frame.html" class="external-link">as.data.frame</a></span><span class="op">(</span><span class="fu"><a href="https://rdrr.io/pkg/SummarizedExperiment/man/SummarizedExperiment-class.html" class="external-link">colData</a></span><span class="op">(</span><span class="va">airway</span><span class="op">)</span><span class="op">)</span></span>
 <span></span>
-<span><span class="co"># Create a new SE using our function</span></span>
-<span><span class="va">my_se</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/make_se.html">make_se</a></span><span class="op">(</span><span class="va">test_counts</span>, <span class="va">test_meta</span><span class="op">)</span></span>
+<span><span class="co"># Create a new SE directly — the constructor is already a clear one-liner</span></span>
+<span><span class="va">my_se</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/pkg/SummarizedExperiment/man/SummarizedExperiment-class.html" class="external-link">SummarizedExperiment</a></span><span class="op">(</span></span>
+<span>    assays <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/list.html" class="external-link">list</a></span><span class="op">(</span>counts <span class="op">=</span> <span class="va">test_counts</span><span class="op">)</span>,</span>
+<span>    colData <span class="op">=</span> <span class="va">test_meta</span></span>
+<span><span class="op">)</span></span>
 <span></span>
 <span><span class="co"># Verify it worked</span></span>
 <span><span class="va">my_se</span></span>
 <span><span class="fu"><a href="https://rdrr.io/r/base/dim.html" class="external-link">dim</a></span><span class="op">(</span><span class="va">my_se</span><span class="op">)</span></span>
 <span><span class="fu"><a href="https://rdrr.io/pkg/SummarizedExperiment/man/SummarizedExperiment-class.html" class="external-link">colData</a></span><span class="op">(</span><span class="va">my_se</span><span class="op">)</span></span></code></pre></div>
 <blockquote>
-<p><strong>Exercise B:</strong> Modify the call to
-<code><a href="../reference/make_se.html">make_se()</a></code> to also include <code>rowData</code>. Extract it
-from <code>airway</code> first, then pass it as the
-<code>row_data</code> argument.</p>
+<p><strong>Exercise B:</strong> Modify the constructor call above to
+also include <code>rowData</code>. Extract it from <code>airway</code>
+first, then pass it via the <code>rowData</code> argument.</p>
 </blockquote>
 <hr>
 </div>
-</div>
 <div class="section level3">
-<h3 id="function-2-top_variable_features-select-most-variable-genes">Function 2: <code>top_variable_features()</code> — Select Most
-Variable Genes<a class="anchor" aria-label="anchor" href="#function-2-top_variable_features-select-most-variable-genes"></a>
+<h3 id="function-1-top_variable_features-select-most-variable-genes">Function 1: <code>top_variable_features()</code> — Select Most
+Variable Genes<a class="anchor" aria-label="anchor" href="#function-1-top_variable_features-select-most-variable-genes"></a>
 </h3>
 <p>For PCA, we typically want to focus on the most variable genes:</p>
-<div class="sourceCode" id="cb16"><pre class="downlit sourceCode r">
+<div class="sourceCode" id="cb15"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="co">#' Select top variable features</span></span>
 <span><span class="co">#'</span></span>
 <span><span class="co">#' @param se A SummarizedExperiment object</span></span>
@@ -482,7 +422,7 @@ Variable Genes<a class="anchor" aria-label="anchor" href="#function-2-top_variab
 <span>    <span class="co"># Subset the SummarizedExperiment</span></span>
 <span>    <span class="va">se</span><span class="op">[</span><span class="va">top_idx</span>, <span class="op">]</span></span>
 <span><span class="op">}</span></span></code></pre></div>
-<div class="sourceCode" id="cb17"><pre class="downlit sourceCode r">
+<div class="sourceCode" id="cb16"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="co"># Get top 500 variable genes</span></span>
 <span><span class="va">se_top</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/top_variable_features.html">top_variable_features</a></span><span class="op">(</span><span class="va">airway</span>, n <span class="op">=</span> <span class="fl">500</span><span class="op">)</span></span>
 <span><span class="fu"><a href="https://rdrr.io/r/base/dim.html" class="external-link">dim</a></span><span class="op">(</span><span class="va">se_top</span><span class="op">)</span></span></code></pre></div>
@@ -494,10 +434,10 @@ What advantage does this provide?</p>
 <hr>
 </div>
 <div class="section level3">
-<h3 id="function-3-run_pca-perform-pca">Function 3: <code>run_pca()</code> — Perform PCA<a class="anchor" aria-label="anchor" href="#function-3-run_pca-perform-pca"></a>
+<h3 id="function-2-run_pca-perform-pca">Function 2: <code>run_pca()</code> — Perform PCA<a class="anchor" aria-label="anchor" href="#function-2-run_pca-perform-pca"></a>
 </h3>
 <p>Now let’s run PCA on our data:</p>
-<div class="sourceCode" id="cb18"><pre class="downlit sourceCode r">
+<div class="sourceCode" id="cb17"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="co">#' Run PCA on a SummarizedExperiment</span></span>
 <span><span class="co">#'</span></span>
 <span><span class="co">#' @param se A SummarizedExperiment object</span></span>
@@ -542,7 +482,7 @@ What advantage does this provide?</p>
 <span>        scores <span class="op">=</span> <span class="va">scores</span></span>
 <span>    <span class="op">)</span><span class="op">)</span></span>
 <span><span class="op">}</span></span></code></pre></div>
-<div class="sourceCode" id="cb19"><pre class="downlit sourceCode r">
+<div class="sourceCode" id="cb18"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="co"># Run PCA on airway data</span></span>
 <span><span class="va">pca_result</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/run_pca.html">run_pca</a></span><span class="op">(</span><span class="va">airway</span>, n_top <span class="op">=</span> <span class="fl">500</span><span class="op">)</span></span>
 <span></span>
@@ -554,10 +494,10 @@ What advantage does this provide?</p>
 <hr>
 </div>
 <div class="section level3">
-<h3 id="function-4-pca_variance_explained-helper-for-variance">Function 4: <code>pca_variance_explained()</code> — Helper for
-Variance<a class="anchor" aria-label="anchor" href="#function-4-pca_variance_explained-helper-for-variance"></a>
+<h3 id="function-3-pca_variance_explained-helper-for-variance">Function 3: <code>pca_variance_explained()</code> — Helper for
+Variance<a class="anchor" aria-label="anchor" href="#function-3-pca_variance_explained-helper-for-variance"></a>
 </h3>
-<div class="sourceCode" id="cb20"><pre class="downlit sourceCode r">
+<div class="sourceCode" id="cb19"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="co">#' Get variance explained by each PC</span></span>
 <span><span class="co">#'</span></span>
 <span><span class="co">#' @param pca_result Output from run_pca()</span></span>
@@ -572,15 +512,15 @@ Variance<a class="anchor" aria-label="anchor" href="#function-4-pca_variance_exp
 <span>        variance_percent <span class="op">=</span> <span class="va">var_explained</span></span>
 <span>    <span class="op">)</span></span>
 <span><span class="op">}</span></span></code></pre></div>
-<div class="sourceCode" id="cb21"><pre class="downlit sourceCode r">
+<div class="sourceCode" id="cb20"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="va">var_df</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/pca_variance_explained.html">pca_variance_explained</a></span><span class="op">(</span><span class="va">pca_result</span><span class="op">)</span></span>
 <span><span class="fu"><a href="https://rdrr.io/r/utils/head.html" class="external-link">head</a></span><span class="op">(</span><span class="va">var_df</span><span class="op">)</span></span></code></pre></div>
 <hr>
 </div>
 <div class="section level3">
-<h3 id="function-5-plot_pca-visualize-pca-results">Function 5: <code>plot_pca()</code> — Visualize PCA Results<a class="anchor" aria-label="anchor" href="#function-5-plot_pca-visualize-pca-results"></a>
+<h3 id="function-4-plot_pca-visualize-pca-results">Function 4: <code>plot_pca()</code> — Visualize PCA Results<a class="anchor" aria-label="anchor" href="#function-4-plot_pca-visualize-pca-results"></a>
 </h3>
-<div class="sourceCode" id="cb22"><pre class="downlit sourceCode r">
+<div class="sourceCode" id="cb21"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="co">#' Create a PCA scatter plot</span></span>
 <span><span class="co">#'</span></span>
 <span><span class="co">#' @param pca_result Output from run_pca()</span></span>
@@ -630,10 +570,10 @@ Variance<a class="anchor" aria-label="anchor" href="#function-4-pca_variance_exp
 <div class="section level4">
 <h4 id="creating-pca-visualizations">Creating PCA Visualizations<a class="anchor" aria-label="anchor" href="#creating-pca-visualizations"></a>
 </h4>
-<div class="sourceCode" id="cb23"><pre class="downlit sourceCode r">
+<div class="sourceCode" id="cb22"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="co"># Basic PCA plot colored by treatment</span></span>
 <span><span class="fu"><a href="../reference/plot_pca.html">plot_pca</a></span><span class="op">(</span><span class="va">pca_result</span>, color_by <span class="op">=</span> <span class="st">"dex"</span><span class="op">)</span></span></code></pre></div>
-<div class="sourceCode" id="cb24"><pre class="downlit sourceCode r">
+<div class="sourceCode" id="cb23"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="co"># Color by treatment, shape by cell line</span></span>
 <span><span class="fu"><a href="../reference/plot_pca.html">plot_pca</a></span><span class="op">(</span><span class="va">pca_result</span>, color_by <span class="op">=</span> <span class="st">"dex"</span>, shape_by <span class="op">=</span> <span class="st">"cell"</span><span class="op">)</span></span></code></pre></div>
 <blockquote>
@@ -644,13 +584,13 @@ instead of PC1 vs PC2. What do you observe?</p>
 </div>
 </div>
 <div class="section level3">
-<h3 id="function-6-save_pca_results-export-results-to-files">Function 6: <code>save_pca_results()</code> — Export Results to
-Files<a class="anchor" aria-label="anchor" href="#function-6-save_pca_results-export-results-to-files"></a>
+<h3 id="function-5-save_pca_results-export-results-to-files">Function 5: <code>save_pca_results()</code> — Export Results to
+Files<a class="anchor" aria-label="anchor" href="#function-5-save_pca_results-export-results-to-files"></a>
 </h3>
 <p>The CLI and reproducible scripts need to write analysis outputs to
 disk. This function exports PCA scores, variance, and optionally a plot
 — the same outputs your CLI subcommand will produce:</p>
-<div class="sourceCode" id="cb25"><pre class="downlit sourceCode r">
+<div class="sourceCode" id="cb24"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="co">#' Save PCA results to files</span></span>
 <span><span class="co">#'</span></span>
 <span><span class="co">#' @param pca_result Output from run_pca()</span></span>
@@ -690,7 +630,7 @@ disk. This function exports PCA scores, variance, and optionally a plot
 <span>    </span>
 <span>    <span class="fu"><a href="https://rdrr.io/r/base/invisible.html" class="external-link">invisible</a></span><span class="op">(</span><span class="cn">NULL</span><span class="op">)</span></span>
 <span><span class="op">}</span></span></code></pre></div>
-<div class="sourceCode" id="cb26"><pre class="downlit sourceCode r">
+<div class="sourceCode" id="cb25"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="co"># Save results to a temporary directory</span></span>
 <span><span class="va">tmp_out</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/base/file.path.html" class="external-link">file.path</a></span><span class="op">(</span><span class="fu"><a href="https://rdrr.io/r/base/tempfile.html" class="external-link">tempdir</a></span><span class="op">(</span><span class="op">)</span>, <span class="st">"pca_output"</span><span class="op">)</span></span>
 <span><span class="fu"><a href="../reference/save_pca_results.html">save_pca_results</a></span><span class="op">(</span><span class="va">pca_result</span>, <span class="va">tmp_out</span>, color_by <span class="op">=</span> <span class="st">"dex"</span><span class="op">)</span></span>
@@ -715,7 +655,7 @@ analysis core and the command line.</p>
 </h2>
 <p>Let’s visualize the top variable genes using a heatmap. This is a
 common way to explore patterns in gene expression data.</p>
-<div class="sourceCode" id="cb27"><pre class="downlit sourceCode r">
+<div class="sourceCode" id="cb26"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="co"># Get top 20 most variable genes for visualization</span></span>
 <span><span class="va">se_top20</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/top_variable_features.html">top_variable_features</a></span><span class="op">(</span><span class="va">airway</span>, n <span class="op">=</span> <span class="fl">20</span><span class="op">)</span></span>
 <span></span>
@@ -724,7 +664,7 @@ common way to explore patterns in gene expression data.</p>
 <span></span>
 <span><span class="co"># Scale by row (gene) for better visualization</span></span>
 <span><span class="va">heatmap_mat</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/base/t.html" class="external-link">t</a></span><span class="op">(</span><span class="fu"><a href="https://rdrr.io/r/base/scale.html" class="external-link">scale</a></span><span class="op">(</span><span class="fu"><a href="https://rdrr.io/r/base/t.html" class="external-link">t</a></span><span class="op">(</span><span class="va">heatmap_mat</span><span class="op">)</span><span class="op">)</span><span class="op">)</span></span></code></pre></div>
-<div class="sourceCode" id="cb28"><pre class="downlit sourceCode r">
+<div class="sourceCode" id="cb27"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="co"># Create annotation for columns (samples)</span></span>
 <span><span class="va">col_anno</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/pkg/ComplexHeatmap/man/HeatmapAnnotation.html" class="external-link">HeatmapAnnotation</a></span><span class="op">(</span></span>
 <span>    treatment <span class="op">=</span> <span class="va">airway</span><span class="op">$</span><span class="va">dex</span>,</span>
@@ -762,7 +702,7 @@ that is loadable via <code><a href="https://rdrr.io/r/utils/data.html" class="ex
 generated by a reproducible script in <code>data-raw/</code>. Here is
 the pattern for our reference package, starting from the full
 <code>airway</code> dataset:</p>
-<div class="sourceCode" id="cb29"><pre class="downlit sourceCode r">
+<div class="sourceCode" id="cb28"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="co">## data-raw/example_se.R</span></span>
 <span><span class="co">## -----------------------------------------------------------</span></span>
 <span><span class="co">## This script creates a small example SummarizedExperiment</span></span>
@@ -801,7 +741,7 @@ projects will save an <code>example_sce</code> instead.</p>
 <div class="section level2">
 <h2 id="summary-the-analysis-core">Summary: The Analysis Core<a class="anchor" aria-label="anchor" href="#summary-the-analysis-core"></a>
 </h2>
-<p>We now have six core functions that work together — everything a
+<p>We now have five core functions that work together — everything a
 student package needs for the <a href="HW1_Rubric.html">HW1
 rubric</a>:</p>
 <table class="table">
@@ -819,36 +759,30 @@ rubric</a>:</p>
 </tr></thead>
 <tbody>
 <tr class="odd">
-<td>Constructor (1 pt)</td>
-<td><code><a href="../reference/make_se.html">make_se()</a></code></td>
-<td>counts matrix + metadata</td>
-<td>SummarizedExperiment</td>
-</tr>
-<tr class="even">
 <td>Analysis #1 (1 pt)</td>
 <td><code><a href="../reference/top_variable_features.html">top_variable_features()</a></code></td>
 <td>SE + n</td>
 <td>Subsetted SE</td>
 </tr>
-<tr class="odd">
+<tr class="even">
 <td>Analysis #2 (1 pt)</td>
 <td><code><a href="../reference/run_pca.html">run_pca()</a></code></td>
 <td>SE + parameters</td>
 <td>list(pca, scores)</td>
 </tr>
-<tr class="even">
+<tr class="odd">
 <td>Summary/metric (1 pt)</td>
 <td><code><a href="../reference/pca_variance_explained.html">pca_variance_explained()</a></code></td>
 <td>PCA result</td>
 <td>data.frame</td>
 </tr>
-<tr class="odd">
+<tr class="even">
 <td>Plotting (1 pt)</td>
 <td><code><a href="../reference/plot_pca.html">plot_pca()</a></code></td>
 <td>PCA result + aesthetics</td>
 <td>ggplot</td>
 </tr>
-<tr class="even">
+<tr class="odd">
 <td>Export (CLI)</td>
 <td><code><a href="../reference/save_pca_results.html">save_pca_results()</a></code></td>
 <td>PCA result + output dir</td>
@@ -856,7 +790,7 @@ rubric</a>:</p>
 </tr>
 </tbody>
 </table>
-<p>Design principles shared by all six:</p>
+<p>Design principles shared by all five:</p>
 <ul>
 <li>
 <strong>Take structured objects as input</strong> — Not loose
@@ -879,21 +813,21 @@ variables or specific file paths</li>
 <div class="section level2">
 <h2 id="three-interfaces-one-core">Three Interfaces, One Core<a class="anchor" aria-label="anchor" href="#three-interfaces-one-core"></a>
 </h2>
-<p>The six functions above form the <strong>analysis core</strong>. For
+<p>The five functions above form the <strong>analysis core</strong>. For
 HW1, you will expose them through <strong>three interfaces</strong> —
 each calling the same core functions:</p>
 <pre><code>                    Analysis Core
-  make_se() → run_pca() → plot_pca() → save_pca_results()
-        ↑            ↑            ↑            ↑
-   ┌────┴────┐  ┌────┴────┐  ┌───┴─────┐ ┌───┴─────┐
-   │ R API   │  │ Shiny   │  │  CLI    │ │  Tests  │
-   │ (users) │  │ (web)   │  │(scripts)│ │(testthat)│
-   └─────────┘  └─────────┘  └─────────┘ └─────────┘</code></pre>
+  run_pca() → plot_pca() → save_pca_results()
+        ↑            ↑            ↑            
+   ┌────┴────┐  ┌────┴────┐  ┌───┴─────┐
+   │ R API   │  │ Shiny   │  │  CLI    │
+   │ (users) │  │ (web)   │  │(scripts)│
+   └─────────┘  └─────────┘  └─────────┘</code></pre>
 <div class="section level4">
 <h4 id="interface-1-r-api-lectures-56">Interface 1: R API (Lectures 5–6)<a class="anchor" aria-label="anchor" href="#interface-1-r-api-lectures-56"></a>
 </h4>
 <p>Users call your exported functions directly from R:</p>
-<div class="sourceCode" id="cb31"><pre class="downlit sourceCode r">
+<div class="sourceCode" id="cb30"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="kw"><a href="https://rdrr.io/r/base/library.html" class="external-link">library</a></span><span class="op">(</span><span class="va">sePCA</span><span class="op">)</span></span>
 <span><span class="fu"><a href="https://rdrr.io/r/utils/data.html" class="external-link">data</a></span><span class="op">(</span><span class="st">"example_se"</span><span class="op">)</span></span>
 <span><span class="va">result</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/run_pca.html">run_pca</a></span><span class="op">(</span><span class="va">example_se</span>, n_top <span class="op">=</span> <span class="fl">500</span><span class="op">)</span></span>
@@ -904,7 +838,7 @@ each calling the same core functions:</p>
 <h4 id="interface-2-shiny-app-lectures-78">Interface 2: Shiny App (Lectures 7–8)<a class="anchor" aria-label="anchor" href="#interface-2-shiny-app-lectures-78"></a>
 </h4>
 <p>The Shiny server calls the same functions reactively:</p>
-<div class="sourceCode" id="cb32"><pre class="downlit sourceCode r">
+<div class="sourceCode" id="cb31"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="co"># Inside app_server.R (simplified)</span></span>
 <span><span class="va">result</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/pkg/shiny/man/reactive.html" class="external-link">reactive</a></span><span class="op">(</span><span class="op">{</span></span>
 <span>    <span class="fu"><a href="../reference/run_pca.html">run_pca</a></span><span class="op">(</span><span class="fu"><a href="https://rdrr.io/r/utils/data.html" class="external-link">data</a></span><span class="op">(</span><span class="op">)</span>, n_top <span class="op">=</span> <span class="va">input</span><span class="op">$</span><span class="va">n_top</span><span class="op">)</span></span>
@@ -919,7 +853,7 @@ each calling the same core functions:</p>
 </h4>
 <p>The CLI script in <code>exec/</code> parses arguments and calls the
 same functions:</p>
-<div class="sourceCode" id="cb33"><pre class="downlit sourceCode r">
+<div class="sourceCode" id="cb32"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="co">#!/usr/bin/env Rapp</span></span>
 <span><span class="co">#| name: sePCA</span></span>
 <span><span class="co">#| description: PCA analysis for SummarizedExperiment data.</span></span>
@@ -934,7 +868,10 @@ same functions:</p>
 <span><span class="co"># Read data, build SE, run analysis, save results</span></span>
 <span><span class="va">counts_df</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/utils/read.table.html" class="external-link">read.table</a></span><span class="op">(</span><span class="va">counts</span>, sep <span class="op">=</span> <span class="st">"\t"</span>, header <span class="op">=</span> <span class="cn">TRUE</span>, row.names <span class="op">=</span> <span class="fl">1</span><span class="op">)</span></span>
 <span><span class="va">meta_df</span>   <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/utils/read.table.html" class="external-link">read.table</a></span><span class="op">(</span><span class="va">meta</span>,   sep <span class="op">=</span> <span class="st">"\t"</span>, header <span class="op">=</span> <span class="cn">TRUE</span>, row.names <span class="op">=</span> <span class="fl">1</span><span class="op">)</span></span>
-<span><span class="va">se</span>     <span class="op">&lt;-</span> <span class="fu"><a href="../reference/make_se.html">make_se</a></span><span class="op">(</span><span class="fu"><a href="https://rdrr.io/r/base/matrix.html" class="external-link">as.matrix</a></span><span class="op">(</span><span class="va">counts_df</span><span class="op">)</span>, <span class="va">meta_df</span><span class="op">)</span></span>
+<span><span class="va">se</span>     <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/pkg/SummarizedExperiment/man/SummarizedExperiment-class.html" class="external-link">SummarizedExperiment</a></span><span class="op">(</span></span>
+<span>    assays <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/list.html" class="external-link">list</a></span><span class="op">(</span>counts <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/matrix.html" class="external-link">as.matrix</a></span><span class="op">(</span><span class="va">counts_df</span><span class="op">)</span><span class="op">)</span>,</span>
+<span>    colData <span class="op">=</span> <span class="va">meta_df</span></span>
+<span><span class="op">)</span></span>
 <span><span class="va">result</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/run_pca.html">run_pca</a></span><span class="op">(</span><span class="va">se</span>, n_top <span class="op">=</span> <span class="va">n_top</span><span class="op">)</span></span>
 <span><span class="fu"><a href="../reference/save_pca_results.html">save_pca_results</a></span><span class="op">(</span><span class="va">result</span>, <span class="va">output</span><span class="op">)</span></span></code></pre></div>
 <blockquote>
@@ -952,17 +889,16 @@ the power of the “three interfaces, one core” architecture.</p>
 <div class="section level3">
 <h3 id="micro-task-1-create-analysis_core-r">Micro-task 1: Create <code>analysis_core.R</code><a class="anchor" aria-label="anchor" href="#micro-task-1-create-analysis_core-r"></a>
 </h3>
-<p>Put all six functions into a single script called
-<code>analysis_core.R</code>: <code><a href="../reference/make_se.html">make_se()</a></code>,
-<code><a href="../reference/top_variable_features.html">top_variable_features()</a></code>, <code><a href="../reference/run_pca.html">run_pca()</a></code>,
-<code><a href="../reference/pca_variance_explained.html">pca_variance_explained()</a></code>, <code><a href="../reference/plot_pca.html">plot_pca()</a></code>, and
-<code><a href="../reference/save_pca_results.html">save_pca_results()</a></code>.</p>
+<p>Put all five functions into a single script called
+<code>analysis_core.R</code>: <code><a href="../reference/top_variable_features.html">top_variable_features()</a></code>,
+<code><a href="../reference/run_pca.html">run_pca()</a></code>, <code><a href="../reference/pca_variance_explained.html">pca_variance_explained()</a></code>,
+<code><a href="../reference/plot_pca.html">plot_pca()</a></code>, and <code><a href="../reference/save_pca_results.html">save_pca_results()</a></code>.</p>
 <p>Requirements:</p>
 <ul>
 <li>roxygen2-style comment header for every function
 (<code>#' @param</code>, <code>#' @return</code>)</li>
-<li>Input validation using <code><a href="https://rdrr.io/r/base/stop.html" class="external-link">stop()</a></code> in <code><a href="../reference/make_se.html">make_se()</a></code>
-and <code><a href="../reference/save_pca_results.html">save_pca_results()</a></code>
+<li>Input validation using <code><a href="https://rdrr.io/r/base/stop.html" class="external-link">stop()</a></code> in
+<code><a href="../reference/save_pca_results.html">save_pca_results()</a></code>
 </li>
 <li>No <code><a href="https://rdrr.io/r/base/library.html" class="external-link">library()</a></code> calls inside the functions (we’ll handle
 dependencies properly in Lecture 5)</li>
@@ -1010,28 +946,8 @@ choose your project!</li>
 <div class="section level2">
 <h2 id="appendix-complete-function-reference">Appendix: Complete Function Reference<a class="anchor" aria-label="anchor" href="#appendix-complete-function-reference"></a>
 </h2>
-<div class="sourceCode" id="cb34"><pre class="downlit sourceCode r">
+<div class="sourceCode" id="cb33"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="co"># SAVE THIS AS: analysis_core.R</span></span>
-<span></span>
-<span><span class="co">#' Create a SummarizedExperiment from counts and metadata</span></span>
-<span><span class="va">make_se</span> <span class="op">&lt;-</span> <span class="kw">function</span><span class="op">(</span><span class="va">counts</span>, <span class="va">col_data</span>, <span class="va">row_data</span> <span class="op">=</span> <span class="cn">NULL</span><span class="op">)</span> <span class="op">{</span></span>
-<span>    <span class="kw">if</span> <span class="op">(</span><span class="op">!</span><span class="fu"><a href="https://rdrr.io/r/base/matrix.html" class="external-link">is.matrix</a></span><span class="op">(</span><span class="va">counts</span><span class="op">)</span><span class="op">)</span> <span class="va">counts</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/base/matrix.html" class="external-link">as.matrix</a></span><span class="op">(</span><span class="va">counts</span><span class="op">)</span></span>
-<span>    <span class="kw">if</span> <span class="op">(</span><span class="op">!</span><span class="fu"><a href="https://rdrr.io/r/base/as.data.frame.html" class="external-link">is.data.frame</a></span><span class="op">(</span><span class="va">col_data</span><span class="op">)</span><span class="op">)</span> <span class="kw"><a href="https://rdrr.io/r/base/stop.html" class="external-link">stop</a></span><span class="op">(</span><span class="st">"col_data must be a data.frame"</span><span class="op">)</span></span>
-<span>    <span class="kw">if</span> <span class="op">(</span><span class="op">!</span><span class="fu"><a href="https://rdrr.io/r/base/all.html" class="external-link">all</a></span><span class="op">(</span><span class="fu"><a href="https://rdrr.io/r/base/colnames.html" class="external-link">colnames</a></span><span class="op">(</span><span class="va">counts</span><span class="op">)</span> <span class="op"><a href="https://rdrr.io/r/base/match.html" class="external-link">%in%</a></span> <span class="fu"><a href="https://rdrr.io/r/base/colnames.html" class="external-link">rownames</a></span><span class="op">(</span><span class="va">col_data</span><span class="op">)</span><span class="op">)</span><span class="op">)</span> <span class="op">{</span></span>
-<span>        <span class="kw"><a href="https://rdrr.io/r/base/stop.html" class="external-link">stop</a></span><span class="op">(</span><span class="st">"Column names of counts must match row names of col_data"</span><span class="op">)</span></span>
-<span>    <span class="op">}</span></span>
-<span>    <span class="va">col_data</span> <span class="op">&lt;-</span> <span class="va">col_data</span><span class="op">[</span><span class="fu"><a href="https://rdrr.io/r/base/colnames.html" class="external-link">colnames</a></span><span class="op">(</span><span class="va">counts</span><span class="op">)</span>, , drop <span class="op">=</span> <span class="cn">FALSE</span><span class="op">]</span></span>
-<span>    <span class="kw">if</span> <span class="op">(</span><span class="fu"><a href="https://rdrr.io/r/base/NULL.html" class="external-link">is.null</a></span><span class="op">(</span><span class="va">row_data</span><span class="op">)</span><span class="op">)</span> <span class="op">{</span></span>
-<span>        <span class="fu"><a href="https://rdrr.io/pkg/SummarizedExperiment/man/SummarizedExperiment-class.html" class="external-link">SummarizedExperiment</a></span><span class="op">(</span>assays <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/list.html" class="external-link">list</a></span><span class="op">(</span>counts <span class="op">=</span> <span class="va">counts</span><span class="op">)</span>, colData <span class="op">=</span> <span class="va">col_data</span><span class="op">)</span></span>
-<span>    <span class="op">}</span> <span class="kw">else</span> <span class="op">{</span></span>
-<span>        <span class="va">row_data</span> <span class="op">&lt;-</span> <span class="va">row_data</span><span class="op">[</span><span class="fu"><a href="https://rdrr.io/r/base/colnames.html" class="external-link">rownames</a></span><span class="op">(</span><span class="va">counts</span><span class="op">)</span>, , drop <span class="op">=</span> <span class="cn">FALSE</span><span class="op">]</span></span>
-<span>        <span class="fu"><a href="https://rdrr.io/pkg/SummarizedExperiment/man/SummarizedExperiment-class.html" class="external-link">SummarizedExperiment</a></span><span class="op">(</span></span>
-<span>            assays <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/list.html" class="external-link">list</a></span><span class="op">(</span>counts <span class="op">=</span> <span class="va">counts</span><span class="op">)</span>, </span>
-<span>            colData <span class="op">=</span> <span class="va">col_data</span>, </span>
-<span>            rowData <span class="op">=</span> <span class="va">row_data</span></span>
-<span>        <span class="op">)</span></span>
-<span>    <span class="op">}</span></span>
-<span><span class="op">}</span></span>
 <span></span>
 <span><span class="co">#' Select top variable features</span></span>
 <span><span class="va">top_variable_features</span> <span class="op">&lt;-</span> <span class="kw">function</span><span class="op">(</span><span class="va">se</span>, <span class="va">n</span> <span class="op">=</span> <span class="fl">500</span>, <span class="va">assay_name</span> <span class="op">=</span> <span class="st">"counts"</span><span class="op">)</span> <span class="op">{</span></span>
@@ -1109,7 +1025,7 @@ choose your project!</li>
 <div class="section level2">
 <h2 id="session-info">Session Info<a class="anchor" aria-label="anchor" href="#session-info"></a>
 </h2>
-<div class="sourceCode" id="cb35"><pre class="downlit sourceCode r">
+<div class="sourceCode" id="cb34"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="fu"><a href="https://rdrr.io/r/utils/sessionInfo.html" class="external-link">sessionInfo</a></span><span class="op">(</span><span class="op">)</span></span></code></pre></div>
 </div>
   </main><aside class="col-md-3"><nav id="toc" aria-label="Table of contents"><h2>On this page</h2>
