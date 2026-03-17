@@ -22,3 +22,6 @@ by default and wraps the package's core analysis functions.
 run_app()
 }
 }
+\author{
+Jared Andrews
+}

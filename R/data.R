@@ -19,6 +19,7 @@
 #'
 #' @importFrom SummarizedExperiment SummarizedExperiment
 #'
+#' @author Jared Andrews
 #' @examples
 #' counts <- matrix(rpois(100, 50), nrow = 10, ncol = 10)
 #' rownames(counts) <- paste0("gene", 1:10)

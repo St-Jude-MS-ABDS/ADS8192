@@ -80,6 +80,7 @@ run_pca <- function(se, assay_name = "counts", n_top = 500,
 #'
 #' @export
 #'
+#' @author Jared Andrews
 #' @examples
 #' data(airway, package = "airway")
 #' result <- run_pca(airway, n_top = 50)

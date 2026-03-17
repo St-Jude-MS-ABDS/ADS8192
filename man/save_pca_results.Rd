@@ -31,3 +31,6 @@ result <- run_pca(airway, n_top = 50)
 save_pca_results(result, tempdir())
 }
 }
+\author{
+Jared Andrews
+}

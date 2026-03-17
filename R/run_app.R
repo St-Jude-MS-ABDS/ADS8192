@@ -9,6 +9,7 @@
 #' @return A Shiny app object (invisibly).
 #'
 #' @export
+#' @author Jared Andrews
 #'
 #' @examples
 #' \dontrun{

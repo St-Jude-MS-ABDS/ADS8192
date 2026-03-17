@@ -8,9 +8,10 @@
 #' @noRd
 #'
 #' @importFrom SummarizedExperiment colData
-#' @importFrom ggplot2 ggplot aes geom_col geom_text theme_minimal labs ylim ggsave
+#' @importFrom ggplot2 ggsave
 #' @importFrom rlang .data
 #' @importFrom utils data
+#' @author Jared Andrews
 app_server <- function(input, output, session) {
     # Load example data (airway dataset)
     se_data <- shiny::reactive({
@@ -55,7 +56,6 @@ app_server <- function(input, output, session) {
         )
     })
 
-    # PCA scatter plot
     output$pca_plot <- shiny::renderPlot({
         shiny::req(pca_result(), input$color_by)
 
@@ -86,29 +86,12 @@ app_server <- function(input, output, session) {
         )
     })
 
-    # Variance plot
     output$variance_plot <- shiny::renderPlot({
         shiny::req(pca_result())
 
-        var_df <- pca_variance_explained(pca_result())
-        var_df <- var_df[seq_len(min(8, nrow(var_df))), ]
-        var_df$PC <- factor(var_df$PC, levels = var_df$PC)
-
-        ggplot(var_df, aes(x = .data$PC, y = .data$variance_percent)) +
-            geom_col(fill = "steelblue") +
-            geom_text(
-                aes(label = sprintf("%.1f%%", .data$variance_percent)),
-                vjust = -0.5, size = 4
-            ) +
-            theme_minimal(base_size = 14) +
-            labs(
-                x = "Principal Component",
-                y = "Variance Explained (%)"
-            ) +
-            ylim(0, max(var_df$variance_percent) * 1.15)
+        plot_variance_explained(pca_result())
     })
 
-    # Scores table
     output$scores_table <- DT::renderDataTable({
         shiny::req(pca_result())
         DT::datatable(
@@ -117,7 +100,6 @@ app_server <- function(input, output, session) {
         )
     })
 
-    # Download handler
     output$download_plot <- shiny::downloadHandler(
         filename = function() {
             paste0("pca_plot_", Sys.Date(), ".png")
@@ -137,7 +119,7 @@ app_server <- function(input, output, session) {
                 point_size = input$point_size
             )
 
-            ggsave(file, p, width = 8, height = 6, dpi = 150)
+            ggsave(file, p, width = 8, height = 6, dpi = 300)
         }
     )
 }

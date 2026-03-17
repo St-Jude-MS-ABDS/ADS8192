@@ -38,3 +38,6 @@ data(airway, package = "airway")
 result <- run_pca(airway, n_top = 50)
 plot_pca(result, color_by = "dex")
 }
+\author{
+Jared Andrews
+}

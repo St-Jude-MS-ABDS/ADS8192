@@ -37,3 +37,6 @@ meta <- data.frame(
 se <- make_se(counts, meta)
 se
 }
+\author{
+Jared Andrews
+}

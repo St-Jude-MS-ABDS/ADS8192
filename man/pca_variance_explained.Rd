@@ -26,3 +26,6 @@ result <- run_pca(airway, n_top = 50)
 var_df <- pca_variance_explained(result)
 head(var_df)
 }
+\author{
+Jared Andrews
+}

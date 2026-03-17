@@ -15,6 +15,7 @@
 #'
 #' @export
 #'
+#' @author Jared Andrews
 #' @examples
 #' \dontrun{
 #' data(airway, package = "airway")

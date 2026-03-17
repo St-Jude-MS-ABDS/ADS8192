@@ -6,10 +6,10 @@
 \alias{ADS8192}
 \title{ADS8192: ADS 8192 - Developing Scientific Applications (Course Materials)}
 \description{
-Course materials and reference implementation for ADS 8192: Developing Scientific Applications. Provides a complete example of the 'three interfaces, one core' architecture: PCA analysis functions for SummarizedExperiment objects, a Shiny interactive explorer, and a command-line interface via Rapp. Includes lectures, quizzes, and a grading rubric. Students build their own packages following this model.
+Course materials and reference implementation for ADS 8192: Developing Scientific Applications. Demonstrates separation of concerns and layered architecture: PCA analysis functions for SummarizedExperiment objects, a Shiny interactive explorer, and a command-line interface via Rapp. Includes lectures, quizzes, and a grading rubric. Students build their own packages following this model.
 
 Course materials and reference implementation for ADS 8192.
-Demonstrates the "three interfaces, one core" architecture:
+Demonstrates separation of concerns and layered architecture:
 PCA analysis functions for SummarizedExperiment objects,
 a Shiny interactive explorer, and a command-line interface via Rapp.
 }
