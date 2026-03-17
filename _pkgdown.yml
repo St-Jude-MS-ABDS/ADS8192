@@ -46,7 +46,6 @@ reference:
 - title: Data Handling
   desc: Create and manipulate SummarizedExperiment objects
   contents:
-  - make_se
   - top_variable_features
 - title: PCA Analysis
   desc: Run and analyze PCA
@@ -55,7 +54,9 @@ reference:
   - pca_variance_explained
 - title: Visualization
   desc: Create plots
-  contents: plot_pca
+  contents:
+  - plot_pca
+  - plot_variance_explained
 - title: Export
   desc: Save results to files
   contents: save_pca_results

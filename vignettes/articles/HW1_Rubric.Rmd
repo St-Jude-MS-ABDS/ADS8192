@@ -45,9 +45,9 @@ three interfaces: R API, Shiny app, and CLI.
 
 | Points | Criterion | Check |
 |--------|-----------|-------|
-| 1 | `make_se()` or `make_sce()` creates a valid SE/SCE from expression matrix + metadata | Returns correct class, validates inputs |
 | 1 | First analysis function (project-specific) | Correct return type, well-defined behavior |
 | 1 | Second analysis function (project-specific) | Correct return type, well-defined behavior |
+| 1 | Third analysis function (project-specific) | Correct return type, well-defined behavior |
 | 1 | Summary/metric function (project-specific) | Returns meaningful summary data.frame |
 | 1 | Plotting function returns a ggplot with appropriate aesthetics | Returns ggplot object with informative labels |
 
@@ -89,7 +89,7 @@ three interfaces: R API, Shiny app, and CLI.
 
 **Checklist:**
 
-- [ ] `?make_se` / `?make_sce` and all exported functions display help
+- [ ] All exported functions display help
 - [ ] README includes install command + runnable example
 - [ ] pkgdown site deployed and shows reference pages
 - [ ] At least one vignette or pkgdown article exists

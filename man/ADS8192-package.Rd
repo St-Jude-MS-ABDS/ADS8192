@@ -16,13 +16,13 @@ a Shiny interactive explorer, and a command-line interface via Rapp.
 \section{Core Analysis Functions}{
 
 \itemize{
-\item \code{\link{make_se}}: Create a SummarizedExperiment from counts
-and metadata
 \item \code{\link{top_variable_features}}: Select the most variable genes
 \item \code{\link{run_pca}}: Run PCA on a SummarizedExperiment
 \item \code{\link{pca_variance_explained}}: Get variance explained by
 each PC
 \item \code{\link{plot_pca}}: Create PCA scatter plots
+\item \code{\link{plot_variance_explained}}: Plot variance explained
+bar chart
 \item \code{\link{save_pca_results}}: Export PCA results to files
 }
 }

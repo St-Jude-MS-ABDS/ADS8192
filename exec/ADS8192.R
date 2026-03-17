@@ -4,6 +4,8 @@
 #| description: PCA analysis for SummarizedExperiment data (ADS 8192 reference implementation).
 
 suppressPackageStartupMessages(library(ADS8192))
+suppressPackageStartupMessages(library(SummarizedExperiment))
+suppressPackageStartupMessages(library(ggplot2))
 
 # Helper to read TSV/CSV (not exported; kept in CLI script)
 read_data_file <- function(path) {
@@ -62,17 +64,18 @@ switch(
         meta_df <- read_data_file(meta)
 
         # Run analysis using package core functions
-        se <- make_se(as.matrix(counts_df), meta_df)
+        se <- SummarizedExperiment(
+            assays = list(counts = as.matrix(counts_df)),
+            colData = meta_df
+        )
         result <- run_pca(se, n_top = n_top, log_transform = log_transform)
 
-        # Save results
         save_pca_results(result, output)
 
-        # Generate plot if color_by is specified
         if (color_by != "") {
             plot_file <- file.path(output, "pca_plot.png")
             p <- plot_pca(result, color_by = color_by)
-            ggplot2::ggsave(plot_file, p, width = 8, height = 6, dpi = 150)
+            ggsave(plot_file, p, width = 8, height = 6, dpi = 150)
             message("Saved: ", plot_file)
         }
 

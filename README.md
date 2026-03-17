@@ -70,7 +70,7 @@ HW1 is the capstone deliverable for Unit 1. Each student selects a project (or p
 | Category | Points | Key Requirements |
 |----------|--------|------------------|
 | Package Structure & Installation | 4 | Valid `DESCRIPTION`, `NAMESPACE`, installs from GitHub, bundled example data |
-| Core Analysis Functions | 5 | Constructor (`make_se()` / `make_sce()`), analysis, summary, and plotting functions |
+| Core Analysis Functions | 5 | Analysis, summary, and plotting functions operating on SE/SCE objects |
 | Testing | 4 | ≥ 8 `testthat` expectations, happy-path + error-case coverage |
 | Documentation | 4 | `roxygen2` help pages, README, deployed `pkgdown` site |
 | Shiny App | 4 | `run_app()` calls core functions reactively; deployed on Posit Connect |
@@ -144,11 +144,11 @@ ADS8192 pca --counts counts.tsv --meta samples.tsv --output results/ --color-by 
 
 | Function | Purpose |
 |----------|---------|
-| `make_se()` | Create a `SummarizedExperiment` from counts + metadata |
 | `top_variable_features()` | Select the N most variable genes |
 | `run_pca()` | Run PCA, return scores + metadata |
 | `pca_variance_explained()` | Variance explained per PC |
 | `plot_pca()` | PCA scatter plot (`ggplot2`) |
+| `plot_variance_explained()` | Variance explained bar chart (`ggplot2`) |
 | `save_pca_results()` | Export results to TSV files |
 | `run_app()` | Launch the Shiny PCA Explorer |
 

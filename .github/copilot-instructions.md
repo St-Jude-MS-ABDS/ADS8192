@@ -14,9 +14,9 @@ ADS8192/
 ├── README.md
 ├── R/                      # Package source (core functions + Shiny app)
 │   ├── ADS8192-package.R
-│   ├── data.R              # make_se(), top_variable_features()
+│   ├── data.R              # top_variable_features()
 │   ├── pca.R               # run_pca(), pca_variance_explained()
-│   ├── plotting.R          # plot_pca()
+│   ├── plotting.R          # plot_pca(), plot_variance_explained()
 │   ├── export.R            # save_pca_results()
 │   ├── app_ui.R            # Shiny UI
 │   ├── app_server.R        # Shiny server

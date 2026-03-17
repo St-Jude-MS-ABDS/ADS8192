@@ -384,7 +384,10 @@ counts <- read.table("/tmp/cli_test/counts.tsv", header = TRUE, row.names = 1, s
 meta <- read.table("/tmp/cli_test/meta.tsv", header = TRUE, row.names = 1, sep = "\t")
 
 # Create SE and run PCA
-se <- make_se(as.matrix(counts), meta)
+se <- SummarizedExperiment::SummarizedExperiment(
+    assays = list(counts = as.matrix(counts)),
+    colData = meta
+)
 result <- run_pca(se, n_top = 5)
 
 # Get scores
@@ -433,7 +436,10 @@ test_that("CLI produces same output as R functions", {
     write.table(meta, meta_file, sep = "\t", quote = FALSE)
     
     # Run via R
-    se <- make_se(counts, meta)
+    se <- SummarizedExperiment::SummarizedExperiment(
+        assays = list(counts = counts),
+        colData = meta
+    )
     r_result <- run_pca(se, n_top = 50)
     
     # Run via CLI
