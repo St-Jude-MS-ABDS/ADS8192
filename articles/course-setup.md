@@ -52,12 +52,16 @@ bioc_pkgs <- c(
   # Data containers
   "SummarizedExperiment",
   "SingleCellExperiment",
+  # Analysis
+  "DESeq2",
   # Visualization
   "ComplexHeatmap",
+  "dittoSeq",
   # Datasets
   "airway",
+  "macrophage",
   "scRNAseq",
-  "parathyroidSE",
+  "tximeta",
   "recount3",
   "curatedTCGAData",
   "TCGAutils",

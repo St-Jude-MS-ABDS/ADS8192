@@ -69,6 +69,8 @@ The `airway` package contains an RNA-seq experiment on human airway
 smooth muscle cell lines treated with dexamethasone (a glucocorticoid).
 8 samples, 4 treated and 4 untreated, with ~64,000 genes.
 
+Data preparation code
+
 ``` r
 BiocManager::install("airway")
 library(airway)
@@ -81,8 +83,6 @@ data("airway")
 
 **What users should be able to do:**
 
-- Construct a SummarizedExperiment from a counts matrix and sample
-  metadata
 - Select the most variable genes from the dataset
 - Run PCA on filtered, optionally transformed expression data
 - Summarize variance explained per principal component
@@ -115,6 +115,8 @@ somatosensory cortex and hippocampus, classified into 7 major cell types
 astrocytes, endothelial, and mural cells). The clear cell-type structure
 makes UMAP parameters visually interpretable.
 
+Data preparation code
+
 ``` r
 ## data-raw/example_sce.R
 BiocManager::install("scRNAseq")
@@ -136,8 +138,6 @@ usethis::use_data(example_sce, overwrite = TRUE)
 
 **What users should be able to do:**
 
-- Construct a SingleCellExperiment from a counts matrix and cell
-  metadata
 - Select the most variable genes for downstream analysis
 - Run UMAP dimensionality reduction with configurable parameters
   (neighbors, min_dist, metric)
@@ -163,44 +163,49 @@ slider (0.01–1.0), metric dropdown, color/shape by metadata
 **Rationale:** Before formal analysis, you must check whether samples
 group by the expected biological variable (treatment, genotype) rather
 than technical artifacts (batch, patient). A sample-by-sample
-correlation heatmap with hierarchical clustering is the standard first
-diagnostic.
+correlation heatmap with hierarchical clustering is a common diagnostic.
 
-### Dataset: Parathyroid Adenoma (Human bulk RNA-seq)
+### Dataset: Macrophage Stimulation (Human bulk RNA-seq)
 
-The `parathyroidSE` package contains RNA-seq data from 27 samples of
-human parathyroid adenoma tissue: 3 patients × 3 treatments (Control,
-DPN, OHT) × time points. The dual grouping by patient and treatment
-creates an interesting similarity structure where both biological and
-individual effects compete.
+The `macrophage` package (Alasoo et al., 2018) contains RNA-seq data
+from human monocyte-derived macrophages: 6 donors × 4 stimulation
+conditions (naive, IFNγ, Salmonella, and IFNγ + Salmonella) for 24
+samples total. The dual grouping by stimulation and donor creates an
+interesting similarity structure where immune activation effects and
+donor-specific variation compete — stimulated conditions should cluster
+together, with donor effects visible within each treatment group.
+
+Data preparation code
 
 ``` r
 ## data-raw/example_se.R
-BiocManager::install("parathyroidSE")
-library(parathyroidSE)
+BiocManager::install(c("macrophage", "tximeta"))
+library(macrophage)
+library(tximeta)
 library(SummarizedExperiment)
 
-data("parathyroidGenesSE")
-se <- parathyroidGenesSE
+# Import salmon quantifications via tximeta
+dir <- system.file("extdata", package = "macrophage")
+coldata <- read.csv(file.path(dir, "coldata.csv"))
+coldata$files <- file.path(dir, "quants", coldata$names, "quant.sf.gz")
+coldata$names <- coldata$sample_id
 
-# Subset to top 2000 genes by variance for package size
-counts <- assay(se)
-vars <- apply(counts, 1, var)
-keep_genes <- names(sort(vars, decreasing = TRUE))[1:2000]
-example_se <- se[keep_genes, ]
+se <- tximeta(coldata)
+gse <- summarizeToGene(se)
 
 # Simplify colData
-colData(example_se) <- colData(example_se)[, c("treatment", "patient", "time")]
+colData(gse) <- DataFrame(
+  condition = factor(gse$condition_name),
+  donor = factor(gse$line_id)
+)
 
-usethis::use_data(example_se, overwrite = TRUE)
+usethis::use_data(gse, overwrite = TRUE)
 ```
 
 **Data structure:** `SummarizedExperiment`
 
 **What users should be able to do:**
 
-- Construct a SummarizedExperiment from a counts matrix and sample
-  metadata
 - Select the most variable genes
 - Compute pairwise sample similarity (correlation or distance matrix)
 - Perform hierarchical clustering, cut at a chosen k, and compute
@@ -217,16 +222,21 @@ usethis::use_data(example_se, overwrite = TRUE)
 **Shiny inputs:** Correlation method, linkage method, k slider, n_top
 slider, metadata columns for annotation bars
 
-**Dependencies:** `SummarizedExperiment`, `parathyroidSE` (data only)
+**Dependencies:** `SummarizedExperiment`, `macrophage` + `tximeta` (data
+only)
 
 ------------------------------------------------------------------------
 
-## Project 3: Differential Expression Explorer
+## Project 3: Differential Expression with DESeq2
 
 **Rationale:** The central question in most gene expression experiments:
-which genes change between conditions? Per-gene statistical testing with
-fold-change estimation, followed by volcano and MA plot visualization,
-is the foundational analysis in transcriptomics.
+which genes change between conditions? DESeq2 is the gold-standard
+method for differential expression analysis of count data — it models
+the mean-variance relationship with a negative binomial distribution,
+shares information across genes to stabilize fold-change estimates, and
+provides log2 fold-change shrinkage for reliable ranking. Volcano and MA
+plot visualization of DESeq2 results is the foundational analysis in
+transcriptomics.
 
 ### Dataset: Bottomly (Mouse bulk RNA-seq)
 
@@ -234,10 +244,12 @@ The Bottomly et al. (2011) dataset contains bulk RNA-seq data from two
 inbred mouse strains — C57BL/6J and DBA/2J — with 10 and 11 biological
 replicates respectively (21 samples total). These two strains have
 well-characterized gene expression differences, making this a clean,
-real-world dataset for demonstrating per-gene differential expression
-testing. The balanced design and moderate sample size are ideal for both
-t-test and Wilcoxon approaches. Available via `recount3` (project
+real-world dataset for DESeq2 differential expression analysis. The
+balanced design and moderate sample size provide good statistical power
+and stable dispersion estimates. Available via `recount3` (project
 SRP001540).
+
+Data preparation code
 
 ``` r
 ## data-raw/example_se.R
@@ -251,8 +263,8 @@ proj <- subset(human_projects, file_source == "sra" &
                  project == "SRP001540")
 rse <- create_rse(proj)
 
-# Transform raw counts
-assay(rse, "counts") <- transform_counts(rse)
+# Transform to integer counts (DESeq2 requires integer input)
+assay(rse, "counts") <- round(transform_counts(rse))
 
 # Simplify colData - extract strain from attributes
 example_se <- rse
@@ -271,45 +283,50 @@ usethis::use_data(example_se, overwrite = TRUE)
 
 **What users should be able to do:**
 
-- Construct a SummarizedExperiment from a counts matrix and sample
-  metadata
-- Filter out genes with low expression across samples
-- Run per-gene statistical testing (t-test or Wilcoxon) between two
-  groups, computing log2 fold changes, p-values, and BH-adjusted
-  p-values
+- Filter out genes with low expression across samples (e.g., minimum
+  total count threshold)
+- Run DESeq2 differential expression analysis between two groups,
+  producing log2 fold changes, p-values, and BH-adjusted p-values
+- Apply log2 fold-change shrinkage for more reliable effect-size
+  estimates
 - Summarize the number of significantly up/down/non-significant genes at
   given thresholds
 - Visualize results as a volcano plot (log2FC vs. −log10 p) or MA plot
-  (average expression vs. log2FC), with significant genes highlighted
+  (mean expression vs. log2FC), with significant genes highlighted
 - Export differential expression results and summary counts to TSV files
 
 **Key parameters:** `group_column`, `ref_level`, `fc_threshold`,
-`p_threshold`, `test_method` (t.test/wilcox), `plot_type` (volcano/ma)
+`p_threshold`, `shrinkage` (apeglm/ashr/normal/none), `plot_type`
+(volcano/ma)
 
 **CLI outputs:** `de_results.tsv`, `de_summary.tsv`
 
 **Shiny inputs:** Grouping column, reference level, FC threshold slider,
-p-value threshold slider, test method toggle, volcano ↔︎ MA radio button
+p-value threshold slider, shrinkage method dropdown, volcano ↔︎ MA radio
+button
 
-**Dependencies:** `SummarizedExperiment`, `recount3` (data only)
+**Dependencies:** `SummarizedExperiment`, `DESeq2`, `recount3` (data
+only)
 
 ------------------------------------------------------------------------
 
 ## Project 4: K-means Cell Clustering
 
-**Rationale:** K-means clustering partitions cells into k groups by
+**Rationale:** K-means clustering partitions samples into `k` groups by
 minimizing within-cluster variance. Choosing k is a real practical
 decision — the elbow plot of within-cluster sum of squares is the
 standard diagnostic. Single-cell data with many unlabeled cell types is
-the natural application.
+a typical application.
 
 ### Dataset: Baron Human Pancreas (scRNA-seq)
 
 The Baron et al. (2016) dataset profiles ~8,500 cells from human
 pancreatic islets, capturing 14 cell types including alpha, beta, delta,
-gamma, acinar, and ductal cells. Students must discover the “right”
-number of clusters from data alone — the elbow and silhouette
-diagnostics should suggest k ≈ 8–14, matching the known biology.
+gamma, acinar, and ductal cells. Students must build a project to
+provide elbow and silhouette diagnostics to help users select the
+optimal number of clusters.
+
+Data preparation code
 
 ``` r
 ## data-raw/example_sce.R
@@ -331,8 +348,6 @@ usethis::use_data(example_sce, overwrite = TRUE)
 
 **What users should be able to do:**
 
-- Construct a SingleCellExperiment from a counts matrix and cell
-  metadata
 - Select the most variable genes
 - Run k-means clustering across a range of k values (2..max_k)
 - Compute clustering quality metrics (total within-cluster sum of
@@ -370,6 +385,8 @@ spike-in controls. It was specifically designed for benchmarking
 normalization and QC methods. The spike-in proportions and library size
 variation create natural QC outliers that students must detect.
 
+Data preparation code
+
 ``` r
 ## data-raw/example_sce.R
 BiocManager::install("scRNAseq")
@@ -393,8 +410,6 @@ usethis::use_data(example_sce, overwrite = TRUE)
 
 **What users should be able to do:**
 
-- Construct a SingleCellExperiment from a counts matrix and cell
-  metadata
 - Compute per-cell QC metrics: library size, number of genes detected,
   spike-in percentage, and Shannon entropy
 - Flag outlier cells using MAD-based thresholds on QC metrics
@@ -433,6 +448,8 @@ cell-type diversity means HVG selection critically determines which
 downstream structure is recovered — making this the ideal dataset for
 exploring variance-based feature selection.
 
+Data preparation code
+
 ``` r
 ## data-raw/example_sce.R
 BiocManager::install("scRNAseq")
@@ -456,8 +473,6 @@ usethis::use_data(example_sce, overwrite = TRUE)
 
 **What users should be able to do:**
 
-- Construct a SingleCellExperiment from a counts matrix and cell
-  metadata
 - Filter out genes below a minimum mean expression threshold
 - Compute per-gene statistics: mean, variance, coefficient of variation,
   and dispersion, with ranking
@@ -496,6 +511,8 @@ PAM50 subtype, stage). Immune and proliferation-related gene sets from
 MSigDB clearly distinguish molecular subtypes — making pathway-level
 scoring biologically compelling. We subset to a manageable number of
 samples for the example data.
+
+Data preparation code
 
 ``` r
 ## data-raw/example_se.R
@@ -554,8 +571,6 @@ usethis::use_data(example_se, example_gene_sets, overwrite = TRUE)
 
 **What users should be able to do:**
 
-- Construct a SummarizedExperiment from an expression matrix and sample
-  metadata
 - Read gene sets from a GMT file or named list of character vectors
 - Compute per-sample gene set scores (e.g., mean z-score of set members)
 - Summarize mean scores per group and compute effect sizes between
@@ -595,6 +610,8 @@ variation across cells (typical of scRNA-seq) makes normalization
 effects visually striking — CPM, log2-CPM, and quantile normalization
 reshape per-cell distributions in very different ways.
 
+Data preparation code
+
 ``` r
 ## data-raw/example_sce.R
 BiocManager::install("scRNAseq")
@@ -615,8 +632,6 @@ usethis::use_data(example_sce, overwrite = TRUE)
 
 **What users should be able to do:**
 
-- Construct a SingleCellExperiment from a counts matrix and cell
-  metadata
 - Filter out low-expression genes
 - Apply multiple normalization methods (CPM, log2-CPM, quantile) and
   store the normalized values as new assays in the SCE
@@ -657,6 +672,8 @@ respiration genes, sarcomere components, and extracellular matrix genes
 — are recoverable, making this a biologically rich dataset for network
 analysis.
 
+Data preparation code
+
 ``` r
 ## data-raw/example_se.R
 BiocManager::install("recount3")
@@ -692,8 +709,6 @@ usethis::use_data(example_se, overwrite = TRUE)
 
 **What users should be able to do:**
 
-- Construct a SummarizedExperiment from a counts matrix and sample
-  metadata
 - Select the most variable genes for network construction
 - Compute a pairwise gene-gene correlation matrix
 - Threshold the correlation matrix into a binary adjacency matrix and
@@ -736,6 +751,8 @@ methylation, age, and survival. The multiple clinical variables make
 ideal column annotation bars, and the known molecular subtypes produce
 distinctive gene module patterns in unsupervised clustering.
 
+Data preparation code
+
 ``` r
 ## data-raw/example_se.R
 BiocManager::install(c("curatedTCGAData", "TCGAutils"))
@@ -772,8 +789,6 @@ usethis::use_data(example_se, overwrite = TRUE)
 
 **What users should be able to do:**
 
-- Construct a SummarizedExperiment from an expression matrix and sample
-  metadata
 - Select the most variable genes
 - Row-scale the expression matrix (z-score or min-max normalization)
 - Perform hierarchical clustering on rows (genes) and cut at k to assign
@@ -813,6 +828,8 @@ the “right” number of PCs is actively debated: Seurat defaults to 20,
 but the intrinsic dimensionality for ~10 cell types may be closer to
 10–15. This makes the estimation question genuinely interesting.
 
+Data preparation code
+
 ``` r
 ## data-raw/example_sce.R
 BiocManager::install("TENxPBMCData")
@@ -832,8 +849,6 @@ usethis::use_data(example_sce, overwrite = TRUE)
 
 **What users should be able to do:**
 
-- Construct a SingleCellExperiment from a counts matrix and cell
-  metadata
 - Select the most variable genes
 - Run PCA and extract eigenvalues (variance per component, cumulative
   variance)
@@ -873,6 +888,8 @@ realistic scenario where students must distinguish technical from
 biological variation in PCA space. PCA colored by donor vs. cell type
 reveals the batch effect immediately.
 
+Data preparation code
+
 ``` r
 ## data-raw/example_sce.R
 BiocManager::install("scRNAseq")
@@ -893,8 +910,6 @@ usethis::use_data(example_sce, overwrite = TRUE)
 
 **What users should be able to do:**
 
-- Construct a SingleCellExperiment from a counts matrix and cell
-  metadata
 - Select the most variable genes
 - Quantify batch effects by fitting a linear model of each PC against
   the batch variable and extracting R² values
@@ -936,6 +951,8 @@ to validate their markers against published biology. Note: this is the
 **mouse** version — Project 4 uses the human dataset from the same
 study, so code cannot be directly shared.
 
+Data preparation code
+
 ``` r
 ## data-raw/example_sce.R
 BiocManager::install("scRNAseq")
@@ -956,8 +973,6 @@ usethis::use_data(example_sce, overwrite = TRUE)
 
 **What users should be able to do:**
 
-- Construct a SingleCellExperiment from a counts matrix and cell
-  metadata
 - Filter out low-expression genes
 - Perform one-vs-rest statistical testing per cell type: compute log2
   fold changes, Wilcoxon p-values, BH-adjusted p-values, and rank genes
@@ -986,8 +1001,8 @@ table
 | \#  | Project                 | Dataset                  | Organism | Structure | Primary Plot            | Extra Deps                      |
 |-----|-------------------------|--------------------------|----------|-----------|-------------------------|---------------------------------|
 | 1   | UMAP Embedding          | Zeisel brain             | Mouse    | SCE       | 2D scatter              | uwot                            |
-| 2   | Sample Similarity       | Parathyroid adenoma      | Human    | SE        | heatmap + dendrogram    | —                               |
-| 3   | Differential Expression | Bottomly (mouse strains) | Mouse    | SE        | volcano / MA            | —                               |
+| 2   | Sample Similarity       | Macrophage stimulation   | Human    | SE        | heatmap + dendrogram    | —                               |
+| 3   | Differential Expression | Bottomly (mouse strains) | Mouse    | SE        | volcano / MA            | DESeq2                          |
 | 4   | K-means Clustering      | Baron human pancreas     | Human    | SCE       | scatter + elbow         | cluster                         |
 | 5   | Cell QC Dashboard       | Lun spike-in             | Mouse    | SCE       | multi-panel             | —                               |
 | 6   | Gene Variance           | Macosko retina           | Mouse    | SCE       | mean-variance scatter   | —                               |

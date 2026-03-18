@@ -72,7 +72,7 @@
                         <h4 data-toc-skip class="author">Jared
 Andrews</h4>
             
-            <h4 data-toc-skip class="date">2026-03-17</h4>
+            <h4 data-toc-skip class="date">2026-03-18</h4>
       
       <small class="dont-index">Source: <a href="https://github.com/St-Jude-MS-ABDS/ADS8192/blob/main/vignettes/articles/project-selection.Rmd" class="external-link"><code>vignettes/articles/project-selection.Rmd</code></a></small>
       <div class="d-none name"><code>project-selection.Rmd</code></div>
@@ -194,18 +194,18 @@ of variation for the dataset.</p>
 human airway smooth muscle cell lines treated with dexamethasone (a
 glucocorticoid). 8 samples, 4 treated and 4 untreated, with ~64,000
 genes.</p>
-<div class="sourceCode" id="cb1"><pre class="downlit sourceCode r">
+<details><summary>
+Data preparation code
+</summary><div class="sourceCode" id="cb1"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="fu">BiocManager</span><span class="fu">::</span><span class="fu">install</span><span class="op">(</span><span class="st">"airway"</span><span class="op">)</span></span>
 <span><span class="kw"><a href="https://rdrr.io/r/base/library.html" class="external-link">library</a></span><span class="op">(</span><span class="va">airway</span><span class="op">)</span></span>
 <span><span class="kw"><a href="https://rdrr.io/r/base/library.html" class="external-link">library</a></span><span class="op">(</span><span class="va"><a href="https://bioconductor.org/packages/SummarizedExperiment" class="external-link">SummarizedExperiment</a></span><span class="op">)</span></span>
 <span></span>
 <span><span class="fu"><a href="https://rdrr.io/r/utils/data.html" class="external-link">data</a></span><span class="op">(</span><span class="st">"airway"</span><span class="op">)</span></span></code></pre></div>
-<p><strong>Data structure:</strong>
+</details><p><strong>Data structure:</strong>
 <code>SummarizedExperiment</code></p>
 <p><strong>What users should be able to do:</strong></p>
 <ul>
-<li>Construct a SummarizedExperiment from a counts matrix and sample
-metadata</li>
 <li>Select the most variable genes from the dataset</li>
 <li>Run PCA on filtered, optionally transformed expression data</li>
 <li>Summarize variance explained per principal component</li>
@@ -240,7 +240,9 @@ somatosensory cortex and hippocampus, classified into 7 major cell types
 (interneurons, pyramidal neurons, oligodendrocytes, microglia,
 astrocytes, endothelial, and mural cells). The clear cell-type structure
 makes UMAP parameters visually interpretable.</p>
-<div class="sourceCode" id="cb2"><pre class="downlit sourceCode r">
+<details><summary>
+Data preparation code
+</summary><div class="sourceCode" id="cb2"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="co">## data-raw/example_sce.R</span></span>
 <span><span class="fu">BiocManager</span><span class="fu">::</span><span class="fu">install</span><span class="op">(</span><span class="st">"scRNAseq"</span><span class="op">)</span></span>
 <span><span class="kw"><a href="https://rdrr.io/r/base/library.html" class="external-link">library</a></span><span class="op">(</span><span class="va">scRNAseq</span><span class="op">)</span></span>
@@ -255,12 +257,10 @@ makes UMAP parameters visually interpretable.</p>
 <span><span class="fu"><a href="https://rdrr.io/r/base/colnames.html" class="external-link">colnames</a></span><span class="op">(</span><span class="fu"><a href="https://rdrr.io/pkg/SummarizedExperiment/man/SummarizedExperiment-class.html" class="external-link">colData</a></span><span class="op">(</span><span class="va">example_sce</span><span class="op">)</span><span class="op">)</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="st">"cell_type"</span>, <span class="st">"cell_subtype"</span><span class="op">)</span></span>
 <span></span>
 <span><span class="fu">usethis</span><span class="fu">::</span><span class="fu">use_data</span><span class="op">(</span><span class="va">example_sce</span>, overwrite <span class="op">=</span> <span class="cn">TRUE</span><span class="op">)</span></span></code></pre></div>
-<p><strong>Data structure:</strong>
+</details><p><strong>Data structure:</strong>
 <code>SingleCellExperiment</code></p>
 <p><strong>What users should be able to do:</strong></p>
 <ul>
-<li>Construct a SingleCellExperiment from a counts matrix and cell
-metadata</li>
 <li>Select the most variable genes for downstream analysis</li>
 <li>Run UMAP dimensionality reduction with configurable parameters
 (neighbors, min_dist, metric)</li>
@@ -289,41 +289,47 @@ metadata</p>
 <p><strong>Rationale:</strong> Before formal analysis, you must check
 whether samples group by the expected biological variable (treatment,
 genotype) rather than technical artifacts (batch, patient). A
-sample-by-sample correlation heatmap with hierarchical clustering is the
-standard first diagnostic.</p>
+sample-by-sample correlation heatmap with hierarchical clustering is a
+common diagnostic.</p>
 <div class="section level3">
-<h3 id="dataset-parathyroid-adenoma-human-bulk-rna-seq">Dataset: Parathyroid Adenoma (Human bulk RNA-seq)<a class="anchor" aria-label="anchor" href="#dataset-parathyroid-adenoma-human-bulk-rna-seq"></a>
+<h3 id="dataset-macrophage-stimulation-human-bulk-rna-seq">Dataset: Macrophage Stimulation (Human bulk RNA-seq)<a class="anchor" aria-label="anchor" href="#dataset-macrophage-stimulation-human-bulk-rna-seq"></a>
 </h3>
-<p>The <code>parathyroidSE</code> package contains RNA-seq data from 27
-samples of human parathyroid adenoma tissue: 3 patients × 3 treatments
-(Control, DPN, OHT) × time points. The dual grouping by patient and
-treatment creates an interesting similarity structure where both
-biological and individual effects compete.</p>
-<div class="sourceCode" id="cb3"><pre class="downlit sourceCode r">
+<p>The <code>macrophage</code> package (Alasoo et al., 2018) contains
+RNA-seq data from human monocyte-derived macrophages: 6 donors × 4
+stimulation conditions (naive, IFNγ, Salmonella, and IFNγ + Salmonella)
+for 24 samples total. The dual grouping by stimulation and donor creates
+an interesting similarity structure where immune activation effects and
+donor-specific variation compete — stimulated conditions should cluster
+together, with donor effects visible within each treatment group.</p>
+<details><summary>
+Data preparation code
+</summary><div class="sourceCode" id="cb3"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="co">## data-raw/example_se.R</span></span>
-<span><span class="fu">BiocManager</span><span class="fu">::</span><span class="fu">install</span><span class="op">(</span><span class="st">"parathyroidSE"</span><span class="op">)</span></span>
-<span><span class="kw"><a href="https://rdrr.io/r/base/library.html" class="external-link">library</a></span><span class="op">(</span><span class="va">parathyroidSE</span><span class="op">)</span></span>
+<span><span class="fu">BiocManager</span><span class="fu">::</span><span class="fu">install</span><span class="op">(</span><span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="st">"macrophage"</span>, <span class="st">"tximeta"</span><span class="op">)</span><span class="op">)</span></span>
+<span><span class="kw"><a href="https://rdrr.io/r/base/library.html" class="external-link">library</a></span><span class="op">(</span><span class="va">macrophage</span><span class="op">)</span></span>
+<span><span class="kw"><a href="https://rdrr.io/r/base/library.html" class="external-link">library</a></span><span class="op">(</span><span class="va">tximeta</span><span class="op">)</span></span>
 <span><span class="kw"><a href="https://rdrr.io/r/base/library.html" class="external-link">library</a></span><span class="op">(</span><span class="va"><a href="https://bioconductor.org/packages/SummarizedExperiment" class="external-link">SummarizedExperiment</a></span><span class="op">)</span></span>
 <span></span>
-<span><span class="fu"><a href="https://rdrr.io/r/utils/data.html" class="external-link">data</a></span><span class="op">(</span><span class="st">"parathyroidGenesSE"</span><span class="op">)</span></span>
-<span><span class="va">se</span> <span class="op">&lt;-</span> <span class="va">parathyroidGenesSE</span></span>
+<span><span class="co"># Import salmon quantifications via tximeta</span></span>
+<span><span class="va">dir</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/base/system.file.html" class="external-link">system.file</a></span><span class="op">(</span><span class="st">"extdata"</span>, package <span class="op">=</span> <span class="st">"macrophage"</span><span class="op">)</span></span>
+<span><span class="va">coldata</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/utils/read.table.html" class="external-link">read.csv</a></span><span class="op">(</span><span class="fu"><a href="https://rdrr.io/r/base/file.path.html" class="external-link">file.path</a></span><span class="op">(</span><span class="va">dir</span>, <span class="st">"coldata.csv"</span><span class="op">)</span><span class="op">)</span></span>
+<span><span class="va">coldata</span><span class="op">$</span><span class="va">files</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/base/file.path.html" class="external-link">file.path</a></span><span class="op">(</span><span class="va">dir</span>, <span class="st">"quants"</span>, <span class="va">coldata</span><span class="op">$</span><span class="va">names</span>, <span class="st">"quant.sf.gz"</span><span class="op">)</span></span>
+<span><span class="va">coldata</span><span class="op">$</span><span class="va">names</span> <span class="op">&lt;-</span> <span class="va">coldata</span><span class="op">$</span><span class="va">sample_id</span></span>
 <span></span>
-<span><span class="co"># Subset to top 2000 genes by variance for package size</span></span>
-<span><span class="va">counts</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/pkg/SummarizedExperiment/man/SummarizedExperiment-class.html" class="external-link">assay</a></span><span class="op">(</span><span class="va">se</span><span class="op">)</span></span>
-<span><span class="va">vars</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/base/apply.html" class="external-link">apply</a></span><span class="op">(</span><span class="va">counts</span>, <span class="fl">1</span>, <span class="va">var</span><span class="op">)</span></span>
-<span><span class="va">keep_genes</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/base/names.html" class="external-link">names</a></span><span class="op">(</span><span class="fu"><a href="https://rdrr.io/r/base/sort.html" class="external-link">sort</a></span><span class="op">(</span><span class="va">vars</span>, decreasing <span class="op">=</span> <span class="cn">TRUE</span><span class="op">)</span><span class="op">)</span><span class="op">[</span><span class="fl">1</span><span class="op">:</span><span class="fl">2000</span><span class="op">]</span></span>
-<span><span class="va">example_se</span> <span class="op">&lt;-</span> <span class="va">se</span><span class="op">[</span><span class="va">keep_genes</span>, <span class="op">]</span></span>
+<span><span class="va">se</span> <span class="op">&lt;-</span> <span class="fu">tximeta</span><span class="op">(</span><span class="va">coldata</span><span class="op">)</span></span>
+<span><span class="va">gse</span> <span class="op">&lt;-</span> <span class="fu">summarizeToGene</span><span class="op">(</span><span class="va">se</span><span class="op">)</span></span>
 <span></span>
 <span><span class="co"># Simplify colData</span></span>
-<span><span class="fu"><a href="https://rdrr.io/pkg/SummarizedExperiment/man/SummarizedExperiment-class.html" class="external-link">colData</a></span><span class="op">(</span><span class="va">example_se</span><span class="op">)</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/pkg/SummarizedExperiment/man/SummarizedExperiment-class.html" class="external-link">colData</a></span><span class="op">(</span><span class="va">example_se</span><span class="op">)</span><span class="op">[</span>, <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="st">"treatment"</span>, <span class="st">"patient"</span>, <span class="st">"time"</span><span class="op">)</span><span class="op">]</span></span>
+<span><span class="fu"><a href="https://rdrr.io/pkg/SummarizedExperiment/man/SummarizedExperiment-class.html" class="external-link">colData</a></span><span class="op">(</span><span class="va">gse</span><span class="op">)</span> <span class="op">&lt;-</span> <span class="fu">DataFrame</span><span class="op">(</span></span>
+<span>  condition <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/factor.html" class="external-link">factor</a></span><span class="op">(</span><span class="va">gse</span><span class="op">$</span><span class="va">condition_name</span><span class="op">)</span>,</span>
+<span>  donor <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/factor.html" class="external-link">factor</a></span><span class="op">(</span><span class="va">gse</span><span class="op">$</span><span class="va">line_id</span><span class="op">)</span></span>
+<span><span class="op">)</span></span>
 <span></span>
-<span><span class="fu">usethis</span><span class="fu">::</span><span class="fu">use_data</span><span class="op">(</span><span class="va">example_se</span>, overwrite <span class="op">=</span> <span class="cn">TRUE</span><span class="op">)</span></span></code></pre></div>
-<p><strong>Data structure:</strong>
+<span><span class="fu">usethis</span><span class="fu">::</span><span class="fu">use_data</span><span class="op">(</span><span class="va">gse</span>, overwrite <span class="op">=</span> <span class="cn">TRUE</span><span class="op">)</span></span></code></pre></div>
+</details><p><strong>Data structure:</strong>
 <code>SummarizedExperiment</code></p>
 <p><strong>What users should be able to do:</strong></p>
 <ul>
-<li>Construct a SummarizedExperiment from a counts matrix and sample
-metadata</li>
 <li>Select the most variable genes</li>
 <li>Compute pairwise sample similarity (correlation or distance
 matrix)</li>
@@ -342,18 +348,21 @@ files</li>
 <p><strong>Shiny inputs:</strong> Correlation method, linkage method, k
 slider, n_top slider, metadata columns for annotation bars</p>
 <p><strong>Dependencies:</strong> <code>SummarizedExperiment</code>,
-<code>parathyroidSE</code> (data only)</p>
+<code>macrophage</code> + <code>tximeta</code> (data only)</p>
 <hr>
 </div>
 </div>
 <div class="section level2">
-<h2 id="project-3-differential-expression-explorer">Project 3: Differential Expression Explorer<a class="anchor" aria-label="anchor" href="#project-3-differential-expression-explorer"></a>
+<h2 id="project-3-differential-expression-with-deseq2">Project 3: Differential Expression with DESeq2<a class="anchor" aria-label="anchor" href="#project-3-differential-expression-with-deseq2"></a>
 </h2>
 <p><strong>Rationale:</strong> The central question in most gene
-expression experiments: which genes change between conditions? Per-gene
-statistical testing with fold-change estimation, followed by volcano and
-MA plot visualization, is the foundational analysis in
-transcriptomics.</p>
+expression experiments: which genes change between conditions? DESeq2 is
+the gold-standard method for differential expression analysis of count
+data — it models the mean-variance relationship with a negative binomial
+distribution, shares information across genes to stabilize fold-change
+estimates, and provides log2 fold-change shrinkage for reliable ranking.
+Volcano and MA plot visualization of DESeq2 results is the foundational
+analysis in transcriptomics.</p>
 <div class="section level3">
 <h3 id="dataset-bottomly-mouse-bulk-rna-seq">Dataset: Bottomly (Mouse bulk RNA-seq)<a class="anchor" aria-label="anchor" href="#dataset-bottomly-mouse-bulk-rna-seq"></a>
 </h3>
@@ -361,11 +370,13 @@ transcriptomics.</p>
 two inbred mouse strains — C57BL/6J and DBA/2J — with 10 and 11
 biological replicates respectively (21 samples total). These two strains
 have well-characterized gene expression differences, making this a
-clean, real-world dataset for demonstrating per-gene differential
-expression testing. The balanced design and moderate sample size are
-ideal for both t-test and Wilcoxon approaches. Available via
+clean, real-world dataset for DESeq2 differential expression analysis.
+The balanced design and moderate sample size provide good statistical
+power and stable dispersion estimates. Available via
 <code>recount3</code> (project SRP001540).</p>
-<div class="sourceCode" id="cb4"><pre class="downlit sourceCode r">
+<details><summary>
+Data preparation code
+</summary><div class="sourceCode" id="cb4"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="co">## data-raw/example_se.R</span></span>
 <span><span class="fu">BiocManager</span><span class="fu">::</span><span class="fu">install</span><span class="op">(</span><span class="st">"recount3"</span><span class="op">)</span></span>
 <span><span class="kw"><a href="https://rdrr.io/r/base/library.html" class="external-link">library</a></span><span class="op">(</span><span class="va">recount3</span><span class="op">)</span></span>
@@ -377,8 +388,8 @@ ideal for both t-test and Wilcoxon approaches. Available via
 <span>                 <span class="va">project</span> <span class="op">==</span> <span class="st">"SRP001540"</span><span class="op">)</span></span>
 <span><span class="va">rse</span> <span class="op">&lt;-</span> <span class="fu">create_rse</span><span class="op">(</span><span class="va">proj</span><span class="op">)</span></span>
 <span></span>
-<span><span class="co"># Transform raw counts</span></span>
-<span><span class="fu"><a href="https://rdrr.io/pkg/SummarizedExperiment/man/SummarizedExperiment-class.html" class="external-link">assay</a></span><span class="op">(</span><span class="va">rse</span>, <span class="st">"counts"</span><span class="op">)</span> <span class="op">&lt;-</span> <span class="fu">transform_counts</span><span class="op">(</span><span class="va">rse</span><span class="op">)</span></span>
+<span><span class="co"># Transform to integer counts (DESeq2 requires integer input)</span></span>
+<span><span class="fu"><a href="https://rdrr.io/pkg/SummarizedExperiment/man/SummarizedExperiment-class.html" class="external-link">assay</a></span><span class="op">(</span><span class="va">rse</span>, <span class="st">"counts"</span><span class="op">)</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/base/Round.html" class="external-link">round</a></span><span class="op">(</span><span class="fu">transform_counts</span><span class="op">(</span><span class="va">rse</span><span class="op">)</span><span class="op">)</span></span>
 <span></span>
 <span><span class="co"># Simplify colData - extract strain from attributes</span></span>
 <span><span class="va">example_se</span> <span class="op">&lt;-</span> <span class="va">rse</span></span>
@@ -391,54 +402,56 @@ ideal for both t-test and Wilcoxon approaches. Available via
 <span><span class="op">)</span></span>
 <span></span>
 <span><span class="fu">usethis</span><span class="fu">::</span><span class="fu">use_data</span><span class="op">(</span><span class="va">example_se</span>, overwrite <span class="op">=</span> <span class="cn">TRUE</span><span class="op">)</span></span></code></pre></div>
-<p><strong>Data structure:</strong>
+</details><p><strong>Data structure:</strong>
 <code>SummarizedExperiment</code></p>
 <p><strong>What users should be able to do:</strong></p>
 <ul>
-<li>Construct a SummarizedExperiment from a counts matrix and sample
-metadata</li>
-<li>Filter out genes with low expression across samples</li>
-<li>Run per-gene statistical testing (t-test or Wilcoxon) between two
-groups, computing log2 fold changes, p-values, and BH-adjusted
-p-values</li>
+<li>Filter out genes with low expression across samples (e.g., minimum
+total count threshold)</li>
+<li>Run DESeq2 differential expression analysis between two groups,
+producing log2 fold changes, p-values, and BH-adjusted p-values</li>
+<li>Apply log2 fold-change shrinkage for more reliable effect-size
+estimates</li>
 <li>Summarize the number of significantly up/down/non-significant genes
 at given thresholds</li>
 <li>Visualize results as a volcano plot (log2FC vs. −log10 p) or MA plot
-(average expression vs. log2FC), with significant genes highlighted</li>
+(mean expression vs. log2FC), with significant genes highlighted</li>
 <li>Export differential expression results and summary counts to TSV
 files</li>
 </ul>
 <p><strong>Key parameters:</strong> <code>group_column</code>,
 <code>ref_level</code>, <code>fc_threshold</code>,
-<code>p_threshold</code>, <code>test_method</code> (t.test/wilcox),
-<code>plot_type</code> (volcano/ma)</p>
+<code>p_threshold</code>, <code>shrinkage</code>
+(apeglm/ashr/normal/none), <code>plot_type</code> (volcano/ma)</p>
 <p><strong>CLI outputs:</strong> <code>de_results.tsv</code>,
 <code>de_summary.tsv</code></p>
 <p><strong>Shiny inputs:</strong> Grouping column, reference level, FC
-threshold slider, p-value threshold slider, test method toggle, volcano
-↔︎ MA radio button</p>
+threshold slider, p-value threshold slider, shrinkage method dropdown,
+volcano ↔︎ MA radio button</p>
 <p><strong>Dependencies:</strong> <code>SummarizedExperiment</code>,
-<code>recount3</code> (data only)</p>
+<code>DESeq2</code>, <code>recount3</code> (data only)</p>
 <hr>
 </div>
 </div>
 <div class="section level2">
 <h2 id="project-4-k-means-cell-clustering">Project 4: K-means Cell Clustering<a class="anchor" aria-label="anchor" href="#project-4-k-means-cell-clustering"></a>
 </h2>
-<p><strong>Rationale:</strong> K-means clustering partitions cells into
-k groups by minimizing within-cluster variance. Choosing k is a real
-practical decision — the elbow plot of within-cluster sum of squares is
-the standard diagnostic. Single-cell data with many unlabeled cell types
-is the natural application.</p>
+<p><strong>Rationale:</strong> K-means clustering partitions samples
+into <code>k</code> groups by minimizing within-cluster variance.
+Choosing k is a real practical decision — the elbow plot of
+within-cluster sum of squares is the standard diagnostic. Single-cell
+data with many unlabeled cell types is a typical application.</p>
 <div class="section level3">
 <h3 id="dataset-baron-human-pancreas-scrna-seq">Dataset: Baron Human Pancreas (scRNA-seq)<a class="anchor" aria-label="anchor" href="#dataset-baron-human-pancreas-scrna-seq"></a>
 </h3>
 <p>The Baron et al. (2016) dataset profiles ~8,500 cells from human
 pancreatic islets, capturing 14 cell types including alpha, beta, delta,
-gamma, acinar, and ductal cells. Students must discover the “right”
-number of clusters from data alone — the elbow and silhouette
-diagnostics should suggest k ≈ 8–14, matching the known biology.</p>
-<div class="sourceCode" id="cb5"><pre class="downlit sourceCode r">
+gamma, acinar, and ductal cells. Students must build a project to
+provide elbow and silhouette diagnostics to help users select the
+optimal number of clusters.</p>
+<details><summary>
+Data preparation code
+</summary><div class="sourceCode" id="cb5"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="co">## data-raw/example_sce.R</span></span>
 <span><span class="fu">BiocManager</span><span class="fu">::</span><span class="fu">install</span><span class="op">(</span><span class="st">"scRNAseq"</span><span class="op">)</span></span>
 <span><span class="kw"><a href="https://rdrr.io/r/base/library.html" class="external-link">library</a></span><span class="op">(</span><span class="va">scRNAseq</span><span class="op">)</span></span>
@@ -452,12 +465,10 @@ diagnostics should suggest k ≈ 8–14, matching the known biology.</p>
 <span><span class="fu"><a href="https://rdrr.io/r/base/colnames.html" class="external-link">colnames</a></span><span class="op">(</span><span class="fu"><a href="https://rdrr.io/pkg/SummarizedExperiment/man/SummarizedExperiment-class.html" class="external-link">colData</a></span><span class="op">(</span><span class="va">example_sce</span><span class="op">)</span><span class="op">)</span> <span class="op">&lt;-</span> <span class="st">"cell_type"</span></span>
 <span></span>
 <span><span class="fu">usethis</span><span class="fu">::</span><span class="fu">use_data</span><span class="op">(</span><span class="va">example_sce</span>, overwrite <span class="op">=</span> <span class="cn">TRUE</span><span class="op">)</span></span></code></pre></div>
-<p><strong>Data structure:</strong>
+</details><p><strong>Data structure:</strong>
 <code>SingleCellExperiment</code></p>
 <p><strong>What users should be able to do:</strong></p>
 <ul>
-<li>Construct a SingleCellExperiment from a counts matrix and cell
-metadata</li>
 <li>Select the most variable genes</li>
 <li>Run k-means clustering across a range of k values (2..max_k)</li>
 <li>Compute clustering quality metrics (total within-cluster sum of
@@ -495,7 +506,9 @@ ERCC spike-in controls provide a ground-truth reference for QC.</p>
 spike-in controls. It was specifically designed for benchmarking
 normalization and QC methods. The spike-in proportions and library size
 variation create natural QC outliers that students must detect.</p>
-<div class="sourceCode" id="cb6"><pre class="downlit sourceCode r">
+<details><summary>
+Data preparation code
+</summary><div class="sourceCode" id="cb6"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="co">## data-raw/example_sce.R</span></span>
 <span><span class="fu">BiocManager</span><span class="fu">::</span><span class="fu">install</span><span class="op">(</span><span class="st">"scRNAseq"</span><span class="op">)</span></span>
 <span><span class="kw"><a href="https://rdrr.io/r/base/library.html" class="external-link">library</a></span><span class="op">(</span><span class="va">scRNAseq</span><span class="op">)</span></span>
@@ -512,12 +525,10 @@ variation create natural QC outliers that students must detect.</p>
 <span><span class="fu"><a href="https://rdrr.io/pkg/SummarizedExperiment/man/SummarizedExperiment-class.html" class="external-link">colData</a></span><span class="op">(</span><span class="va">example_sce</span><span class="op">)</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/pkg/SummarizedExperiment/man/SummarizedExperiment-class.html" class="external-link">colData</a></span><span class="op">(</span><span class="va">example_sce</span><span class="op">)</span><span class="op">[</span>, <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="st">"cell_line"</span>, <span class="st">"plate"</span><span class="op">)</span><span class="op">]</span></span>
 <span></span>
 <span><span class="fu">usethis</span><span class="fu">::</span><span class="fu">use_data</span><span class="op">(</span><span class="va">example_sce</span>, overwrite <span class="op">=</span> <span class="cn">TRUE</span><span class="op">)</span></span></code></pre></div>
-<p><strong>Data structure:</strong>
+</details><p><strong>Data structure:</strong>
 <code>SingleCellExperiment</code></p>
 <p><strong>What users should be able to do:</strong></p>
 <ul>
-<li>Construct a SingleCellExperiment from a counts matrix and cell
-metadata</li>
 <li>Compute per-cell QC metrics: library size, number of genes detected,
 spike-in percentage, and Shannon entropy</li>
 <li>Flag outlier cells using MAD-based thresholds on QC metrics</li>
@@ -558,7 +569,9 @@ bipolar cells, amacrine cells, and ganglion cells. The enormous
 cell-type diversity means HVG selection critically determines which
 downstream structure is recovered — making this the ideal dataset for
 exploring variance-based feature selection.</p>
-<div class="sourceCode" id="cb7"><pre class="downlit sourceCode r">
+<details><summary>
+Data preparation code
+</summary><div class="sourceCode" id="cb7"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="co">## data-raw/example_sce.R</span></span>
 <span><span class="fu">BiocManager</span><span class="fu">::</span><span class="fu">install</span><span class="op">(</span><span class="st">"scRNAseq"</span><span class="op">)</span></span>
 <span><span class="kw"><a href="https://rdrr.io/r/base/library.html" class="external-link">library</a></span><span class="op">(</span><span class="va">scRNAseq</span><span class="op">)</span></span>
@@ -575,12 +588,10 @@ exploring variance-based feature selection.</p>
 <span><span class="fu"><a href="https://rdrr.io/pkg/SummarizedExperiment/man/SummarizedExperiment-class.html" class="external-link">colData</a></span><span class="op">(</span><span class="va">example_sce</span><span class="op">)</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/pkg/SummarizedExperiment/man/SummarizedExperiment-class.html" class="external-link">colData</a></span><span class="op">(</span><span class="va">example_sce</span><span class="op">)</span><span class="op">[</span>, <span class="st">"cluster"</span>, drop <span class="op">=</span> <span class="cn">FALSE</span><span class="op">]</span></span>
 <span></span>
 <span><span class="fu">usethis</span><span class="fu">::</span><span class="fu">use_data</span><span class="op">(</span><span class="va">example_sce</span>, overwrite <span class="op">=</span> <span class="cn">TRUE</span><span class="op">)</span></span></code></pre></div>
-<p><strong>Data structure:</strong>
+</details><p><strong>Data structure:</strong>
 <code>SingleCellExperiment</code></p>
 <p><strong>What users should be able to do:</strong></p>
 <ul>
-<li>Construct a SingleCellExperiment from a counts matrix and cell
-metadata</li>
 <li>Filter out genes below a minimum mean expression threshold</li>
 <li>Compute per-gene statistics: mean, variance, coefficient of
 variation, and dispersion, with ranking</li>
@@ -623,7 +634,9 @@ proliferation-related gene sets from MSigDB clearly distinguish
 molecular subtypes — making pathway-level scoring biologically
 compelling. We subset to a manageable number of samples for the example
 data.</p>
-<div class="sourceCode" id="cb8"><pre class="downlit sourceCode r">
+<details><summary>
+Data preparation code
+</summary><div class="sourceCode" id="cb8"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="co">## data-raw/example_se.R</span></span>
 <span><span class="fu">BiocManager</span><span class="fu">::</span><span class="fu">install</span><span class="op">(</span><span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="st">"curatedTCGAData"</span>, <span class="st">"TCGAutils"</span><span class="op">)</span><span class="op">)</span></span>
 <span><span class="fu"><a href="https://rdrr.io/r/utils/install.packages.html" class="external-link">install.packages</a></span><span class="op">(</span><span class="st">"msigdbr"</span><span class="op">)</span></span>
@@ -674,12 +687,10 @@ data.</p>
 <span><span class="va">example_gene_sets</span> <span class="op">&lt;-</span> <span class="va">example_gene_sets</span><span class="op">[</span><span class="va">keep_sets</span><span class="op">]</span></span>
 <span></span>
 <span><span class="fu">usethis</span><span class="fu">::</span><span class="fu">use_data</span><span class="op">(</span><span class="va">example_se</span>, <span class="va">example_gene_sets</span>, overwrite <span class="op">=</span> <span class="cn">TRUE</span><span class="op">)</span></span></code></pre></div>
-<p><strong>Data structure:</strong>
+</details><p><strong>Data structure:</strong>
 <code>SummarizedExperiment</code></p>
 <p><strong>What users should be able to do:</strong></p>
 <ul>
-<li>Construct a SummarizedExperiment from an expression matrix and
-sample metadata</li>
 <li>Read gene sets from a GMT file or named list of character
 vectors</li>
 <li>Compute per-sample gene set scores (e.g., mean z-score of set
@@ -721,7 +732,9 @@ types include alpha, beta, delta, acinar, ductal, and more. The dramatic
 library size variation across cells (typical of scRNA-seq) makes
 normalization effects visually striking — CPM, log2-CPM, and quantile
 normalization reshape per-cell distributions in very different ways.</p>
-<div class="sourceCode" id="cb9"><pre class="downlit sourceCode r">
+<details><summary>
+Data preparation code
+</summary><div class="sourceCode" id="cb9"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="co">## data-raw/example_sce.R</span></span>
 <span><span class="fu">BiocManager</span><span class="fu">::</span><span class="fu">install</span><span class="op">(</span><span class="st">"scRNAseq"</span><span class="op">)</span></span>
 <span><span class="kw"><a href="https://rdrr.io/r/base/library.html" class="external-link">library</a></span><span class="op">(</span><span class="va">scRNAseq</span><span class="op">)</span></span>
@@ -735,12 +748,10 @@ normalization reshape per-cell distributions in very different ways.</p>
 <span><span class="fu"><a href="https://rdrr.io/r/base/colnames.html" class="external-link">colnames</a></span><span class="op">(</span><span class="fu"><a href="https://rdrr.io/pkg/SummarizedExperiment/man/SummarizedExperiment-class.html" class="external-link">colData</a></span><span class="op">(</span><span class="va">example_sce</span><span class="op">)</span><span class="op">)</span> <span class="op">&lt;-</span> <span class="st">"cell_type"</span></span>
 <span></span>
 <span><span class="fu">usethis</span><span class="fu">::</span><span class="fu">use_data</span><span class="op">(</span><span class="va">example_sce</span>, overwrite <span class="op">=</span> <span class="cn">TRUE</span><span class="op">)</span></span></code></pre></div>
-<p><strong>Data structure:</strong>
+</details><p><strong>Data structure:</strong>
 <code>SingleCellExperiment</code></p>
 <p><strong>What users should be able to do:</strong></p>
 <ul>
-<li>Construct a SingleCellExperiment from a counts matrix and cell
-metadata</li>
 <li>Filter out low-expression genes</li>
 <li>Apply multiple normalization methods (CPM, log2-CPM, quantile) and
 store the normalized values as new assays in the SCE</li>
@@ -781,7 +792,9 @@ stable gene-gene correlations. Known co-expression modules — such as
 mitochondrial respiration genes, sarcomere components, and extracellular
 matrix genes — are recoverable, making this a biologically rich dataset
 for network analysis.</p>
-<div class="sourceCode" id="cb10"><pre class="downlit sourceCode r">
+<details><summary>
+Data preparation code
+</summary><div class="sourceCode" id="cb10"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="co">## data-raw/example_se.R</span></span>
 <span><span class="fu">BiocManager</span><span class="fu">::</span><span class="fu">install</span><span class="op">(</span><span class="st">"recount3"</span><span class="op">)</span></span>
 <span><span class="kw"><a href="https://rdrr.io/r/base/library.html" class="external-link">library</a></span><span class="op">(</span><span class="va">recount3</span><span class="op">)</span></span>
@@ -810,12 +823,10 @@ for network analysis.</p>
 <span>                                            drop <span class="op">=</span> <span class="cn">FALSE</span><span class="op">]</span></span>
 <span></span>
 <span><span class="fu">usethis</span><span class="fu">::</span><span class="fu">use_data</span><span class="op">(</span><span class="va">example_se</span>, overwrite <span class="op">=</span> <span class="cn">TRUE</span><span class="op">)</span></span></code></pre></div>
-<p><strong>Data structure:</strong>
+</details><p><strong>Data structure:</strong>
 <code>SummarizedExperiment</code></p>
 <p><strong>What users should be able to do:</strong></p>
 <ul>
-<li>Construct a SummarizedExperiment from a counts matrix and sample
-metadata</li>
 <li>Select the most variable genes for network construction</li>
 <li>Compute a pairwise gene-gene correlation matrix</li>
 <li>Threshold the correlation matrix into a binary adjacency matrix and
@@ -861,7 +872,9 @@ mutation status, MGMT methylation, age, and survival. The multiple
 clinical variables make ideal column annotation bars, and the known
 molecular subtypes produce distinctive gene module patterns in
 unsupervised clustering.</p>
-<div class="sourceCode" id="cb11"><pre class="downlit sourceCode r">
+<details><summary>
+Data preparation code
+</summary><div class="sourceCode" id="cb11"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="co">## data-raw/example_se.R</span></span>
 <span><span class="fu">BiocManager</span><span class="fu">::</span><span class="fu">install</span><span class="op">(</span><span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="st">"curatedTCGAData"</span>, <span class="st">"TCGAutils"</span><span class="op">)</span><span class="op">)</span></span>
 <span><span class="kw"><a href="https://rdrr.io/r/base/library.html" class="external-link">library</a></span><span class="op">(</span><span class="va">curatedTCGAData</span><span class="op">)</span></span>
@@ -891,12 +904,10 @@ unsupervised clustering.</p>
 <span><span class="op">)</span></span>
 <span></span>
 <span><span class="fu">usethis</span><span class="fu">::</span><span class="fu">use_data</span><span class="op">(</span><span class="va">example_se</span>, overwrite <span class="op">=</span> <span class="cn">TRUE</span><span class="op">)</span></span></code></pre></div>
-<p><strong>Data structure:</strong>
+</details><p><strong>Data structure:</strong>
 <code>SummarizedExperiment</code></p>
 <p><strong>What users should be able to do:</strong></p>
 <ul>
-<li>Construct a SummarizedExperiment from an expression matrix and
-sample metadata</li>
 <li>Select the most variable genes</li>
 <li>Row-scale the expression matrix (z-score or min-max
 normalization)</li>
@@ -939,7 +950,9 @@ cell types (T cells, B cells, NK cells, monocytes, dendritic cells), and
 the “right” number of PCs is actively debated: Seurat defaults to 20,
 but the intrinsic dimensionality for ~10 cell types may be closer to
 10–15. This makes the estimation question genuinely interesting.</p>
-<div class="sourceCode" id="cb12"><pre class="downlit sourceCode r">
+<details><summary>
+Data preparation code
+</summary><div class="sourceCode" id="cb12"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="co">## data-raw/example_sce.R</span></span>
 <span><span class="fu">BiocManager</span><span class="fu">::</span><span class="fu">install</span><span class="op">(</span><span class="st">"TENxPBMCData"</span><span class="op">)</span></span>
 <span><span class="kw"><a href="https://rdrr.io/r/base/library.html" class="external-link">library</a></span><span class="op">(</span><span class="va">TENxPBMCData</span><span class="op">)</span></span>
@@ -952,12 +965,10 @@ but the intrinsic dimensionality for ~10 cell types may be closer to
 <span><span class="fu"><a href="https://rdrr.io/pkg/SummarizedExperiment/man/SummarizedExperiment-class.html" class="external-link">colData</a></span><span class="op">(</span><span class="va">example_sce</span><span class="op">)</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/pkg/SummarizedExperiment/man/SummarizedExperiment-class.html" class="external-link">colData</a></span><span class="op">(</span><span class="va">example_sce</span><span class="op">)</span><span class="op">[</span>, <span class="st">"Barcode"</span>, drop <span class="op">=</span> <span class="cn">FALSE</span><span class="op">]</span></span>
 <span></span>
 <span><span class="fu">usethis</span><span class="fu">::</span><span class="fu">use_data</span><span class="op">(</span><span class="va">example_sce</span>, overwrite <span class="op">=</span> <span class="cn">TRUE</span><span class="op">)</span></span></code></pre></div>
-<p><strong>Data structure:</strong>
+</details><p><strong>Data structure:</strong>
 <code>SingleCellExperiment</code></p>
 <p><strong>What users should be able to do:</strong></p>
 <ul>
-<li>Construct a SingleCellExperiment from a counts matrix and cell
-metadata</li>
 <li>Select the most variable genes</li>
 <li>Run PCA and extract eigenvalues (variance per component, cumulative
 variance)</li>
@@ -999,7 +1010,9 @@ using CEL-Seq. The combination of donor (batch) and cell type (biology)
 creates a realistic scenario where students must distinguish technical
 from biological variation in PCA space. PCA colored by donor vs. cell
 type reveals the batch effect immediately.</p>
-<div class="sourceCode" id="cb13"><pre class="downlit sourceCode r">
+<details><summary>
+Data preparation code
+</summary><div class="sourceCode" id="cb13"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="co">## data-raw/example_sce.R</span></span>
 <span><span class="fu">BiocManager</span><span class="fu">::</span><span class="fu">install</span><span class="op">(</span><span class="st">"scRNAseq"</span><span class="op">)</span></span>
 <span><span class="kw"><a href="https://rdrr.io/r/base/library.html" class="external-link">library</a></span><span class="op">(</span><span class="va">scRNAseq</span><span class="op">)</span></span>
@@ -1013,12 +1026,10 @@ type reveals the batch effect immediately.</p>
 <span><span class="fu"><a href="https://rdrr.io/r/base/colnames.html" class="external-link">colnames</a></span><span class="op">(</span><span class="fu"><a href="https://rdrr.io/pkg/SummarizedExperiment/man/SummarizedExperiment-class.html" class="external-link">colData</a></span><span class="op">(</span><span class="va">example_sce</span><span class="op">)</span><span class="op">)</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="st">"batch"</span>, <span class="st">"cell_type"</span><span class="op">)</span></span>
 <span></span>
 <span><span class="fu">usethis</span><span class="fu">::</span><span class="fu">use_data</span><span class="op">(</span><span class="va">example_sce</span>, overwrite <span class="op">=</span> <span class="cn">TRUE</span><span class="op">)</span></span></code></pre></div>
-<p><strong>Data structure:</strong>
+</details><p><strong>Data structure:</strong>
 <code>SingleCellExperiment</code></p>
 <p><strong>What users should be able to do:</strong></p>
 <ul>
-<li>Construct a SingleCellExperiment from a counts matrix and cell
-metadata</li>
 <li>Select the most variable genes</li>
 <li>Quantify batch effects by fitting a linear model of each PC against
 the batch variable and extracting R² values</li>
@@ -1064,7 +1075,9 @@ cells), enabling students to validate their markers against published
 biology. Note: this is the <strong>mouse</strong> version — Project 4
 uses the human dataset from the same study, so code cannot be directly
 shared.</p>
-<div class="sourceCode" id="cb14"><pre class="downlit sourceCode r">
+<details><summary>
+Data preparation code
+</summary><div class="sourceCode" id="cb14"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="co">## data-raw/example_sce.R</span></span>
 <span><span class="fu">BiocManager</span><span class="fu">::</span><span class="fu">install</span><span class="op">(</span><span class="st">"scRNAseq"</span><span class="op">)</span></span>
 <span><span class="kw"><a href="https://rdrr.io/r/base/library.html" class="external-link">library</a></span><span class="op">(</span><span class="va">scRNAseq</span><span class="op">)</span></span>
@@ -1078,12 +1091,10 @@ shared.</p>
 <span><span class="fu"><a href="https://rdrr.io/r/base/colnames.html" class="external-link">colnames</a></span><span class="op">(</span><span class="fu"><a href="https://rdrr.io/pkg/SummarizedExperiment/man/SummarizedExperiment-class.html" class="external-link">colData</a></span><span class="op">(</span><span class="va">example_sce</span><span class="op">)</span><span class="op">)</span> <span class="op">&lt;-</span> <span class="st">"cell_type"</span></span>
 <span></span>
 <span><span class="fu">usethis</span><span class="fu">::</span><span class="fu">use_data</span><span class="op">(</span><span class="va">example_sce</span>, overwrite <span class="op">=</span> <span class="cn">TRUE</span><span class="op">)</span></span></code></pre></div>
-<p><strong>Data structure:</strong>
+</details><p><strong>Data structure:</strong>
 <code>SingleCellExperiment</code></p>
 <p><strong>What users should be able to do:</strong></p>
 <ul>
-<li>Construct a SingleCellExperiment from a counts matrix and cell
-metadata</li>
 <li>Filter out low-expression genes</li>
 <li>Perform one-vs-rest statistical testing per cell type: compute log2
 fold changes, Wilcoxon p-values, BH-adjusted p-values, and rank genes
@@ -1142,7 +1153,7 @@ filterable gene table</p>
 <tr class="even">
 <td>2</td>
 <td>Sample Similarity</td>
-<td>Parathyroid adenoma</td>
+<td>Macrophage stimulation</td>
 <td>Human</td>
 <td>SE</td>
 <td>heatmap + dendrogram</td>
@@ -1155,7 +1166,7 @@ filterable gene table</p>
 <td>Mouse</td>
 <td>SE</td>
 <td>volcano / MA</td>
-<td>—</td>
+<td>DESeq2</td>
 </tr>
 <tr class="even">
 <td>4</td>
