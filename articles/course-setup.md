@@ -16,14 +16,21 @@ block below once on a fresh R installation will get you fully set up.
 ## Prerequisites
 
 - **R ≥ 4.5.0** — install from [CRAN](https://cran.r-project.org/)
+- If on Windows, install Rtools from
+  [CRAN](https://cran.r-project.org/bin/windows/Rtools/) - this is
+  required to compile some packages with C/C++ code.
 - **RStudio** (recommended) or Positron
+  - Download from [RStudio](https://posit.co/download/rstudio-desktop/)
+- Bioconductor v3.22
 
 ## Install All Packages
 
-Copy and run the entire block below in your R console. It installs: 1.
-BiocManager (needed to install Bioconductor packages) 2. CRAN packages
-(development tools, Shiny stack, analysis dependencies) 3. Bioconductor
-packages (data containers, datasets, annotation tools)
+Copy and run the entire block below in your R console. It installs:
+
+1.  BiocManager (needed to install Bioconductor packages)
+2.  CRAN packages (development tools, Shiny stack, analysis
+    dependencies)
+3.  Bioconductor packages (data containers, datasets, annotation tools)
 
 ``` r
 if (!requireNamespace("BiocManager", quietly = TRUE))
@@ -68,7 +75,7 @@ bioc_pkgs <- c(
   "TENxPBMCData"
 )
 
-BiocManager::install(bioc_pkgs)
+BiocManager::install(bioc_pkgs, version = "3.22")
 ```
 
 ## Verify Installation
