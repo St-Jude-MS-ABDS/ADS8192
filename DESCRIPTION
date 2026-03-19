@@ -23,7 +23,8 @@ Imports:
     rlang,
     methods,
     stats,
-    utils
+    utils,
+    SingleCellExperiment
 Suggests:
     testthat (>= 3.0.0),
     airway,
@@ -34,7 +35,13 @@ Suggests:
     knitr,
     rmarkdown,
     ComplexHeatmap,
-    pkgdown
+    pkgdown,
+    scRNAseq,
+    recount3,
+    curatedTCGAData,
+    msigdbr,
+    TENxPBMCData,
+    DESeq2
 Config/testthat/edition: 3
 VignetteBuilder: knitr
 URL: https://github.com/St-Jude-MS-ABDS/ADS8192, https://automatic-engine-4qp7m5e.pages.github.io/
