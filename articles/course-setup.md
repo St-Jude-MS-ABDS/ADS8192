@@ -10,8 +10,9 @@ block below once on a fresh R installation will get you fully set up.
 > **Tip:** If you have already installed some of these packages,
 > re-running
 > [`install.packages()`](https://rdrr.io/r/utils/install.packages.html)
-> or `BiocManager::install()` will simply skip packages that are already
-> up to date.
+> or
+> [`BiocManager::install()`](https://bioconductor.github.io/BiocManager/reference/install.html)
+> will simply skip packages that are already up to date.
 
 ## Prerequisites
 
@@ -94,8 +95,8 @@ library(testthat)
 
 If any package fails to load, re-run the relevant
 [`install.packages()`](https://rdrr.io/r/utils/install.packages.html) or
-`BiocManager::install()` call for that package and check the error
-message.
+[`BiocManager::install()`](https://bioconductor.github.io/BiocManager/reference/install.html)
+call for that package and check the error message.
 
 ## Install the Course Reference Package
 

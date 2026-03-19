@@ -72,7 +72,7 @@
                         <h4 data-toc-skip class="author">Jared
 Andrews</h4>
             
-            <h4 data-toc-skip class="date">2026-03-18</h4>
+            <h4 data-toc-skip class="date">2026-03-19</h4>
       
       <small class="dont-index">Source: <a href="https://github.com/St-Jude-MS-ABDS/ADS8192/blob/main/vignettes/articles/project-selection.Rmd" class="external-link"><code>vignettes/articles/project-selection.Rmd</code></a></small>
       <div class="d-none name"><code>project-selection.Rmd</code></div>
@@ -197,7 +197,7 @@ genes.</p>
 <details><summary>
 Data preparation code
 </summary><div class="sourceCode" id="cb1"><pre class="downlit sourceCode r">
-<code class="sourceCode R"><span><span class="fu">BiocManager</span><span class="fu">::</span><span class="fu">install</span><span class="op">(</span><span class="st">"airway"</span><span class="op">)</span></span>
+<code class="sourceCode R"><span><span class="fu">BiocManager</span><span class="fu">::</span><span class="fu"><a href="https://bioconductor.github.io/BiocManager/reference/install.html" class="external-link">install</a></span><span class="op">(</span><span class="st">"airway"</span><span class="op">)</span></span>
 <span><span class="kw"><a href="https://rdrr.io/r/base/library.html" class="external-link">library</a></span><span class="op">(</span><span class="va">airway</span><span class="op">)</span></span>
 <span><span class="kw"><a href="https://rdrr.io/r/base/library.html" class="external-link">library</a></span><span class="op">(</span><span class="va"><a href="https://bioconductor.org/packages/SummarizedExperiment" class="external-link">SummarizedExperiment</a></span><span class="op">)</span></span>
 <span></span>
@@ -244,15 +244,15 @@ makes UMAP parameters visually interpretable.</p>
 Data preparation code
 </summary><div class="sourceCode" id="cb2"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="co">## data-raw/example_sce.R</span></span>
-<span><span class="fu">BiocManager</span><span class="fu">::</span><span class="fu">install</span><span class="op">(</span><span class="st">"scRNAseq"</span><span class="op">)</span></span>
+<span><span class="fu">BiocManager</span><span class="fu">::</span><span class="fu"><a href="https://bioconductor.github.io/BiocManager/reference/install.html" class="external-link">install</a></span><span class="op">(</span><span class="st">"scRNAseq"</span><span class="op">)</span></span>
 <span><span class="kw"><a href="https://rdrr.io/r/base/library.html" class="external-link">library</a></span><span class="op">(</span><span class="va">scRNAseq</span><span class="op">)</span></span>
 <span><span class="kw"><a href="https://rdrr.io/r/base/library.html" class="external-link">library</a></span><span class="op">(</span><span class="va">SingleCellExperiment</span><span class="op">)</span></span>
 <span></span>
-<span><span class="va">sce</span> <span class="op">&lt;-</span> <span class="fu">ZeiselBrainData</span><span class="op">(</span><span class="op">)</span></span>
+<span><span class="va">sce</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/pkg/scRNAseq/man/ZeiselBrainData.html" class="external-link">ZeiselBrainData</a></span><span class="op">(</span><span class="op">)</span></span>
 <span><span class="va">example_sce</span> <span class="op">&lt;-</span> <span class="va">sce</span></span>
 <span></span>
 <span><span class="co"># Keep only counts + key metadata</span></span>
-<span><span class="fu"><a href="https://rdrr.io/pkg/SummarizedExperiment/man/SummarizedExperiment-class.html" class="external-link">assays</a></span><span class="op">(</span><span class="va">example_sce</span><span class="op">)</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/base/list.html" class="external-link">list</a></span><span class="op">(</span>counts <span class="op">=</span> <span class="fu">counts</span><span class="op">(</span><span class="va">example_sce</span><span class="op">)</span><span class="op">)</span></span>
+<span><span class="fu"><a href="https://rdrr.io/pkg/SummarizedExperiment/man/SummarizedExperiment-class.html" class="external-link">assays</a></span><span class="op">(</span><span class="va">example_sce</span><span class="op">)</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/base/list.html" class="external-link">list</a></span><span class="op">(</span>counts <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/pkg/BiocGenerics/man/dge.html" class="external-link">counts</a></span><span class="op">(</span><span class="va">example_sce</span><span class="op">)</span><span class="op">)</span></span>
 <span><span class="fu"><a href="https://rdrr.io/pkg/SummarizedExperiment/man/SummarizedExperiment-class.html" class="external-link">colData</a></span><span class="op">(</span><span class="va">example_sce</span><span class="op">)</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/pkg/SummarizedExperiment/man/SummarizedExperiment-class.html" class="external-link">colData</a></span><span class="op">(</span><span class="va">example_sce</span><span class="op">)</span><span class="op">[</span>, <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="st">"level1class"</span>, <span class="st">"level2class"</span><span class="op">)</span><span class="op">]</span></span>
 <span><span class="fu"><a href="https://rdrr.io/r/base/colnames.html" class="external-link">colnames</a></span><span class="op">(</span><span class="fu"><a href="https://rdrr.io/pkg/SummarizedExperiment/man/SummarizedExperiment-class.html" class="external-link">colData</a></span><span class="op">(</span><span class="va">example_sce</span><span class="op">)</span><span class="op">)</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="st">"cell_type"</span>, <span class="st">"cell_subtype"</span><span class="op">)</span></span>
 <span></span>
@@ -305,7 +305,7 @@ together, with donor effects visible within each treatment group.</p>
 Data preparation code
 </summary><div class="sourceCode" id="cb3"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="co">## data-raw/example_se.R</span></span>
-<span><span class="fu">BiocManager</span><span class="fu">::</span><span class="fu">install</span><span class="op">(</span><span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="st">"macrophage"</span>, <span class="st">"tximeta"</span><span class="op">)</span><span class="op">)</span></span>
+<span><span class="fu">BiocManager</span><span class="fu">::</span><span class="fu"><a href="https://bioconductor.github.io/BiocManager/reference/install.html" class="external-link">install</a></span><span class="op">(</span><span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="st">"macrophage"</span>, <span class="st">"tximeta"</span><span class="op">)</span><span class="op">)</span></span>
 <span><span class="kw"><a href="https://rdrr.io/r/base/library.html" class="external-link">library</a></span><span class="op">(</span><span class="va">macrophage</span><span class="op">)</span></span>
 <span><span class="kw"><a href="https://rdrr.io/r/base/library.html" class="external-link">library</a></span><span class="op">(</span><span class="va">tximeta</span><span class="op">)</span></span>
 <span><span class="kw"><a href="https://rdrr.io/r/base/library.html" class="external-link">library</a></span><span class="op">(</span><span class="va"><a href="https://bioconductor.org/packages/SummarizedExperiment" class="external-link">SummarizedExperiment</a></span><span class="op">)</span></span>
@@ -378,18 +378,18 @@ power and stable dispersion estimates. Available via
 Data preparation code
 </summary><div class="sourceCode" id="cb4"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="co">## data-raw/example_se.R</span></span>
-<span><span class="fu">BiocManager</span><span class="fu">::</span><span class="fu">install</span><span class="op">(</span><span class="st">"recount3"</span><span class="op">)</span></span>
-<span><span class="kw"><a href="https://rdrr.io/r/base/library.html" class="external-link">library</a></span><span class="op">(</span><span class="va">recount3</span><span class="op">)</span></span>
+<span><span class="fu">BiocManager</span><span class="fu">::</span><span class="fu"><a href="https://bioconductor.github.io/BiocManager/reference/install.html" class="external-link">install</a></span><span class="op">(</span><span class="st">"recount3"</span><span class="op">)</span></span>
+<span><span class="kw"><a href="https://rdrr.io/r/base/library.html" class="external-link">library</a></span><span class="op">(</span><span class="va"><a href="https://github.com/LieberInstitute/recount3" class="external-link">recount3</a></span><span class="op">)</span></span>
 <span><span class="kw"><a href="https://rdrr.io/r/base/library.html" class="external-link">library</a></span><span class="op">(</span><span class="va"><a href="https://bioconductor.org/packages/SummarizedExperiment" class="external-link">SummarizedExperiment</a></span><span class="op">)</span></span>
 <span></span>
 <span><span class="co"># Access the Bottomly et al. dataset via recount3</span></span>
-<span><span class="va">human_projects</span> <span class="op">&lt;-</span> <span class="fu">available_projects</span><span class="op">(</span><span class="op">)</span></span>
+<span><span class="va">human_projects</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/pkg/recount3/man/available_projects.html" class="external-link">available_projects</a></span><span class="op">(</span><span class="op">)</span></span>
 <span><span class="va">proj</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/base/subset.html" class="external-link">subset</a></span><span class="op">(</span><span class="va">human_projects</span>, <span class="va">file_source</span> <span class="op">==</span> <span class="st">"sra"</span> <span class="op">&amp;</span></span>
 <span>                 <span class="va">project</span> <span class="op">==</span> <span class="st">"SRP001540"</span><span class="op">)</span></span>
-<span><span class="va">rse</span> <span class="op">&lt;-</span> <span class="fu">create_rse</span><span class="op">(</span><span class="va">proj</span><span class="op">)</span></span>
+<span><span class="va">rse</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/pkg/recount3/man/create_rse.html" class="external-link">create_rse</a></span><span class="op">(</span><span class="va">proj</span><span class="op">)</span></span>
 <span></span>
 <span><span class="co"># Transform to integer counts (DESeq2 requires integer input)</span></span>
-<span><span class="fu"><a href="https://rdrr.io/pkg/SummarizedExperiment/man/SummarizedExperiment-class.html" class="external-link">assay</a></span><span class="op">(</span><span class="va">rse</span>, <span class="st">"counts"</span><span class="op">)</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/base/Round.html" class="external-link">round</a></span><span class="op">(</span><span class="fu">transform_counts</span><span class="op">(</span><span class="va">rse</span><span class="op">)</span><span class="op">)</span></span>
+<span><span class="fu"><a href="https://rdrr.io/pkg/SummarizedExperiment/man/SummarizedExperiment-class.html" class="external-link">assay</a></span><span class="op">(</span><span class="va">rse</span>, <span class="st">"counts"</span><span class="op">)</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/base/Round.html" class="external-link">round</a></span><span class="op">(</span><span class="fu"><a href="https://rdrr.io/pkg/recount3/man/transform_counts.html" class="external-link">transform_counts</a></span><span class="op">(</span><span class="va">rse</span><span class="op">)</span><span class="op">)</span></span>
 <span></span>
 <span><span class="co"># Simplify colData - extract strain from attributes</span></span>
 <span><span class="va">example_se</span> <span class="op">&lt;-</span> <span class="va">rse</span></span>
@@ -453,14 +453,14 @@ optimal number of clusters.</p>
 Data preparation code
 </summary><div class="sourceCode" id="cb5"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="co">## data-raw/example_sce.R</span></span>
-<span><span class="fu">BiocManager</span><span class="fu">::</span><span class="fu">install</span><span class="op">(</span><span class="st">"scRNAseq"</span><span class="op">)</span></span>
+<span><span class="fu">BiocManager</span><span class="fu">::</span><span class="fu"><a href="https://bioconductor.github.io/BiocManager/reference/install.html" class="external-link">install</a></span><span class="op">(</span><span class="st">"scRNAseq"</span><span class="op">)</span></span>
 <span><span class="kw"><a href="https://rdrr.io/r/base/library.html" class="external-link">library</a></span><span class="op">(</span><span class="va">scRNAseq</span><span class="op">)</span></span>
 <span><span class="kw"><a href="https://rdrr.io/r/base/library.html" class="external-link">library</a></span><span class="op">(</span><span class="va">SingleCellExperiment</span><span class="op">)</span></span>
 <span></span>
-<span><span class="va">sce</span> <span class="op">&lt;-</span> <span class="fu">BaronPancreasData</span><span class="op">(</span><span class="st">"human"</span><span class="op">)</span></span>
+<span><span class="va">sce</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/pkg/scRNAseq/man/BaronPancreasData.html" class="external-link">BaronPancreasData</a></span><span class="op">(</span><span class="st">"human"</span><span class="op">)</span></span>
 <span><span class="va">example_sce</span> <span class="op">&lt;-</span> <span class="va">sce</span></span>
 <span></span>
-<span><span class="fu"><a href="https://rdrr.io/pkg/SummarizedExperiment/man/SummarizedExperiment-class.html" class="external-link">assays</a></span><span class="op">(</span><span class="va">example_sce</span><span class="op">)</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/base/list.html" class="external-link">list</a></span><span class="op">(</span>counts <span class="op">=</span> <span class="fu">counts</span><span class="op">(</span><span class="va">example_sce</span><span class="op">)</span><span class="op">)</span></span>
+<span><span class="fu"><a href="https://rdrr.io/pkg/SummarizedExperiment/man/SummarizedExperiment-class.html" class="external-link">assays</a></span><span class="op">(</span><span class="va">example_sce</span><span class="op">)</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/base/list.html" class="external-link">list</a></span><span class="op">(</span>counts <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/pkg/BiocGenerics/man/dge.html" class="external-link">counts</a></span><span class="op">(</span><span class="va">example_sce</span><span class="op">)</span><span class="op">)</span></span>
 <span><span class="fu"><a href="https://rdrr.io/pkg/SummarizedExperiment/man/SummarizedExperiment-class.html" class="external-link">colData</a></span><span class="op">(</span><span class="va">example_sce</span><span class="op">)</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/pkg/SummarizedExperiment/man/SummarizedExperiment-class.html" class="external-link">colData</a></span><span class="op">(</span><span class="va">example_sce</span><span class="op">)</span><span class="op">[</span>, <span class="st">"label"</span>, drop <span class="op">=</span> <span class="cn">FALSE</span><span class="op">]</span></span>
 <span><span class="fu"><a href="https://rdrr.io/r/base/colnames.html" class="external-link">colnames</a></span><span class="op">(</span><span class="fu"><a href="https://rdrr.io/pkg/SummarizedExperiment/man/SummarizedExperiment-class.html" class="external-link">colData</a></span><span class="op">(</span><span class="va">example_sce</span><span class="op">)</span><span class="op">)</span> <span class="op">&lt;-</span> <span class="st">"cell_type"</span></span>
 <span></span>
@@ -510,11 +510,11 @@ variation create natural QC outliers that students must detect.</p>
 Data preparation code
 </summary><div class="sourceCode" id="cb6"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="co">## data-raw/example_sce.R</span></span>
-<span><span class="fu">BiocManager</span><span class="fu">::</span><span class="fu">install</span><span class="op">(</span><span class="st">"scRNAseq"</span><span class="op">)</span></span>
+<span><span class="fu">BiocManager</span><span class="fu">::</span><span class="fu"><a href="https://bioconductor.github.io/BiocManager/reference/install.html" class="external-link">install</a></span><span class="op">(</span><span class="st">"scRNAseq"</span><span class="op">)</span></span>
 <span><span class="kw"><a href="https://rdrr.io/r/base/library.html" class="external-link">library</a></span><span class="op">(</span><span class="va">scRNAseq</span><span class="op">)</span></span>
 <span><span class="kw"><a href="https://rdrr.io/r/base/library.html" class="external-link">library</a></span><span class="op">(</span><span class="va">SingleCellExperiment</span><span class="op">)</span></span>
 <span></span>
-<span><span class="va">sce</span> <span class="op">&lt;-</span> <span class="fu">LunSpikeInData</span><span class="op">(</span><span class="op">)</span></span>
+<span><span class="va">sce</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/pkg/scRNAseq/man/LunSpikeInData.html" class="external-link">LunSpikeInData</a></span><span class="op">(</span><span class="op">)</span></span>
 <span><span class="va">example_sce</span> <span class="op">&lt;-</span> <span class="va">sce</span></span>
 <span></span>
 <span><span class="co"># Mark ERCC spike-ins in rowData</span></span>
@@ -573,17 +573,17 @@ exploring variance-based feature selection.</p>
 Data preparation code
 </summary><div class="sourceCode" id="cb7"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="co">## data-raw/example_sce.R</span></span>
-<span><span class="fu">BiocManager</span><span class="fu">::</span><span class="fu">install</span><span class="op">(</span><span class="st">"scRNAseq"</span><span class="op">)</span></span>
+<span><span class="fu">BiocManager</span><span class="fu">::</span><span class="fu"><a href="https://bioconductor.github.io/BiocManager/reference/install.html" class="external-link">install</a></span><span class="op">(</span><span class="st">"scRNAseq"</span><span class="op">)</span></span>
 <span><span class="kw"><a href="https://rdrr.io/r/base/library.html" class="external-link">library</a></span><span class="op">(</span><span class="va">scRNAseq</span><span class="op">)</span></span>
 <span><span class="kw"><a href="https://rdrr.io/r/base/library.html" class="external-link">library</a></span><span class="op">(</span><span class="va">SingleCellExperiment</span><span class="op">)</span></span>
 <span></span>
-<span><span class="va">sce</span> <span class="op">&lt;-</span> <span class="fu">MacoskoRetinaData</span><span class="op">(</span><span class="op">)</span></span>
+<span><span class="va">sce</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/pkg/scRNAseq/man/MacoskoRetinaData.html" class="external-link">MacoskoRetinaData</a></span><span class="op">(</span><span class="op">)</span></span>
 <span><span class="fu"><a href="https://rdrr.io/r/base/Random.html" class="external-link">set.seed</a></span><span class="op">(</span><span class="fl">42</span><span class="op">)</span></span>
 <span><span class="co"># Subsample to 10000 cells for package size (full dataset has ~44k cells)</span></span>
 <span><span class="va">keep_cells</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/base/sample.html" class="external-link">sample</a></span><span class="op">(</span><span class="fu"><a href="https://rdrr.io/r/base/nrow.html" class="external-link">ncol</a></span><span class="op">(</span><span class="va">sce</span><span class="op">)</span>, <span class="fl">10000</span><span class="op">)</span></span>
 <span><span class="va">example_sce</span> <span class="op">&lt;-</span> <span class="va">sce</span><span class="op">[</span>, <span class="va">keep_cells</span><span class="op">]</span></span>
 <span></span>
-<span><span class="fu"><a href="https://rdrr.io/pkg/SummarizedExperiment/man/SummarizedExperiment-class.html" class="external-link">assays</a></span><span class="op">(</span><span class="va">example_sce</span><span class="op">)</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/base/list.html" class="external-link">list</a></span><span class="op">(</span>counts <span class="op">=</span> <span class="fu">counts</span><span class="op">(</span><span class="va">example_sce</span><span class="op">)</span><span class="op">)</span></span>
+<span><span class="fu"><a href="https://rdrr.io/pkg/SummarizedExperiment/man/SummarizedExperiment-class.html" class="external-link">assays</a></span><span class="op">(</span><span class="va">example_sce</span><span class="op">)</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/base/list.html" class="external-link">list</a></span><span class="op">(</span>counts <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/pkg/BiocGenerics/man/dge.html" class="external-link">counts</a></span><span class="op">(</span><span class="va">example_sce</span><span class="op">)</span><span class="op">)</span></span>
 <span><span class="co"># Cluster labels from the original paper</span></span>
 <span><span class="fu"><a href="https://rdrr.io/pkg/SummarizedExperiment/man/SummarizedExperiment-class.html" class="external-link">colData</a></span><span class="op">(</span><span class="va">example_sce</span><span class="op">)</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/pkg/SummarizedExperiment/man/SummarizedExperiment-class.html" class="external-link">colData</a></span><span class="op">(</span><span class="va">example_sce</span><span class="op">)</span><span class="op">[</span>, <span class="st">"cluster"</span>, drop <span class="op">=</span> <span class="cn">FALSE</span><span class="op">]</span></span>
 <span></span>
@@ -638,16 +638,16 @@ data.</p>
 Data preparation code
 </summary><div class="sourceCode" id="cb8"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="co">## data-raw/example_se.R</span></span>
-<span><span class="fu">BiocManager</span><span class="fu">::</span><span class="fu">install</span><span class="op">(</span><span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="st">"curatedTCGAData"</span>, <span class="st">"TCGAutils"</span><span class="op">)</span><span class="op">)</span></span>
+<span><span class="fu">BiocManager</span><span class="fu">::</span><span class="fu"><a href="https://bioconductor.github.io/BiocManager/reference/install.html" class="external-link">install</a></span><span class="op">(</span><span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="st">"curatedTCGAData"</span>, <span class="st">"TCGAutils"</span><span class="op">)</span><span class="op">)</span></span>
 <span><span class="fu"><a href="https://rdrr.io/r/utils/install.packages.html" class="external-link">install.packages</a></span><span class="op">(</span><span class="st">"msigdbr"</span><span class="op">)</span></span>
 <span><span class="kw"><a href="https://rdrr.io/r/base/library.html" class="external-link">library</a></span><span class="op">(</span><span class="va">curatedTCGAData</span><span class="op">)</span></span>
 <span><span class="kw"><a href="https://rdrr.io/r/base/library.html" class="external-link">library</a></span><span class="op">(</span><span class="va">TCGAutils</span><span class="op">)</span></span>
 <span><span class="kw"><a href="https://rdrr.io/r/base/library.html" class="external-link">library</a></span><span class="op">(</span><span class="va"><a href="https://bioconductor.org/packages/SummarizedExperiment" class="external-link">SummarizedExperiment</a></span><span class="op">)</span></span>
 <span></span>
 <span><span class="co"># Download BRCA RNA-seq data</span></span>
-<span><span class="va">brca</span> <span class="op">&lt;-</span> <span class="fu">curatedTCGAData</span><span class="op">(</span><span class="st">"BRCA"</span>, <span class="st">"RNASeq2*"</span>, version <span class="op">=</span> <span class="st">"2.0.1"</span>,</span>
+<span><span class="va">brca</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/pkg/curatedTCGAData/man/curatedTCGAData.html" class="external-link">curatedTCGAData</a></span><span class="op">(</span><span class="st">"BRCA"</span>, <span class="st">"RNASeq2*"</span>, version <span class="op">=</span> <span class="st">"2.0.1"</span>,</span>
 <span>                         dry.run <span class="op">=</span> <span class="cn">FALSE</span><span class="op">)</span></span>
-<span><span class="va">rse</span> <span class="op">&lt;-</span> <span class="fu">experiments</span><span class="op">(</span><span class="va">brca</span><span class="op">)</span><span class="op">[[</span><span class="fl">1</span><span class="op">]</span><span class="op">]</span></span>
+<span><span class="va">rse</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://github.com/waldronlab/MultiAssayExperiment/reference/MultiAssayExperiment-methods.html" class="external-link">experiments</a></span><span class="op">(</span><span class="va">brca</span><span class="op">)</span><span class="op">[[</span><span class="fl">1</span><span class="op">]</span><span class="op">]</span></span>
 <span></span>
 <span><span class="co"># Subset to 200 samples for package size</span></span>
 <span><span class="fu"><a href="https://rdrr.io/r/base/Random.html" class="external-link">set.seed</a></span><span class="op">(</span><span class="fl">42</span><span class="op">)</span></span>
@@ -665,7 +665,7 @@ Data preparation code
 <span></span>
 <span><span class="va">example_se</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/pkg/SummarizedExperiment/man/SummarizedExperiment-class.html" class="external-link">SummarizedExperiment</a></span><span class="op">(</span></span>
 <span>  assays <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/list.html" class="external-link">list</a></span><span class="op">(</span>exprs <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/pkg/SummarizedExperiment/man/SummarizedExperiment-class.html" class="external-link">assay</a></span><span class="op">(</span><span class="va">rse</span><span class="op">)</span><span class="op">)</span>,</span>
-<span>  colData <span class="op">=</span> <span class="fu">DataFrame</span><span class="op">(</span></span>
+<span>  colData <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/pkg/S4Vectors/man/DataFrame-class.html" class="external-link">DataFrame</a></span><span class="op">(</span></span>
 <span>    sample_id   <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/colnames.html" class="external-link">colnames</a></span><span class="op">(</span><span class="va">rse</span><span class="op">)</span>,</span>
 <span>    er_status   <span class="op">=</span> <span class="va">clin</span><span class="op">$</span><span class="va">pathologic_stage</span>,</span>
 <span>    pam50       <span class="op">=</span> <span class="va">clin</span><span class="op">$</span><span class="va">subtype_PAM50.mRNA</span></span>
@@ -674,7 +674,7 @@ Data preparation code
 <span></span>
 <span><span class="co"># Bundle a small set of hallmark gene sets</span></span>
 <span><span class="kw"><a href="https://rdrr.io/r/base/library.html" class="external-link">library</a></span><span class="op">(</span><span class="va"><a href="https://igordot.github.io/msigdbr/" class="external-link">msigdbr</a></span><span class="op">)</span></span>
-<span><span class="va">hallmarks</span> <span class="op">&lt;-</span> <span class="fu">msigdbr</span><span class="op">(</span>species <span class="op">=</span> <span class="st">"Homo sapiens"</span>, category <span class="op">=</span> <span class="st">"H"</span><span class="op">)</span></span>
+<span><span class="va">hallmarks</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://igordot.github.io/msigdbr/reference/msigdbr.html" class="external-link">msigdbr</a></span><span class="op">(</span>species <span class="op">=</span> <span class="st">"Homo sapiens"</span>, category <span class="op">=</span> <span class="st">"H"</span><span class="op">)</span></span>
 <span><span class="va">example_gene_sets</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/base/split.html" class="external-link">split</a></span><span class="op">(</span><span class="va">hallmarks</span><span class="op">$</span><span class="va">gene_symbol</span>, <span class="va">hallmarks</span><span class="op">$</span><span class="va">gs_name</span><span class="op">)</span></span>
 <span><span class="co"># Keep 10 immune/proliferation-relevant sets</span></span>
 <span><span class="va">keep_sets</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span></span>
@@ -736,14 +736,14 @@ normalization reshape per-cell distributions in very different ways.</p>
 Data preparation code
 </summary><div class="sourceCode" id="cb9"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="co">## data-raw/example_sce.R</span></span>
-<span><span class="fu">BiocManager</span><span class="fu">::</span><span class="fu">install</span><span class="op">(</span><span class="st">"scRNAseq"</span><span class="op">)</span></span>
+<span><span class="fu">BiocManager</span><span class="fu">::</span><span class="fu"><a href="https://bioconductor.github.io/BiocManager/reference/install.html" class="external-link">install</a></span><span class="op">(</span><span class="st">"scRNAseq"</span><span class="op">)</span></span>
 <span><span class="kw"><a href="https://rdrr.io/r/base/library.html" class="external-link">library</a></span><span class="op">(</span><span class="va">scRNAseq</span><span class="op">)</span></span>
 <span><span class="kw"><a href="https://rdrr.io/r/base/library.html" class="external-link">library</a></span><span class="op">(</span><span class="va">SingleCellExperiment</span><span class="op">)</span></span>
 <span></span>
-<span><span class="va">sce</span> <span class="op">&lt;-</span> <span class="fu">MuraroPancreasData</span><span class="op">(</span><span class="op">)</span></span>
+<span><span class="va">sce</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/pkg/scRNAseq/man/MuraroPancreasData.html" class="external-link">MuraroPancreasData</a></span><span class="op">(</span><span class="op">)</span></span>
 <span><span class="va">example_sce</span> <span class="op">&lt;-</span> <span class="va">sce</span></span>
 <span></span>
-<span><span class="fu"><a href="https://rdrr.io/pkg/SummarizedExperiment/man/SummarizedExperiment-class.html" class="external-link">assays</a></span><span class="op">(</span><span class="va">example_sce</span><span class="op">)</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/base/list.html" class="external-link">list</a></span><span class="op">(</span>counts <span class="op">=</span> <span class="fu">counts</span><span class="op">(</span><span class="va">example_sce</span><span class="op">)</span><span class="op">)</span></span>
+<span><span class="fu"><a href="https://rdrr.io/pkg/SummarizedExperiment/man/SummarizedExperiment-class.html" class="external-link">assays</a></span><span class="op">(</span><span class="va">example_sce</span><span class="op">)</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/base/list.html" class="external-link">list</a></span><span class="op">(</span>counts <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/pkg/BiocGenerics/man/dge.html" class="external-link">counts</a></span><span class="op">(</span><span class="va">example_sce</span><span class="op">)</span><span class="op">)</span></span>
 <span><span class="fu"><a href="https://rdrr.io/pkg/SummarizedExperiment/man/SummarizedExperiment-class.html" class="external-link">colData</a></span><span class="op">(</span><span class="va">example_sce</span><span class="op">)</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/pkg/SummarizedExperiment/man/SummarizedExperiment-class.html" class="external-link">colData</a></span><span class="op">(</span><span class="va">example_sce</span><span class="op">)</span><span class="op">[</span>, <span class="st">"label"</span>, drop <span class="op">=</span> <span class="cn">FALSE</span><span class="op">]</span></span>
 <span><span class="fu"><a href="https://rdrr.io/r/base/colnames.html" class="external-link">colnames</a></span><span class="op">(</span><span class="fu"><a href="https://rdrr.io/pkg/SummarizedExperiment/man/SummarizedExperiment-class.html" class="external-link">colData</a></span><span class="op">(</span><span class="va">example_sce</span><span class="op">)</span><span class="op">)</span> <span class="op">&lt;-</span> <span class="st">"cell_type"</span></span>
 <span></span>
@@ -796,18 +796,18 @@ for network analysis.</p>
 Data preparation code
 </summary><div class="sourceCode" id="cb10"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="co">## data-raw/example_se.R</span></span>
-<span><span class="fu">BiocManager</span><span class="fu">::</span><span class="fu">install</span><span class="op">(</span><span class="st">"recount3"</span><span class="op">)</span></span>
-<span><span class="kw"><a href="https://rdrr.io/r/base/library.html" class="external-link">library</a></span><span class="op">(</span><span class="va">recount3</span><span class="op">)</span></span>
+<span><span class="fu">BiocManager</span><span class="fu">::</span><span class="fu"><a href="https://bioconductor.github.io/BiocManager/reference/install.html" class="external-link">install</a></span><span class="op">(</span><span class="st">"recount3"</span><span class="op">)</span></span>
+<span><span class="kw"><a href="https://rdrr.io/r/base/library.html" class="external-link">library</a></span><span class="op">(</span><span class="va"><a href="https://github.com/LieberInstitute/recount3" class="external-link">recount3</a></span><span class="op">)</span></span>
 <span><span class="kw"><a href="https://rdrr.io/r/base/library.html" class="external-link">library</a></span><span class="op">(</span><span class="va"><a href="https://bioconductor.org/packages/SummarizedExperiment" class="external-link">SummarizedExperiment</a></span><span class="op">)</span></span>
 <span></span>
 <span><span class="co"># Access GTEx skeletal muscle data</span></span>
-<span><span class="va">human_projects</span> <span class="op">&lt;-</span> <span class="fu">available_projects</span><span class="op">(</span><span class="op">)</span></span>
+<span><span class="va">human_projects</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/pkg/recount3/man/available_projects.html" class="external-link">available_projects</a></span><span class="op">(</span><span class="op">)</span></span>
 <span><span class="va">proj</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/base/subset.html" class="external-link">subset</a></span><span class="op">(</span><span class="va">human_projects</span>, <span class="va">file_source</span> <span class="op">==</span> <span class="st">"gtex"</span> <span class="op">&amp;</span></span>
 <span>                 <span class="va">project</span> <span class="op">==</span> <span class="st">"MUSCLE"</span><span class="op">)</span></span>
-<span><span class="va">rse</span> <span class="op">&lt;-</span> <span class="fu">create_rse</span><span class="op">(</span><span class="va">proj</span><span class="op">)</span></span>
+<span><span class="va">rse</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/pkg/recount3/man/create_rse.html" class="external-link">create_rse</a></span><span class="op">(</span><span class="va">proj</span><span class="op">)</span></span>
 <span></span>
 <span><span class="co"># Transform raw counts</span></span>
-<span><span class="fu"><a href="https://rdrr.io/pkg/SummarizedExperiment/man/SummarizedExperiment-class.html" class="external-link">assay</a></span><span class="op">(</span><span class="va">rse</span>, <span class="st">"counts"</span><span class="op">)</span> <span class="op">&lt;-</span> <span class="fu">transform_counts</span><span class="op">(</span><span class="va">rse</span><span class="op">)</span></span>
+<span><span class="fu"><a href="https://rdrr.io/pkg/SummarizedExperiment/man/SummarizedExperiment-class.html" class="external-link">assay</a></span><span class="op">(</span><span class="va">rse</span>, <span class="st">"counts"</span><span class="op">)</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/pkg/recount3/man/transform_counts.html" class="external-link">transform_counts</a></span><span class="op">(</span><span class="va">rse</span><span class="op">)</span></span>
 <span></span>
 <span><span class="co"># Subset to top 2000 genes by variance for tractable network computation</span></span>
 <span><span class="va">vars</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/base/apply.html" class="external-link">apply</a></span><span class="op">(</span><span class="fu"><a href="https://rdrr.io/pkg/SummarizedExperiment/man/SummarizedExperiment-class.html" class="external-link">assay</a></span><span class="op">(</span><span class="va">rse</span>, <span class="st">"counts"</span><span class="op">)</span>, <span class="fl">1</span>, <span class="va">var</span><span class="op">)</span></span>
@@ -876,15 +876,15 @@ unsupervised clustering.</p>
 Data preparation code
 </summary><div class="sourceCode" id="cb11"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="co">## data-raw/example_se.R</span></span>
-<span><span class="fu">BiocManager</span><span class="fu">::</span><span class="fu">install</span><span class="op">(</span><span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="st">"curatedTCGAData"</span>, <span class="st">"TCGAutils"</span><span class="op">)</span><span class="op">)</span></span>
+<span><span class="fu">BiocManager</span><span class="fu">::</span><span class="fu"><a href="https://bioconductor.github.io/BiocManager/reference/install.html" class="external-link">install</a></span><span class="op">(</span><span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="st">"curatedTCGAData"</span>, <span class="st">"TCGAutils"</span><span class="op">)</span><span class="op">)</span></span>
 <span><span class="kw"><a href="https://rdrr.io/r/base/library.html" class="external-link">library</a></span><span class="op">(</span><span class="va">curatedTCGAData</span><span class="op">)</span></span>
 <span><span class="kw"><a href="https://rdrr.io/r/base/library.html" class="external-link">library</a></span><span class="op">(</span><span class="va">TCGAutils</span><span class="op">)</span></span>
 <span><span class="kw"><a href="https://rdrr.io/r/base/library.html" class="external-link">library</a></span><span class="op">(</span><span class="va"><a href="https://bioconductor.org/packages/SummarizedExperiment" class="external-link">SummarizedExperiment</a></span><span class="op">)</span></span>
 <span></span>
 <span><span class="co"># Download GBM RNA-seq data</span></span>
-<span><span class="va">gbm</span> <span class="op">&lt;-</span> <span class="fu">curatedTCGAData</span><span class="op">(</span><span class="st">"GBM"</span>, <span class="st">"RNASeq2*"</span>, version <span class="op">=</span> <span class="st">"2.0.1"</span>,</span>
+<span><span class="va">gbm</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/pkg/curatedTCGAData/man/curatedTCGAData.html" class="external-link">curatedTCGAData</a></span><span class="op">(</span><span class="st">"GBM"</span>, <span class="st">"RNASeq2*"</span>, version <span class="op">=</span> <span class="st">"2.0.1"</span>,</span>
 <span>                        dry.run <span class="op">=</span> <span class="cn">FALSE</span><span class="op">)</span></span>
-<span><span class="va">rse</span> <span class="op">&lt;-</span> <span class="fu">experiments</span><span class="op">(</span><span class="va">gbm</span><span class="op">)</span><span class="op">[[</span><span class="fl">1</span><span class="op">]</span><span class="op">]</span></span>
+<span><span class="va">rse</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://github.com/waldronlab/MultiAssayExperiment/reference/MultiAssayExperiment-methods.html" class="external-link">experiments</a></span><span class="op">(</span><span class="va">gbm</span><span class="op">)</span><span class="op">[[</span><span class="fl">1</span><span class="op">]</span><span class="op">]</span></span>
 <span></span>
 <span><span class="co"># Subset to top 2000 variable genes</span></span>
 <span><span class="va">vars</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/base/apply.html" class="external-link">apply</a></span><span class="op">(</span><span class="fu"><a href="https://rdrr.io/pkg/SummarizedExperiment/man/SummarizedExperiment-class.html" class="external-link">assay</a></span><span class="op">(</span><span class="va">rse</span><span class="op">)</span>, <span class="fl">1</span>, <span class="va">var</span>, na.rm <span class="op">=</span> <span class="cn">TRUE</span><span class="op">)</span></span>
@@ -896,7 +896,7 @@ Data preparation code
 <span></span>
 <span><span class="va">example_se</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/pkg/SummarizedExperiment/man/SummarizedExperiment-class.html" class="external-link">SummarizedExperiment</a></span><span class="op">(</span></span>
 <span>  assays <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/list.html" class="external-link">list</a></span><span class="op">(</span>exprs <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/pkg/SummarizedExperiment/man/SummarizedExperiment-class.html" class="external-link">assay</a></span><span class="op">(</span><span class="va">rse</span><span class="op">)</span><span class="op">)</span>,</span>
-<span>  colData <span class="op">=</span> <span class="fu">DataFrame</span><span class="op">(</span></span>
+<span>  colData <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/pkg/S4Vectors/man/DataFrame-class.html" class="external-link">DataFrame</a></span><span class="op">(</span></span>
 <span>    sample_id <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/colnames.html" class="external-link">colnames</a></span><span class="op">(</span><span class="va">rse</span><span class="op">)</span>,</span>
 <span>    subtype   <span class="op">=</span> <span class="va">clin</span><span class="op">[</span><span class="fu"><a href="https://rdrr.io/r/base/colnames.html" class="external-link">colnames</a></span><span class="op">(</span><span class="va">rse</span><span class="op">)</span>, <span class="st">"subtype_Transcriptome.Subtype"</span><span class="op">]</span>,</span>
 <span>    age       <span class="op">=</span> <span class="va">clin</span><span class="op">[</span><span class="fu"><a href="https://rdrr.io/r/base/colnames.html" class="external-link">colnames</a></span><span class="op">(</span><span class="va">rse</span><span class="op">)</span>, <span class="st">"years_to_birth"</span><span class="op">]</span></span>
@@ -954,11 +954,11 @@ but the intrinsic dimensionality for ~10 cell types may be closer to
 Data preparation code
 </summary><div class="sourceCode" id="cb12"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="co">## data-raw/example_sce.R</span></span>
-<span><span class="fu">BiocManager</span><span class="fu">::</span><span class="fu">install</span><span class="op">(</span><span class="st">"TENxPBMCData"</span><span class="op">)</span></span>
+<span><span class="fu">BiocManager</span><span class="fu">::</span><span class="fu"><a href="https://bioconductor.github.io/BiocManager/reference/install.html" class="external-link">install</a></span><span class="op">(</span><span class="st">"TENxPBMCData"</span><span class="op">)</span></span>
 <span><span class="kw"><a href="https://rdrr.io/r/base/library.html" class="external-link">library</a></span><span class="op">(</span><span class="va">TENxPBMCData</span><span class="op">)</span></span>
 <span><span class="kw"><a href="https://rdrr.io/r/base/library.html" class="external-link">library</a></span><span class="op">(</span><span class="va">SingleCellExperiment</span><span class="op">)</span></span>
 <span></span>
-<span><span class="va">sce</span> <span class="op">&lt;-</span> <span class="fu">TENxPBMCData</span><span class="op">(</span><span class="st">"pbmc3k"</span><span class="op">)</span></span>
+<span><span class="va">sce</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/pkg/TENxPBMCData/man/TENxPBMCData.html" class="external-link">TENxPBMCData</a></span><span class="op">(</span><span class="st">"pbmc3k"</span><span class="op">)</span></span>
 <span><span class="va">example_sce</span> <span class="op">&lt;-</span> <span class="va">sce</span></span>
 <span></span>
 <span><span class="co"># Minimal colData — no pre-computed labels; that's fine for dim estimation</span></span>
@@ -1014,14 +1014,14 @@ type reveals the batch effect immediately.</p>
 Data preparation code
 </summary><div class="sourceCode" id="cb13"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="co">## data-raw/example_sce.R</span></span>
-<span><span class="fu">BiocManager</span><span class="fu">::</span><span class="fu">install</span><span class="op">(</span><span class="st">"scRNAseq"</span><span class="op">)</span></span>
+<span><span class="fu">BiocManager</span><span class="fu">::</span><span class="fu"><a href="https://bioconductor.github.io/BiocManager/reference/install.html" class="external-link">install</a></span><span class="op">(</span><span class="st">"scRNAseq"</span><span class="op">)</span></span>
 <span><span class="kw"><a href="https://rdrr.io/r/base/library.html" class="external-link">library</a></span><span class="op">(</span><span class="va">scRNAseq</span><span class="op">)</span></span>
 <span><span class="kw"><a href="https://rdrr.io/r/base/library.html" class="external-link">library</a></span><span class="op">(</span><span class="va">SingleCellExperiment</span><span class="op">)</span></span>
 <span></span>
-<span><span class="va">sce</span> <span class="op">&lt;-</span> <span class="fu">GrunPancreasData</span><span class="op">(</span><span class="op">)</span></span>
+<span><span class="va">sce</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/pkg/scRNAseq/man/GrunPancreasData.html" class="external-link">GrunPancreasData</a></span><span class="op">(</span><span class="op">)</span></span>
 <span><span class="va">example_sce</span> <span class="op">&lt;-</span> <span class="va">sce</span></span>
 <span></span>
-<span><span class="fu"><a href="https://rdrr.io/pkg/SummarizedExperiment/man/SummarizedExperiment-class.html" class="external-link">assays</a></span><span class="op">(</span><span class="va">example_sce</span><span class="op">)</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/base/list.html" class="external-link">list</a></span><span class="op">(</span>counts <span class="op">=</span> <span class="fu">counts</span><span class="op">(</span><span class="va">example_sce</span><span class="op">)</span><span class="op">)</span></span>
+<span><span class="fu"><a href="https://rdrr.io/pkg/SummarizedExperiment/man/SummarizedExperiment-class.html" class="external-link">assays</a></span><span class="op">(</span><span class="va">example_sce</span><span class="op">)</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/base/list.html" class="external-link">list</a></span><span class="op">(</span>counts <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/pkg/BiocGenerics/man/dge.html" class="external-link">counts</a></span><span class="op">(</span><span class="va">example_sce</span><span class="op">)</span><span class="op">)</span></span>
 <span><span class="fu"><a href="https://rdrr.io/pkg/SummarizedExperiment/man/SummarizedExperiment-class.html" class="external-link">colData</a></span><span class="op">(</span><span class="va">example_sce</span><span class="op">)</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/pkg/SummarizedExperiment/man/SummarizedExperiment-class.html" class="external-link">colData</a></span><span class="op">(</span><span class="va">example_sce</span><span class="op">)</span><span class="op">[</span>, <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="st">"donor"</span>, <span class="st">"sample"</span><span class="op">)</span><span class="op">]</span></span>
 <span><span class="fu"><a href="https://rdrr.io/r/base/colnames.html" class="external-link">colnames</a></span><span class="op">(</span><span class="fu"><a href="https://rdrr.io/pkg/SummarizedExperiment/man/SummarizedExperiment-class.html" class="external-link">colData</a></span><span class="op">(</span><span class="va">example_sce</span><span class="op">)</span><span class="op">)</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="st">"batch"</span>, <span class="st">"cell_type"</span><span class="op">)</span></span>
 <span></span>
@@ -1079,14 +1079,14 @@ shared.</p>
 Data preparation code
 </summary><div class="sourceCode" id="cb14"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="co">## data-raw/example_sce.R</span></span>
-<span><span class="fu">BiocManager</span><span class="fu">::</span><span class="fu">install</span><span class="op">(</span><span class="st">"scRNAseq"</span><span class="op">)</span></span>
+<span><span class="fu">BiocManager</span><span class="fu">::</span><span class="fu"><a href="https://bioconductor.github.io/BiocManager/reference/install.html" class="external-link">install</a></span><span class="op">(</span><span class="st">"scRNAseq"</span><span class="op">)</span></span>
 <span><span class="kw"><a href="https://rdrr.io/r/base/library.html" class="external-link">library</a></span><span class="op">(</span><span class="va">scRNAseq</span><span class="op">)</span></span>
 <span><span class="kw"><a href="https://rdrr.io/r/base/library.html" class="external-link">library</a></span><span class="op">(</span><span class="va">SingleCellExperiment</span><span class="op">)</span></span>
 <span></span>
-<span><span class="va">sce</span> <span class="op">&lt;-</span> <span class="fu">BaronPancreasData</span><span class="op">(</span><span class="st">"mouse"</span><span class="op">)</span></span>
+<span><span class="va">sce</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/pkg/scRNAseq/man/BaronPancreasData.html" class="external-link">BaronPancreasData</a></span><span class="op">(</span><span class="st">"mouse"</span><span class="op">)</span></span>
 <span><span class="va">example_sce</span> <span class="op">&lt;-</span> <span class="va">sce</span></span>
 <span></span>
-<span><span class="fu"><a href="https://rdrr.io/pkg/SummarizedExperiment/man/SummarizedExperiment-class.html" class="external-link">assays</a></span><span class="op">(</span><span class="va">example_sce</span><span class="op">)</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/base/list.html" class="external-link">list</a></span><span class="op">(</span>counts <span class="op">=</span> <span class="fu">counts</span><span class="op">(</span><span class="va">example_sce</span><span class="op">)</span><span class="op">)</span></span>
+<span><span class="fu"><a href="https://rdrr.io/pkg/SummarizedExperiment/man/SummarizedExperiment-class.html" class="external-link">assays</a></span><span class="op">(</span><span class="va">example_sce</span><span class="op">)</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/base/list.html" class="external-link">list</a></span><span class="op">(</span>counts <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/pkg/BiocGenerics/man/dge.html" class="external-link">counts</a></span><span class="op">(</span><span class="va">example_sce</span><span class="op">)</span><span class="op">)</span></span>
 <span><span class="fu"><a href="https://rdrr.io/pkg/SummarizedExperiment/man/SummarizedExperiment-class.html" class="external-link">colData</a></span><span class="op">(</span><span class="va">example_sce</span><span class="op">)</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/pkg/SummarizedExperiment/man/SummarizedExperiment-class.html" class="external-link">colData</a></span><span class="op">(</span><span class="va">example_sce</span><span class="op">)</span><span class="op">[</span>, <span class="st">"label"</span>, drop <span class="op">=</span> <span class="cn">FALSE</span><span class="op">]</span></span>
 <span><span class="fu"><a href="https://rdrr.io/r/base/colnames.html" class="external-link">colnames</a></span><span class="op">(</span><span class="fu"><a href="https://rdrr.io/pkg/SummarizedExperiment/man/SummarizedExperiment-class.html" class="external-link">colData</a></span><span class="op">(</span><span class="va">example_sce</span><span class="op">)</span><span class="op">)</span> <span class="op">&lt;-</span> <span class="st">"cell_type"</span></span>
 <span></span>
