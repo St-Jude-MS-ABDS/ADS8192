@@ -26,8 +26,30 @@ By the end of this session, you will be able to:
 1. Add the CLI entry point to the package so it works after installation
 2. Update the GitHub repository and verify installation and CLI execution in a clean session
 3. Confirm that CLI outputs match the package's R function outputs for the same inputs
+4. Explain why clean-room testing, release discipline, and backward compatibility matter for automation users
 
 **Course Learning Outcomes (CLOs):** CLO 1, 2, 3, 5, 6
+
+## Motivation
+
+For automated scientific tools, installation and release quality are part of the user experience. If a CLI only works in development mode or only on the author's machine, it is not yet robust software.
+
+This lecture matters because clean installs, output parity checks, and release discipline save other people time. They catch hidden assumptions early, prevent interface drift, and make it much more likely that a pipeline user or collaborator will get the same result you saw during development.
+
+## Evaluation Checklist
+
+Before you ship a CLI, ask:
+
+- Can a user install and run it from a clean environment with only declared dependencies?
+- Does the installed interface behave the same as the development version?
+- Do CLI outputs match the package core for the same inputs?
+- Which file names, flags, and output columns now form part of the user contract?
+- What would break if you changed those interfaces in the next release?
+- Are release steps reproducible enough for someone else in the lab to repeat?
+
+## Scientific Use Case
+
+An analysis group adds your CLI to a scheduled workflow and archives the outputs for compliance. A month later you "clean up" some file names and help text before tagging a release. Which changes are harmless refactors, and which ones break their pipeline contract?
 
 ---
 
@@ -50,6 +72,10 @@ sePCA pca --help
 R session.
 
 ---
+
+## Design Principle: Installation Is Part of the Product
+
+If a tool only works on the developer's machine, it is not ready for scientific use. Clean-room testing and output parity checks matter because they reveal hidden assumptions, missing dependencies, and accidental drift between interfaces before users discover them the hard way.
 
 # Part 1: Package the CLI Entry Point
 
@@ -561,6 +587,16 @@ Today we:
 ## Package Milestone
 
 OK - The package installs from GitHub and exposes both `run_app()` and a working Rapp-based CLI.
+
+---
+
+## Debrief & Reflection
+
+Before moving on, make sure you can answer:
+
+- Why is installation quality part of the user contract for automation tools?
+- Which parts of your CLI output now count as backward-compatibility commitments?
+- How do clean-room testing and output parity checks protect users from hidden assumptions in your development environment?
 
 ---
 

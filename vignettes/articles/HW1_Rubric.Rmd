@@ -130,7 +130,7 @@ three interfaces: R API, Shiny app, and CLI.
 - [ ] After running the launcher installer, the CLI works directly from the terminal (e.g. `mypkg pca --help`)
 - [ ] Running CLI produces the expected TSV output files
 - [ ] CLI calls your exported core functions (not raw analysis functions directly)
-- [ ] `--counts`, `--meta`, and `--output` arguments work
+- [ ] All arguments work
 - [ ] README documents both launcher installation and fallback usage
 
 ---

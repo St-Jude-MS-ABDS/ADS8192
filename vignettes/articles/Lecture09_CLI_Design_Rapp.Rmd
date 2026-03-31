@@ -26,9 +26,31 @@ By the end of this session, you will be able to:
 1. Implement a simple CLI using Rapp that calls package functions
 2. Write usage/help text and define clear inputs/outputs for commands
 3. Test CLI functionality from the terminal and interpret exit behavior
-4. Explain why CLIs improve interoperability and pipeline integration
+4. Decide when a CLI is worth adding and keep it a thin wrapper over package logic
+5. Explain why CLIs improve interoperability and pipeline integration
 
 **Course Learning Outcomes (CLOs):** CLO 1, 2, 3, 5, 6
+
+## Motivation
+
+Scientific software often needs to run without a human sitting at the keyboard. Command-line interfaces matter because they make analysis tools usable in pipelines, schedulers, shared compute environments, and repeatable scripts.
+
+This lecture is important for robust software design because a good CLI forces you to make the interface contract explicit: inputs, outputs, defaults, error behavior, and file formats all become visible. That clarity saves time for automation users and reduces drift between the command line and the underlying package logic.
+
+## Evaluation Checklist
+
+Before adding a CLI, ask:
+
+- Who needs it: pipeline users, HPC workflows, collaborators, or only interactive analysts?
+- What explicit inputs and outputs must remain stable over time?
+- Does the CLI call the same package functions as the R API and Shiny app?
+- Are error messages and exit codes useful to scripts, not just humans?
+- Would a thin wrapper over the existing package be enough?
+- Are you adding a CLI because users need automation, or because it seems impressive?
+
+## Scientific Use Case
+
+A bioinformatics core wants to run your analysis across 40 cohorts in a nightly workflow. They do not want a web app and they do not want to source R files by hand. What contract does a good CLI need to offer so that automation users can trust it?
 
 ---
 
@@ -71,6 +93,14 @@ Benefits:
 - **No IDE required**: Run on servers, HPC clusters
 
 ---
+
+## When Should You Add a CLI?
+
+Add a CLI when users need automation, batch execution, scheduler integration, or a stable entry point from another language or workflow manager. Do not add one just because a terminal interface looks advanced. A CLI is worthwhile when it exposes a clear contract around existing package logic.
+
+## Why Use Rapp Instead of Parsing Arguments Yourself?
+
+Argument parsing is infrastructure, not the scientific problem. `Rapp` lets you describe commands, help text, and argument types without hand-writing a parser, which leaves your time for the design work that matters: stable flags, explicit file formats, and DRY delegation to the package core.
 
 # Part 1: CLI Design Principles
 
@@ -612,6 +642,16 @@ Today we:
 
 ✅ A working CLI prototype with an exported launcher installer — users can run
 `sePCA pca --help` directly from the terminal after installing your package.
+
+---
+
+## Debrief & Reflection
+
+Before moving on, make sure you can answer:
+
+- When is a CLI genuinely useful, and when is it just an unnecessary extra interface?
+- Which parts of the CLI are stable user contract, and which parts are replaceable implementation details?
+- How does `Rapp` let you avoid reinventing plumbing so you can focus on I/O contracts and DRY reuse of the package core?
 
 ---
 

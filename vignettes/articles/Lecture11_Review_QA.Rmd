@@ -26,8 +26,44 @@ By the end of this session, you will be able to:
 1. Identify and resolve remaining blockers for Homework 1 submission
 2. Apply a systematic debugging workflow (reproduce → isolate → fix → test → document)
 3. Validate the end-to-end deliverable: install from GitHub, run core functions, run Shiny app, run CLI, and view pkgdown site
+4. Synthesize the durable software-design heuristics from Unit 1 and use them during peer review
 
 **Course Learning Outcomes (CLOs):** CLO 1, 2, 3, 4, 5, 6
+
+## Motivation
+
+Robust scientific software is evaluated end to end: can someone else install it, understand it, trust its outputs, and debug it when something goes wrong? A review session matters because it forces you to look at the project the way a real user, collaborator, or reviewer would.
+
+This lecture is important because systematic debugging and peer review save time. They help you find hidden assumptions, inconsistent interfaces, and weak documentation before those problems become lost hours for someone else or become embarrassing failures late in a project.
+
+## Evaluation Checklist
+
+As you review a package at the end of Unit 1, ask:
+
+- Does the project reuse strong existing infrastructure instead of rebuilding it unnecessarily?
+- Is there one clear analysis core with thin interfaces layered on top?
+- Are public contracts documented, tested, and stable across interfaces?
+- Can another user install and run it from a clean environment?
+- Are validation and error messages placed at the right boundaries?
+- Would a future collaborator understand what is core logic versus interface glue?
+
+## Scientific Use Case
+
+Imagine you inherit a small but useful lab prototype that currently exists as a pile of scripts. You have one week to turn it into something another team can install, test, run interactively, and place in a workflow. Which Unit 1 principles let you improve the software quickly without rewriting the science from scratch?
+
+---
+
+# Unit 1 Design Synthesis
+
+The specific tools in this unit matter, but the durable ideas matter more:
+
+- **Reuse strong ecosystems first.** Start by evaluating existing packages, containers, and infrastructure before writing custom replacements.
+- **One core, many interfaces.** Keep analysis logic separate from Shiny, CLI, and documentation layers.
+- **Public contracts matter.** Function signatures, file outputs, and help text become promises to users.
+- **Tests protect behavior, not ego.** They exist to catch regressions and make refactoring safe.
+- **Packaging is a distribution boundary.** It forces dependencies, documentation, and installability into the open.
+- **Validate at the boundary.** Friendly errors in functions, apps, and CLIs are part of the product.
+- **Clean-room thinking reveals truth.** If the project only works on your machine, it is not done.
 
 ---
 
@@ -584,6 +620,16 @@ sessionInfo()
 - [ ] Deploy Shiny app to shinyapps.io
 - [ ] Deploy pkgdown site to GitHub Pages
 - [ ] Add CI badges to README
+
+---
+
+## Debrief & Reflection
+
+Before submission, make sure you can answer:
+
+- Which parts of your project are intentionally simple teaching implementations, and where would you reuse existing scientific software in real work?
+- What are the strongest user-facing contracts in your package, and how do tests and clean-room checks protect them?
+- If another team had to maintain this project next semester, would they understand the boundary between core analysis logic and interface glue?
 
 ---
 

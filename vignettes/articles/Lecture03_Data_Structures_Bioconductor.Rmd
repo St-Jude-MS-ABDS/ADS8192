@@ -26,13 +26,34 @@ knitr::opts_chunk$set(
 By the end of this session, you will be able to:
 
 1. Generate a `SummarizedExperiment` object from raw assay data and sample metadata
-2. Find and use Bioconductor package documentation (vignettes/manuals) to select appropriate tools
+2. Find and use Bioconductor package documentation (vignettes/manuals) to select an appropriate existing container before building anything custom
 3. Build a complete analysis core: constructor, feature selection, analysis, summary, plotting, and export functions
 4. Prepare a bundled example dataset using a `data-raw/` script
 5. Write small, testable functions with input validation that take structured objects as input and return well-defined outputs
 6. See how one set of core functions powers three interfaces (R API, Shiny, CLI)
 
 **Course Learning Outcomes (CLOs):** CLO 1, 3
+
+## Motivation
+
+Scientific software becomes fragile very quickly when assay matrices, sample metadata, and feature annotations drift out of sync. A good data model prevents entire classes of silent mistakes before you ever write a plot, app, or pipeline.
+
+This lecture matters because robust containers and clear function contracts save time later. If your data structure is reliable and your core functions accept and return well-defined objects, you can test them more easily, hand them to collaborators with less explanation, and reuse the same analysis logic across package code, Shiny apps, and CLIs without constant rewrites.
+
+## Evaluation Checklist
+
+Before you adopt or build a data structure, ask:
+
+- Does it fit the scientific problem and expected scale?
+- Does its data model keep related pieces synchronized?
+- Is the input/output contract explicit and documented?
+- Does it interoperate with packages your collaborators already use?
+- Is it maintained and broadly understood in the community?
+- Would a thin wrapper around an existing container be safer than a new class?
+
+## Scientific Use Case
+
+A collaborator gives you raw counts, sample metadata, and gene annotations as three CSV files from a pilot RNA-seq experiment. You need exploratory analysis this week, but six months from now the same work may need to support a package, dashboard, or pipeline. Which design choices now will keep that future refactor small?
 
 ---
 
@@ -161,6 +182,32 @@ Bioconductor packages rely heavily on **S4 classes** because they provide:
 - Use **accessor methods** instead of direct slot access (`@`)
 - Document **invariants** and expected slot types
 - Avoid storing **redundant derived values** when they can be computed
+
+---
+
+# Finding Existing Bioconductor Solutions
+
+Before you create a new class or container, spend a few minutes checking whether the ecosystem already solved the problem:
+
+```{r existing-solutions, eval=FALSE}
+# Read the class help and vignette first
+?SummarizedExperiment
+browseVignettes(package = "SummarizedExperiment")
+
+# If you expect single-cell-specific behavior, compare the next layer up
+?SingleCellExperiment
+browseVignettes(package = "SingleCellExperiment")
+```
+
+Look for:
+
+- **Problem fit**: Does the class match bulk RNA-seq, single-cell, or another assay type?
+- **Data model fit**: Can it represent assays, feature metadata, and sample metadata without hacks?
+- **Contract clarity**: Are the accessors and invariants clear from the docs?
+- **Interoperability**: Do downstream packages already expect this container?
+- **Maintenance**: Is the package well documented and actively used?
+
+For this course we rebuild a tiny example to make the design visible. In professional work, the default should be to reuse and extend an existing ecosystem type unless you have a concrete reason not to.
 
 ---
 
@@ -751,6 +798,16 @@ save_pca_results(result, output)
 > **Key insight:** Fix a bug in `run_pca()` and it's fixed in all three
 > interfaces. Add a feature to `plot_pca()` and the Shiny app and CLI both
 > benefit. This is the power of the "three interfaces, one core" architecture.
+
+---
+
+# Debrief & Reflection
+
+Before leaving this lecture, make sure you can answer:
+
+- Why is reusing `SummarizedExperiment` usually better than inventing a custom container?
+- Which parts of today's PCA workflow are domain logic, and which parts are interface or packaging concerns?
+- If your future project needs a new abstraction, could it be a thin wrapper around an existing Bioconductor class instead of a brand-new data structure?
 
 ---
 

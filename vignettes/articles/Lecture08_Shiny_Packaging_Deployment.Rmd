@@ -26,9 +26,31 @@ By the end of this session, you will be able to:
 1. Add a Shiny application to the package as a function and document it
 2. Deploy the application to a hosting platform (shinyapps.io or Posit Cloud)
 3. Add inputs for flexibility and interactive elements in outputs
-4. Discuss and (optionally) implement a basic testing strategy for Shiny apps
+4. Explain why packaging, optional dependencies, and deployment are reproducibility decisions as much as UI decisions
+5. Discuss and (optionally) implement a basic testing strategy for Shiny apps
 
 **Course Learning Outcomes (CLOs):** CLO 1, 4, 5, 6
+
+## Motivation
+
+An app is only useful scientific software if other people can install it, launch it, and trust that it behaves the same way outside your own machine. Packaging and deployment turn an interesting interface into a reproducible tool.
+
+This lecture matters because deployment decisions shape maintainability. Stable entry points, optional dependencies, and clean file lookup rules save time for collaborators, reduce environment-specific failures, and keep the app aligned with the same package core used everywhere else.
+
+## Evaluation Checklist
+
+Before packaging or deploying an app, ask:
+
+- Is the app truly a thin layer over tested package functions?
+- Which dependencies are essential, and which should stay optional?
+- Can a user install and launch the app from a clean session?
+- What interface failures need friendly validation or graceful fallback?
+- Does the deployment choice fit the intended audience and maintenance model?
+- Would packaging this app reduce manual setup more than another custom distribution method?
+
+## Scientific Use Case
+
+Your lab wants to share a small QC dashboard with collaborators at another institution. Some users will explore the app interactively, while others only want the package functions in scripts. How do you package the app so both audiences are supported without forcing every user into the same workflow?
 
 ---
 
@@ -62,6 +84,12 @@ Benefits:
 - **Documented** — `?run_app` shows how to use it
 
 ---
+
+## Why Reuse Package Conventions and Deployment Platforms?
+
+Package conventions such as `inst/`, `system.file()`, and `run_app()` exist so you do not have to invent a custom file layout or startup story for every app. Hosting platforms then give you a managed way to share that app instead of building deployment plumbing yourself.
+
+Reusing those conventions keeps the design problem focused where it belongs: what should the app expose, how should dependencies be declared, and how should failures be handled for real users.
 
 # Part 1: Package Structure for Shiny Apps
 
@@ -646,6 +674,16 @@ Today we:
 ## Package Milestone
 
 ✅ The Shiny app is shipped inside the package and can be launched by users after installing from GitHub.
+
+---
+
+## Debrief & Reflection
+
+Before moving on, make sure you can answer:
+
+- Why is packaging the app part of the reproducibility story, not just a convenience feature?
+- Which app dependencies should be mandatory, and which should remain optional with graceful fallback?
+- If a collaborator never opens the app and only uses the R API, how does your package design still serve them well?
 
 ---
 
