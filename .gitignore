@@ -53,3 +53,6 @@ docs
 Unit1/Assessments/*.docx
 
 *.py
+
+__pycache__/
+./claude/

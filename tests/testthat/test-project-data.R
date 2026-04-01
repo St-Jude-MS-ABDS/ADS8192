@@ -137,9 +137,14 @@ test_that("Project 5: LunSpikeInData loads correctly", {
   expect_s4_class(sce, "SingleCellExperiment")
   expect_gt(ncol(sce), 0)
 
-  # Check ERCC spike-ins are present
-  has_ercc <- any(grepl("^ERCC-", rownames(sce)))
-  expect_true(has_ercc, label = "ERCC spike-in genes present")
+  # ERCC spike-ins are stored in an altExp named "ERCC", not in the main assay.
+  # rownames(sce) contains only endogenous genes.
+  expect_true("ERCC" %in% altExpNames(sce),
+              label = "ERCC spike-in altExp present")
+  ercc_alt <- altExp(sce, "ERCC")
+  expect_gt(nrow(ercc_alt), 0, label = "ERCC altExp has rows")
+  expect_true(all(grepl("^ERCC-", rownames(ercc_alt))),
+              label = "ERCC altExp rownames are ERCC IDs")
 
   cd <- colData(sce)
   expect_true("cell_line" %in% colnames(cd))
