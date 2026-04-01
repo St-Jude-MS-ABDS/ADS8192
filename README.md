@@ -9,7 +9,7 @@ Course materials and reference implementation for **ADS 8192: Developing Scienti
 
 Unit 1 teaches graduate students to build **complete, reproducible scientific software in R** — from raw analysis functions through a fully packaged, documented, and deployable application. The unit is organized around core software engineering principles that apply in any language or domain:
 
-> **Separation of concerns.** Write your analysis logic once as small, testable, composable R functions. Then add thin presentation layers — an R API, a Shiny web app, and a command-line interface — that delegate to those functions without duplicating logic.
+> **Separation of concerns.** Write your analysis logic once as small, testable, composable functions. Then add thin presentation layers — an R API, a Shiny web app, and a command-line interface — that delegate to those functions without duplicating logic.
 
 This is the same layered-architecture idea you'll find in well-engineered software everywhere: keep the _what_ (computation) separate from the _how_ (delivery to users). Different audiences — scientists who want point-and-click exploration, developers who want composable functions, and bioinformatics cores who want scriptable CLI tools — all benefit from the same tested core.
 
