@@ -385,6 +385,17 @@ spike-in controls. It was specifically designed for benchmarking
 normalization and QC methods. The spike-in proportions and library size
 variation create natural QC outliers that students must detect.
 
+**Important note on data structure:**
+[`LunSpikeInData()`](https://rdrr.io/pkg/scRNAseq/man/LunSpikeInData.html)
+stores the ERCC spike-in counts in an *alternative experiment*
+(`altExp`), not alongside endogenous genes in the main assay. This is
+the standard Bioconductor convention for spike-ins: `rownames(sce)`
+contains only the ~9,000 endogenous mouse genes, while
+`altExp(sce, "ERCC")` is itself a `SingleCellExperiment` holding the 92
+ERCC control counts for the same cells. To compute spike-in percentage
+per cell, sum across `counts(altExp(sce, "ERCC"))` and divide by the
+total library size (endogenous + spike-in counts).
+
 Data preparation code
 
 ``` r
@@ -396,9 +407,11 @@ library(SingleCellExperiment)
 sce <- LunSpikeInData()
 example_sce <- sce
 
-# Mark ERCC spike-ins in rowData
-is_spike <- grepl("^ERCC-", rownames(example_sce))
-rowData(example_sce)$is_spike <- is_spike
+# ERCC spike-ins are already in altExp(example_sce, "ERCC") — the standard
+# Bioconductor convention. Do NOT look for ERCC rows in rownames(example_sce);
+# they live in the alternative experiment, accessed via:
+#   altExp(example_sce, "ERCC")          # the ERCC SCE
+#   counts(altExp(example_sce, "ERCC"))  # ERCC count matrix (92 controls x 192 cells)
 
 # Keep key metadata
 colData(example_sce) <- colData(example_sce)[, c("cell_line", "plate")]
@@ -411,7 +424,7 @@ usethis::use_data(example_sce, overwrite = TRUE)
 **What users should be able to do:**
 
 - Compute per-cell QC metrics: library size, number of genes detected,
-  spike-in percentage, and Shannon entropy
+  spike-in percentage (from `altExp(sce, "ERCC")`), and Shannon entropy
 - Flag outlier cells using MAD-based thresholds on QC metrics
 - Visualize QC results in a multi-panel display: library size
   distribution, genes vs. library size scatter, spike-in percentage

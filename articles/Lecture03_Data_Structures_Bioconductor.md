@@ -785,7 +785,7 @@ functions:
 Users call your exported functions directly from R:
 
 ``` r
-library(sePCA)
+library(ADS8192)
 data("example_se")
 result <- run_pca(example_se, n_top = 500)
 plot_pca(result, color_by = "treatment")
@@ -816,7 +816,7 @@ The CLI script in `exec/` parses arguments and calls the same functions:
 #| name: sePCA
 #| description: PCA analysis for SummarizedExperiment data.
 
-suppressPackageStartupMessages(library(sePCA))
+suppressPackageStartupMessages(library(ADS8192))
 
 counts <- ""   # --counts FILE
 meta   <- ""   # --meta   FILE
