@@ -10,8 +10,44 @@ By the end of this session, you will be able to:
     execution in a clean session
 3.  Confirm that CLI outputs match the package’s R function outputs for
     the same inputs
+4.  Explain why clean-room testing, release discipline, and backward
+    compatibility matter for automation users
 
 **Course Learning Outcomes (CLOs):** CLO 1, 2, 3, 5, 6
+
+### Motivation
+
+For automated scientific tools, installation and release quality are
+part of the user experience. If a CLI only works in development mode or
+only on the author’s machine, it is not yet robust software.
+
+This lecture matters because clean installs, output parity checks, and
+release discipline save other people time. They catch hidden assumptions
+early, prevent interface drift, and make it much more likely that a
+pipeline user or collaborator will get the same result you saw during
+development.
+
+### Evaluation Checklist
+
+Before you ship a CLI, ask:
+
+- Can a user install and run it from a clean environment with only
+  declared dependencies?
+- Does the installed interface behave the same as the development
+  version?
+- Do CLI outputs match the package core for the same inputs?
+- Which file names, flags, and output columns now form part of the user
+  contract?
+- What would break if you changed those interfaces in the next release?
+- Are release steps reproducible enough for someone else in the lab to
+  repeat?
+
+### Scientific Use Case
+
+An analysis group adds your CLI to a scheduled workflow and archives the
+outputs for compliance. A month later you “clean up” some file names and
+help text before tagging a release. Which changes are harmless
+refactors, and which ones break their pipeline contract?
 
 ------------------------------------------------------------------------
 
@@ -34,6 +70,14 @@ end-to-end — package installation, launcher installation, and CLI
 execution — in a clean R session.
 
 ------------------------------------------------------------------------
+
+### Design Principle: Installation Is Part of the Product
+
+If a tool only works on the developer’s machine, it is not ready for
+scientific use. Clean-room testing and output parity checks matter
+because they reveal hidden assumptions, missing dependencies, and
+accidental drift between interfaces before users discover them the hard
+way.
 
 ## Part 1: Package the CLI Entry Point
 
@@ -550,6 +594,16 @@ remotes::install_github("you/sePCA@v0.1.0")
 
     ---
 
+    ## Debrief & Reflection
+
+    Before moving on, make sure you can answer:
+
+    - Why is installation quality part of the user contract for automation tools?
+    - Which parts of your CLI output now count as backward-compatibility commitments?
+    - How do clean-room testing and output parity checks protect users from hidden assumptions in your development environment?
+
+    ---
+
     # After-Class Tasks
 
     ## Micro-task 1: R CMD check
@@ -606,7 +660,7 @@ workflows/ ├── R-CMD-check.yaml └── pkgdown.yaml
 
     ## R version 4.5.3 (2026-03-11)
     ## Platform: x86_64-pc-linux-gnu
-    ## Running under: Ubuntu 24.04.3 LTS
+    ## Running under: Ubuntu 24.04.4 LTS
     ## 
     ## Matrix products: default
     ## BLAS:   /usr/lib/x86_64-linux-gnu/openblas-pthread/libblas.so.3 
@@ -626,9 +680,9 @@ workflows/ ├── R-CMD-check.yaml └── pkgdown.yaml
     ## 
     ## loaded via a namespace (and not attached):
     ##  [1] digest_0.6.39     desc_1.4.3        R6_2.6.1          fastmap_1.2.0    
-    ##  [5] xfun_0.56         cachem_1.1.0      knitr_1.51        htmltools_0.5.9  
-    ##  [9] rmarkdown_2.30    lifecycle_1.0.5   cli_3.6.5         sass_0.4.10      
+    ##  [5] xfun_0.57         cachem_1.1.0      knitr_1.51        htmltools_0.5.9  
+    ##  [9] rmarkdown_2.31    lifecycle_1.0.5   cli_3.6.5         sass_0.4.10      
     ## [13] pkgdown_2.2.0     textshaping_1.0.5 jquerylib_0.1.4   systemfonts_1.3.2
-    ## [17] compiler_4.5.3    tools_4.5.3       ragg_1.5.1        bslib_0.10.0     
+    ## [17] compiler_4.5.3    tools_4.5.3       ragg_1.5.2        bslib_0.10.0     
     ## [21] evaluate_1.0.5    yaml_2.3.12       otel_0.2.0        jsonlite_2.0.0   
-    ## [25] rlang_1.1.7       fs_1.6.7          htmlwidgets_1.6.4
+    ## [25] rlang_1.1.7       fs_2.0.1          htmlwidgets_1.6.4

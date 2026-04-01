@@ -4,16 +4,53 @@
 
 By the end of this session, you will be able to:
 
-1.  Create an R package skeleton with usethis and organize code into the
-    correct package structure
-2.  Define and validate a correct DESCRIPTION file, including
+1.  Use `usethis` and `devtools` to scaffold package infrastructure
+    instead of hand-building it
+2.  Define a small public API and distinguish exported functions from
+    internal helpers
+3.  Define and validate a correct DESCRIPTION file, including
     dependencies and metadata
-3.  Add roxygen2 documentation and generate help files/NAMESPACE
-4.  Publish the package to a Git repository and install it from GitHub
-5.  Diagnose and resolve common development issues (namespacing, missing
+4.  Add roxygen2 documentation and generate help files/NAMESPACE
+5.  Publish the package to a Git repository and install it from GitHub
+6.  Diagnose and resolve common development issues (namespacing, missing
     Imports, R CMD check warnings)
 
 **Course Learning Outcomes (CLOs):** CLO 1, 4, 6
+
+### Motivation
+
+Many research projects begin as scripts that only make sense to the
+original author and only run in one working directory. Packaging forces
+you to turn that private workflow into something installable,
+documented, and reusable by other people.
+
+That matters for scientific software because package boundaries make
+assumptions visible. A small public API, explicit dependencies, and
+generated documentation save time for your future self, reduce
+onboarding time for collaborators, and make it far easier to test or
+extend the code without breaking everything around it.
+
+### Evaluation Checklist
+
+Before you introduce a packaging tool or workflow, ask:
+
+- Does it solve infrastructure that should not be custom work?
+- Does it make the package contract clearer for users and collaborators?
+- Does it reduce hidden state, manual steps, or copy-paste setup?
+- Does it align with standard R package workflows that others already
+  know?
+- Will it make clean installs, testing, and maintenance easier six
+  months from now?
+- Are you using it to support a clear API, or just generating files
+  without design intent?
+
+### Scientific Use Case
+
+You inherit a 700-line exploratory RNA-seq script from a graduate
+student who is graduating next month. The code “works on their laptop,”
+but a collaborator now wants to install it from GitHub, read help pages,
+and call only two functions from another project. What has to change
+first: the science, or the software boundaries?
 
 ------------------------------------------------------------------------
 
@@ -24,19 +61,33 @@ By the end of this session, you will be able to:
 In Lecture 3, we created an “analysis core” — a set of functions in a
 script. But scripts have limitations:
 
-| Script                          | Package                                                                                   |
-|---------------------------------|-------------------------------------------------------------------------------------------|
-| `source("path/to/file.R")`      | [`library(sePCA)`](https://rdrr.io/r/base/library.html)                                   |
-| Paths break when you move files | Installed; works anywhere                                                                 |
-| Dependency conflicts            | Explicit dependency management                                                            |
-| No help documentation           | [`?run_pca`](https://automatic-engine-4qp7m5e.pages.github.io/reference/run_pca.md) works |
-| Hard to share                   | `install_github("you/sePCA")`                                                             |
-| No tests                        | Automated testing with testthat                                                           |
+| Script                          | Package                                                                            |
+|---------------------------------|------------------------------------------------------------------------------------|
+| `source("path/to/file.R")`      | [`library(sePCA)`](https://rdrr.io/r/base/library.html)                            |
+| Paths break when you move files | Installed; works anywhere                                                          |
+| Dependency conflicts            | Explicit dependency management                                                     |
+| No help documentation           | [`?run_pca`](https://st-jude-ms-abds.github.io/ADS8192/reference/run_pca.md) works |
+| Hard to share                   | `install_github("you/sePCA")`                                                      |
+| No tests                        | Automated testing with testthat                                                    |
 
 **A package is the fundamental unit of shareable, reproducible code in
 R.**
 
 ------------------------------------------------------------------------
+
+### Why Reuse Package Tooling?
+
+The package files in this lecture are not an invitation to manually
+recreate package infrastructure forever. In production work:
+
+- `usethis` gives you consistent scaffolding faster than hand-editing
+  every file
+- `devtools` standardizes the edit-document-test-check loop
+- `roxygen2` keeps documentation close to the code it describes
+
+Reinventing any of those layers is usually wasted effort. The design
+work that still belongs to you is deciding what the package should
+expose, what it should hide, and how users should move through the API.
 
 ## Pre-Lab Checklist
 
@@ -71,12 +122,12 @@ Before writing code, let’s define the **user story** and **public API**.
 
 ### Public API (Exported Functions)
 
-| Function                                                                                                           | Exported? | Reason                              |
-|--------------------------------------------------------------------------------------------------------------------|-----------|-------------------------------------|
-| [`top_variable_features()`](https://automatic-engine-4qp7m5e.pages.github.io/reference/top_variable_features.md)   | Yes       | Users may want to filter separately |
-| [`run_pca()`](https://automatic-engine-4qp7m5e.pages.github.io/reference/run_pca.md)                               | Yes       | Core analysis function              |
-| [`pca_variance_explained()`](https://automatic-engine-4qp7m5e.pages.github.io/reference/pca_variance_explained.md) | Yes       | Useful standalone                   |
-| [`plot_pca()`](https://automatic-engine-4qp7m5e.pages.github.io/reference/plot_pca.md)                             | Yes       | Core visualization                  |
+| Function                                                                                                    | Exported? | Reason                              |
+|-------------------------------------------------------------------------------------------------------------|-----------|-------------------------------------|
+| [`top_variable_features()`](https://st-jude-ms-abds.github.io/ADS8192/reference/top_variable_features.md)   | Yes       | Users may want to filter separately |
+| [`run_pca()`](https://st-jude-ms-abds.github.io/ADS8192/reference/run_pca.md)                               | Yes       | Core analysis function              |
+| [`pca_variance_explained()`](https://st-jude-ms-abds.github.io/ADS8192/reference/pca_variance_explained.md) | Yes       | Useful standalone                   |
+| [`plot_pca()`](https://st-jude-ms-abds.github.io/ADS8192/reference/plot_pca.md)                             | Yes       | Core visualization                  |
 
 > **Exercise A:** Are there any functions you might add later that
 > should be **internal** (not exported)? What distinguishes an exported
@@ -600,6 +651,20 @@ exposes the analysis core as documented exported functions.
 
 ------------------------------------------------------------------------
 
+### Debrief & Reflection
+
+Before moving on, make sure you can explain:
+
+- Why is `usethis` worth reusing instead of hand-writing package
+  scaffolding?
+- Which of your current functions are true user-facing API, and which
+  should become internal helpers?
+- If a collaborator only reads the README and function help, what
+  package design choices will make the code feel coherent instead of
+  script-like?
+
+------------------------------------------------------------------------
+
 ## After-Class Tasks
 
 ### Reading
@@ -674,7 +739,7 @@ sessionInfo()
 
     ## R version 4.5.3 (2026-03-11)
     ## Platform: x86_64-pc-linux-gnu
-    ## Running under: Ubuntu 24.04.3 LTS
+    ## Running under: Ubuntu 24.04.4 LTS
     ## 
     ## Matrix products: default
     ## BLAS:   /usr/lib/x86_64-linux-gnu/openblas-pthread/libblas.so.3 
@@ -694,9 +759,9 @@ sessionInfo()
     ## 
     ## loaded via a namespace (and not attached):
     ##  [1] digest_0.6.39     desc_1.4.3        R6_2.6.1          fastmap_1.2.0    
-    ##  [5] xfun_0.56         cachem_1.1.0      knitr_1.51        htmltools_0.5.9  
-    ##  [9] rmarkdown_2.30    lifecycle_1.0.5   cli_3.6.5         sass_0.4.10      
+    ##  [5] xfun_0.57         cachem_1.1.0      knitr_1.51        htmltools_0.5.9  
+    ##  [9] rmarkdown_2.31    lifecycle_1.0.5   cli_3.6.5         sass_0.4.10      
     ## [13] pkgdown_2.2.0     textshaping_1.0.5 jquerylib_0.1.4   systemfonts_1.3.2
-    ## [17] compiler_4.5.3    tools_4.5.3       ragg_1.5.1        bslib_0.10.0     
+    ## [17] compiler_4.5.3    tools_4.5.3       ragg_1.5.2        bslib_0.10.0     
     ## [21] evaluate_1.0.5    yaml_2.3.12       otel_0.2.0        jsonlite_2.0.0   
-    ## [25] rlang_1.1.7       fs_1.6.7          htmlwidgets_1.6.4
+    ## [25] rlang_1.1.7       fs_2.0.1          htmlwidgets_1.6.4

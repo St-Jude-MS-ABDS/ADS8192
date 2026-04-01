@@ -5,7 +5,7 @@
 Submit a public GitHub repository URL containing an R package that
 implements your chosen analysis on `SummarizedExperiment` or
 `SingleCellExperiment` objects (see the [Project Selection
-Guide](https://automatic-engine-4qp7m5e.pages.github.io/articles/project-selection.md))
+Guide](https://st-jude-ms-abds.github.io/ADS8192/articles/project-selection.md))
 with three interfaces: R API, Shiny app, and CLI.
 
 ------------------------------------------------------------------------
@@ -101,12 +101,12 @@ At least one vignette or pkgdown article exists
 
 ## 5. Shiny App (4 pts)
 
-| Points | Criterion                                                                                                                        | Check                                                                            |
-|--------|----------------------------------------------------------------------------------------------------------------------------------|----------------------------------------------------------------------------------|
-| 1      | [`run_app()`](https://automatic-engine-4qp7m5e.pages.github.io/reference/run_app.md) launches without error from a clean session | App opens in browser                                                             |
-| 1      | App calls package core functions (not reimplemented logic)                                                                       | Analysis and plotting use your exported functions, not reimplemented code        |
-| 1      | Inputs change the outputs reactively with basic validation                                                                       | Changing parameters re-runs analysis; invalid values show user-friendly messages |
-| 1      | App is deployed and usable via Posit Connect                                                                                     | App URL is accessible and functional                                             |
+| Points | Criterion                                                                                                                 | Check                                                                            |
+|--------|---------------------------------------------------------------------------------------------------------------------------|----------------------------------------------------------------------------------|
+| 1      | [`run_app()`](https://st-jude-ms-abds.github.io/ADS8192/reference/run_app.md) launches without error from a clean session | App opens in browser                                                             |
+| 1      | App calls package core functions (not reimplemented logic)                                                                | Analysis and plotting use your exported functions, not reimplemented code        |
+| 1      | Inputs change the outputs reactively with basic validation                                                                | Changing parameters re-runs analysis; invalid values show user-friendly messages |
+| 1      | App is deployed and usable via Posit Connect                                                                              | App URL is accessible and functional                                             |
 
 **Checklist:**
 
@@ -146,7 +146,7 @@ Running CLI produces the expected TSV output files
 CLI calls your exported core functions (not raw analysis functions
 directly)
 
-`--counts`, `--meta`, and `--output` arguments work
+All arguments work
 
 README documents both launcher installation and fallback usage
 

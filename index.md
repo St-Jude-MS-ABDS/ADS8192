@@ -14,9 +14,9 @@ around core software engineering principles that apply in any language
 or domain:
 
 > **Separation of concerns.** Write your analysis logic once as small,
-> testable, composable R functions. Then add thin presentation layers —
-> an R API, a Shiny web app, and a command-line interface — that
-> delegate to those functions without duplicating logic.
+> testable, composable functions. Then add thin presentation layers — an
+> R API, a Shiny web app, and a command-line interface — that delegate
+> to those functions without duplicating logic.
 
 This is the same layered-architecture idea you’ll find in
 well-engineered software everywhere: keep the *what* (computation)
@@ -88,7 +88,7 @@ live in `vignettes/articles/`.
 | 05  | Package Development (devtools)          | Turn loose scripts into a valid R package; `DESCRIPTION`, `NAMESPACE`, `roxygen2` exports/imports, `devtools::check()`                                            |
 | 06  | Package Development (pkgdown, testthat) | Write `testthat` tests (happy path + error cases); build and deploy a `pkgdown` documentation site                                                                |
 | 07  | Shiny Reactivity                        | Understand the reactive graph; build a UI with `bslib`; connect inputs → reactive expressions → outputs                                                           |
-| 08  | Shiny Packaging & Deployment            | Embed a Shiny app inside an R package ([`run_app()`](https://automatic-engine-4qp7m5e.pages.github.io/reference/run_app.md)); deploy to Posit Connect             |
+| 08  | Shiny Packaging & Deployment            | Embed a Shiny app inside an R package ([`run_app()`](https://st-jude-ms-abds.github.io/ADS8192/reference/run_app.md)); deploy to Posit Connect                    |
 | 09  | CLI Design (Rapp)                       | Design a CLI with `Rapp`; argument types, defaults, help text; call package functions from `exec/` scripts                                                        |
 | 10  | CLI Packaging & Installation            | Ship the CLI with the package; [`Rapp::install_pkg_cli_apps()`](https://rdrr.io/pkg/Rapp/man/install_pkg_cli_apps.html); launcher functions; README documentation |
 | 11  | Review & Q/A                            | Systematic debugging workflow; end-to-end validation of all deliverables before submission                                                                        |
@@ -114,15 +114,15 @@ HW1 is the capstone deliverable for Unit 1. Each student selects a
 project (or proposes a custom one) and delivers a public GitHub
 repository containing an R package with:
 
-| Category                         | Points | Key Requirements                                                                                                                                |
-|----------------------------------|--------|-------------------------------------------------------------------------------------------------------------------------------------------------|
-| Package Structure & Installation | 4      | Valid `DESCRIPTION`, `NAMESPACE`, installs from GitHub, bundled example data                                                                    |
-| Core Analysis Functions          | 5      | Analysis, summary, and plotting functions operating on SE/SCE objects                                                                           |
-| Testing                          | 4      | ≥ 8 `testthat` expectations, happy-path + error-case coverage                                                                                   |
-| Documentation                    | 4      | `roxygen2` help pages, README, deployed `pkgdown` site                                                                                          |
-| Shiny App                        | 4      | [`run_app()`](https://automatic-engine-4qp7m5e.pages.github.io/reference/run_app.md) calls core functions reactively; deployed on Posit Connect |
-| Command-Line Interface           | 4      | `Rapp` entry point in `exec/`, `--help`, TSV output files                                                                                       |
-| **Total**                        | **25** |                                                                                                                                                 |
+| Category                         | Points | Key Requirements                                                                                                                         |
+|----------------------------------|--------|------------------------------------------------------------------------------------------------------------------------------------------|
+| Package Structure & Installation | 4      | Valid `DESCRIPTION`, `NAMESPACE`, installs from GitHub, bundled example data                                                             |
+| Core Analysis Functions          | 5      | Analysis, summary, and plotting functions operating on SE/SCE objects                                                                    |
+| Testing                          | 4      | ≥ 8 `testthat` expectations, happy-path + error-case coverage                                                                            |
+| Documentation                    | 4      | `roxygen2` help pages, README, deployed `pkgdown` site                                                                                   |
+| Shiny App                        | 4      | [`run_app()`](https://st-jude-ms-abds.github.io/ADS8192/reference/run_app.md) calls core functions reactively; deployed on Posit Connect |
+| Command-Line Interface           | 4      | `Rapp` entry point in `exec/`, `--help`, TSV output files                                                                                |
+| **Total**                        | **25** |                                                                                                                                          |
 
 Projects span bulk RNA-seq (`SummarizedExperiment`) and single-cell
 RNA-seq (`SingleCellExperiment`) analyses — PCA, UMAP, differential
@@ -197,15 +197,15 @@ ADS8192 pca --counts counts.tsv --meta samples.tsv --output results/ --color-by 
 
 ### Core Functions
 
-| Function                                                                                                             | Purpose                                  |
-|----------------------------------------------------------------------------------------------------------------------|------------------------------------------|
-| [`top_variable_features()`](https://automatic-engine-4qp7m5e.pages.github.io/reference/top_variable_features.md)     | Select the N most variable genes         |
-| [`run_pca()`](https://automatic-engine-4qp7m5e.pages.github.io/reference/run_pca.md)                                 | Run PCA, return scores + metadata        |
-| [`pca_variance_explained()`](https://automatic-engine-4qp7m5e.pages.github.io/reference/pca_variance_explained.md)   | Variance explained per PC                |
-| [`plot_pca()`](https://automatic-engine-4qp7m5e.pages.github.io/reference/plot_pca.md)                               | PCA scatter plot (`ggplot2`)             |
-| [`plot_variance_explained()`](https://automatic-engine-4qp7m5e.pages.github.io/reference/plot_variance_explained.md) | Variance explained bar chart (`ggplot2`) |
-| [`save_pca_results()`](https://automatic-engine-4qp7m5e.pages.github.io/reference/save_pca_results.md)               | Export results to TSV files              |
-| [`run_app()`](https://automatic-engine-4qp7m5e.pages.github.io/reference/run_app.md)                                 | Launch the Shiny PCA Explorer            |
+| Function                                                                                                      | Purpose                                  |
+|---------------------------------------------------------------------------------------------------------------|------------------------------------------|
+| [`top_variable_features()`](https://st-jude-ms-abds.github.io/ADS8192/reference/top_variable_features.md)     | Select the N most variable genes         |
+| [`run_pca()`](https://st-jude-ms-abds.github.io/ADS8192/reference/run_pca.md)                                 | Run PCA, return scores + metadata        |
+| [`pca_variance_explained()`](https://st-jude-ms-abds.github.io/ADS8192/reference/pca_variance_explained.md)   | Variance explained per PC                |
+| [`plot_pca()`](https://st-jude-ms-abds.github.io/ADS8192/reference/plot_pca.md)                               | PCA scatter plot (`ggplot2`)             |
+| [`plot_variance_explained()`](https://st-jude-ms-abds.github.io/ADS8192/reference/plot_variance_explained.md) | Variance explained bar chart (`ggplot2`) |
+| [`save_pca_results()`](https://st-jude-ms-abds.github.io/ADS8192/reference/save_pca_results.md)               | Export results to TSV files              |
+| [`run_app()`](https://st-jude-ms-abds.github.io/ADS8192/reference/run_app.md)                                 | Launch the Shiny PCA Explorer            |
 
 ## Links
 

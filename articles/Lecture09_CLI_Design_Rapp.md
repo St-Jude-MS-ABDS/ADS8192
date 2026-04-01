@@ -7,9 +7,45 @@ By the end of this session, you will be able to:
 1.  Implement a simple CLI using Rapp that calls package functions
 2.  Write usage/help text and define clear inputs/outputs for commands
 3.  Test CLI functionality from the terminal and interpret exit behavior
-4.  Explain why CLIs improve interoperability and pipeline integration
+4.  Decide when a CLI is worth adding and keep it a thin wrapper over
+    package logic
+5.  Explain why CLIs improve interoperability and pipeline integration
 
 **Course Learning Outcomes (CLOs):** CLO 1, 2, 3, 5, 6
+
+### Motivation
+
+Scientific software often needs to run without a human sitting at the
+keyboard. Command-line interfaces matter because they make analysis
+tools usable in pipelines, schedulers, shared compute environments, and
+repeatable scripts.
+
+This lecture is important for robust software design because a good CLI
+forces you to make the interface contract explicit: inputs, outputs,
+defaults, error behavior, and file formats all become visible. That
+clarity saves time for automation users and reduces drift between the
+command line and the underlying package logic.
+
+### Evaluation Checklist
+
+Before adding a CLI, ask:
+
+- Who needs it: pipeline users, HPC workflows, collaborators, or only
+  interactive analysts?
+- What explicit inputs and outputs must remain stable over time?
+- Does the CLI call the same package functions as the R API and Shiny
+  app?
+- Are error messages and exit codes useful to scripts, not just humans?
+- Would a thin wrapper over the existing package be enough?
+- Are you adding a CLI because users need automation, or because it
+  seems impressive?
+
+### Scientific Use Case
+
+A bioinformatics core wants to run your analysis across 40 cohorts in a
+nightly workflow. They do not want a web app and they do not want to
+source R files by hand. What contract does a good CLI need to offer so
+that automation users can trust it?
 
 ------------------------------------------------------------------------
 
@@ -52,6 +88,22 @@ Benefits:
 - **No IDE required**: Run on servers, HPC clusters
 
 ------------------------------------------------------------------------
+
+### When Should You Add a CLI?
+
+Add a CLI when users need automation, batch execution, scheduler
+integration, or a stable entry point from another language or workflow
+manager. Do not add one just because a terminal interface looks
+advanced. A CLI is worthwhile when it exposes a clear contract around
+existing package logic.
+
+### Why Use Rapp Instead of Parsing Arguments Yourself?
+
+Argument parsing is infrastructure, not the scientific problem. `Rapp`
+lets you describe commands, help text, and argument types without
+hand-writing a parser, which leaves your time for the design work that
+matters: stable flags, explicit file formats, and DRY delegation to the
+package core.
 
 ## Part 1: CLI Design Principles
 
@@ -542,7 +594,7 @@ Ready for analysis!
 ### Exercise C: DRY Check
 
 Verify that your CLI calls
-[`run_pca()`](https://automatic-engine-4qp7m5e.pages.github.io/reference/run_pca.md)
+[`run_pca()`](https://st-jude-ms-abds.github.io/ADS8192/reference/run_pca.md)
 from your package rather than re-implementing the PCA logic.
 
 Look for:
@@ -602,6 +654,19 @@ Today we:
 ✅ A working CLI prototype with an exported launcher installer — users
 can run `sePCA pca --help` directly from the terminal after installing
 your package.
+
+------------------------------------------------------------------------
+
+### Debrief & Reflection
+
+Before moving on, make sure you can answer:
+
+- When is a CLI genuinely useful, and when is it just an unnecessary
+  extra interface?
+- Which parts of the CLI are stable user contract, and which parts are
+  replaceable implementation details?
+- How does `Rapp` let you avoid reinventing plumbing so you can focus on
+  I/O contracts and DRY reuse of the package core?
 
 ------------------------------------------------------------------------
 
@@ -671,7 +736,7 @@ sessionInfo()
 
     ## R version 4.5.3 (2026-03-11)
     ## Platform: x86_64-pc-linux-gnu
-    ## Running under: Ubuntu 24.04.3 LTS
+    ## Running under: Ubuntu 24.04.4 LTS
     ## 
     ## Matrix products: default
     ## BLAS:   /usr/lib/x86_64-linux-gnu/openblas-pthread/libblas.so.3 
@@ -691,9 +756,9 @@ sessionInfo()
     ## 
     ## loaded via a namespace (and not attached):
     ##  [1] digest_0.6.39     desc_1.4.3        R6_2.6.1          fastmap_1.2.0    
-    ##  [5] xfun_0.56         cachem_1.1.0      knitr_1.51        htmltools_0.5.9  
-    ##  [9] rmarkdown_2.30    lifecycle_1.0.5   cli_3.6.5         sass_0.4.10      
+    ##  [5] xfun_0.57         cachem_1.1.0      knitr_1.51        htmltools_0.5.9  
+    ##  [9] rmarkdown_2.31    lifecycle_1.0.5   cli_3.6.5         sass_0.4.10      
     ## [13] pkgdown_2.2.0     textshaping_1.0.5 jquerylib_0.1.4   systemfonts_1.3.2
-    ## [17] compiler_4.5.3    tools_4.5.3       ragg_1.5.1        bslib_0.10.0     
+    ## [17] compiler_4.5.3    tools_4.5.3       ragg_1.5.2        bslib_0.10.0     
     ## [21] evaluate_1.0.5    yaml_2.3.12       otel_0.2.0        jsonlite_2.0.0   
-    ## [25] rlang_1.1.7       fs_1.6.7          htmlwidgets_1.6.4
+    ## [25] rlang_1.1.7       fs_2.0.1          htmlwidgets_1.6.4

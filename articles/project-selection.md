@@ -8,11 +8,11 @@ architecture taught in class:
 
 1.  **R API** — exported functions with roxygen2 documentation
 2.  **Shiny app** — interactive exploration via
-    [`run_app()`](https://automatic-engine-4qp7m5e.pages.github.io/reference/run_app.md)
+    [`run_app()`](https://st-jude-ms-abds.github.io/ADS8192/reference/run_app.md)
 3.  **CLI** — command-line interface via Rapp in `exec/`
 
 All projects share the same
-[rubric](https://automatic-engine-4qp7m5e.pages.github.io/articles/HW1_Rubric.md)
+[rubric](https://st-jude-ms-abds.github.io/ADS8192/articles/HW1_Rubric.md)
 (25 points) and structural requirements. What differs is the **core
 analysis** and the **dataset**. Choose one of the 13 projects below, or
 propose your own (see [Custom Projects](#custom-projects) at the end).
@@ -1025,7 +1025,7 @@ table
 
 Regardless of which project you choose, your package must satisfy
 **all** of the following. These map directly to the [HW1
-rubric](https://automatic-engine-4qp7m5e.pages.github.io/articles/HW1_Rubric.md)
+rubric](https://st-jude-ms-abds.github.io/ADS8192/articles/HW1_Rubric.md)
 (25 points).
 
 ### Package Structure (4 pts)
@@ -1064,7 +1064,7 @@ rubric](https://automatic-engine-4qp7m5e.pages.github.io/articles/HW1_Rubric.md)
 
 ### Shiny App (5 pts)
 
-- [`run_app()`](https://automatic-engine-4qp7m5e.pages.github.io/reference/run_app.md)
+- [`run_app()`](https://st-jude-ms-abds.github.io/ADS8192/reference/run_app.md)
   launches from a clean session
 - Calls your package core functions (no copy-pasted analysis logic)
 - ≥ 2 user-adjustable inputs that reactively update output

@@ -91,9 +91,83 @@ submission</li>
 test → document)</li>
 <li>Validate the end-to-end deliverable: install from GitHub, run core
 functions, run Shiny app, run CLI, and view pkgdown site</li>
+<li>Synthesize the durable software-design heuristics from Unit 1 and
+use them during peer review</li>
 </ol>
 <p><strong>Course Learning Outcomes (CLOs):</strong> CLO 1, 2, 3, 4, 5,
 6</p>
+<div class="section level3">
+<h3 id="motivation">Motivation<a class="anchor" aria-label="anchor" href="#motivation"></a>
+</h3>
+<p>Robust scientific software is evaluated end to end: can someone else
+install it, understand it, trust its outputs, and debug it when
+something goes wrong? A review session matters because it forces you to
+look at the project the way a real user, collaborator, or reviewer
+would.</p>
+<p>This lecture is important because systematic debugging and peer
+review save time. They help you find hidden assumptions, inconsistent
+interfaces, and weak documentation before those problems become lost
+hours for someone else or become embarrassing failures late in a
+project.</p>
+</div>
+<div class="section level3">
+<h3 id="evaluation-checklist">Evaluation Checklist<a class="anchor" aria-label="anchor" href="#evaluation-checklist"></a>
+</h3>
+<p>As you review a package at the end of Unit 1, ask:</p>
+<ul>
+<li>Does the project reuse strong existing infrastructure instead of
+rebuilding it unnecessarily?</li>
+<li>Is there one clear analysis core with thin interfaces layered on
+top?</li>
+<li>Are public contracts documented, tested, and stable across
+interfaces?</li>
+<li>Can another user install and run it from a clean environment?</li>
+<li>Are validation and error messages placed at the right
+boundaries?</li>
+<li>Would a future collaborator understand what is core logic versus
+interface glue?</li>
+</ul>
+</div>
+<div class="section level3">
+<h3 id="scientific-use-case">Scientific Use Case<a class="anchor" aria-label="anchor" href="#scientific-use-case"></a>
+</h3>
+<p>Imagine you inherit a small but useful lab prototype that currently
+exists as a pile of scripts. You have one week to turn it into something
+another team can install, test, run interactively, and place in a
+workflow. Which Unit 1 principles let you improve the software quickly
+without rewriting the science from scratch?</p>
+<hr>
+</div>
+</div>
+<div class="section level2">
+<h2 id="unit-1-design-synthesis">Unit 1 Design Synthesis<a class="anchor" aria-label="anchor" href="#unit-1-design-synthesis"></a>
+</h2>
+<p>The specific tools in this unit matter, but the durable ideas matter
+more:</p>
+<ul>
+<li>
+<strong>Reuse strong ecosystems first.</strong> Start by evaluating
+existing packages, containers, and infrastructure before writing custom
+replacements.</li>
+<li>
+<strong>One core, many interfaces.</strong> Keep analysis logic
+separate from Shiny, CLI, and documentation layers.</li>
+<li>
+<strong>Public contracts matter.</strong> Function signatures, file
+outputs, and help text become promises to users.</li>
+<li>
+<strong>Tests protect behavior, not ego.</strong> They exist to
+catch regressions and make refactoring safe.</li>
+<li>
+<strong>Packaging is a distribution boundary.</strong> It forces
+dependencies, documentation, and installability into the open.</li>
+<li>
+<strong>Validate at the boundary.</strong> Friendly errors in
+functions, apps, and CLIs are part of the product.</li>
+<li>
+<strong>Clean-room thinking reveals truth.</strong> If the project
+only works on your machine, it is not done.</li>
+</ul>
 <hr>
 </div>
 <div class="section level2">
@@ -737,6 +811,22 @@ Pages</label></li>
 </ul>
 <hr>
 </div>
+<div class="section level3">
+<h3 id="debrief-reflection">Debrief &amp; Reflection<a class="anchor" aria-label="anchor" href="#debrief-reflection"></a>
+</h3>
+<p>Before submission, make sure you can answer:</p>
+<ul>
+<li>Which parts of your project are intentionally simple teaching
+implementations, and where would you reuse existing scientific software
+in real work?</li>
+<li>What are the strongest user-facing contracts in your package, and
+how do tests and clean-room checks protect them?</li>
+<li>If another team had to maintain this project next semester, would
+they understand the boundary between core analysis logic and interface
+glue?</li>
+</ul>
+<hr>
+</div>
 </div>
 <div class="section level2">
 <h2 id="summary">Summary<a class="anchor" aria-label="anchor" href="#summary"></a>
@@ -818,7 +908,7 @@ questions</li>
 <code class="sourceCode R"><span><span class="fu"><a href="https://rdrr.io/r/utils/sessionInfo.html" class="external-link">sessionInfo</a></span><span class="op">(</span><span class="op">)</span></span></code></pre></div>
 <pre><code><span><span class="co">## R version 4.5.3 (2026-03-11)</span></span>
 <span><span class="co">## Platform: x86_64-pc-linux-gnu</span></span>
-<span><span class="co">## Running under: Ubuntu 24.04.3 LTS</span></span>
+<span><span class="co">## Running under: Ubuntu 24.04.4 LTS</span></span>
 <span><span class="co">## </span></span>
 <span><span class="co">## Matrix products: default</span></span>
 <span><span class="co">## BLAS:   /usr/lib/x86_64-linux-gnu/openblas-pthread/libblas.so.3 </span></span>
@@ -838,12 +928,12 @@ questions</li>
 <span><span class="co">## </span></span>
 <span><span class="co">## loaded via a namespace (and not attached):</span></span>
 <span><span class="co">##  [1] digest_0.6.39     desc_1.4.3        R6_2.6.1          fastmap_1.2.0    </span></span>
-<span><span class="co">##  [5] xfun_0.56         cachem_1.1.0      knitr_1.51        htmltools_0.5.9  </span></span>
-<span><span class="co">##  [9] rmarkdown_2.30    lifecycle_1.0.5   cli_3.6.5         sass_0.4.10      </span></span>
+<span><span class="co">##  [5] xfun_0.57         cachem_1.1.0      knitr_1.51        htmltools_0.5.9  </span></span>
+<span><span class="co">##  [9] rmarkdown_2.31    lifecycle_1.0.5   cli_3.6.5         sass_0.4.10      </span></span>
 <span><span class="co">## [13] pkgdown_2.2.0     textshaping_1.0.5 jquerylib_0.1.4   systemfonts_1.3.2</span></span>
-<span><span class="co">## [17] compiler_4.5.3    tools_4.5.3       ragg_1.5.1        bslib_0.10.0     </span></span>
+<span><span class="co">## [17] compiler_4.5.3    tools_4.5.3       ragg_1.5.2        bslib_0.10.0     </span></span>
 <span><span class="co">## [21] evaluate_1.0.5    yaml_2.3.12       otel_0.2.0        jsonlite_2.0.0   </span></span>
-<span><span class="co">## [25] rlang_1.1.7       fs_1.6.7          htmlwidgets_1.6.4</span></span></code></pre>
+<span><span class="co">## [25] rlang_1.1.7       fs_2.0.1          htmlwidgets_1.6.4</span></span></code></pre>
 </div>
   </main><aside class="col-md-3"><nav id="toc" aria-label="Table of contents"><h2>On this page</h2>
     </nav></aside>

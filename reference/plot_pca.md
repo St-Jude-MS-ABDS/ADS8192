@@ -20,7 +20,7 @@ plot_pca(
 - pca_result:
 
   Output from
-  [`run_pca()`](https://automatic-engine-4qp7m5e.pages.github.io/reference/run_pca.md).
+  [`run_pca()`](https://st-jude-ms-abds.github.io/ADS8192/reference/run_pca.md).
 
 - color_by:
 

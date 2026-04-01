@@ -91,10 +91,50 @@ installation</li>
 execution in a clean session</li>
 <li>Confirm that CLI outputs match the package’s R function outputs for
 the same inputs</li>
+<li>Explain why clean-room testing, release discipline, and backward
+compatibility matter for automation users</li>
 </ol>
 <p><strong>Course Learning Outcomes (CLOs):</strong> CLO 1, 2, 3, 5,
 6</p>
+<div class="section level3">
+<h3 id="motivation">Motivation<a class="anchor" aria-label="anchor" href="#motivation"></a>
+</h3>
+<p>For automated scientific tools, installation and release quality are
+part of the user experience. If a CLI only works in development mode or
+only on the author’s machine, it is not yet robust software.</p>
+<p>This lecture matters because clean installs, output parity checks,
+and release discipline save other people time. They catch hidden
+assumptions early, prevent interface drift, and make it much more likely
+that a pipeline user or collaborator will get the same result you saw
+during development.</p>
+</div>
+<div class="section level3">
+<h3 id="evaluation-checklist">Evaluation Checklist<a class="anchor" aria-label="anchor" href="#evaluation-checklist"></a>
+</h3>
+<p>Before you ship a CLI, ask:</p>
+<ul>
+<li>Can a user install and run it from a clean environment with only
+declared dependencies?</li>
+<li>Does the installed interface behave the same as the development
+version?</li>
+<li>Do CLI outputs match the package core for the same inputs?</li>
+<li>Which file names, flags, and output columns now form part of the
+user contract?</li>
+<li>What would break if you changed those interfaces in the next
+release?</li>
+<li>Are release steps reproducible enough for someone else in the lab to
+repeat?</li>
+</ul>
+</div>
+<div class="section level3">
+<h3 id="scientific-use-case">Scientific Use Case<a class="anchor" aria-label="anchor" href="#scientific-use-case"></a>
+</h3>
+<p>An analysis group adds your CLI to a scheduled workflow and archives
+the outputs for compliance. A month later you “clean up” some file names
+and help text before tagging a release. Which changes are harmless
+refactors, and which ones break their pipeline contract?</p>
 <hr>
+</div>
 </div>
 <div class="section level2">
 <h2 id="where-we-are">Where We Are<a class="anchor" aria-label="anchor" href="#where-we-are"></a>
@@ -112,6 +152,15 @@ from the terminal:</p>
 workflow works end-to-end — package installation, launcher installation,
 and CLI execution — in a clean R session.</p>
 <hr>
+<div class="section level3">
+<h3 id="design-principle-installation-is-part-of-the-product">Design Principle: Installation Is Part of the Product<a class="anchor" aria-label="anchor" href="#design-principle-installation-is-part-of-the-product"></a>
+</h3>
+<p>If a tool only works on the developer’s machine, it is not ready for
+scientific use. Clean-room testing and output parity checks matter
+because they reveal hidden assumptions, missing dependencies, and
+accidental drift between interfaces before users discover them the hard
+way.</p>
+</div>
 </div>
 <div class="section level2">
 <h2 id="part-1-package-the-cli-entry-point">Part 1: Package the CLI Entry Point<a class="anchor" aria-label="anchor" href="#part-1-package-the-cli-entry-point"></a>
@@ -617,6 +666,16 @@ OK - The package installs from GitHub and exposes both `run_app()` and a working
 
 ---
 
+## Debrief &amp; Reflection
+
+Before moving on, make sure you can answer:
+
+- Why is installation quality part of the user contract for automation tools?
+- Which parts of your CLI output now count as backward-compatibility commitments?
+- How do clean-room testing and output parity checks protect users from hidden assumptions in your development environment?
+
+---
+
 # After-Class Tasks
 
 ## Micro-task 1: R CMD check
@@ -672,7 +731,7 @@ shiny-app.Rmd │ └── cli.Rmd ├── _pkgdown.yml └── .github/ �
 sessionInfo()</code></pre>
 <pre><code><span><span class="co">## R version 4.5.3 (2026-03-11)</span></span>
 <span><span class="co">## Platform: x86_64-pc-linux-gnu</span></span>
-<span><span class="co">## Running under: Ubuntu 24.04.3 LTS</span></span>
+<span><span class="co">## Running under: Ubuntu 24.04.4 LTS</span></span>
 <span><span class="co">## </span></span>
 <span><span class="co">## Matrix products: default</span></span>
 <span><span class="co">## BLAS:   /usr/lib/x86_64-linux-gnu/openblas-pthread/libblas.so.3 </span></span>
@@ -692,12 +751,12 @@ sessionInfo()</code></pre>
 <span><span class="co">## </span></span>
 <span><span class="co">## loaded via a namespace (and not attached):</span></span>
 <span><span class="co">##  [1] digest_0.6.39     desc_1.4.3        R6_2.6.1          fastmap_1.2.0    </span></span>
-<span><span class="co">##  [5] xfun_0.56         cachem_1.1.0      knitr_1.51        htmltools_0.5.9  </span></span>
-<span><span class="co">##  [9] rmarkdown_2.30    lifecycle_1.0.5   cli_3.6.5         sass_0.4.10      </span></span>
+<span><span class="co">##  [5] xfun_0.57         cachem_1.1.0      knitr_1.51        htmltools_0.5.9  </span></span>
+<span><span class="co">##  [9] rmarkdown_2.31    lifecycle_1.0.5   cli_3.6.5         sass_0.4.10      </span></span>
 <span><span class="co">## [13] pkgdown_2.2.0     textshaping_1.0.5 jquerylib_0.1.4   systemfonts_1.3.2</span></span>
-<span><span class="co">## [17] compiler_4.5.3    tools_4.5.3       ragg_1.5.1        bslib_0.10.0     </span></span>
+<span><span class="co">## [17] compiler_4.5.3    tools_4.5.3       ragg_1.5.2        bslib_0.10.0     </span></span>
 <span><span class="co">## [21] evaluate_1.0.5    yaml_2.3.12       otel_0.2.0        jsonlite_2.0.0   </span></span>
-<span><span class="co">## [25] rlang_1.1.7       fs_1.6.7          htmlwidgets_1.6.4</span></span></code></pre>
+<span><span class="co">## [25] rlang_1.1.7       fs_2.0.1          htmlwidgets_1.6.4</span></span></code></pre>
 </div>
 </div>
 </div>

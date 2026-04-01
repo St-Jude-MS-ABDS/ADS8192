@@ -90,12 +90,52 @@ Andrews</h4>
 commands</li>
 <li>Test CLI functionality from the terminal and interpret exit
 behavior</li>
+<li>Decide when a CLI is worth adding and keep it a thin wrapper over
+package logic</li>
 <li>Explain why CLIs improve interoperability and pipeline
 integration</li>
 </ol>
 <p><strong>Course Learning Outcomes (CLOs):</strong> CLO 1, 2, 3, 5,
 6</p>
+<div class="section level3">
+<h3 id="motivation">Motivation<a class="anchor" aria-label="anchor" href="#motivation"></a>
+</h3>
+<p>Scientific software often needs to run without a human sitting at the
+keyboard. Command-line interfaces matter because they make analysis
+tools usable in pipelines, schedulers, shared compute environments, and
+repeatable scripts.</p>
+<p>This lecture is important for robust software design because a good
+CLI forces you to make the interface contract explicit: inputs, outputs,
+defaults, error behavior, and file formats all become visible. That
+clarity saves time for automation users and reduces drift between the
+command line and the underlying package logic.</p>
+</div>
+<div class="section level3">
+<h3 id="evaluation-checklist">Evaluation Checklist<a class="anchor" aria-label="anchor" href="#evaluation-checklist"></a>
+</h3>
+<p>Before adding a CLI, ask:</p>
+<ul>
+<li>Who needs it: pipeline users, HPC workflows, collaborators, or only
+interactive analysts?</li>
+<li>What explicit inputs and outputs must remain stable over time?</li>
+<li>Does the CLI call the same package functions as the R API and Shiny
+app?</li>
+<li>Are error messages and exit codes useful to scripts, not just
+humans?</li>
+<li>Would a thin wrapper over the existing package be enough?</li>
+<li>Are you adding a CLI because users need automation, or because it
+seems impressive?</li>
+</ul>
+</div>
+<div class="section level3">
+<h3 id="scientific-use-case">Scientific Use Case<a class="anchor" aria-label="anchor" href="#scientific-use-case"></a>
+</h3>
+<p>A bioinformatics core wants to run your analysis across 40 cohorts in
+a nightly workflow. They do not want a web app and they do not want to
+source R files by hand. What contract does a good CLI need to offer so
+that automation users can trust it?</p>
 <hr>
+</div>
 </div>
 <div class="section level2">
 <h2 id="why-build-a-cli">Why Build a CLI?<a class="anchor" aria-label="anchor" href="#why-build-a-cli"></a>
@@ -146,6 +186,24 @@ Nextflow, Make</li>
 <strong>No IDE required</strong>: Run on servers, HPC clusters</li>
 </ul>
 <hr>
+</div>
+<div class="section level3">
+<h3 id="when-should-you-add-a-cli">When Should You Add a CLI?<a class="anchor" aria-label="anchor" href="#when-should-you-add-a-cli"></a>
+</h3>
+<p>Add a CLI when users need automation, batch execution, scheduler
+integration, or a stable entry point from another language or workflow
+manager. Do not add one just because a terminal interface looks
+advanced. A CLI is worthwhile when it exposes a clear contract around
+existing package logic.</p>
+</div>
+<div class="section level3">
+<h3 id="why-use-rapp-instead-of-parsing-arguments-yourself">Why Use Rapp Instead of Parsing Arguments Yourself?<a class="anchor" aria-label="anchor" href="#why-use-rapp-instead-of-parsing-arguments-yourself"></a>
+</h3>
+<p>Argument parsing is infrastructure, not the scientific problem.
+<code>Rapp</code> lets you describe commands, help text, and argument
+types without hand-writing a parser, which leaves your time for the
+design work that matters: stable flags, explicit file formats, and DRY
+delegation to the package core.</p>
 </div>
 </div>
 <div class="section level2">
@@ -764,6 +822,20 @@ users can run <code>sePCA pca --help</code> directly from the terminal
 after installing your package.</p>
 <hr>
 </div>
+<div class="section level3">
+<h3 id="debrief-reflection">Debrief &amp; Reflection<a class="anchor" aria-label="anchor" href="#debrief-reflection"></a>
+</h3>
+<p>Before moving on, make sure you can answer:</p>
+<ul>
+<li>When is a CLI genuinely useful, and when is it just an unnecessary
+extra interface?</li>
+<li>Which parts of the CLI are stable user contract, and which parts are
+replaceable implementation details?</li>
+<li>How does <code>Rapp</code> let you avoid reinventing plumbing so you
+can focus on I/O contracts and DRY reuse of the package core?</li>
+</ul>
+<hr>
+</div>
 </div>
 <div class="section level2">
 <h2 id="after-class-tasks">After-Class Tasks<a class="anchor" aria-label="anchor" href="#after-class-tasks"></a>
@@ -834,7 +906,7 @@ users who skip the launcher</li>
 <code class="sourceCode R"><span><span class="fu"><a href="https://rdrr.io/r/utils/sessionInfo.html" class="external-link">sessionInfo</a></span><span class="op">(</span><span class="op">)</span></span></code></pre></div>
 <pre><code><span><span class="co">## R version 4.5.3 (2026-03-11)</span></span>
 <span><span class="co">## Platform: x86_64-pc-linux-gnu</span></span>
-<span><span class="co">## Running under: Ubuntu 24.04.3 LTS</span></span>
+<span><span class="co">## Running under: Ubuntu 24.04.4 LTS</span></span>
 <span><span class="co">## </span></span>
 <span><span class="co">## Matrix products: default</span></span>
 <span><span class="co">## BLAS:   /usr/lib/x86_64-linux-gnu/openblas-pthread/libblas.so.3 </span></span>
@@ -854,12 +926,12 @@ users who skip the launcher</li>
 <span><span class="co">## </span></span>
 <span><span class="co">## loaded via a namespace (and not attached):</span></span>
 <span><span class="co">##  [1] digest_0.6.39     desc_1.4.3        R6_2.6.1          fastmap_1.2.0    </span></span>
-<span><span class="co">##  [5] xfun_0.56         cachem_1.1.0      knitr_1.51        htmltools_0.5.9  </span></span>
-<span><span class="co">##  [9] rmarkdown_2.30    lifecycle_1.0.5   cli_3.6.5         sass_0.4.10      </span></span>
+<span><span class="co">##  [5] xfun_0.57         cachem_1.1.0      knitr_1.51        htmltools_0.5.9  </span></span>
+<span><span class="co">##  [9] rmarkdown_2.31    lifecycle_1.0.5   cli_3.6.5         sass_0.4.10      </span></span>
 <span><span class="co">## [13] pkgdown_2.2.0     textshaping_1.0.5 jquerylib_0.1.4   systemfonts_1.3.2</span></span>
-<span><span class="co">## [17] compiler_4.5.3    tools_4.5.3       ragg_1.5.1        bslib_0.10.0     </span></span>
+<span><span class="co">## [17] compiler_4.5.3    tools_4.5.3       ragg_1.5.2        bslib_0.10.0     </span></span>
 <span><span class="co">## [21] evaluate_1.0.5    yaml_2.3.12       otel_0.2.0        jsonlite_2.0.0   </span></span>
-<span><span class="co">## [25] rlang_1.1.7       fs_1.6.7          htmlwidgets_1.6.4</span></span></code></pre>
+<span><span class="co">## [25] rlang_1.1.7       fs_2.0.1          htmlwidgets_1.6.4</span></span></code></pre>
 </div>
   </main><aside class="col-md-3"><nav id="toc" aria-label="Table of contents"><h2>On this page</h2>
     </nav></aside>

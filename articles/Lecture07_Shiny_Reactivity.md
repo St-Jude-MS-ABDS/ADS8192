@@ -8,10 +8,47 @@ By the end of this session, you will be able to:
     duplicating logic
 2.  Use reactive expressions to cache expensive computations and manage
     reactivity
-3.  Apply input validation and basic UI/UX principles (clarity,
+3.  Treat reactivity as an abstraction boundary rather than a second
+    implementation of the analysis
+4.  Apply input validation and basic UI/UX principles (clarity,
     feedback, consistency) to a scientific app
 
 **Course Learning Outcomes (CLOs):** CLO 1, 4, 5, 6
+
+### Motivation
+
+Interactive scientific software is valuable because many users explore
+data by changing parameters, comparing metadata fields, and looking for
+patterns before they are ready to write a script. A reactive app can
+make that exploration fast and accessible without changing the
+underlying science.
+
+This lecture matters because a well-designed Shiny app saves time only
+when it remains a thin layer over shared analysis logic. If reactivity
+is used carefully, you avoid duplicated computation, keep the interface
+responsive, and let improvements in the package core benefit every
+user-facing layer at once.
+
+### Evaluation Checklist
+
+Before adding an interactive interface, ask:
+
+- Who is the audience, and what task is easier interactively than at the
+  console?
+- Which computations are expensive enough to deserve reactive caching?
+- What inputs need validation at the interface boundary?
+- Does the app call the same core functions as the other interfaces?
+- Will the UI help users reason about the science, or just expose every
+  possible knob?
+- Would a thin interface around existing package functions be enough?
+
+### Scientific Use Case
+
+A wet-lab collaborator wants to explore how PCA changes when they switch
+from 500 to 2000 highly variable genes and color points by treatment,
+batch, or donor. They do not want to read R code, but they do need the
+same computation your package already exposes programmatically. What
+belongs in the app, and what must remain in the core?
 
 ------------------------------------------------------------------------
 
@@ -53,12 +90,22 @@ But this requires:
        └─────────┘         └─────────┘         └─────────┘
 
 The Shiny app calls the same
-[`run_pca()`](https://automatic-engine-4qp7m5e.pages.github.io/reference/run_pca.md)
+[`run_pca()`](https://st-jude-ms-abds.github.io/ADS8192/reference/run_pca.md)
 and
-[`plot_pca()`](https://automatic-engine-4qp7m5e.pages.github.io/reference/plot_pca.md)
+[`plot_pca()`](https://st-jude-ms-abds.github.io/ADS8192/reference/plot_pca.md)
 functions — it never reimplements the analysis!
 
 ------------------------------------------------------------------------
+
+### Design Principle: Reactivity Is a Cache Boundary
+
+Reactive expressions are useful because they let you say, “recompute
+this result only when the relevant inputs change.” That is an
+abstraction and caching boundary, not a new place to re-implement PCA.
+If
+[`run_pca()`](https://st-jude-ms-abds.github.io/ADS8192/reference/run_pca.md)
+changes, the app should benefit automatically because it still delegates
+to the same core function.
 
 ## Part 1: Shiny Basics
 
@@ -567,6 +614,19 @@ functions and is structured for later packaging.
 
 ------------------------------------------------------------------------
 
+### Debrief & Reflection
+
+Before moving on, make sure you can answer:
+
+- Which app computations should be cached reactively, and which should
+  stay as direct rendering code?
+- How does Shiny help you avoid reinventing a custom web interface while
+  still keeping the scientific logic reusable?
+- Which user-facing validations belong in the app because they protect
+  the interface boundary?
+
+------------------------------------------------------------------------
+
 ## After-Class Tasks
 
 ### Reading
@@ -613,7 +673,7 @@ sessionInfo()
 
     ## R version 4.5.3 (2026-03-11)
     ## Platform: x86_64-pc-linux-gnu
-    ## Running under: Ubuntu 24.04.3 LTS
+    ## Running under: Ubuntu 24.04.4 LTS
     ## 
     ## Matrix products: default
     ## BLAS:   /usr/lib/x86_64-linux-gnu/openblas-pthread/libblas.so.3 
@@ -633,9 +693,9 @@ sessionInfo()
     ## 
     ## loaded via a namespace (and not attached):
     ##  [1] digest_0.6.39     desc_1.4.3        R6_2.6.1          fastmap_1.2.0    
-    ##  [5] xfun_0.56         cachem_1.1.0      knitr_1.51        htmltools_0.5.9  
-    ##  [9] rmarkdown_2.30    lifecycle_1.0.5   cli_3.6.5         sass_0.4.10      
+    ##  [5] xfun_0.57         cachem_1.1.0      knitr_1.51        htmltools_0.5.9  
+    ##  [9] rmarkdown_2.31    lifecycle_1.0.5   cli_3.6.5         sass_0.4.10      
     ## [13] pkgdown_2.2.0     textshaping_1.0.5 jquerylib_0.1.4   systemfonts_1.3.2
-    ## [17] compiler_4.5.3    tools_4.5.3       ragg_1.5.1        bslib_0.10.0     
+    ## [17] compiler_4.5.3    tools_4.5.3       ragg_1.5.2        bslib_0.10.0     
     ## [21] evaluate_1.0.5    yaml_2.3.12       otel_0.2.0        jsonlite_2.0.0   
-    ## [25] rlang_1.1.7       fs_1.6.7          htmlwidgets_1.6.4
+    ## [25] rlang_1.1.7       fs_2.0.1          htmlwidgets_1.6.4

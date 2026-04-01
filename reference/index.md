@@ -4,37 +4,37 @@
 
 Create and manipulate SummarizedExperiment objects
 
-- [`top_variable_features()`](https://automatic-engine-4qp7m5e.pages.github.io/reference/top_variable_features.md)
+- [`top_variable_features()`](https://st-jude-ms-abds.github.io/ADS8192/reference/top_variable_features.md)
   : Select top variable features
 
 ## PCA Analysis
 
 Run and analyze PCA
 
-- [`run_pca()`](https://automatic-engine-4qp7m5e.pages.github.io/reference/run_pca.md)
+- [`run_pca()`](https://st-jude-ms-abds.github.io/ADS8192/reference/run_pca.md)
   : Run PCA on a SummarizedExperiment
-- [`pca_variance_explained()`](https://automatic-engine-4qp7m5e.pages.github.io/reference/pca_variance_explained.md)
+- [`pca_variance_explained()`](https://st-jude-ms-abds.github.io/ADS8192/reference/pca_variance_explained.md)
   : Get variance explained by each PC
 
 ## Visualization
 
 Create plots
 
-- [`plot_pca()`](https://automatic-engine-4qp7m5e.pages.github.io/reference/plot_pca.md)
+- [`plot_pca()`](https://st-jude-ms-abds.github.io/ADS8192/reference/plot_pca.md)
   : Create a PCA scatter plot
-- [`plot_variance_explained()`](https://automatic-engine-4qp7m5e.pages.github.io/reference/plot_variance_explained.md)
+- [`plot_variance_explained()`](https://st-jude-ms-abds.github.io/ADS8192/reference/plot_variance_explained.md)
   : Plot variance explained by principal components
 
 ## Export
 
 Save results to files
 
-- [`save_pca_results()`](https://automatic-engine-4qp7m5e.pages.github.io/reference/save_pca_results.md)
+- [`save_pca_results()`](https://st-jude-ms-abds.github.io/ADS8192/reference/save_pca_results.md)
   : Save PCA results to files
 
 ## Interactive App
 
 Shiny web application
 
-- [`run_app()`](https://automatic-engine-4qp7m5e.pages.github.io/reference/run_app.md)
+- [`run_app()`](https://st-jude-ms-abds.github.io/ADS8192/reference/run_app.md)
   : Run the PCA Explorer Shiny Application

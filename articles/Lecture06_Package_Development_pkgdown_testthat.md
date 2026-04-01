@@ -8,11 +8,48 @@ By the end of this session, you will be able to:
     documentation website
 2.  Set up CI to run R CMD check and deploy a pkgdown site (GitHub
     Pages)
-3.  Create and run basic unit tests locally with testthat
-4.  Explain why tests are essential for maintainability and safe
-    refactoring
+3.  Create and run meaningful unit tests locally with testthat
+4.  Distinguish public behavior that should be tested from
+    implementation details that should stay flexible
+5.  Explain why tests and CI are essential for maintainability,
+    refactoring safety, and hidden-assumption detection
 
 **Course Learning Outcomes (CLOs):** CLO 1, 4, 6
+
+### Motivation
+
+Scientific software is rarely finished when the first version works. It
+changes when data sets grow, parameters are tuned, bugs are fixed, and
+collaborators ask for new outputs. Testing, documentation, and CI are
+the tools that keep those changes from quietly breaking results.
+
+These practices save time because they turn vague trust into concrete
+checks. Clear tests protect user-facing behavior, documentation lowers
+the cost of reuse, and CI catches hidden environment problems before a
+reviewer, collaborator, or student discovers them the hard way.
+
+### Evaluation Checklist
+
+Before you add a test, docs, or CI layer, ask:
+
+- What public behavior or scientific assumption am I protecting?
+- Would this failure matter to a user, reviewer, or downstream
+  interface?
+- Am I testing a stable contract, or overfitting to an internal
+  implementation detail?
+- Will the check run in a clean environment with only declared
+  dependencies?
+- Does this tool reduce maintenance risk more than a custom workflow
+  would?
+- If the code changes, will these checks catch regressions that matter?
+
+### Scientific Use Case
+
+A collaborator speeds up
+[`top_variable_features()`](https://st-jude-ms-abds.github.io/ADS8192/reference/top_variable_features.md)
+right before a manuscript deadline. The function still runs, but it now
+changes the output shape in a subtle way and breaks a figure script two
+files downstream. What should your tests and CI have protected?
 
 ------------------------------------------------------------------------
 
@@ -44,18 +81,34 @@ this workflow sustainable.
 Consider this scenario:
 
 1.  You write
-    [`run_pca()`](https://automatic-engine-4qp7m5e.pages.github.io/reference/run_pca.md)
+    [`run_pca()`](https://st-jude-ms-abds.github.io/ADS8192/reference/run_pca.md)
     and it works
 2.  A month later, you optimize
-    [`top_variable_features()`](https://automatic-engine-4qp7m5e.pages.github.io/reference/top_variable_features.md)
+    [`top_variable_features()`](https://st-jude-ms-abds.github.io/ADS8192/reference/top_variable_features.md)
     for speed
 3.  You accidentally change the output format
-4.  [`run_pca()`](https://automatic-engine-4qp7m5e.pages.github.io/reference/run_pca.md)
+4.  [`run_pca()`](https://st-jude-ms-abds.github.io/ADS8192/reference/run_pca.md)
     now silently returns wrong results
 5.  You don’t notice until a reviewer questions your paper’s figures
 
 **Tests prevent this.** They’re automated checks that verify your code
 still works after changes.
+
+### What Should Tests Protect?
+
+In scientific software, the highest-value tests usually protect:
+
+- **Public contracts**: returned classes, column names, file outputs,
+  and error messages that users rely on
+- **Scientific assumptions**: dimensionality, valid parameter ranges,
+  and meaningful edge cases
+- **Cross-interface behavior**: the Shiny app and CLI should remain thin
+  wrappers over the same tested core
+
+Avoid overfitting tests to incidental implementation details such as
+temporary variable names or the exact internal sequence of helper calls.
+Good tests make refactoring safer; brittle tests make refactoring
+harder.
 
 ### Setting Up testthat
 
@@ -181,7 +234,7 @@ fixing the bug.
 #### The Bug
 
 Currently,
-[`run_pca()`](https://automatic-engine-4qp7m5e.pages.github.io/reference/run_pca.md)
+[`run_pca()`](https://st-jude-ms-abds.github.io/ADS8192/reference/run_pca.md)
 doesn’t validate that `n_top` is a positive integer. Let’s fix that.
 
 #### Step 1: Write a Failing Test
@@ -203,7 +256,7 @@ test()  # This should show 1 failure
 #### Step 3: Fix the Code
 
 Add to
-[`run_pca()`](https://automatic-engine-4qp7m5e.pages.github.io/reference/run_pca.md):
+[`run_pca()`](https://st-jude-ms-abds.github.io/ADS8192/reference/run_pca.md):
 
 ``` r
 run_pca <- function(se, assay_name = "counts", n_top = 500,
@@ -655,6 +708,18 @@ optionally deployed) from GitHub.
 
 ------------------------------------------------------------------------
 
+### Debrief & Reflection
+
+Before moving on, make sure you can answer:
+
+- Which parts of your package are true contracts that deserve tests?
+- Which failures would only appear on a clean machine or another
+  platform if CI did not exist?
+- How do `testthat`, `pkgdown`, and CI let you avoid reinventing
+  infrastructure so you can focus on analysis quality?
+
+------------------------------------------------------------------------
+
 ## After-Class Tasks
 
 ### Micro-task 1: Add Tests
@@ -663,9 +728,9 @@ Add at least 5 test expectations across ≥2 test files. Ensure all tests
 pass.
 
 Ideas: - Test
-[`plot_pca()`](https://automatic-engine-4qp7m5e.pages.github.io/reference/plot_pca.md)
+[`plot_pca()`](https://st-jude-ms-abds.github.io/ADS8192/reference/plot_pca.md)
 returns a ggplot object - Test
-[`plot_pca()`](https://automatic-engine-4qp7m5e.pages.github.io/reference/plot_pca.md)
+[`plot_pca()`](https://st-jude-ms-abds.github.io/ADS8192/reference/plot_pca.md)
 with different `pcs` values - Test edge cases (what happens with n_top
 \> nrow?)
 
@@ -728,7 +793,7 @@ sessionInfo()
 
     ## R version 4.5.3 (2026-03-11)
     ## Platform: x86_64-pc-linux-gnu
-    ## Running under: Ubuntu 24.04.3 LTS
+    ## Running under: Ubuntu 24.04.4 LTS
     ## 
     ## Matrix products: default
     ## BLAS:   /usr/lib/x86_64-linux-gnu/openblas-pthread/libblas.so.3 
@@ -748,9 +813,9 @@ sessionInfo()
     ## 
     ## loaded via a namespace (and not attached):
     ##  [1] digest_0.6.39     desc_1.4.3        R6_2.6.1          fastmap_1.2.0    
-    ##  [5] xfun_0.56         cachem_1.1.0      knitr_1.51        htmltools_0.5.9  
-    ##  [9] rmarkdown_2.30    lifecycle_1.0.5   cli_3.6.5         sass_0.4.10      
+    ##  [5] xfun_0.57         cachem_1.1.0      knitr_1.51        htmltools_0.5.9  
+    ##  [9] rmarkdown_2.31    lifecycle_1.0.5   cli_3.6.5         sass_0.4.10      
     ## [13] pkgdown_2.2.0     textshaping_1.0.5 jquerylib_0.1.4   systemfonts_1.3.2
-    ## [17] compiler_4.5.3    tools_4.5.3       ragg_1.5.1        bslib_0.10.0     
+    ## [17] compiler_4.5.3    tools_4.5.3       ragg_1.5.2        bslib_0.10.0     
     ## [21] evaluate_1.0.5    yaml_2.3.12       otel_0.2.0        jsonlite_2.0.0   
-    ## [25] rlang_1.1.7       fs_1.6.7          htmlwidgets_1.6.4
+    ## [25] rlang_1.1.7       fs_2.0.1          htmlwidgets_1.6.4

@@ -9,8 +9,68 @@ By the end of this session, you will be able to:
     test → document)
 3.  Validate the end-to-end deliverable: install from GitHub, run core
     functions, run Shiny app, run CLI, and view pkgdown site
+4.  Synthesize the durable software-design heuristics from Unit 1 and
+    use them during peer review
 
 **Course Learning Outcomes (CLOs):** CLO 1, 2, 3, 4, 5, 6
+
+### Motivation
+
+Robust scientific software is evaluated end to end: can someone else
+install it, understand it, trust its outputs, and debug it when
+something goes wrong? A review session matters because it forces you to
+look at the project the way a real user, collaborator, or reviewer
+would.
+
+This lecture is important because systematic debugging and peer review
+save time. They help you find hidden assumptions, inconsistent
+interfaces, and weak documentation before those problems become lost
+hours for someone else or become embarrassing failures late in a
+project.
+
+### Evaluation Checklist
+
+As you review a package at the end of Unit 1, ask:
+
+- Does the project reuse strong existing infrastructure instead of
+  rebuilding it unnecessarily?
+- Is there one clear analysis core with thin interfaces layered on top?
+- Are public contracts documented, tested, and stable across interfaces?
+- Can another user install and run it from a clean environment?
+- Are validation and error messages placed at the right boundaries?
+- Would a future collaborator understand what is core logic versus
+  interface glue?
+
+### Scientific Use Case
+
+Imagine you inherit a small but useful lab prototype that currently
+exists as a pile of scripts. You have one week to turn it into something
+another team can install, test, run interactively, and place in a
+workflow. Which Unit 1 principles let you improve the software quickly
+without rewriting the science from scratch?
+
+------------------------------------------------------------------------
+
+## Unit 1 Design Synthesis
+
+The specific tools in this unit matter, but the durable ideas matter
+more:
+
+- **Reuse strong ecosystems first.** Start by evaluating existing
+  packages, containers, and infrastructure before writing custom
+  replacements.
+- **One core, many interfaces.** Keep analysis logic separate from
+  Shiny, CLI, and documentation layers.
+- **Public contracts matter.** Function signatures, file outputs, and
+  help text become promises to users.
+- **Tests protect behavior, not ego.** They exist to catch regressions
+  and make refactoring safe.
+- **Packaging is a distribution boundary.** It forces dependencies,
+  documentation, and installability into the open.
+- **Validate at the boundary.** Friendly errors in functions, apps, and
+  CLIs are part of the product.
+- **Clean-room thinking reveals truth.** If the project only works on
+  your machine, it is not done.
 
 ------------------------------------------------------------------------
 
@@ -20,16 +80,16 @@ By the end of this session, you will be able to:
 
 A GitHub repository containing an R package that:
 
-| Component             | Status                                                                                                                                                                             | Check                                                                                |
-|-----------------------|------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------|--------------------------------------------------------------------------------------|
-| **Package structure** | Valid R package                                                                                                                                                                    | `devtools::check()` passes                                                           |
-| **Core functions**    | [`run_pca()`](https://automatic-engine-4qp7m5e.pages.github.io/reference/run_pca.md), [`plot_pca()`](https://automatic-engine-4qp7m5e.pages.github.io/reference/plot_pca.md), etc. | Functions work on test data                                                          |
-| **Documentation**     | roxygen2 + README                                                                                                                                                                  | `?function` works                                                                    |
-| **Tests**             | testthat                                                                                                                                                                           | `devtools::test()` passes                                                            |
-| **pkgdown site**      | Builds successfully                                                                                                                                                                | [`pkgdown::build_site()`](https://pkgdown.r-lib.org/reference/build_site.html) works |
-| **Shiny app**         | [`run_app()`](https://automatic-engine-4qp7m5e.pages.github.io/reference/run_app.md)                                                                                               | App launches and works                                                               |
-| **CLI**               | `sePCA` (Rapp CLI)                                                                                                                                                                 | CLI runs from fresh install                                                          |
-| **GitHub**            | Public repo                                                                                                                                                                        | `install_github()` works                                                             |
+| Component             | Status                                                                                                                                                               | Check                                                                                |
+|-----------------------|----------------------------------------------------------------------------------------------------------------------------------------------------------------------|--------------------------------------------------------------------------------------|
+| **Package structure** | Valid R package                                                                                                                                                      | `devtools::check()` passes                                                           |
+| **Core functions**    | [`run_pca()`](https://st-jude-ms-abds.github.io/ADS8192/reference/run_pca.md), [`plot_pca()`](https://st-jude-ms-abds.github.io/ADS8192/reference/plot_pca.md), etc. | Functions work on test data                                                          |
+| **Documentation**     | roxygen2 + README                                                                                                                                                    | `?function` works                                                                    |
+| **Tests**             | testthat                                                                                                                                                             | `devtools::test()` passes                                                            |
+| **pkgdown site**      | Builds successfully                                                                                                                                                  | [`pkgdown::build_site()`](https://pkgdown.r-lib.org/reference/build_site.html) works |
+| **Shiny app**         | [`run_app()`](https://st-jude-ms-abds.github.io/ADS8192/reference/run_app.md)                                                                                        | App launches and works                                                               |
+| **CLI**               | `sePCA` (Rapp CLI)                                                                                                                                                   | CLI runs from fresh install                                                          |
+| **GitHub**            | Public repo                                                                                                                                                          | `install_github()` works                                                             |
 
 ------------------------------------------------------------------------
 
@@ -572,6 +632,21 @@ Add CI badges to README
 
 ------------------------------------------------------------------------
 
+### Debrief & Reflection
+
+Before submission, make sure you can answer:
+
+- Which parts of your project are intentionally simple teaching
+  implementations, and where would you reuse existing scientific
+  software in real work?
+- What are the strongest user-facing contracts in your package, and how
+  do tests and clean-room checks protect them?
+- If another team had to maintain this project next semester, would they
+  understand the boundary between core analysis logic and interface
+  glue?
+
+------------------------------------------------------------------------
+
 ## Summary
 
 Today we:
@@ -621,7 +696,7 @@ sessionInfo()
 
     ## R version 4.5.3 (2026-03-11)
     ## Platform: x86_64-pc-linux-gnu
-    ## Running under: Ubuntu 24.04.3 LTS
+    ## Running under: Ubuntu 24.04.4 LTS
     ## 
     ## Matrix products: default
     ## BLAS:   /usr/lib/x86_64-linux-gnu/openblas-pthread/libblas.so.3 
@@ -641,9 +716,9 @@ sessionInfo()
     ## 
     ## loaded via a namespace (and not attached):
     ##  [1] digest_0.6.39     desc_1.4.3        R6_2.6.1          fastmap_1.2.0    
-    ##  [5] xfun_0.56         cachem_1.1.0      knitr_1.51        htmltools_0.5.9  
-    ##  [9] rmarkdown_2.30    lifecycle_1.0.5   cli_3.6.5         sass_0.4.10      
+    ##  [5] xfun_0.57         cachem_1.1.0      knitr_1.51        htmltools_0.5.9  
+    ##  [9] rmarkdown_2.31    lifecycle_1.0.5   cli_3.6.5         sass_0.4.10      
     ## [13] pkgdown_2.2.0     textshaping_1.0.5 jquerylib_0.1.4   systemfonts_1.3.2
-    ## [17] compiler_4.5.3    tools_4.5.3       ragg_1.5.1        bslib_0.10.0     
+    ## [17] compiler_4.5.3    tools_4.5.3       ragg_1.5.2        bslib_0.10.0     
     ## [21] evaluate_1.0.5    yaml_2.3.12       otel_0.2.0        jsonlite_2.0.0   
-    ## [25] rlang_1.1.7       fs_1.6.7          htmlwidgets_1.6.4
+    ## [25] rlang_1.1.7       fs_2.0.1          htmlwidgets_1.6.4

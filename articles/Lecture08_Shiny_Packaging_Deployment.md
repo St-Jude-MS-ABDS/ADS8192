@@ -8,10 +8,45 @@ By the end of this session, you will be able to:
 2.  Deploy the application to a hosting platform (shinyapps.io or Posit
     Cloud)
 3.  Add inputs for flexibility and interactive elements in outputs
-4.  Discuss and (optionally) implement a basic testing strategy for
+4.  Explain why packaging, optional dependencies, and deployment are
+    reproducibility decisions as much as UI decisions
+5.  Discuss and (optionally) implement a basic testing strategy for
     Shiny apps
 
 **Course Learning Outcomes (CLOs):** CLO 1, 4, 5, 6
+
+### Motivation
+
+An app is only useful scientific software if other people can install
+it, launch it, and trust that it behaves the same way outside your own
+machine. Packaging and deployment turn an interesting interface into a
+reproducible tool.
+
+This lecture matters because deployment decisions shape maintainability.
+Stable entry points, optional dependencies, and clean file lookup rules
+save time for collaborators, reduce environment-specific failures, and
+keep the app aligned with the same package core used everywhere else.
+
+### Evaluation Checklist
+
+Before packaging or deploying an app, ask:
+
+- Is the app truly a thin layer over tested package functions?
+- Which dependencies are essential, and which should stay optional?
+- Can a user install and launch the app from a clean session?
+- What interface failures need friendly validation or graceful fallback?
+- Does the deployment choice fit the intended audience and maintenance
+  model?
+- Would packaging this app reduce manual setup more than another custom
+  distribution method?
+
+### Scientific Use Case
+
+Your lab wants to share a small QC dashboard with collaborators at
+another institution. Some users will explore the app interactively,
+while others only want the package functions in scripts. How do you
+package the app so both audiences are supported without forcing every
+user into the same workflow?
 
 ------------------------------------------------------------------------
 
@@ -44,10 +79,23 @@ Benefits:
 - **Works anywhere** — no file paths to manage  
 - **Version-controlled** — users get consistent behavior
 - **Documented** —
-  [`?run_app`](https://automatic-engine-4qp7m5e.pages.github.io/reference/run_app.md)
+  [`?run_app`](https://st-jude-ms-abds.github.io/ADS8192/reference/run_app.md)
   shows how to use it
 
 ------------------------------------------------------------------------
+
+### Why Reuse Package Conventions and Deployment Platforms?
+
+Package conventions such as `inst/`,
+[`system.file()`](https://rdrr.io/r/base/system.file.html), and
+[`run_app()`](https://st-jude-ms-abds.github.io/ADS8192/reference/run_app.md)
+exist so you do not have to invent a custom file layout or startup story
+for every app. Hosting platforms then give you a managed way to share
+that app instead of building deployment plumbing yourself.
+
+Reusing those conventions keeps the design problem focused where it
+belongs: what should the app expose, how should dependencies be
+declared, and how should failures be handled for real users.
 
 ## Part 1: Package Structure for Shiny Apps
 
@@ -361,7 +409,7 @@ Suggests:
 
 - Users who only want the R API don’t need shiny
 - Keeps the core package lightweight
-- [`run_app()`](https://automatic-engine-4qp7m5e.pages.github.io/reference/run_app.md)
+- [`run_app()`](https://st-jude-ms-abds.github.io/ADS8192/reference/run_app.md)
   checks for packages at runtime
 
 ### Graceful Fallbacks
@@ -381,7 +429,7 @@ if (requireNamespace("DT", quietly = TRUE)) {
 ```
 
 > **Exercise A:** Ensure
-> [`run_app()`](https://automatic-engine-4qp7m5e.pages.github.io/reference/run_app.md)
+> [`run_app()`](https://st-jude-ms-abds.github.io/ADS8192/reference/run_app.md)
 > works after installing from GitHub (no local relative paths). Test in
 > a fresh R session.
 
@@ -646,6 +694,16 @@ sePCA::run_app()
 
     ---
 
+    ## Debrief & Reflection
+
+    Before moving on, make sure you can answer:
+
+    - Why is packaging the app part of the reproducibility story, not just a convenience feature?
+    - Which app dependencies should be mandatory, and which should remain optional with graceful fallback?
+    - If a collaborator never opens the app and only uses the R API, how does your package design still serve them well?
+
+    ---
+
     # After-Class Tasks
 
     ## Micro-task 1: GitHub Test
@@ -720,7 +778,7 @@ sessionInfo()
 
     ## R version 4.5.3 (2026-03-11)
     ## Platform: x86_64-pc-linux-gnu
-    ## Running under: Ubuntu 24.04.3 LTS
+    ## Running under: Ubuntu 24.04.4 LTS
     ## 
     ## Matrix products: default
     ## BLAS:   /usr/lib/x86_64-linux-gnu/openblas-pthread/libblas.so.3 
@@ -740,9 +798,9 @@ sessionInfo()
     ## 
     ## loaded via a namespace (and not attached):
     ##  [1] digest_0.6.39     desc_1.4.3        R6_2.6.1          fastmap_1.2.0    
-    ##  [5] xfun_0.56         cachem_1.1.0      knitr_1.51        htmltools_0.5.9  
-    ##  [9] rmarkdown_2.30    lifecycle_1.0.5   cli_3.6.5         sass_0.4.10      
+    ##  [5] xfun_0.57         cachem_1.1.0      knitr_1.51        htmltools_0.5.9  
+    ##  [9] rmarkdown_2.31    lifecycle_1.0.5   cli_3.6.5         sass_0.4.10      
     ## [13] pkgdown_2.2.0     textshaping_1.0.5 jquerylib_0.1.4   systemfonts_1.3.2
-    ## [17] compiler_4.5.3    tools_4.5.3       ragg_1.5.1        bslib_0.10.0     
+    ## [17] compiler_4.5.3    tools_4.5.3       ragg_1.5.2        bslib_0.10.0     
     ## [21] evaluate_1.0.5    yaml_2.3.12       otel_0.2.0        jsonlite_2.0.0   
-    ## [25] rlang_1.1.7       fs_1.6.7          htmlwidgets_1.6.4
+    ## [25] rlang_1.1.7       fs_2.0.1          htmlwidgets_1.6.4
