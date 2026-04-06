@@ -16,7 +16,7 @@ Roxygen: list(markdown = TRUE)
 RoxygenNote: 7.3.3
 biocViews:
 Depends:
-    R (>= 4.1.0)
+    R (>= 4.5.0)
 Imports:
     SummarizedExperiment,
     ggplot2,
@@ -41,7 +41,9 @@ Suggests:
     curatedTCGAData,
     msigdbr,
     TENxPBMCData,
-    DESeq2
+    DESeq2,
+    macrophage,
+    ExperimentHub
 Config/testthat/edition: 3
 VignetteBuilder: knitr
 URL: https://github.com/St-Jude-MS-ABDS/ADS8192, https://st-jude-ms-abds.github.io/ADS8192/

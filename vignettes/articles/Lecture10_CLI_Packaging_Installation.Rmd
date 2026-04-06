@@ -56,15 +56,15 @@ An analysis group adds your CLI to a scheduled workflow and archives the outputs
 # Where We Are
 
 In Lecture 9, we built CLI functions that work during development and **exported
-a launcher installer** (`install_sePCA_cli()`) so users can run the CLI
+a launcher installer** (`install_ADS8192_cli()`) so users can run the CLI
 directly from the terminal:
 
 ```bash
 # Works in development mode
-Rapp exec/sePCA pca --help
+Rapp exec/ADS8192 pca --help
 
 # Works after installing launchers (Lecture 9)
-sePCA pca --help
+ADS8192 pca --help
 ```
 
 **Goal:** Verify that the full install-from-GitHub workflow works end-to-end
@@ -91,11 +91,15 @@ dir.create("exec", recursive = TRUE)
 
 ### Add the Rapp App
 
-Create `exec/sePCA` (from Lecture 9). On Unix/Mac, mark it executable:
+Create `exec/ADS8192` (from Lecture 9). On Unix/Mac, mark it executable:
 
 ```bash
-chmod +x exec/sePCA
+chmod +x exec/ADS8192
 ```
+
+> **Mac/Linux users:** You only need to run `chmod +x` once when you first create the file. If you clone the repo fresh on another machine, Git preserves the executable bit (if you committed it), so collaborators won't need to repeat this step. Check with `git ls-files --stage exec/ADS8192` — you should see mode `100755`, not `100644`.
+
+> **Required: trailing newline.** Rapp requires the script file to end with a blank newline. Make sure `exec/ADS8192` has an extra blank line at the very end of the file. Without it, Rapp may fail to parse the last command correctly. In most editors this is the default behavior, but it's worth verifying.
 
 ### Declare the Dependency
 
@@ -111,21 +115,53 @@ usethis::use_package("Rapp")
 
 ## Install CLI Launchers
 
-In Lecture 9 we exported an `install_sePCA_cli()` function that wraps
+In Lecture 9 we exported an `install_ADS8192_cli()` function that wraps
 `Rapp::install_pkg_cli_apps()`. Verify it works after a fresh install:
 
 ```r
 # Your exported wrapper (preferred)
-sePCA::install_sePCA_cli()
+ADS8192::install_ADS8192_cli()
 
 # Or the direct Rapp call
-Rapp::install_pkg_cli_apps("sePCA")
+Rapp::install_pkg_cli_apps("ADS8192")
+```
+
+## Where Rapp Installs Launchers
+
+The launchers are placed in a platform-specific directory:
+
+| Platform | Launcher directory |
+|----------|--------------------|
+| macOS / Linux | `~/.local/bin/` |
+| Windows | `%LOCALAPPDATA%\Programs\R\Rapp\bin\` |
+
+These directories should already be on your `PATH` after `Rapp::install_pkg_cli_apps()` runs — it handles `PATH` configuration automatically on first use. If the command is not found after installation, check:
+
+```bash
+# Unix/Mac: verify the launcher exists
+ls ~/.local/bin/ADS8192
+
+# Windows (PowerShell)
+Get-Command ADS8192
+
+# Check which ADS8192 is on PATH (Unix/Mac)
+which ADS8192
+
+# Check which ADS8192 is on PATH (Windows)
+where ADS8192
+```
+
+If multiple versions are installed or the wrong one is found, check that `~/.local/bin` (Unix) or the Rapp bin directory (Windows) appears before any other `ADS8192` on `PATH`. You can verify the Rapp install path with:
+
+```r
+# See where Rapp would install launchers
+Rapp::pkg_cli_apps_dir()
 ```
 
 After this, users can run:
 
 ```bash
-sePCA pca --help
+ADS8192 pca --help
 ```
 
 ## Fallback: Run Directly from `exec/`
@@ -133,13 +169,13 @@ sePCA pca --help
 If launchers are not installed, you can still run the app directly:
 
 ```bash
-Rapp exec/sePCA pca --help
+Rapp exec/ADS8192 pca --help
 ```
 
 Or from R:
 
 ```r
-Rapp::run(system.file("exec", "sePCA", package = "sePCA"), c("pca", "--help"))
+Rapp::run(system.file("exec", "ADS8192", package = "ADS8192"), c("pca", "--help"))
 ```
 
 ### Required: Export the Launcher Installer
@@ -148,16 +184,16 @@ In Lecture 9 you created `R/install_cli.R` with an exported wrapper.
 Make sure it is present and documented — this is a **rubric requirement**:
 
 ```{r install-helper}
-#' Install sePCA CLI launchers
+#' Install ADS8192 CLI launchers
 #'
 #' Places lightweight launcher scripts on the user's `PATH` so the
-#' sePCA CLI can be invoked directly from a terminal
-#' (e.g. `sePCA pca --help`).
+#' ADS8192 CLI can be invoked directly from a terminal
+#' (e.g. `ADS8192 pca --help`).
 #'
 #' @inheritDotParams Rapp::install_pkg_cli_apps -package -lib.loc
 #' @export
-install_sePCA_cli <- function(...) {
-    Rapp::install_pkg_cli_apps(package = "sePCA", lib.loc = NULL, ...)
+install_ADS8192_cli <- function(...) {
+    Rapp::install_pkg_cli_apps(package = "ADS8192", lib.loc = NULL, ...)
 }
 ```
 
@@ -172,16 +208,16 @@ Add a CLI section:
 ````markdown
 ## Command Line Interface
 
-sePCA includes a command-line interface for pipeline integration.
+ADS8192 includes a command-line interface for pipeline integration.
 
 ### Quick Start
 
 ```bash
 # Install the launcher (one-time)
-Rscript -e "Rapp::install_pkg_cli_apps('sePCA')"
+Rscript -e "Rapp::install_pkg_cli_apps('ADS8192')"
 
 # Run PCA analysis
-sePCA pca \
+ADS8192 pca \
     --counts counts.tsv \
     --meta samples.tsv \
     --output results/ \
@@ -192,7 +228,7 @@ sePCA pca \
 ### Fallback (No Launcher)
 
 ```bash
-Rapp exec/sePCA pca --help
+Rapp exec/ADS8192 pca --help
 ```
 
 ### Available Commands
@@ -202,7 +238,7 @@ Rapp exec/sePCA pca --help
 | `pca` | Run PCA analysis and export results |
 | `validate` | Validate input files |
 
-Run `sePCA <command> --help` for detailed options.
+Run `ADS8192 <command> --help` for detailed options.
 ````
 
 ## Add pkgdown Article
@@ -221,16 +257,16 @@ vignette: >
 
 ## Overview
 
-The sePCA CLI allows you to run PCA analysis from the command line,
+The ADS8192 CLI allows you to run PCA analysis from the command line,
 making it easy to integrate into pipelines.
 
 ## Installation
 
-After installing sePCA, install the CLI launcher:
+After installing ADS8192, install the CLI launcher:
 
 ```r
-remotes::install_github("you/sePCA")
-Rapp::install_pkg_cli_apps("sePCA")
+remotes::install_github("you/ADS8192")
+Rapp::install_pkg_cli_apps("ADS8192")
 ```
 
 ## Usage
@@ -238,7 +274,7 @@ Rapp::install_pkg_cli_apps("sePCA")
 ### Basic PCA Analysis
 
 ```bash
-sePCA pca \
+ADS8192 pca \
     --counts counts.tsv \
     --meta samples.tsv \
     --output results/
@@ -281,7 +317,7 @@ sample3      treated      B
 ### Full Options
 
 ```
-sePCA pca --help
+ADS8192 pca --help
 ```
 
 ## Pipeline Integration
@@ -297,7 +333,7 @@ rule pca:
         directory("results/{sample}/pca/")
     shell:
         """
-        sePCA pca \
+        ADS8192 pca \
             --counts {input.counts} \
             --meta {input.meta} \
             --output {output}
@@ -309,7 +345,7 @@ rule pca:
 ```bash
 for dataset in data/*; do
     name=$(basename "$dataset")
-    sePCA pca \
+    ADS8192 pca \
         --counts "$dataset/counts.tsv" \
         --meta "$dataset/meta.tsv" \
         --output "results/$name/"
@@ -333,16 +369,16 @@ In a fresh R session (restart R first!):
 
 ```{r clean-install}
 # Remove any existing installation
-remove.packages("sePCA")
+remove.packages("ADS8192")
 
 # Install fresh from GitHub
-remotes::install_github("you/sePCA")
+remotes::install_github("you/ADS8192")
 ```
 
 ### Step 2: Verify Package Works
 
 ```{r verify-pkg}
-library(sePCA)
+library(ADS8192)
 
 # Test core functions
 data(example_se)
@@ -353,33 +389,62 @@ plot_pca(result, color_by = "treatment")
 # run_app()
 
 # Install CLI launcher
-Rapp::install_pkg_cli_apps("sePCA")
+Rapp::install_pkg_cli_apps("ADS8192")
 ```
+
+### CLI Script: Namespace and Trailing Newline
+
+Two common issues when testing the installed CLI for the first time:
+
+**Namespace issues:** Even though `library(ADS8192)` loads the package, some base R functions may not be found if the search path is not fully set up in the Rapp environment. Always use explicit namespacing in your CLI script:
+
+```{r namespace-note, eval=FALSE}
+# In exec/ADS8192, load packages explicitly at the top
+suppressPackageStartupMessages({
+    library(ADS8192)
+    library(utils)    # for write.table, read.table
+    library(stats)    # for stats::var (used internally)
+})
+
+# And use fully-qualified calls for base functions where needed:
+utils::write.table(result$scores, scores_file, sep = "\t",
+                   row.names = FALSE, quote = FALSE)
+```
+
+**Trailing newline:** Rapp requires the `exec/ADS8192` file to end with a blank line. If you see a parsing error on the last command, add an extra newline at the end of the file.
 
 ### Step 3: Test CLI from Terminal
 
+First, create the test input files using R (this avoids tab/spacing issues with shell heredocs):
+
+```{r create-cli-test-data, eval=FALSE}
+# Create test inputs using R (cross-platform reliable)
+dir.create("/tmp/cli_test", recursive = TRUE, showWarnings = FALSE)
+
+counts <- data.frame(
+  sample1 = c(100L, 50L, 200L, 30L, 80L),
+  sample2 = c(150L, 75L, 180L, 45L, 100L),
+  sample3 = c(120L, 60L, 210L, 35L, 90L),
+  sample4 = c(180L, 90L, 240L, 55L, 110L),
+  row.names = paste0("gene", 1:5)
+)
+utils::write.table(counts, "/tmp/cli_test/counts.tsv",
+                   sep = "\t", quote = FALSE)
+
+meta <- data.frame(
+  treatment = c("control", "control", "treated", "treated"),
+  batch     = c("A", "B", "A", "B"),
+  row.names = paste0("sample", 1:4)
+)
+utils::write.table(meta, "/tmp/cli_test/meta.tsv",
+                   sep = "\t", quote = FALSE)
+```
+
+Then run the CLI from the terminal:
+
 ```bash
-# Create test files
-mkdir -p /tmp/cli_test
-cat > /tmp/cli_test/counts.tsv << 'EOF'
-gene_id	sample1	sample2	sample3	sample4
-gene1	100	150	120	180
-gene2	50	75	60	90
-gene3	200	180	210	240
-gene4	30	45	35	55
-gene5	80	100	90	110
-EOF
-
-cat > /tmp/cli_test/meta.tsv << 'EOF'
-sample_id	treatment	batch
-sample1	control	A
-sample2	control	B
-sample3	treated	A
-sample4	treated	B
-EOF
-
 # Run CLI
-sePCA pca \
+ADS8192 pca \
     --counts /tmp/cli_test/counts.tsv \
     --meta /tmp/cli_test/meta.tsv \
     --output /tmp/cli_test/output/ \
@@ -403,7 +468,7 @@ The CLI should produce the same results as calling the R functions directly.
 ### Step 1: Run Analysis via R
 
 ```{r r-analysis}
-library(sePCA)
+library(ADS8192)
 
 # Load sample data
 counts <- read.table("/tmp/cli_test/counts.tsv", header = TRUE, row.names = 1, sep = "\t")
@@ -443,54 +508,55 @@ all.equal(r_scores$PC2, cli_scores$PC2)
 
 Create `tests/testthat/test-cli.R`:
 
-```{r cli-test}
+```{r cli-test, class.source = "fold-hide"}
+# tests/testthat/test-cli.R — CLI output parity test
 test_that("CLI produces same output as R functions", {
     skip_on_cran()  # CLI tests may be slow
-    
+
     # Create temp files
     tmp_dir <- tempdir()
     counts_file <- file.path(tmp_dir, "counts.tsv")
     meta_file <- file.path(tmp_dir, "meta.tsv")
     output_dir <- file.path(tmp_dir, "cli_output")
-    
+
     # Create test data
-    data(example_se, package = "sePCA")
+    data(example_se, package = "ADS8192")
     counts <- SummarizedExperiment::assay(example_se, "counts")
     meta <- as.data.frame(SummarizedExperiment::colData(example_se))
-    
+
     write.table(counts, counts_file, sep = "\t", quote = FALSE)
     write.table(meta, meta_file, sep = "\t", quote = FALSE)
-    
+
     # Run via R
     se <- SummarizedExperiment::SummarizedExperiment(
         assays = list(counts = counts),
         colData = meta
     )
     r_result <- run_pca(se, n_top = 50)
-    
+
     # Run via CLI
-    Rapp::run(system.file("exec", "sePCA", package = "sePCA"), c(
+    Rapp::run(system.file("exec", "ADS8192", package = "ADS8192"), c(
         "pca",
         "--counts", counts_file,
         "--meta", meta_file,
         "--output", output_dir,
         "--n-top", "50"
     ))
-    
+
     # Load CLI output
     cli_scores <- read.table(
         file.path(output_dir, "pca_scores.tsv"),
         header = TRUE,
         sep = "\t"
     )
-    
+
     # Compare dimensions
     expect_equal(nrow(cli_scores), nrow(r_result$scores))
     expect_equal(ncol(cli_scores), ncol(r_result$scores))
-    
+
     # Compare PC values (within tolerance)
     expect_equal(cli_scores$PC1, r_result$scores$PC1, tolerance = 1e-10)
-    
+
     # Cleanup
     unlink(output_dir, recursive = TRUE)
 })
@@ -539,7 +605,7 @@ On GitHub:
 3. Add release notes:
 
 ```markdown
-## sePCA v0.1.0
+## ADS8192 v0.1.0
 
 ### Features
 - Core PCA analysis functions (`run_pca()`, `plot_pca()`)
@@ -549,7 +615,7 @@ On GitHub:
 
 ### Installation
 ```r
-remotes::install_github("you/sePCA@v0.1.0")
+remotes::install_github("you/ADS8192@v0.1.0")
 ```
 ```
 
@@ -621,10 +687,10 @@ This package was developed with:
 
 ```r
 # Install from GitHub
-remotes::install_github("you/sePCA")
+remotes::install_github("you/ADS8192")
 
 # Or from a specific version
-remotes::install_github("you/sePCA@v0.1.0")
+remotes::install_github("you/ADS8192@v0.1.0")
 ```
 
 ### Session Info
@@ -637,7 +703,7 @@ Run `sessionInfo()` after loading the package to see your environment.
 # Final Package Structure
 
 ```
-sePCA/
+ADS8192/
 ├── DESCRIPTION
 ├── NAMESPACE
 ├── LICENSE.md
@@ -654,7 +720,7 @@ sePCA/
 │   ├── run_app.R
 │   └── cli_install.R
 ├── exec/
-│   └── sePCA
+│   └── ADS8192
 ├── inst/
 │   └── app/
 │      └── app.R

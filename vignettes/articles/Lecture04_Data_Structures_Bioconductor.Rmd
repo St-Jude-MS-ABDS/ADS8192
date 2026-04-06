@@ -1,5 +1,5 @@
 ---
-title: "Lecture 3: Data Structures & R Ecosystems (Bioconductor)"
+title: "Lecture 4: Data Structures & R Ecosystems (Bioconductor)"
 author: "Jared Andrews"
 date: "April 14, 2026"
 output:
@@ -47,9 +47,9 @@ Before you adopt or build a data structure, ask:
 - Does it fit the scientific problem and expected scale?
 - Does its data model keep related pieces synchronized?
 - Is the input/output contract explicit and documented?
-- Does it interoperate with packages your collaborators already use?
+- Does it interoperate with packages you and your team already use?
 - Is it maintained and broadly understood in the community?
-- Would a thin wrapper around an existing container be safer than a new class?
+- Would extending an existing container be safer than creating a new class?
 
 ## Scientific Use Case
 
@@ -106,7 +106,7 @@ Bioconductor's `SummarizedExperiment` class keeps everything synchronized:
               └───────────────────────────────┘
 ```
 
-When you subset or reorder a `SummarizedExperiment`, all components stay synchronized automatically!
+When you subset or reorder a `SummarizedExperiment`, all components stay synchronized automatically.
 
 ---
 
@@ -135,33 +135,6 @@ gene <- list(
 )
 ```
 
-### S4-Style Sketch (Class + Constructor)
-
-```r
-setClass("Gene",
-         slots = c(
-             gene_id = "character",
-             symbol = "character",
-             chr = "character",
-             start = "integer",
-             end = "integer",
-             strand = "character",
-             biotype = "character"
-         ))
-
-Gene <- function(gene_id, symbol, chr, start, end, strand, biotype) {
-    new("Gene",
-        gene_id = gene_id,
-        symbol = symbol,
-        chr = chr,
-        start = as.integer(start),
-        end = as.integer(end),
-        strand = strand,
-        biotype = biotype
-    )
-}
-```
-
 ---
 
 ## Why S4 in Bioconductor?
@@ -174,14 +147,237 @@ Bioconductor packages rely heavily on **S4 classes** because they provide:
 
 `SummarizedExperiment` is an S4 class. Its formal structure and methods keep assays, rowData, and colData synchronized and enforce consistency.
 
+## S4-Style Sketch (Class + Constructor)
+
+Building a custom S4 class for our gene above might look like this.
+The first step is registering the class and its **slots** — the typed fields
+every instance must carry:
+
+```{r gene-setclass, eval=FALSE}
+# setClass() registers the class with R's S4 system.
+# `slots` is a named character vector: name -> type.
+# R enforces these types at construction time: passing a non-character to
+# `gene_id` will throw an error immediately, not silently coerce it.
+setClass("Gene",
+         slots = c(
+             gene_id = "character",
+             symbol  = "character",
+             chr     = "character",
+             start   = "integer",
+             end     = "integer",
+             strand  = "character",
+             biotype = "character"
+         ))
+```
+
+`new("Gene", ...)` would work directly, but we wrap it in a **constructor
+function** so callers don't need to know the internal class name — and so we
+have one place to coerce types, run checks, and set defaults:
+
+```{r gene-constructor, eval=FALSE}
+# The constructor is just a regular function. It:
+#   1. Accepts user-friendly types (numeric start/end is fine)
+#   2. Coerces them to the slot types the class expects
+#   3. Delegates to new() with slot values already validated
+#
+# Users should never call new("Gene", ...) directly — always use Gene().
+Gene <- function(gene_id, symbol, chr, start, end, strand, biotype) {
+    new("Gene",
+        gene_id = gene_id,
+        symbol  = symbol,
+        chr     = chr,
+        start   = as.integer(start),   # coerce numeric → integer
+        end     = as.integer(end),
+        strand  = strand,
+        biotype = biotype
+    )
+}
+```
+
+---
+
+## Step 2: Adding a Validity Method
+
+A class with no validity check will happily hold nonsense — a gene where
+`start > end`, or a `strand` character that is neither `"+"` nor `"-"`.
+`setValidity()` lets you define invariants that are checked every time
+`validObject()` is called (and optionally on every `new()`):
+
+```{r gene-validity, eval=FALSE}
+setValidity("Gene", function(object) {
+    errors <- character()
+
+    # Invariant 1: strand must be one of the accepted values
+    if (!object@strand %in% c("+", "-", "*")) {
+        errors <- c(errors,
+            paste0("strand must be '+', '-', or '*', got: '",
+                   object@strand, "'"))
+    }
+
+    # Invariant 2: genomic coordinates must be positive
+    if (object@start < 1L) {
+        errors <- c(errors,
+            paste0("start must be >= 1, got: ", object@start))
+    }
+
+    # Invariant 3: start must not exceed end
+    if (object@start > object@end) {
+        errors <- c(errors,
+            paste0("start (", object@start, ") must be <= end (", object@end, ")"))
+    }
+
+    # Return TRUE when valid, or the error messages when invalid.
+    # The S4 system will stop() with these messages automatically.
+    if (length(errors) == 0) TRUE else errors
+})
+```
+
+> **Key design point:** validity checks live in `setValidity()`, *not* in the
+> constructor. That way they fire whenever the object could be in an invalid
+> state — including after programmatic slot replacement — not just at
+> construction time.
+
+---
+
+## Step 3: Generic Getters and Setters
+
+Direct slot access with `@` works but leaks implementation details: if you
+ever rename a slot, every caller breaks. **Generic functions** give you a
+stable API that can evolve independently of the internal representation:
+
+```{r gene-accessors, eval=FALSE}
+# --- Getters ---
+# setGeneric() creates a new generic if one doesn't already exist.
+# The second argument is the default method body (usually just callNextMethod()
+# or a forwarding call). Real dispatch happens in setMethod().
+
+setGeneric("geneId",  function(x) standardGeneric("geneId"))
+setGeneric("symbol",  function(x) standardGeneric("symbol"))
+setGeneric("seqname", function(x) standardGeneric("seqname"))
+setGeneric("gstart",  function(x) standardGeneric("gstart"))
+setGeneric("gend",    function(x) standardGeneric("gend"))
+setGeneric("strand",  function(x) standardGeneric("strand"))
+setGeneric("biotype", function(x) standardGeneric("biotype"))
+
+# setMethod() wires each generic to our Gene class.
+# `x@slot_name` is how you read a slot *inside* the package;
+# outsiders should use the getter, never @.
+setMethod("geneId",  "Gene", function(x) x@gene_id)
+setMethod("symbol",  "Gene", function(x) x@symbol)
+setMethod("seqname", "Gene", function(x) x@chr)
+setMethod("gstart",  "Gene", function(x) x@start)
+setMethod("gend",    "Gene", function(x) x@end)
+setMethod("strand",  "Gene", function(x) x@strand)
+setMethod("biotype", "Gene", function(x) x@biotype)
+
+# --- Setters ---
+# The replacement generic follows the R convention: foo<-()
+# `validObject()` re-runs setValidity() so invariants are enforced
+# even after modification — you can't accidentally set start > end.
+
+setGeneric("gstart<-", function(x, value) standardGeneric("gstart<-"))
+setGeneric("gend<-",   function(x, value) standardGeneric("gend<-"))
+
+setReplaceMethod("gstart", "Gene", function(x, value) {
+    x@start <- as.integer(value)
+    validObject(x)
+    x
+})
+
+setReplaceMethod("gend", "Gene", function(x, value) {
+    x@end <- as.integer(value)
+    validObject(x)
+    x
+})
+```
+
+---
+
+## Step 4: A `show()` Method
+
+By default, printing an S4 object dumps every slot in a hard-to-read format.
+Overriding `show()` gives users a clean summary — and it's the method called
+automatically when you type the object name at the prompt:
+
+```{r gene-show, eval=FALSE}
+setMethod("show", "Gene", function(object) {
+    cat("Gene:", object@symbol, "(", object@gene_id, ")\n")
+    cat("  Location:", paste0("chr", object@chr, ":",
+                              object@start, "-", object@end,
+                              " (", object@strand, ")"), "\n")
+    cat("  Biotype:", object@biotype, "\n")
+    # Compute length on the fly — no need to store it as a slot
+    cat("  Length:", object@end - object@start + 1L, "bp\n")
+})
+```
+
+---
+
+## Step 5: A Computed Method (`length`)
+
+Some properties are fully determined by existing slots — storing them would
+create redundancy and a risk of inconsistency. Instead, define them as
+methods that compute on demand:
+
+```{r gene-length-method, eval=FALSE}
+# R already has a length() generic; we just add a method for our class.
+setMethod("length", "Gene", function(x) {
+    x@end - x@start + 1L
+})
+```
+
+---
+
+## Full Usage Example
+
+Putting it all together:
+
+```{r gene-full-example, eval=FALSE}
+# Construction — types are coerced automatically
+tp53 <- Gene(
+    gene_id = "ENSG00000141510",
+    symbol  = "TP53",
+    chr     = "17",
+    start   = 7661779,
+    end     = 7687550,
+    strand  = "-",
+    biotype = "protein_coding"
+)
+
+# show() fires automatically — clean, readable output
+tp53
+
+# Getters — stable API, independent of slot names
+geneId(tp53)      # "ENSG00000141510"
+symbol(tp53)      # "TP53"
+seqname(tp53)     # "17"
+gstart(tp53)      # 7661779L
+length(tp53)      # 25772L  (computed, not stored)
+
+# Setter — validity is re-checked automatically
+gend(tp53) <- 7688000
+length(tp53)      # 26222L — updated correctly
+
+# Validity catches nonsense immediately
+tryCatch(
+    Gene("X", "BAD", "1", start = 500, end = 100, strand = "?",
+         biotype = "protein_coding"),
+    error = function(e) message("Caught: ", conditionMessage(e))
+)
+# Caught: strand must be '+', '-', or '*', got: '?'
+# (start > end would also be caught in the same call)
+```
+
 ## S4 Best Practices (Design Checklist)
 
 - Keep **slots minimal** and focused on essential fields
-- Write **validity checks** for invariants (e.g., `start <= end`)
-- Provide **constructor functions** so users don't call `new()` directly
-- Use **accessor methods** instead of direct slot access (`@`)
-- Document **invariants** and expected slot types
-- Avoid storing **redundant derived values** when they can be computed
+- Write **validity checks** for invariants (e.g., `start <= end`) via `setValidity()`
+- Provide **constructor functions** so users never call `new()` directly
+- Provide **generic getters/setters** via `setGeneric()` / `setMethod()` instead of direct slot access (`@`)
+- Call **`validObject()`** inside setters to re-enforce invariants after modification
+- Override **`show()`** for a readable console representation
+- Implement derived properties as **methods**, not stored slots
+- Document **invariants** and expected slot types with roxygen2
 
 ---
 
@@ -213,7 +409,7 @@ For this course we rebuild a tiny example to make the design visible. In profess
 
 # Setup: Installing Required Packages
 
-If you haven't already, install the required Bioconductor packages:
+If you haven't already, install and load the required Bioconductor packages:
 
 ```{r install-packages, eval=FALSE}
 if (!require("BiocManager", quietly = TRUE))
@@ -222,11 +418,9 @@ if (!require("BiocManager", quietly = TRUE))
 BiocManager::install(c(
     "SummarizedExperiment",
     "airway",
-    "ComplexHeatmap"
+    "ComplexHeatmap",
+    "ggplot2"
 ))
-
-# Also install ggplot2 for visualization
-install.packages("ggplot2")
 ```
 
 Now load the libraries:
@@ -257,7 +451,7 @@ airway
 class(airway)
 ```
 
-`RangedSummarizedExperiment` is a subclass of `SummarizedExperiment` that also stores genomic ranges for each feature (gene).
+`RangedSummarizedExperiment` is an extension of `SummarizedExperiment` that also stores genomic ranges for each feature (gene).
 
 ### Dimensions: How many genes and samples?
 
@@ -296,7 +490,7 @@ The `rowData()` function extracts feature-level (gene) metadata:
 rowData(airway)
 ```
 
-### Assay Data (the counts!)
+### Assay Data (the actual values)
 
 The actual expression data is stored in "assays". This dataset has one assay called "counts":
 

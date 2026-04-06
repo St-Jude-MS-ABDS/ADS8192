@@ -53,450 +53,7 @@ A wet-lab collaborator wants to explore how PCA changes when they switch from 50
 
 ---
 
-# Why Shiny?
-
-## From Functions to Interactions
-
-We have a powerful analysis core:
-
-```{r core-functions, eval=FALSE}
-library(sePCA)
-result <- run_pca(se, n_top = 500)
-plot_pca(result, color_by = "treatment")
-```
-
-But this requires:
-
-- Users to know R
-- Manual iteration to explore different parameters
-- No visual feedback during exploration
-
-**Shiny** lets us wrap these functions in an interactive web interface:
-
-- Point-and-click exploration
-- Immediate visual feedback
-- Accessible to non-programmers
-
-## Key Principle: No Code Duplication
-
-```
-┌─────────────────────────────────────────────────────┐
-│                 Package Core                         │
-│  run_pca() → plot_pca() → save_pca_results()        │
-└─────────────────────────────────────────────────────┘
-        ↑                    ↑                    ↑
-        │                    │                    │
-   ┌────┴────┐         ┌────┴────┐         ┌────┴────┐
-   │ R API   │         │ Shiny   │         │ CLI     │
-   │ (users) │         │ (web)   │         │(scripts)│
-   └─────────┘         └─────────┘         └─────────┘
-```
-
-The Shiny app calls the same `run_pca()` and `plot_pca()` functions — it never reimplements the analysis!
-
----
-
-## Design Principle: Reactivity Is a Cache Boundary
-
-Reactive expressions are useful because they let you say, "recompute this result only when the relevant inputs change." That is an abstraction and caching boundary, not a new place to re-implement PCA. If `run_pca()` changes, the app should benefit automatically because it still delegates to the same core function.
-
-# Part 1: Shiny Basics
-
-## Installation
-
-```{r install-shiny}
-install.packages(c("shiny", "bslib"))
-
-# Optional but useful:
-install.packages(c("DT", "plotly", "shinycssloaders"))
-```
-
-```{r load-shiny}
-library(shiny)
-library(bslib)
-library(sePCA)
-library(airway)
-```
-
-## Minimal Shiny App Structure
-
-Every Shiny app has two parts:
-
-```{r minimal-app}
-# UI: What the user sees
-ui <- fluidPage(
-    titlePanel("Hello Shiny!"),
-    
-    sidebarLayout(
-        sidebarPanel(
-            sliderInput("n", "Number:", min = 1, max = 100, value = 50)
-        ),
-        mainPanel(
-            textOutput("result")
-        )
-    )
-)
-
-# Server: What happens behind the scenes
-server <- function(input, output, session) {
-    output$result <- renderText({
-        paste("You selected:", input$n)
-    })
-}
-
-# Run the app
-shinyApp(ui, server)
-```
-
-## The Reactive Graph
-
-Shiny uses **reactivity** to automatically update outputs when inputs change:
-
-```
-┌──────────┐     ┌───────────────┐     ┌──────────────┐
-│  input$n │ ──→ │ renderText()  │ ──→ │ output$result│
-│ (source) │     │  (conductor)  │     │   (endpoint) │
-└──────────┘     └───────────────┘     └──────────────┘
-```
-
-- **Sources**: Inputs that change (input$n, reactive values)
-- **Conductors**: Computations that depend on sources (reactive(), renderX)
-- **Endpoints**: Outputs that display results (output$X)
-
-When a source changes, Shiny automatically reruns all dependent code.
-
----
-
-# Part 2: Building the PCA Explorer
-
-## Step 1: Minimal Working App
-
-Let's build a PCA explorer step by step. First, a minimal version:
-
-```{r app-v1}
-library(shiny)
-library(sePCA)
-library(airway)
-
-# Pre-load data
-data(airway)
-
-ui <- fluidPage(
-    theme = bslib::bs_theme(bootswatch = "flatly"),
-    
-    titlePanel("PCA Explorer"),
-    
-    sidebarLayout(
-        sidebarPanel(
-            h4("Settings"),
-            numericInput(
-                "n_top",
-                "Number of top variable genes:",
-                value = 500,
-                min = 50,
-                max = 5000,
-                step = 50
-            ),
-            selectInput(
-                "color_by",
-                "Color by:",
-                choices = c("dex", "cell")
-            )
-        ),
-        mainPanel(
-            h4("PCA Plot"),
-            plotOutput("pca_plot", height = "500px")
-        )
-    )
-)
-
-server <- function(input, output, session) {
-    output$pca_plot <- renderPlot({
-        # Run PCA with user-selected parameters
-        result <- run_pca(airway, n_top = input$n_top)
-        
-        # Create plot
-        plot_pca(result, color_by = input$color_by)
-    })
-}
-
-shinyApp(ui, server)
-```
-
-**Save this as `app.R` and run it!**
-
-## Step 2: Adding Reactive Expressions
-
-The above app has a problem: every time you change `color_by`, it re-runs the entire PCA! That's wasteful — PCA only depends on `n_top`.
-
-**Solution: Use `reactive()` to cache expensive computations:**
-
-```{r app-v2}
-server <- function(input, output, session) {
-    
-    # Reactive expression: only reruns when n_top changes
-    pca_result <- reactive({
-        run_pca(airway, n_top = input$n_top)
-    })
-    
-    output$pca_plot <- renderPlot({
-        # Use the cached result
-        plot_pca(pca_result(), color_by = input$color_by)
-    })
-}
-```
-
-Now the reactive graph looks like:
-
-```
-input$n_top ──→ pca_result() ──→ renderPlot() ──→ output$pca_plot
-                                       ↑
-input$color_by ────────────────────────┘
-```
-
-- Changing `n_top` → reruns `pca_result()` → reruns plot
-- Changing `color_by` → only reruns plot (uses cached PCA)
-
-> **Exercise A:** Add a second `selectInput` for `shape_by` and update the plot to use both aesthetics. Verify that changing shape doesn't re-run PCA.
-
----
-
-## Step 3: More Controls
-
-Let's add more user controls:
-
-```{r app-v3}
-ui <- fluidPage(
-    theme = bslib::bs_theme(bootswatch = "flatly"),
-    
-    titlePanel("PCA Explorer"),
-    
-    sidebarLayout(
-        sidebarPanel(
-            h4("PCA Settings"),
-            numericInput(
-                "n_top",
-                "Top variable genes:",
-                value = 500, min = 50, max = 5000, step = 50
-            ),
-            checkboxInput(
-                "log_transform",
-                "Log-transform counts",
-                value = TRUE
-            ),
-            checkboxInput(
-                "scale",
-                "Scale features",
-                value = TRUE
-            ),
-            
-            hr(),
-            h4("Plot Settings"),
-            
-            selectInput("color_by", "Color by:", choices = c("dex", "cell")),
-            selectInput("shape_by", "Shape by:", choices = c("None", "dex", "cell")),
-            
-            fluidRow(
-                column(6, numericInput("pc_x", "PC X:", value = 1, min = 1, max = 8)),
-                column(6, numericInput("pc_y", "PC Y:", value = 2, min = 1, max = 8))
-            ),
-            
-            sliderInput(
-                "point_size",
-                "Point size:",
-                value = 4, min = 1, max = 10
-            )
-        ),
-        
-        mainPanel(
-            tabsetPanel(
-                tabPanel(
-                    "PCA Plot",
-                    plotOutput("pca_plot", height = "500px")
-                ),
-                tabPanel(
-                    "Variance Explained",
-                    plotOutput("variance_plot", height = "400px")
-                ),
-                tabPanel(
-                    "Sample Data",
-                    DT::dataTableOutput("scores_table")
-                )
-            )
-        )
-    )
-)
-
-server <- function(input, output, session) {
-    
-    # Cached PCA result
-    pca_result <- reactive({
-        run_pca(
-            airway,
-            n_top = input$n_top,
-            log_transform = input$log_transform,
-            scale = input$scale
-        )
-    })
-    
-    # PCA scatter plot
-    output$pca_plot <- renderPlot({
-        shape <- if (input$shape_by == "None") NULL else input$shape_by
-        
-        plot_pca(
-            pca_result(),
-            color_by = input$color_by,
-            shape_by = shape,
-            pcs = c(input$pc_x, input$pc_y),
-            point_size = input$point_size
-        )
-    })
-    
-    # Variance plot
-    output$variance_plot <- renderPlot({
-        var_df <- pca_variance_explained(pca_result())
-        
-        # Only show first 8 PCs
-        var_df <- var_df[1:min(8, nrow(var_df)), ]
-        var_df$PC <- factor(var_df$PC, levels = var_df$PC)
-        
-        ggplot2::ggplot(var_df, ggplot2::aes(x = PC, y = variance_percent)) +
-            ggplot2::geom_col(fill = "steelblue") +
-            ggplot2::geom_text(
-                ggplot2::aes(label = sprintf("%.1f%%", variance_percent)),
-                vjust = -0.5
-            ) +
-            ggplot2::theme_minimal(base_size = 14) +
-            ggplot2::labs(
-                x = "Principal Component",
-                y = "Variance Explained (%)",
-                title = "Variance Explained by Each PC"
-            ) +
-            ggplot2::ylim(0, max(var_df$variance_percent) * 1.1)
-    })
-    
-    # Scores table
-    output$scores_table <- DT::renderDataTable({
-        pca_result()$scores
-    }, options = list(pageLength = 10, scrollX = TRUE))
-}
-
-shinyApp(ui, server)
-```
-
----
-
-# Part 3: Debugging Reactivity
-
-## Common Issue: Plot Not Updating
-
-**Symptom:** You change an input but the plot doesn't update.
-
-**Diagnosis:**
-
-1. Is the input wired correctly? Check `input$name` matches the input ID
-2. Is the reactive graph connected? Use `reactlog` to visualize:
-
-```{r reactlog}
-# Enable reactlog
-options(shiny.reactlog = TRUE)
-
-# Run your app, then press Ctrl+F3 to see the reactive graph
-```
-
-3. Is there an error being silently swallowed?
-
-## Exercise: Debug This App
-
-```{r broken-app}
-# BROKEN APP - Find the bug!
-ui <- fluidPage(
-    selectInput("color", "Color:", choices = c("dex", "cell")),
-    plotOutput("plot")
-)
-
-server <- function(input, output, session) {
-    se <- airway::airway  # Load data
-    
-    result <- run_pca(se)  # BUG: Not reactive!
-    
-    output$plot <- renderPlot({
-        plot_pca(result, color_by = input$color)
-    })
-}
-```
-
-**What's wrong?**
-
-`result` is computed once when the app starts, but it's not a reactive expression. Changes to any input won't affect it.
-
-**Fix:**
-
-```{r fixed-app}
-server <- function(input, output, session) {
-    result <- reactive({
-        run_pca(airway)
-    })
-    
-    output$plot <- renderPlot({
-        plot_pca(result(), color_by = input$color)  # Note: result() with parentheses!
-    })
-}
-```
-
----
-
-# Part 4: Input Validation
-
-## The Problem
-
-What happens if a user:
-
-- Selects PC 10 when there are only 8 samples?
-- Enters a negative number of genes?
-- Uploads a malformed file?
-
-Without validation, you get ugly errors or crashes.
-
-## Using `validate()` and `need()`
-
-```{r validation}
-server <- function(input, output, session) {
-    pca_result <- reactive({
-        # Validate inputs before computing
-        validate(
-            need(input$n_top >= 10, "Please select at least 10 genes"),
-            need(input$n_top <= nrow(airway), "Cannot select more genes than available")
-        )
-        
-        run_pca(airway, n_top = input$n_top)
-    })
-    
-    output$pca_plot <- renderPlot({
-        # Validate PC selection
-        n_samples <- ncol(airway)
-        validate(
-            need(input$pc_x <= n_samples, paste("PC X must be ≤", n_samples)),
-            need(input$pc_y <= n_samples, paste("PC Y must be ≤", n_samples)),
-            need(input$pc_x != input$pc_y, "Please select different PCs for X and Y")
-        )
-        
-        plot_pca(
-            pca_result(),
-            color_by = input$color_by,
-            pcs = c(input$pc_x, input$pc_y)
-        )
-    })
-}
-```
-
-When validation fails, Shiny displays a helpful message instead of an error.
-
-> **Exercise B:** Add validation to prevent `point_size` from being zero or negative.
-
----
-
-# Part 5: UI/UX Principles
+# UI/UX Principles
 
 ## Warm-up Discussion: Worst UI Ever
 
@@ -555,9 +112,9 @@ numericInput(
 sidebarPanel(
     h4(icon("cogs"), "Analysis Settings"),
     # ... inputs
-    
+
     hr(),
-    
+
     h4(icon("palette"), "Visualization"),
     # ... more inputs
 )
@@ -565,18 +122,596 @@ sidebarPanel(
 
 ---
 
-# Optional: Modules at a Glance (Not Required)
+# Why Shiny?
 
-Shiny modules can help in large apps, but they are **not required** for this project. This is a tiny reference example only:
+## From Functions to Interactions
 
-```{r modules-blurb}
-pcaPlotUI <- function(id) plotOutput(NS(id)("plot"))
-pcaPlotServer <- function(id, pca_result) {
-    moduleServer(id, function(input, output, session) {
-        output$plot <- renderPlot(plot_pca(pca_result()))
+We have a powerful analysis core:
+
+```{r core-functions, eval=FALSE}
+library(ADS8192)
+result <- run_pca(se, n_top = 500)
+plot_pca(result, color_by = "treatment")
+```
+
+But this requires:
+
+- Users to know R
+- Manual iteration to explore different parameters
+- No visual feedback during exploration
+
+**Shiny** lets us wrap these functions in an interactive web interface:
+
+- Point-and-click exploration
+- Immediate visual feedback
+- Accessible to non-programmers
+
+## Key Principle: No Code Duplication
+
+```
+┌─────────────────────────────────────────────────────┐
+│                 Package Core                        │
+│  run_pca() → plot_pca() → save_pca_results()        │
+└─────────────────────────────────────────────────────┘
+        ↑                   ↑                   ↑
+        │                   │                   │
+   ┌────┴────┐         ┌────┴────┐         ┌────┴────┐
+   │ R API   │         │ Shiny   │         │ CLI     │
+   │ (users) │         │ (web)   │         │(scripts)│
+   └─────────┘         └─────────┘         └─────────┘
+```
+
+The Shiny app calls the same `run_pca()` and `plot_pca()` functions — it doesn't reimplement the analysis.
+
+---
+
+## Design Principle: Reactivity Is a Cache Boundary
+
+Reactive expressions are useful because they let you say, "recompute this result only when the relevant inputs change." That is an abstraction and caching boundary, not a new place to re-implement PCA. If `run_pca()` changes, the app should benefit automatically because it still delegates to the same core function.
+
+# Part 1: Shiny Basics
+
+## Installation
+
+```{r install-shiny}
+install.packages(c("shiny", "bslib", "DT", "plotly", "shinycssloaders"))
+
+library(shiny)
+library(bslib)
+library(ADS8192)
+library(airway)
+```
+
+## Minimal Shiny App Structure
+
+Every Shiny app has two parts:
+
+```{r minimal-app}
+# UI: What the user sees
+ui <- fluidPage(
+    titlePanel("Hello Shiny!"),
+
+    sidebarLayout(
+        sidebarPanel(
+            sliderInput("n", "Number:", min = 1, max = 100, value = 50)
+        ),
+        mainPanel(
+            textOutput("result")
+        )
+    )
+)
+
+# Server: What happens behind the scenes
+server <- function(input, output, session) {
+    output$result <- renderText({
+        paste("You selected:", input$n)
+    })
+}
+
+# Run the app
+shinyApp(ui, server)
+```
+
+## UI Layout Options
+
+Shiny is flexible about how you structure the overall page. Here are the most common patterns:
+
+### `fluidPage` + `sidebarLayout`
+
+The classic layout (shown above) — a sidebar for controls and a main area for outputs:
+
+```{r sidebar-layout, eval=FALSE}
+# Classic: sidebar + main panel
+ui <- fluidPage(
+    titlePanel("My App"),
+    sidebarLayout(
+        sidebarPanel(
+            # Controls here
+            sliderInput("n", "N:", min = 1, max = 100, value = 50)
+        ),
+        mainPanel(
+            # Outputs here
+            plotOutput("plot")
+        )
+    )
+)
+```
+
+### `navbarPage` — Multi-page Navigation
+
+For apps with multiple distinct sections:
+
+```{r navbar-layout, eval=FALSE}
+# Multi-page app with a navigation bar
+ui <- navbarPage(
+    title = "My App",
+    tabPanel("Analysis", plotOutput("plot")),
+    tabPanel("Data", DT::dataTableOutput("table")),
+    tabPanel("About", p("About this app..."))
+)
+```
+
+### `bslib::page_sidebar()` — Modern Bootstrap 5
+
+The modern alternative to `sidebarLayout`, using Bootstrap 5 components:
+
+```{r bslib-layout, eval=FALSE}
+library(bslib)
+
+# Modern equivalent of sidebarLayout
+ui <- page_sidebar(
+    title = "My App",
+    theme = bs_theme(bootswatch = "flatly"),
+    sidebar = sidebar(
+        sliderInput("n", "N:", min = 1, max = 100, value = 50)
+    ),
+    plotOutput("plot")
+)
+```
+
+> **Note:** `bslib::page_sidebar()` is what the packaged ADS8192 Shiny app uses (`run_app()`). It provides a cleaner API and full Bootstrap 5 support.
+
+### Other Packages and Custom Inputs
+
+The base Shiny inputs cover most use cases, but you are not limited to them:
+
+- **`shinydashboard`** and **`bs4Dash`**: Provide dashboard-style layouts with cards, value boxes, and sidebars
+- **`bslib`**: Offers `accordion()`, `card()`, `value_box()`, and other Bootstrap 5 components
+- **Custom inputs**: You can write your own input widgets using the `htmlwidgets` package or raw HTML/JavaScript — this is advanced but powerful for specialized scientific visualizations
+- Other packages in the ecosystem (e.g., `plotly`, `leaflet`) provide their own output widgets that integrate seamlessly with Shiny's reactive system
+
+For most scientific apps, the built-in Shiny inputs plus `bslib` components will cover all your needs.
+
+---
+
+## The Reactive Graph
+
+Shiny uses **reactivity** to automatically update outputs when inputs change:
+
+```
+┌──────────┐     ┌───────────────┐     ┌──────────────┐
+│  input$n │ ──→ │ renderText()  │ ──→ │ output$result│
+│ (source) │     │  (conductor)  │     │   (endpoint) │
+└──────────┘     └───────────────┘     └──────────────┘
+```
+
+- **Sources**: Inputs that change (input$n, reactive values)
+- **Conductors**: Computations that depend on sources (reactive(), renderX)
+- **Endpoints**: Outputs that display results (output$X)
+
+When a source changes, Shiny automatically reruns all dependent code.
+
+---
+
+# Part 2: Building the PCA Explorer
+
+## Step 1: Minimal Working App
+
+Let's build a PCA explorer step by step. First, a minimal version:
+
+```{r app-v1}
+library(shiny)
+library(ADS8192)
+library(airway)
+
+# Pre-load data
+data(airway)
+
+ui <- fluidPage(
+    theme = bslib::bs_theme(bootswatch = "flatly"),
+
+    titlePanel("PCA Explorer"),
+
+    sidebarLayout(
+        sidebarPanel(
+            h4("Settings"),
+            numericInput(
+                "n_top",
+                "Number of top variable genes:",
+                value = 500,
+                min = 50,
+                max = 5000,
+                step = 50
+            ),
+            selectInput(
+                "color_by",
+                "Color by:",
+                choices = c("dex", "cell")
+            )
+        ),
+        mainPanel(
+            h4("PCA Plot"),
+            plotOutput("pca_plot", height = "500px")
+        )
+    )
+)
+
+server <- function(input, output, session) {
+    output$pca_plot <- renderPlot({
+        # Run PCA with user-selected parameters
+        result <- run_pca(airway, n_top = input$n_top)
+
+        # Create plot
+        plot_pca(result, color_by = input$color_by)
+    })
+}
+
+shinyApp(ui, server)
+```
+
+**Save this as `app.R` and run it!**
+
+## Step 2: Adding Reactive Expressions
+
+The above app has a problem: every time you change `color_by`, it re-runs the entire PCA! That's wasteful — PCA only depends on `n_top`.
+
+**Solution: Use `reactive()` to cache expensive computations:**
+
+```{r app-v2}
+server <- function(input, output, session) {
+
+    # Reactive expression: only reruns when n_top changes
+    pca_result <- reactive({
+        run_pca(airway, n_top = input$n_top)
+    })
+
+    output$pca_plot <- renderPlot({
+        # Use the cached result
+        plot_pca(pca_result(), color_by = input$color_by)
     })
 }
 ```
+
+Now the reactive graph looks like:
+
+```
+input$n_top ──→ pca_result() ──→ renderPlot() ──→ output$pca_plot
+                                       ↑
+input$color_by ────────────────────────┘
+```
+
+- Changing `n_top` → reruns `pca_result()` → reruns plot
+- Changing `color_by` → only reruns plot (uses cached PCA)
+
+> **Exercise A:** Add a second `selectInput` for `shape_by` and update the plot to use both aesthetics. Verify that changing shape doesn't re-run PCA.
+
+---
+
+## Step 3: More Controls
+
+Let's add more user controls:
+
+```{r app-v3, class.source = "fold-hide"}
+# Full PCA Explorer app — Step 3 (UI + server with tabs, reactive caching, and multiple outputs)
+ui <- fluidPage(
+    theme = bslib::bs_theme(bootswatch = "flatly"),
+
+    titlePanel("PCA Explorer"),
+
+    sidebarLayout(
+        sidebarPanel(
+            h4("PCA Settings"),
+            numericInput(
+                "n_top",
+                "Top variable genes:",
+                value = 500, min = 50, max = 5000, step = 50
+            ),
+            checkboxInput(
+                "log_transform",
+                "Log-transform counts",
+                value = TRUE
+            ),
+            checkboxInput(
+                "scale",
+                "Scale features",
+                value = TRUE
+            ),
+
+            hr(),
+            h4("Plot Settings"),
+
+            selectInput("color_by", "Color by:", choices = c("dex", "cell")),
+            selectInput("shape_by", "Shape by:", choices = c("None", "dex", "cell")),
+
+            fluidRow(
+                column(6, numericInput("pc_x", "PC X:", value = 1, min = 1, max = 8)),
+                column(6, numericInput("pc_y", "PC Y:", value = 2, min = 1, max = 8))
+            ),
+
+            sliderInput(
+                "point_size",
+                "Point size:",
+                value = 4, min = 1, max = 10
+            )
+        ),
+
+        mainPanel(
+            tabsetPanel(
+                tabPanel(
+                    "PCA Plot",
+                    plotOutput("pca_plot", height = "500px")
+                ),
+                tabPanel(
+                    "Variance Explained",
+                    plotOutput("variance_plot", height = "400px")
+                ),
+                tabPanel(
+                    "Sample Data",
+                    DT::dataTableOutput("scores_table")
+                )
+            )
+        )
+    )
+)
+
+server <- function(input, output, session) {
+
+    # Cached PCA result
+    pca_result <- reactive({
+        run_pca(
+            airway,
+            n_top = input$n_top,
+            log_transform = input$log_transform,
+            scale = input$scale
+        )
+    })
+
+    # PCA scatter plot
+    output$pca_plot <- renderPlot({
+        shape <- if (input$shape_by == "None") NULL else input$shape_by
+
+        plot_pca(
+            pca_result(),
+            color_by = input$color_by,
+            shape_by = shape,
+            pcs = c(input$pc_x, input$pc_y),
+            point_size = input$point_size
+        )
+    })
+
+    # Variance plot
+    output$variance_plot <- renderPlot({
+        var_df <- pca_variance_explained(pca_result())
+
+        # Only show first 8 PCs
+        var_df <- var_df[1:min(8, nrow(var_df)), ]
+        var_df$PC <- factor(var_df$PC, levels = var_df$PC)
+
+        ggplot2::ggplot(var_df, ggplot2::aes(x = PC, y = variance_percent)) +
+            ggplot2::geom_col(fill = "steelblue") +
+            ggplot2::geom_text(
+                ggplot2::aes(label = sprintf("%.1f%%", variance_percent)),
+                vjust = -0.5
+            ) +
+            ggplot2::theme_minimal(base_size = 14) +
+            ggplot2::labs(
+                x = "Principal Component",
+                y = "Variance Explained (%)",
+                title = "Variance Explained by Each PC"
+            ) +
+            ggplot2::ylim(0, max(var_df$variance_percent) * 1.1)
+    })
+
+    # Scores table
+    output$scores_table <- DT::renderDataTable({
+        pca_result()$scores
+    }, options = list(pageLength = 10, scrollX = TRUE))
+}
+
+shinyApp(ui, server)
+```
+
+---
+
+# Part 3: Debugging Reactivity
+
+## Common Issue: Plot Not Updating
+
+**Symptom:** You change an input but the plot doesn't update.
+
+**Diagnosis:**
+
+1. Is the input wired correctly? Check `input$name` matches the input ID
+2. Is the reactive graph connected? Use `reactlog` to visualize:
+
+```{r reactlog}
+# Enable reactlog
+options(shiny.reactlog = TRUE)
+
+# Run your app, then press Ctrl+F3 to see the reactive graph
+```
+
+3. Is there an error being silently swallowed?
+
+## Exercise: Debug This App
+
+```{r broken-app}
+# BROKEN APP - Find the bug!
+ui <- fluidPage(
+    selectInput("color", "Color:", choices = c("dex", "cell")),
+    plotOutput("plot")
+)
+
+server <- function(input, output, session) {
+    se <- airway::airway  # Load data
+
+    result <- run_pca(se)  # BUG: Not reactive!
+
+    output$plot <- renderPlot({
+        plot_pca(result, color_by = input$color)
+    })
+}
+```
+
+**What's wrong?**
+
+`result` is computed once when the app starts, but it's not a reactive expression. Changes to any input won't affect it.
+
+**Fix:**
+
+```{r fixed-app}
+server <- function(input, output, session) {
+    result <- reactive({
+        run_pca(airway)
+    })
+
+    output$plot <- renderPlot({
+        plot_pca(result(), color_by = input$color)  # Note: result() with parentheses!
+    })
+}
+```
+
+---
+
+# Part 4: Input Validation
+
+## The Problem
+
+What happens if a user:
+
+- Selects PC 10 when there are only 8 samples?
+- Enters a negative number of genes?
+- Uploads a malformed file?
+
+Without validation, you get ugly errors or crashes.
+
+## Using `validate()` and `need()`
+
+```{r validation}
+server <- function(input, output, session) {
+    pca_result <- reactive({
+        # Validate inputs before computing
+        validate(
+            need(input$n_top >= 10, "Please select at least 10 genes"),
+            need(input$n_top <= nrow(airway), "Cannot select more genes than available")
+        )
+
+        run_pca(airway, n_top = input$n_top)
+    })
+
+    output$pca_plot <- renderPlot({
+        # Validate PC selection
+        n_samples <- ncol(airway)
+        validate(
+            need(input$pc_x <= n_samples, paste("PC X must be ≤", n_samples)),
+            need(input$pc_y <= n_samples, paste("PC Y must be ≤", n_samples)),
+            need(input$pc_x != input$pc_y, "Please select different PCs for X and Y")
+        )
+
+        plot_pca(
+            pca_result(),
+            color_by = input$color_by,
+            pcs = c(input$pc_x, input$pc_y)
+        )
+    })
+}
+```
+
+When validation fails, Shiny displays a helpful message instead of an error.
+
+> **Exercise B:** Add validation to prevent `point_size` from being zero or negative.
+
+---
+
+# Shiny Modules
+
+## What Are Modules?
+
+As Shiny apps grow, it becomes difficult to keep `ui` and `server` organized in a single file. **Shiny modules** let you encapsulate a UI/server pair into a reusable, namespaced unit — similar to how R functions encapsulate logic.
+
+A module has two parts:
+1. A **UI function** that wraps UI elements in a namespace
+2. A **server function** that contains the reactive logic for those elements
+
+The namespace prevents input/output ID collisions between modules or between a module and the main app.
+
+## When to Use Modules
+
+Consider using modules when:
+
+- The same UI+server pattern appears multiple times in the app (e.g., a plot panel with controls)
+- Your server function is getting very long (> ~200 lines) and has distinct logical sections
+- You want to separate development of a sub-feature from the main app
+- You're building a reusable component for multiple apps
+
+For small apps like the PCA explorer in this course, modules are **optional** — the app is compact enough to manage without them. But understanding modules prepares you for larger apps.
+
+## How Modules Work
+
+The key mechanism is `NS(id)` (namespace), which prefixes all IDs with the module ID so they don't conflict.
+
+```{r module-example, eval=FALSE}
+# --- Module UI ---
+# NS(id) wraps all input/output IDs in a namespace
+pcaPlotUI <- function(id) {
+    ns <- NS(id)
+    tagList(
+        selectInput(ns("color_by"), "Color by:", choices = NULL),
+        plotOutput(ns("pca_plot"))
+    )
+}
+
+# --- Module Server ---
+# moduleServer handles the ns() scoping automatically
+pcaPlotServer <- function(id, pca_result, metadata_cols) {
+    moduleServer(id, function(input, output, session) {
+        # Update choices from reactive input
+        observe({
+            updateSelectInput(session, "color_by", choices = metadata_cols())
+        })
+
+        output$pca_plot <- renderPlot({
+            req(pca_result(), input$color_by)
+            plot_pca(pca_result(), color_by = input$color_by)
+        })
+    })
+}
+
+# --- Using the Module in the Main App ---
+ui <- fluidPage(
+    pcaPlotUI("main_plot"),   # Instantiate the module UI
+    pcaPlotUI("compare_plot") # A second instance — no ID conflicts!
+)
+
+server <- function(input, output, session) {
+    pca_result <- reactive({ run_pca(airway, n_top = 500) })
+    cols <- reactive({ colnames(SummarizedExperiment::colData(airway)) })
+
+    pcaPlotServer("main_plot",   pca_result, cols)
+    pcaPlotServer("compare_plot", pca_result, cols)
+}
+```
+
+## Key Points
+
+- `NS(id)` creates the namespace function — call it once at the top of the UI function
+- Inside `moduleServer()`, you use `input$color_by` directly (no `ns()` needed) because the namespace is handled automatically
+- Pass reactive expressions (not their values) into server modules so the module stays reactive
+- Modules are just functions — test them like functions
+
+## Further Reading
+
+For a thorough treatment of Shiny modules, see the [Mastering Shiny chapter on modules](https://mastering-shiny.org/scaling-modules.html), which covers communication between modules, testing, and advanced patterns.
 
 ---
 

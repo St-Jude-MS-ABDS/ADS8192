@@ -62,45 +62,76 @@ test_that("Project 1: ZeiselBrainData loads correctly", {
 })
 
 # ---------------------------------------------------------------------------
-# Project 2: Sample Similarity & Clustering — Parathyroid
+# Project 2: Sample Similarity & Clustering — Macrophage Stimulation
 # ---------------------------------------------------------------------------
-test_that("Project 2: parathyroidSE dataset loads correctly", {
-  skip_if_not_installed_bioc("parathyroidSE")
+test_that("Project 2: macrophage package files are accessible", {
+  skip_if_not_installed_bioc("macrophage")
   skip_if_not_installed_bioc("SummarizedExperiment")
   skip_on_cran()
 
-  library(parathyroidSE)
-  library(SummarizedExperiment)
+  library(macrophage)
 
-  data("parathyroidGenesSE")
-  expect_s4_class(parathyroidGenesSE, "RangedSummarizedExperiment")
-  expect_gt(ncol(parathyroidGenesSE), 0)
+  dir <- system.file("extdata", package = "macrophage")
+  expect_true(nchar(dir) > 0, label = "macrophage extdata directory found")
 
-  # Check expected colData columns
-  cd <- colData(parathyroidGenesSE)
-  expect_true(all(c("treatment", "patient", "time") %in% colnames(cd)))
+  coldata_path <- file.path(dir, "coldata.csv")
+  expect_true(file.exists(coldata_path), label = "coldata.csv exists")
+
+  coldata <- read.csv(coldata_path)
+  expect_true("condition_name" %in% colnames(coldata))
+  expect_true("line_id" %in% colnames(coldata))
+  expect_gt(nrow(coldata), 0)
 })
 
 # ---------------------------------------------------------------------------
-# Project 3: Differential Expression — Bottomly (via recount3)
+# Project 3: Differential Expression — Tissue Tregs (ExperimentHub EH1075)
 # ---------------------------------------------------------------------------
-test_that("Project 3: Bottomly dataset available via recount3", {
-  skip_if_not_installed_bioc("recount3")
+test_that("Project 3: EH1075 tissue Treg dataset loads and structures correctly", {
+  skip_if_not_installed_bioc("ExperimentHub")
   skip_if_not_installed_bioc("SummarizedExperiment")
   skip_on_cran()
 
-  library(recount3)
+  library(ExperimentHub)
   library(SummarizedExperiment)
 
-  human_projects <- available_projects()
-  proj <- subset(human_projects, file_source == "sra" &
-                   project == "SRP001540")
-  expect_gt(nrow(proj), 0, label = "SRP001540 project found in recount3")
+  eh <- ExperimentHub()
+  se <- eh[["EH1075"]]
 
-  rse <- create_rse(proj)
-  expect_s4_class(rse, "RangedSummarizedExperiment")
-  expect_gt(ncol(rse), 0)
-  expect_gt(nrow(rse), 0)
+  expect_s4_class(se, "SummarizedExperiment")
+  expect_gt(nrow(se), 10000)
+  expect_equal(ncol(se), 15)
+
+  # Must have raw integer counts
+  expect_true("counts" %in% assayNames(se))
+  expect_true(is.integer(assay(se, "counts")))
+
+  # Must have the tissue_cell grouping column
+  cd <- colData(se)
+  expect_true("tissue_cell" %in% colnames(cd))
+
+  # All expected groups present
+  expected_groups <- c("Fat-Treg", "Liver-Treg", "Lymph-N-Tcon",
+                       "Lymph-N-Treg", "Skin-Treg")
+  expect_setequal(unique(as.character(cd[["tissue_cell"]])), expected_groups)
+
+  # Verify the data-raw construction produces a valid SE
+  tissue_cell <- as.character(cd[["tissue_cell"]])
+  cell_type   <- ifelse(grepl("Tcon", tissue_cell), "Tconv", "Treg")
+  tissue      <- sub("-Tre?[a-z]*", "", tissue_cell)
+  tissue      <- sub("-Tcon", "", tissue)
+
+  example_se <- SummarizedExperiment(
+    assays  = list(counts = assay(se, "counts")),
+    colData = DataFrame(
+      sample_id = rownames(cd),
+      cell_type = factor(cell_type),
+      tissue    = factor(tissue)
+    )
+  )
+  expect_s4_class(example_se, "SummarizedExperiment")
+  expect_true(all(c("sample_id", "cell_type", "tissue") %in%
+                    colnames(colData(example_se))))
+  expect_setequal(levels(colData(example_se)[["cell_type"]]), c("Tconv", "Treg"))
 })
 
 # ---------------------------------------------------------------------------
@@ -147,8 +178,10 @@ test_that("Project 5: LunSpikeInData loads correctly", {
               label = "ERCC altExp rownames are ERCC IDs")
 
   cd <- colData(sce)
-  expect_true("cell_line" %in% colnames(cd))
-  expect_true("plate" %in% colnames(cd))
+  expect_true("cell line" %in% colnames(cd),
+              label = "'cell line' column present in LunSpikeInData colData")
+  expect_true("block" %in% colnames(cd),
+              label = "'block' column present in LunSpikeInData colData")
 })
 
 # ---------------------------------------------------------------------------

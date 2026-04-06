@@ -38,7 +38,7 @@ bar chart
 Useful links:
 \itemize{
   \item \url{https://github.com/St-Jude-MS-ABDS/ADS8192}
-  \item \url{https://automatic-engine-4qp7m5e.pages.github.io/}
+  \item \url{https://st-jude-ms-abds.github.io/ADS8192/}
   \item Report bugs at \url{https://github.com/St-Jude-MS-ABDS/ADS8192/issues}
 }
 

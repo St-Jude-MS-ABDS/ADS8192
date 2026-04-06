@@ -20,7 +20,7 @@
 #' dim(se_top)
 top_variable_features <- function(se, n = 500, assay_name = "counts") {
     mat <- assay(se, assay_name)
-    vars <- apply(mat, 1, var)
+    vars <- apply(mat, 1, stats::var)
     top_idx <- order(vars, decreasing = TRUE)[seq_len(min(n, length(vars)))]
     se[top_idx, ]
 }

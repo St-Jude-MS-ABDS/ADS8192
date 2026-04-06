@@ -252,42 +252,42 @@ genes to stabilize fold-change estimates, and provides log2 fold-change
 shrinkage for reliable ranking. Volcano and MA plot visualization of DESeq2
 results is the foundational analysis in transcriptomics.
 
-### Dataset: Bottomly (Mouse bulk RNA-seq)
+### Dataset: Tissue-Resident Regulatory T Cells (Mouse bulk RNA-seq)
 
-The Bottomly et al. (2011) dataset contains bulk RNA-seq data from two inbred
-mouse strains — C57BL/6J and DBA/2J — with 10 and 11 biological replicates
-respectively (21 samples total). These two strains have well-characterized
-gene expression differences, making this a clean, real-world dataset for
-DESeq2 differential expression analysis. The balanced design and moderate
-sample size provide good statistical power and stable dispersion estimates.
-Available via `recount3` (project SRP001540).
+The `tissueTreg` Bioconductor companion package provides htseq count data from
+Delacher et al. (2017), profiling regulatory T cells (Tregs) isolated from four
+mouse tissues — fat, liver, lymph node, and skin — alongside conventional T
+cells (Tconv) from lymph nodes. This 5-group design lets students choose their
+own comparison (e.g., lymph-node Treg vs. Tconv, or fat vs. liver Tregs). The
+dataset is accessible directly via `ExperimentHub` (ID `EH1075`) and contains
+21,935 genes × 15 samples with raw integer counts ready for DESeq2.
 
 <details>
 <summary>Data preparation code</summary>
 
 ```{r p3-data, eval=FALSE}
 ## data-raw/example_se.R
-BiocManager::install("recount3")
-library(recount3)
+BiocManager::install("ExperimentHub")
+library(ExperimentHub)
 library(SummarizedExperiment)
 
-# Access the Bottomly et al. dataset via recount3
-human_projects <- available_projects()
-proj <- subset(human_projects, file_source == "sra" &
-                 project == "SRP001540")
-rse <- create_rse(proj)
+eh <- ExperimentHub()
+se <- eh[["EH1075"]]  # Tissue Tregs — htseq counts, Mus musculus
 
-# Transform to integer counts (DESeq2 requires integer input)
-assay(rse, "counts") <- round(transform_counts(rse))
+# Parse tissue and cell type from the combined tissue_cell column
+cd <- colData(se)
+tissue_cell <- as.character(cd[["tissue_cell"]])
+cell_type <- ifelse(grepl("Tcon", tissue_cell), "Tconv", "Treg")
+tissue    <- sub("-Tre?[a-z]*", "", tissue_cell)  # strip cell-type suffix
+tissue    <- sub("-Tcon", "", tissue)
 
-# Simplify colData - extract strain from attributes
-example_se <- rse
-cd <- colData(example_se)
-strain <- ifelse(grepl("C57BL/6J", cd$sra.sample_attributes),
-                 "C57BL_6J", "DBA_2J")
-colData(example_se) <- DataFrame(
-  sample_id = colnames(example_se),
-  strain = factor(strain)
+example_se <- SummarizedExperiment(
+  assays  = list(counts = assay(se, "counts")),
+  colData = DataFrame(
+    sample_id   = rownames(cd),
+    cell_type   = factor(cell_type),
+    tissue      = factor(tissue)
+  )
 )
 
 usethis::use_data(example_se, overwrite = TRUE)
@@ -318,7 +318,7 @@ usethis::use_data(example_se, overwrite = TRUE)
 **Shiny inputs:** Grouping column, reference level, FC threshold slider,
 p-value threshold slider, shrinkage method dropdown, volcano ↔ MA radio button
 
-**Dependencies:** `SummarizedExperiment`, `DESeq2`, `recount3` (data only)
+**Dependencies:** `SummarizedExperiment`, `DESeq2`, `ExperimentHub` (data retrieval)
 
 ---
 
@@ -423,8 +423,12 @@ example_sce <- sce
 #   altExp(example_sce, "ERCC")          # the ERCC SCE
 #   counts(altExp(example_sce, "ERCC"))  # ERCC count matrix (92 controls x 192 cells)
 
-# Keep key metadata
-colData(example_sce) <- colData(example_sce)[, c("cell_line", "plate")]
+# Keep key metadata — note column names use spaces in the raw object;
+# rename to R-friendly names
+colData(example_sce) <- DataFrame(
+  cell_line = colData(sce)[["cell line"]],
+  block     = colData(sce)[["block"]]
+)
 
 usethis::use_data(example_sce, overwrite = TRUE)
 ```
@@ -1035,7 +1039,7 @@ slider, detection threshold slider, dot plot + filterable gene table
 |---|---------|---------|----------|-----------|-------------|------------|
 | 1 | UMAP Embedding | Zeisel brain | Mouse | SCE | 2D scatter | uwot |
 | 2 | Sample Similarity | Macrophage stimulation | Human | SE | heatmap + dendrogram | — |
-| 3 | Differential Expression | Bottomly (mouse strains) | Mouse | SE | volcano / MA | DESeq2 |
+| 3 | Differential Expression | Tissue Tregs (Treg vs Tconv) | Mouse | SE | volcano / MA | DESeq2 |
 | 4 | K-means Clustering | Baron human pancreas | Human | SCE | scatter + elbow | cluster |
 | 5 | Cell QC Dashboard | Lun spike-in | Mouse | SCE | multi-panel | — |
 | 6 | Gene Variance | Macosko retina | Mouse | SCE | mean-variance scatter | — |
