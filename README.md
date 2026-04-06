@@ -5,9 +5,25 @@
 
 Course materials and reference implementation for **ADS 8192: Developing Scientific Applications — Unit 1**. This R package serves as both the source of all Unit 1 lecture content and the living reference implementation that students follow as they build their own packages.
 
+At the end of the course, students will be able to: 
+
+- Transform early-stage, exploratory research code into robust, maintainable, and scalable scientific applications and pipelines by applying software design principles, modular architectures, and well-defined interfaces. (CLO#1) 
+
+- Develop reproducible and portable computational environments, including encapsulated application deployments, and validate consistent execution across operating systems and computing platforms. (CLO#2) 
+
+- Utilize interoperable data structures and automated analytical workflows that support scalable execution, reuse, and integration within larger biomedical data science pipelines. (CLO#3) 
+
+- Apply collaborative software development practices, including version control and quality assurance, while effectively leveraging AI-assisted tools to accelerate development, testing, and documentation in a responsible and transparent manner. (CLO#4) 
+
+- Deploy and operate scientific applications on shared or remote computational infrastructures, and assess performance, reliability, cost, and resource trade-offs in applied biomedical settings. (CLO#5) 
+
+- Produce comprehensive documentation, automated tests, and standardized outputs that enable reproducibility and clearly communicate methods, assumptions, and results to diverse scientific and stakeholder audiences. (CLO#6) 
+
+This unit touches on all of these objectives, but places particular emphasis on CLOs 1, 3, 5, and 6.
+
 ## Unit 1 Overview
 
-Unit 1 teaches graduate students to build **complete, reproducible scientific software in R** — from raw analysis functions through a fully packaged, documented, and deployable application. The unit is organized around core software engineering principles that apply in any language or domain:
+Unit 1 teaches graduate students to build **complete, reproducible scientific software in R** — from raw analysis functions through a fully packaged, documented, and deployable application. The unit is organized around a common software engineering principle that applies in any language or domain:
 
 > **Separation of concerns.** Write your analysis logic once as small, testable, composable functions. Then add thin presentation layers — an R API, a Shiny web app, and a command-line interface — that delegate to those functions without duplicating logic.
 
