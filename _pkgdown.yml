@@ -26,8 +26,8 @@ navbar:
         href: articles/HW1_Rubric.html
       - text: '---'
       - text: Lectures
-      - text: 'Lecture 03: Data Structures & Bioconductor'
-        href: articles/Lecture03_Data_Structures_Bioconductor.html
+      - text: 'Lecture 04: Data Structures & Bioconductor'
+        href: articles/Lecture04_Data_Structures_Bioconductor.html
       - text: 'Lecture 05: Package Dev (devtools)'
         href: articles/Lecture05_Package_Development_devtools.html
       - text: 'Lecture 06: Package Dev (pkgdown, testthat)'
@@ -77,7 +77,7 @@ articles:
 - title: Lectures
   navbar: ~
   contents:
-  - "`articles/Lecture03_Data_Structures_Bioconductor`"
+  - "`articles/Lecture04_Data_Structures_Bioconductor`"
   - "`articles/Lecture05_Package_Development_devtools`"
   - "`articles/Lecture06_Package_Development_pkgdown_testthat`"
   - "`articles/Lecture07_Shiny_Reactivity`"

@@ -57,7 +57,7 @@ A collaborator gives you raw counts, sample metadata, and gene annotations as th
 
 ---
 
-# Why Structured Data Containers?
+# Why Do Data Structures Matter?
 
 ## The Problem with Loose Data
 
@@ -139,7 +139,7 @@ gene <- list(
 
 ## Why S4 in Bioconductor?
 
-Bioconductor packages rely heavily on **S4 classes** because they provide:
+Bioconductor packages rely heavily on R's **S4 classes** because they provide:
 
 - **Formal class definitions** (clear structure and types)
 - **Validity checks** (catch invalid objects early)
@@ -200,30 +200,40 @@ Gene <- function(gene_id, symbol, chr, start, end, strand, biotype) {
 
 A class with no validity check will happily hold nonsense — a gene where
 `start > end`, or a `strand` character that is neither `"+"` nor `"-"`.
-`setValidity()` lets you define invariants that are checked every time
-`validObject()` is called (and optionally on every `new()`):
+
+**What is an invariant?** An invariant is a condition that must *always* be
+true for an object to be considered valid — regardless of how it was created
+or modified. For a genomic coordinate object, `start <= end` is an invariant:
+there is no meaningful gene where the end comes before the start. `strand %in%
+c("+", "-", "*")` is another — the strand field only makes sense for a fixed
+vocabulary of values. Invariants are distinct from *defaults* (which are
+suggestions) and *types* (which R enforces slot-by-slot) — they encode domain
+knowledge that the type system alone cannot express.
+
+`setValidity()` lets you encode these invariants as a function that is checked
+every time `validObject()` is called (and optionally on every `new()`):
 
 ```{r gene-validity, eval=FALSE}
-setValidity("Gene", function(object) {
+setValidity("Gene", function(x) {
     errors <- character()
 
     # Invariant 1: strand must be one of the accepted values
-    if (!object@strand %in% c("+", "-", "*")) {
+    if (!x@strand %in% c("+", "-", "*")) {
         errors <- c(errors,
             paste0("strand must be '+', '-', or '*', got: '",
-                   object@strand, "'"))
+                   x@strand, "'"))
     }
 
     # Invariant 2: genomic coordinates must be positive
-    if (object@start < 1L) {
+    if (x@start < 1L) {
         errors <- c(errors,
-            paste0("start must be >= 1, got: ", object@start))
+            paste0("start must be >= 1, got: ", x@start))
     }
 
     # Invariant 3: start must not exceed end
-    if (object@start > object@end) {
+    if (x@start > x@end) {
         errors <- c(errors,
-            paste0("start (", object@start, ") must be <= end (", object@end, ")"))
+            paste0("start (", x@start, ") must be <= end (", x@end, ")"))
     }
 
     # Return TRUE when valid, or the error messages when invalid.
@@ -300,14 +310,14 @@ Overriding `show()` gives users a clean summary — and it's the method called
 automatically when you type the object name at the prompt:
 
 ```{r gene-show, eval=FALSE}
-setMethod("show", "Gene", function(object) {
-    cat("Gene:", object@symbol, "(", object@gene_id, ")\n")
-    cat("  Location:", paste0("chr", object@chr, ":",
-                              object@start, "-", object@end,
-                              " (", object@strand, ")"), "\n")
-    cat("  Biotype:", object@biotype, "\n")
+setMethod("show", "Gene", function(x) {
+    cat("Gene:", x@symbol, "(", x@gene_id, ")\n")
+    cat("  Location:", paste0("chr", x@chr, ":",
+                              x@start, "-", x@end,
+                              " (", x@strand, ")"), "\n")
+    cat("  Biotype:", x@biotype, "\n")
     # Compute length on the fly — no need to store it as a slot
-    cat("  Length:", object@end - object@start + 1L, "bp\n")
+    cat("  Length:", x@end - x@start + 1L, "bp\n")
 })
 ```
 
@@ -381,7 +391,13 @@ tryCatch(
 
 ---
 
-# Finding Existing Bioconductor Solutions
+# Finding Existing Solutions
+
+Based on that small example, you can see how much work goes into building a robust data structure. 
+
+Before embarking on such an endeavor, it is in your best interest to determine if existing data structures already exist for your data modality and what you want to achieve.
+
+In this case, Bioconductor has already done this for many common assay types — including general count data — e.g. `SummarizedExperiment` and domain-specific extensions like `SingleCellExperiment`, `SpatialExperiment`, etc. These classes have been tested, documented, and widely adopted by the community. They also interoperate with hundreds of downstream packages that expect these containers.
 
 Before you create a new class or container, spend a few minutes checking whether the ecosystem already solved the problem:
 
@@ -403,7 +419,9 @@ Look for:
 - **Interoperability**: Do downstream packages already expect this container?
 - **Maintenance**: Is the package well documented and actively used?
 
-For this course we rebuild a tiny example to make the design visible. In professional work, the default should be to reuse and extend an existing ecosystem type unless you have a concrete reason not to.
+Knowing how to design and build your own data structures is important, but knowing when to reuse existing ones is just as crucial. Don't reinvent the wheel if a well-designed, community-supported solution already exists.
+
+![standards](https://imgs.xkcd.com/comics/standards.png)
 
 ---
 
@@ -412,9 +430,6 @@ For this course we rebuild a tiny example to make the design visible. In profess
 If you haven't already, install and load the required Bioconductor packages:
 
 ```{r install-packages, eval=FALSE}
-if (!require("BiocManager", quietly = TRUE))
-    install.packages("BiocManager")
-
 BiocManager::install(c(
     "SummarizedExperiment",
     "airway",
@@ -434,9 +449,9 @@ library(ggplot2)
 
 ---
 
-# The `airway` Dataset
+# An Illustrative Example: SummarizedExperiment
 
-We'll use the `airway` dataset, which contains RNA-seq data from airway smooth muscle cells. The experiment compared cells treated with dexamethasone (a corticosteroid) to untreated cells.
+We'll use the `airway` dataset, which contains RNA-seq data from airway smooth muscle cells, to look at a very common S4 class offered by Bioconductor - `SummarizedExperiment`. 
 
 ```{r load-airway}
 data("airway")

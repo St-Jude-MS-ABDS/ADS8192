@@ -38,7 +38,7 @@ After completing Unit 1, students will be able to:
 - **Build software for multiple audiences.** Scientists want point-and-click exploration (Shiny); package/pipeline developers want composable R functions they can call programmatically; bioinformatics cores want non-interactive CLI tools that slot into automated workflows. One codebase should serve all of them.
 - **Package R code for distribution.** Turn loose scripts into a valid, installable R package using `devtools` / `usethis` workflows so that others can `install_github()` and immediately use your work. Pave the road for submission to CRAN or Bioconductor and publication.
 - **Document thoroughly.** Every exported function gets `roxygen2` documentation; the package ships a `pkgdown` site; a README and vignette provide onboarding for new users.
-- **Test meaningfully.** `testthat` (edition 3) tests cover both expected behavior and informative error cases, giving confidence that changes don't silently break results.
+- **Test meaningfully.** `testthat` tests cover both expected behavior and informative error cases, giving confidence that changes don't silently break results.
 - **Think about user experience.** Shiny apps include input validation with friendly messages; CLIs print help text and produce standard file formats (TSV); error messages tell the user *what went wrong and what to do about it*.
 - **Practice reproducibility and collaboration.** Version control with Git/GitHub, CI/CD via GitHub Actions, reproducible data preparation (`data-raw/` scripts), and tagged releases make the work shareable and auditable.
 
@@ -63,7 +63,7 @@ All lectures are available as pkgdown articles on the [course site](https://st-j
 
 | # | Topic | What Students Learn |
 |---|-------|---------------------|
-| 03 | Data Structures & Bioconductor | Build a `SummarizedExperiment` from scratch; write constructor, analysis, plotting, and export functions with input validation |
+| 04 | Data Structures & Bioconductor | Build an S4 class from scratch; write constructor, analysis, plotting, and export functions with input validation for homework 1 |
 | 05 | Package Development (devtools) | Turn loose scripts into a valid R package; `DESCRIPTION`, `NAMESPACE`, `roxygen2` exports/imports, `devtools::check()` |
 | 06 | Package Development (pkgdown, testthat) | Write `testthat` tests (happy path + error cases); build and deploy a `pkgdown` documentation site |
 | 07 | Shiny Reactivity | Understand the reactive graph; build a UI with `bslib`; connect inputs → reactive expressions → outputs |
@@ -81,12 +81,14 @@ Each lecture includes working code examples (using the `airway` dataset), in-cla
 
 ### HW1 — Culminating Project
 
-HW1 is the capstone deliverable for Unit 1. Each student selects a project (or proposes a custom one) and delivers a public GitHub repository containing an R package with:
+HW1 is the capstone deliverable for Unit 1 and will be what students work on during labs. 
+
+Each student selects a project (or proposes a custom one) and delivers a public GitHub repository containing an R package with:
 
 | Category | Points | Key Requirements |
 |----------|--------|------------------|
 | Package Structure & Installation | 4 | Valid `DESCRIPTION`, `NAMESPACE`, installs from GitHub, bundled example data |
-| Core Analysis Functions | 5 | Analysis, summary, and plotting functions operating on SE/SCE objects |
+| Core Analysis Functions | 5 | Analysis, summary, and plotting functions operating on common data structures |
 | Testing | 4 | ≥ 8 `testthat` expectations, happy-path + error-case coverage |
 | Documentation | 4 | `roxygen2` help pages, README, deployed `pkgdown` site |
 | Shiny App | 4 | `run_app()` calls core functions reactively; deployed on Posit Connect |
@@ -95,18 +97,15 @@ HW1 is the capstone deliverable for Unit 1. Each student selects a project (or p
 
 Projects span bulk RNA-seq (`SummarizedExperiment`) and single-cell RNA-seq (`SingleCellExperiment`) analyses — PCA, UMAP, differential expression, clustering, QC, normalization, heatmaps, gene set scoring, correlation networks, and more. All use real Bioconductor datasets.
 
+As we progress through the lectures, we'll build out the reference implementation for one of these projects (PCA Explorer) in this repository. Students will follow the same design and structure to build their own package, but with their chosen analysis and dataset.
+
 ## Reference Implementation (This Package)
 
-This repository **is** the reference implementation (Project 0: PCA Explorer). Students cannot choose this project but use it as a structural guide. It demonstrates the full layered architecture — core analysis functions with R API, Shiny, and CLI presentation layers — on the Bioconductor `airway` dataset (human airway smooth muscle RNA-seq, 8 samples, dexamethasone treatment vs. control).
+This repository **is** the reference implementation (Project 0: PCA Explorer). Students cannot choose this project but use it as a structural guide. It demonstrates the full layered architecture — core analysis functions with R API, Shiny, and CLI presentation layers — for a basic R package providing PCA tooling.
 
 ### Installation
 
 ```r
-# Install Bioconductor dependencies
-if (!require("BiocManager", quietly = TRUE))
-    install.packages("BiocManager")
-BiocManager::install(c("SummarizedExperiment", "airway"))
-
 # Install the course package
 remotes::install_github("St-Jude-MS-ABDS/ADS8192")
 ```
