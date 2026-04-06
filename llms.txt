@@ -243,9 +243,7 @@ ADS8192 pca --counts counts.tsv --meta samples.tsv --output results/ --color-by 
 
 ## Links
 
-- **pkgdown site:** <https://st-jude-ms-abds.github.io/ADS8192/>
 - **GitHub:** <https://github.com/St-Jude-MS-ABDS/ADS8192>
-- **Issues:** <https://github.com/St-Jude-MS-ABDS/ADS8192/issues>
 
 ## License
 

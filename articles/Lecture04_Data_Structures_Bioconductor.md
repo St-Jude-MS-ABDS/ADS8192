@@ -407,21 +407,25 @@ tryCatch(
 
 ------------------------------------------------------------------------
 
-## Finding Existing Solutions
+## On Wheel Reinvention
 
 Based on that small example, you can see how much work goes into
-building a robust data structure.
+building a robust data structure. Carelessly slapping together a data
+structure can lead to serious headaches downstream that result in
+constant reimplementations and refactors that can break backwards
+compatibility (looking at you, `Seurat`).
 
 Before embarking on such an endeavor, it is in your best interest to
 determine if existing data structures already exist for your data
 modality and what you want to achieve.
 
-In this case, Bioconductor has already done this for many common assay
-types — including general count data — e.g. `SummarizedExperiment` and
-domain-specific extensions like `SingleCellExperiment`,
-`SpatialExperiment`, etc. These classes have been tested, documented,
-and widely adopted by the community. They also interoperate with
-hundreds of downstream packages that expect these containers.
+In this case, Bioconductor already has battle-tested data structures for
+many common assay types — including general count data —
+e.g. `SummarizedExperiment` and domain-specific extensions like
+`SingleCellExperiment`, `SpatialExperiment`, etc. These classes have
+been tested, documented, and widely adopted by the community. They also
+interoperate with hundreds of downstream packages that expect these
+containers.
 
 Before you create a new class or container, spend a few minutes checking
 whether the ecosystem already solved the problem:
@@ -438,10 +442,9 @@ browseVignettes(package = "SingleCellExperiment")
 
 Look for:
 
-- **Problem fit**: Does the class match bulk RNA-seq, single-cell, or
-  another assay type?
-- **Data model fit**: Can it represent assays, feature metadata, and
-  sample metadata without hacks?
+- **Problem fit**: Does the class match the sort of data you have?
+- **Data model fit**: Can it represent the different facets of the data
+  (counts, sample metadata, feature metadata)without hacks?
 - **Contract clarity**: Are the accessors and invariants clear from the
   docs?
 - **Interoperability**: Do downstream packages already expect this
@@ -459,31 +462,6 @@ standards
 
 ------------------------------------------------------------------------
 
-## Setup: Installing Required Packages
-
-If you haven’t already, install and load the required Bioconductor
-packages:
-
-``` r
-BiocManager::install(c(
-    "SummarizedExperiment",
-    "airway",
-    "ComplexHeatmap",
-    "ggplot2"
-))
-```
-
-Now load the libraries:
-
-``` r
-library(SummarizedExperiment)
-library(airway)
-library(ComplexHeatmap)
-library(ggplot2)
-```
-
-------------------------------------------------------------------------
-
 ## An Illustrative Example: SummarizedExperiment
 
 We’ll use the `airway` dataset, which contains RNA-seq data from airway
@@ -491,6 +469,11 @@ smooth muscle cells, to look at a very common S4 class offered by
 Bioconductor - `SummarizedExperiment`.
 
 ``` r
+library(SummarizedExperiment)
+library(airway)
+library(ComplexHeatmap)
+library(ggplot2)
+
 data("airway")
 airway
 ```
@@ -506,7 +489,23 @@ class(airway)
 `RangedSummarizedExperiment` is an extension of `SummarizedExperiment`
 that also stores genomic ranges for each feature (gene).
 
+#### The `SummarizedExperiment` Structure
+
+Though it may at first seem complicated, the `SummarizedExperiment`
+structure is elegantly intuitive once you understand the core
+components. It consists of three main parts - `rowData`, `colData`, and
+`assays` - that are designed to keep related information synchronized
+and organized.
+
+![The SummarizedExperiment Structure](figures/image.png)
+
+The SummarizedExperiment Structure
+
 #### Dimensions: How many genes and samples?
+
+Generally, you can interact with `SummarizedExperiment` object as you
+would with a typical matrix or data.frame, but it also has specialized
+accessors for its components. The dimensions of the assay matrix are:
 
 ``` r
 dim(airway)
@@ -565,13 +564,6 @@ dim(counts_matrix)
 # Preview first few genes and samples
 counts_matrix[1:5, 1:4]
 ```
-
-> **Exercise A (Warm-up):** Use
-> [`head()`](https://rdrr.io/r/utils/head.html) and
-> [`tail()`](https://rdrr.io/r/utils/head.html) to explore the counts
-> matrix. What is the range of count values? Use
-> [`summary()`](https://rdrr.io/r/base/summary.html) on a single column
-> to find out.
 
 ------------------------------------------------------------------------
 
