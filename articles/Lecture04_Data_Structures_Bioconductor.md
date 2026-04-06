@@ -119,7 +119,10 @@ Discuss in groups and sketch a simple structure. Think about:
 - How will you ensure **validity** (e.g., start \<= end, strand in
   {+,-})?
 
-#### Simple Pseudocode (List-Based)
+### Simple Pseudocode (List-Based)
+
+For instance, if we just used a list with elements for fields we care
+about, it might look like:
 
 ``` r
 gene <- list(
@@ -133,6 +136,8 @@ gene <- list(
     length = 7687550 - 7661779 + 1  # derived
 )
 ```
+
+What are the issues of such a simple approach?
 
 ------------------------------------------------------------------------
 
@@ -456,9 +461,7 @@ but knowing when to reuse existing ones is just as crucial. Don’t
 reinvent the wheel if a well-designed, community-supported solution
 already exists.
 
-![standards](https://imgs.xkcd.com/comics/standards.png)
-
-standards
+![](https://imgs.xkcd.com/comics/standards.png)
 
 ------------------------------------------------------------------------
 
@@ -497,21 +500,7 @@ components. It consists of three main parts - `rowData`, `colData`, and
 `assays` - that are designed to keep related information synchronized
 and organized.
 
-![The SummarizedExperiment Structure](figures/image.png)
-
-The SummarizedExperiment Structure
-
-#### Dimensions: How many genes and samples?
-
-Generally, you can interact with `SummarizedExperiment` object as you
-would with a typical matrix or data.frame, but it also has specialized
-accessors for its components. The dimensions of the assay matrix are:
-
-``` r
-dim(airway)
-nrow(airway)  # genes (features)
-ncol(airway)  # samples
-```
+![](figures/image.png)
 
 #### Sample Metadata (colData)
 
@@ -533,6 +522,10 @@ as.data.frame(colData(airway))
 # Access specific columns
 airway$dex
 airway$cell
+
+# Adding a new column is simple
+airway$group <- paste(airway$cell, airway$dex, sep = "_")
+# Equivalent to: colData(airway)$group <- paste(colData(airway)$cell, colData(airway)$dex, sep = "_")
 ```
 
 #### Gene/Feature Data (rowData)
@@ -543,6 +536,14 @@ function extracts feature-level (gene) metadata:
 
 ``` r
 rowData(airway)
+
+# To add columns to rowData, it must be accessed directly rather than using `$` on
+# the SummarizedExperiment object itself.
+rowData(airway)$type <- ifelse(rowData(airway)$gene_id %in% c("ENSG00000141510", "ENSG00000171862"),
+                                "important_gene", "other")
+
+# Check the new column
+table(rowData(airway)$type)
 ```
 
 #### Assay Data (the actual values)
@@ -563,6 +564,31 @@ dim(counts_matrix)
 
 # Preview first few genes and samples
 counts_matrix[1:5, 1:4]
+```
+
+Note that a `SummarizedExperiment` can hold multiple assays (e.g., raw
+counts, normalized counts, log-transformed values) in the same object,
+each accessible by name.
+
+`SingleCellExperiment` can even hold different experiments via
+[`altExps()`](https://rdrr.io/pkg/SingleCellExperiment/man/altExps.html),
+and other varieties offer other features, like spatial coordinates in
+`SpatialExperiment`. But all of these data structures share the baseline
+functionality and structure of `SummarizedExperiment`.
+
+#### Basic Operations
+
+Generally, you can interact with a `SummarizedExperiment` object as you
+would with a typical matrix or data.frame, but it also has specialized
+accessors for its components.
+
+``` r
+# Subsetting works like a matrix, but keeps everything in sync
+airway_subset <- airway[1:100, 1:4]  # first 100 genes, first 4 samples
+
+# Can see that rowData and colData are intact and subsetted accordingly
+rowData(airway_subset)
+colData(airway_subset)
 ```
 
 ------------------------------------------------------------------------
@@ -600,7 +626,7 @@ dim(my_se)
 colData(my_se)
 ```
 
-> **Exercise B:** Modify the constructor call above to also include
+> **Exercise:** Modify the constructor call above to also include
 > `rowData`. Extract it from `airway` first, then pass it via the
 > `rowData` argument.
 

@@ -208,9 +208,11 @@ present</strong>?</li>
 <li>How will you ensure <strong>validity</strong> (e.g., start &lt;=
 end, strand in {+,-})?</li>
 </ul>
-<div class="section level4">
-<h4 id="simple-pseudocode-list-based">Simple Pseudocode (List-Based)<a class="anchor" aria-label="anchor" href="#simple-pseudocode-list-based"></a>
-</h4>
+<div class="section level3">
+<h3 id="simple-pseudocode-list-based">Simple Pseudocode (List-Based)<a class="anchor" aria-label="anchor" href="#simple-pseudocode-list-based"></a>
+</h3>
+<p>For instance, if we just used a list with elements for fields we care
+about, it might look like:</p>
 <div class="sourceCode" id="cb3"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="va">gene</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/base/list.html" class="external-link">list</a></span><span class="op">(</span></span>
 <span>    gene_id <span class="op">=</span> <span class="st">"ENSG00000141510"</span>,</span>
@@ -222,6 +224,7 @@ end, strand in {+,-})?</li>
 <span>    biotype <span class="op">=</span> <span class="st">"protein_coding"</span>,</span>
 <span>    length <span class="op">=</span> <span class="fl">7687550</span> <span class="op">-</span> <span class="fl">7661779</span> <span class="op">+</span> <span class="fl">1</span>  <span class="co"># derived</span></span>
 <span><span class="op">)</span></span></code></pre></div>
+<p>What are the issues of such a simple approach?</p>
 <hr>
 </div>
 <div class="section level3">
@@ -543,9 +546,7 @@ actively used?</li>
 important, but knowing when to reuse existing ones is just as crucial.
 Don’t reinvent the wheel if a well-designed, community-supported
 solution already exists.</p>
-<div class="float">
-<img src="https://imgs.xkcd.com/comics/standards.png" alt="standards"><div class="figcaption">standards</div>
-</div>
+<p><img src="https://imgs.xkcd.com/comics/standards.png"></p>
 <hr>
 </div>
 <div class="section level2">
@@ -583,54 +584,52 @@ you understand the core components. It consists of three main parts -
 <code>rowData</code>, <code>colData</code>, and <code>assays</code> -
 that are designed to keep related information synchronized and
 organized.</p>
-<div class="float">
-<img src="figures/image.png" alt="The SummarizedExperiment Structure"><div class="figcaption">The SummarizedExperiment Structure</div>
-</div>
-</div>
-<div class="section level4">
-<h4 id="dimensions-how-many-genes-and-samples">Dimensions: How many genes and samples?<a class="anchor" aria-label="anchor" href="#dimensions-how-many-genes-and-samples"></a>
-</h4>
-<p>Generally, you can interact with <code>SummarizedExperiment</code>
-object as you would with a typical matrix or data.frame, but it also has
-specialized accessors for its components. The dimensions of the assay
-matrix are:</p>
-<div class="sourceCode" id="cb14"><pre class="downlit sourceCode r">
-<code class="sourceCode R"><span><span class="fu"><a href="https://rdrr.io/r/base/dim.html" class="external-link">dim</a></span><span class="op">(</span><span class="va">airway</span><span class="op">)</span></span>
-<span><span class="fu"><a href="https://rdrr.io/r/base/nrow.html" class="external-link">nrow</a></span><span class="op">(</span><span class="va">airway</span><span class="op">)</span>  <span class="co"># genes (features)</span></span>
-<span><span class="fu"><a href="https://rdrr.io/r/base/nrow.html" class="external-link">ncol</a></span><span class="op">(</span><span class="va">airway</span><span class="op">)</span>  <span class="co"># samples</span></span></code></pre></div>
+<p><img src="figures/image.png"></p>
 </div>
 <div class="section level4">
 <h4 id="sample-metadata-coldata">Sample Metadata (colData)<a class="anchor" aria-label="anchor" href="#sample-metadata-coldata"></a>
 </h4>
 <p>The <code><a href="https://rdrr.io/pkg/SummarizedExperiment/man/SummarizedExperiment-class.html" class="external-link">colData()</a></code> function extracts sample-level
 metadata:</p>
-<div class="sourceCode" id="cb15"><pre class="downlit sourceCode r">
+<div class="sourceCode" id="cb14"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="fu"><a href="https://rdrr.io/pkg/SummarizedExperiment/man/SummarizedExperiment-class.html" class="external-link">colData</a></span><span class="op">(</span><span class="va">airway</span><span class="op">)</span></span></code></pre></div>
 <p>Key variables: - <code>cell</code>: Cell line identifier -
 <code>dex</code>: Treatment status - “trt” (dexamethasone) or “untrt”
 (control)</p>
-<div class="sourceCode" id="cb16"><pre class="downlit sourceCode r">
+<div class="sourceCode" id="cb15"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="co"># Access as a data.frame</span></span>
 <span><span class="fu"><a href="https://rdrr.io/r/base/as.data.frame.html" class="external-link">as.data.frame</a></span><span class="op">(</span><span class="fu"><a href="https://rdrr.io/pkg/SummarizedExperiment/man/SummarizedExperiment-class.html" class="external-link">colData</a></span><span class="op">(</span><span class="va">airway</span><span class="op">)</span><span class="op">)</span></span>
 <span></span>
 <span><span class="co"># Access specific columns</span></span>
 <span><span class="va">airway</span><span class="op">$</span><span class="va">dex</span></span>
-<span><span class="va">airway</span><span class="op">$</span><span class="va">cell</span></span></code></pre></div>
+<span><span class="va">airway</span><span class="op">$</span><span class="va">cell</span></span>
+<span></span>
+<span><span class="co"># Adding a new column is simple</span></span>
+<span><span class="va">airway</span><span class="op">$</span><span class="va">group</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/base/paste.html" class="external-link">paste</a></span><span class="op">(</span><span class="va">airway</span><span class="op">$</span><span class="va">cell</span>, <span class="va">airway</span><span class="op">$</span><span class="va">dex</span>, sep <span class="op">=</span> <span class="st">"_"</span><span class="op">)</span></span>
+<span><span class="co"># Equivalent to: colData(airway)$group &lt;- paste(colData(airway)$cell, colData(airway)$dex, sep = "_")</span></span></code></pre></div>
 </div>
 <div class="section level4">
 <h4 id="genefeature-data-rowdata">Gene/Feature Data (rowData)<a class="anchor" aria-label="anchor" href="#genefeature-data-rowdata"></a>
 </h4>
 <p>The <code><a href="https://rdrr.io/pkg/SummarizedExperiment/man/SummarizedExperiment-class.html" class="external-link">rowData()</a></code> function extracts feature-level (gene)
 metadata:</p>
-<div class="sourceCode" id="cb17"><pre class="downlit sourceCode r">
-<code class="sourceCode R"><span><span class="fu"><a href="https://rdrr.io/pkg/SummarizedExperiment/man/SummarizedExperiment-class.html" class="external-link">rowData</a></span><span class="op">(</span><span class="va">airway</span><span class="op">)</span></span></code></pre></div>
+<div class="sourceCode" id="cb16"><pre class="downlit sourceCode r">
+<code class="sourceCode R"><span><span class="fu"><a href="https://rdrr.io/pkg/SummarizedExperiment/man/SummarizedExperiment-class.html" class="external-link">rowData</a></span><span class="op">(</span><span class="va">airway</span><span class="op">)</span></span>
+<span></span>
+<span><span class="co"># To add columns to rowData, it must be accessed directly rather than using `$` on</span></span>
+<span><span class="co"># the SummarizedExperiment object itself.</span></span>
+<span><span class="fu"><a href="https://rdrr.io/pkg/SummarizedExperiment/man/SummarizedExperiment-class.html" class="external-link">rowData</a></span><span class="op">(</span><span class="va">airway</span><span class="op">)</span><span class="op">$</span><span class="va">type</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/base/ifelse.html" class="external-link">ifelse</a></span><span class="op">(</span><span class="fu"><a href="https://rdrr.io/pkg/SummarizedExperiment/man/SummarizedExperiment-class.html" class="external-link">rowData</a></span><span class="op">(</span><span class="va">airway</span><span class="op">)</span><span class="op">$</span><span class="va">gene_id</span> <span class="op"><a href="https://rdrr.io/r/base/match.html" class="external-link">%in%</a></span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="st">"ENSG00000141510"</span>, <span class="st">"ENSG00000171862"</span><span class="op">)</span>,</span>
+<span>                                <span class="st">"important_gene"</span>, <span class="st">"other"</span><span class="op">)</span></span>
+<span></span>
+<span><span class="co"># Check the new column</span></span>
+<span><span class="fu"><a href="https://rdrr.io/r/base/table.html" class="external-link">table</a></span><span class="op">(</span><span class="fu"><a href="https://rdrr.io/pkg/SummarizedExperiment/man/SummarizedExperiment-class.html" class="external-link">rowData</a></span><span class="op">(</span><span class="va">airway</span><span class="op">)</span><span class="op">$</span><span class="va">type</span><span class="op">)</span></span></code></pre></div>
 </div>
 <div class="section level4">
 <h4 id="assay-data-the-actual-values">Assay Data (the actual values)<a class="anchor" aria-label="anchor" href="#assay-data-the-actual-values"></a>
 </h4>
 <p>The actual expression data is stored in “assays”. This dataset has
 one assay called “counts”:</p>
-<div class="sourceCode" id="cb18"><pre class="downlit sourceCode r">
+<div class="sourceCode" id="cb17"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="co"># What assays are available?</span></span>
 <span><span class="fu"><a href="https://rdrr.io/pkg/SummarizedExperiment/man/SummarizedExperiment-class.html" class="external-link">assayNames</a></span><span class="op">(</span><span class="va">airway</span><span class="op">)</span></span>
 <span></span>
@@ -643,6 +642,28 @@ one assay called “counts”:</p>
 <span></span>
 <span><span class="co"># Preview first few genes and samples</span></span>
 <span><span class="va">counts_matrix</span><span class="op">[</span><span class="fl">1</span><span class="op">:</span><span class="fl">5</span>, <span class="fl">1</span><span class="op">:</span><span class="fl">4</span><span class="op">]</span></span></code></pre></div>
+<p>Note that a <code>SummarizedExperiment</code> can hold multiple
+assays (e.g., raw counts, normalized counts, log-transformed values) in
+the same object, each accessible by name.</p>
+<p><code>SingleCellExperiment</code> can even hold different experiments
+via <code><a href="https://rdrr.io/pkg/SingleCellExperiment/man/altExps.html" class="external-link">altExps()</a></code>, and other varieties offer other features,
+like spatial coordinates in <code>SpatialExperiment</code>. But all of
+these data structures share the baseline functionality and structure of
+<code>SummarizedExperiment</code>.</p>
+</div>
+<div class="section level4">
+<h4 id="basic-operations">Basic Operations<a class="anchor" aria-label="anchor" href="#basic-operations"></a>
+</h4>
+<p>Generally, you can interact with a <code>SummarizedExperiment</code>
+object as you would with a typical matrix or data.frame, but it also has
+specialized accessors for its components.</p>
+<div class="sourceCode" id="cb18"><pre class="downlit sourceCode r">
+<code class="sourceCode R"><span><span class="co"># Subsetting works like a matrix, but keeps everything in sync</span></span>
+<span><span class="va">airway_subset</span> <span class="op">&lt;-</span> <span class="va">airway</span><span class="op">[</span><span class="fl">1</span><span class="op">:</span><span class="fl">100</span>, <span class="fl">1</span><span class="op">:</span><span class="fl">4</span><span class="op">]</span>  <span class="co"># first 100 genes, first 4 samples</span></span>
+<span></span>
+<span><span class="co"># Can see that rowData and colData are intact and subsetted accordingly</span></span>
+<span><span class="fu"><a href="https://rdrr.io/pkg/SummarizedExperiment/man/SummarizedExperiment-class.html" class="external-link">rowData</a></span><span class="op">(</span><span class="va">airway_subset</span><span class="op">)</span></span>
+<span><span class="fu"><a href="https://rdrr.io/pkg/SummarizedExperiment/man/SummarizedExperiment-class.html" class="external-link">colData</a></span><span class="op">(</span><span class="va">airway_subset</span><span class="op">)</span></span></code></pre></div>
 <hr>
 </div>
 </div>
@@ -679,9 +700,9 @@ data.frame, and optionally gene metadata:</p>
 <span><span class="fu"><a href="https://rdrr.io/r/base/dim.html" class="external-link">dim</a></span><span class="op">(</span><span class="va">my_se</span><span class="op">)</span></span>
 <span><span class="fu"><a href="https://rdrr.io/pkg/SummarizedExperiment/man/SummarizedExperiment-class.html" class="external-link">colData</a></span><span class="op">(</span><span class="va">my_se</span><span class="op">)</span></span></code></pre></div>
 <blockquote>
-<p><strong>Exercise B:</strong> Modify the constructor call above to
-also include <code>rowData</code>. Extract it from <code>airway</code>
-first, then pass it via the <code>rowData</code> argument.</p>
+<p><strong>Exercise:</strong> Modify the constructor call above to also
+include <code>rowData</code>. Extract it from <code>airway</code> first,
+then pass it via the <code>rowData</code> argument.</p>
 </blockquote>
 <hr>
 </div>
