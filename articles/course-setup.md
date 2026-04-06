@@ -73,7 +73,9 @@ bioc_pkgs <- c(
   "recount3",
   "curatedTCGAData",
   "TCGAutils",
-  "TENxPBMCData"
+  "TENxPBMCData",
+  # Data access infrastructure
+  "ExperimentHub"
 )
 
 BiocManager::install(bioc_pkgs, version = "3.22")

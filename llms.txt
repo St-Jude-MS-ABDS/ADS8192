@@ -5,13 +5,46 @@ Scientific Applications — Unit 1**. This R package serves as both the
 source of all Unit 1 lecture content and the living reference
 implementation that students follow as they build their own packages.
 
+At the end of the course, students will be able to:
+
+- Transform early-stage, exploratory research code into robust,
+  maintainable, and scalable scientific applications and pipelines by
+  applying software design principles, modular architectures, and
+  well-defined interfaces. (CLO#1)
+
+- Develop reproducible and portable computational environments,
+  including encapsulated application deployments, and validate
+  consistent execution across operating systems and computing platforms.
+  (CLO#2)
+
+- Utilize interoperable data structures and automated analytical
+  workflows that support scalable execution, reuse, and integration
+  within larger biomedical data science pipelines. (CLO#3)
+
+- Apply collaborative software development practices, including version
+  control and quality assurance, while effectively leveraging
+  AI-assisted tools to accelerate development, testing, and
+  documentation in a responsible and transparent manner. (CLO#4)
+
+- Deploy and operate scientific applications on shared or remote
+  computational infrastructures, and assess performance, reliability,
+  cost, and resource trade-offs in applied biomedical settings. (CLO#5)
+
+- Produce comprehensive documentation, automated tests, and standardized
+  outputs that enable reproducibility and clearly communicate methods,
+  assumptions, and results to diverse scientific and stakeholder
+  audiences. (CLO#6)
+
+This unit touches on all of these objectives, but places particular
+emphasis on CLOs 1, 3, 5, and 6.
+
 ## Unit 1 Overview
 
 Unit 1 teaches graduate students to build **complete, reproducible
 scientific software in R** — from raw analysis functions through a fully
 packaged, documented, and deployable application. The unit is organized
-around core software engineering principles that apply in any language
-or domain:
+around a common software engineering principle that applies in any
+language or domain:
 
 > **Separation of concerns.** Write your analysis logic once as small,
 > testable, composable functions. Then add thin presentation layers — an
@@ -49,9 +82,9 @@ After completing Unit 1, students will be able to:
 - **Document thoroughly.** Every exported function gets `roxygen2`
   documentation; the package ships a `pkgdown` site; a README and
   vignette provide onboarding for new users.
-- **Test meaningfully.** `testthat` (edition 3) tests cover both
-  expected behavior and informative error cases, giving confidence that
-  changes don’t silently break results.
+- **Test meaningfully.** `testthat` tests cover both expected behavior
+  and informative error cases, giving confidence that changes don’t
+  silently break results.
 - **Think about user experience.** Shiny apps include input validation
   with friendly messages; CLIs print help text and produce standard file
   formats (TSV); error messages tell the user *what went wrong and what
@@ -84,7 +117,7 @@ live in `vignettes/articles/`.
 
 | \#  | Topic                                   | What Students Learn                                                                                                                                               |
 |-----|-----------------------------------------|-------------------------------------------------------------------------------------------------------------------------------------------------------------------|
-| 03  | Data Structures & Bioconductor          | Build a `SummarizedExperiment` from scratch; write constructor, analysis, plotting, and export functions with input validation                                    |
+| 04  | Data Structures & Bioconductor          | Build an S4 class from scratch; write constructor, analysis, plotting, and export functions with input validation for homework 1                                  |
 | 05  | Package Development (devtools)          | Turn loose scripts into a valid R package; `DESCRIPTION`, `NAMESPACE`, `roxygen2` exports/imports, `devtools::check()`                                            |
 | 06  | Package Development (pkgdown, testthat) | Write `testthat` tests (happy path + error cases); build and deploy a `pkgdown` documentation site                                                                |
 | 07  | Shiny Reactivity                        | Understand the reactive graph; build a UI with `bslib`; connect inputs → reactive expressions → outputs                                                           |
@@ -110,14 +143,16 @@ micro-tasks.
 
 ### HW1 — Culminating Project
 
-HW1 is the capstone deliverable for Unit 1. Each student selects a
-project (or proposes a custom one) and delivers a public GitHub
-repository containing an R package with:
+HW1 is the capstone deliverable for Unit 1 and will be what students
+work on during labs.
+
+Each student selects a project (or proposes a custom one) and delivers a
+public GitHub repository containing an R package with:
 
 | Category                         | Points | Key Requirements                                                                                                                         |
 |----------------------------------|--------|------------------------------------------------------------------------------------------------------------------------------------------|
 | Package Structure & Installation | 4      | Valid `DESCRIPTION`, `NAMESPACE`, installs from GitHub, bundled example data                                                             |
-| Core Analysis Functions          | 5      | Analysis, summary, and plotting functions operating on SE/SCE objects                                                                    |
+| Core Analysis Functions          | 5      | Analysis, summary, and plotting functions operating on common data structures                                                            |
 | Testing                          | 4      | ≥ 8 `testthat` expectations, happy-path + error-case coverage                                                                            |
 | Documentation                    | 4      | `roxygen2` help pages, README, deployed `pkgdown` site                                                                                   |
 | Shiny App                        | 4      | [`run_app()`](https://st-jude-ms-abds.github.io/ADS8192/reference/run_app.md) calls core functions reactively; deployed on Posit Connect |
@@ -129,23 +164,22 @@ RNA-seq (`SingleCellExperiment`) analyses — PCA, UMAP, differential
 expression, clustering, QC, normalization, heatmaps, gene set scoring,
 correlation networks, and more. All use real Bioconductor datasets.
 
+As we progress through the lectures, we’ll build out the reference
+implementation for one of these projects (PCA Explorer) in this
+repository. Students will follow the same design and structure to build
+their own package, but with their chosen analysis and dataset.
+
 ## Reference Implementation (This Package)
 
 This repository **is** the reference implementation (Project 0: PCA
 Explorer). Students cannot choose this project but use it as a
 structural guide. It demonstrates the full layered architecture — core
-analysis functions with R API, Shiny, and CLI presentation layers — on
-the Bioconductor `airway` dataset (human airway smooth muscle RNA-seq, 8
-samples, dexamethasone treatment vs. control).
+analysis functions with R API, Shiny, and CLI presentation layers — for
+a basic R package providing PCA tooling.
 
 ### Installation
 
 ``` r
-# Install Bioconductor dependencies
-if (!require("BiocManager", quietly = TRUE))
-    install.packages("BiocManager")
-BiocManager::install(c("SummarizedExperiment", "airway"))
-
 # Install the course package
 remotes::install_github("St-Jude-MS-ABDS/ADS8192")
 ```
@@ -276,8 +310,8 @@ Shiny web application
 
 ### Lectures
 
-- [Lecture 3: Data Structures & R Ecosystems
-  (Bioconductor)](https://st-jude-ms-abds.github.io/ADS8192/articles/Lecture03_Data_Structures_Bioconductor.md):
+- [Lecture 4: Data Structures & R Ecosystems
+  (Bioconductor)](https://st-jude-ms-abds.github.io/ADS8192/articles/Lecture04_Data_Structures_Bioconductor.md):
 - [Lecture 5: Lab – R Package Development
   (devtools)](https://st-jude-ms-abds.github.io/ADS8192/articles/Lecture05_Package_Development_devtools.md):
 - [Lecture 6: Lab – R Package Development (pkgdown,

@@ -39,7 +39,7 @@
     <li><a class="dropdown-item" href="../articles/HW1_Rubric.html">HW1 Rubric</a></li>
     <li><hr class="dropdown-divider"></li>
     <li><h6 class="dropdown-header" data-toc-skip>Lectures</h6></li>
-    <li><a class="dropdown-item" href="../articles/Lecture03_Data_Structures_Bioconductor.html">Lecture 03: Data Structures &amp; Bioconductor</a></li>
+    <li><a class="dropdown-item" href="../articles/Lecture04_Data_Structures_Bioconductor.html">Lecture 04: Data Structures &amp; Bioconductor</a></li>
     <li><a class="dropdown-item" href="../articles/Lecture05_Package_Development_devtools.html">Lecture 05: Package Dev (devtools)</a></li>
     <li><a class="dropdown-item" href="../articles/Lecture06_Package_Development_pkgdown_testthat.html">Lecture 06: Package Dev (pkgdown, testthat)</a></li>
     <li><a class="dropdown-item" href="../articles/Lecture07_Shiny_Reactivity.html">Lecture 07: Shiny Reactivity</a></li>
@@ -155,7 +155,7 @@ script. But scripts have limitations:</p>
 <tbody>
 <tr class="odd">
 <td><code>source("path/to/file.R")</code></td>
-<td><code><a href="https://rdrr.io/r/base/library.html" class="external-link">library(sePCA)</a></code></td>
+<td><code><a href="https://github.com/St-Jude-MS-ABDS/ADS8192" class="external-link">library(ADS8192)</a></code></td>
 </tr>
 <tr class="even">
 <td>Paths break when you move files</td>
@@ -172,7 +172,7 @@ script. But scripts have limitations:</p>
 </tr>
 <tr class="odd">
 <td>Hard to share</td>
-<td><code>install_github("you/sePCA")</code></td>
+<td><code>install_github("you/ADS8192")</code></td>
 </tr>
 <tr class="even">
 <td>No tests</td>
@@ -212,12 +212,10 @@ API.</p>
 <p>Before we begin, ensure you have:</p>
 <ul class="task-list">
 <li><label><input type="checkbox">Your <code>analysis_core.R</code>
-script from Lecture 3 with the five functions</label></li>
+script from Lecture 3 with analysis functions</label></li>
 <li><label><input type="checkbox">Git installed and configured
 (<code>git config --global user.name "Your Name"</code>)</label></li>
 <li><label><input type="checkbox">A GitHub account</label></li>
-<li><label><input type="checkbox">RStudio (recommended) or another IDE
-with R support</label></li>
 </ul>
 <div class="sourceCode" id="cb1"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="co"># Install development tools if needed</span></span>
@@ -296,17 +294,35 @@ distinguishes an exported function from an internal helper?</p>
 <span></span>
 <span><span class="co"># Create the package (choose your own name!)</span></span>
 <span><span class="co"># This creates a new directory with the package structure</span></span>
-<span><span class="fu">create_package</span><span class="op">(</span><span class="st">"~/sePCA"</span><span class="op">)</span>  <span class="co"># Or wherever you want it</span></span>
+<span><span class="fu">create_package</span><span class="op">(</span><span class="st">"~/ADS8192"</span><span class="op">)</span>  <span class="co"># Or wherever you want it</span></span>
 <span></span>
 <span><span class="co"># This will open a new RStudio session in the package directory</span></span></code></pre></div>
 <p>After running this, you’ll see:</p>
-<pre><code>sePCA/
+<pre><code>ADS8192/
 ├── .Rbuildignore
 ├── .gitignore
 ├── DESCRIPTION
 ├── NAMESPACE
 ├── R/
-└── sePCA.Rproj</code></pre>
+└── ADS8192.Rproj</code></pre>
+<blockquote>
+<p><strong>Note:</strong> Two important files are created automatically
+by <code>usethis</code>:</p>
+<ul>
+<li>
+<strong><code>.Rbuildignore</code></strong> — tells
+<code>R CMD build</code> which files to exclude from the package
+tarball. For example, the <code>.Rproj</code> file,
+<code>data-raw/</code> scripts, and development notes should be listed
+here. They don’t belong in the installed package.</li>
+<li>
+<strong><code>.gitignore</code></strong> — tells Git which files not
+to track. This typically includes compiled artifacts (<code>.o</code>,
+<code>.so</code>), <code>.Rproj.user/</code>, and temporary files. You
+rarely need to edit these manually — <code>usethis</code> functions like
+<code>use_data_raw()</code> automatically add the right entries.</li>
+</ul>
+</blockquote>
 </div>
 <div class="section level3">
 <h3 id="step-2-initialize-git">Step 2: Initialize Git<a class="anchor" aria-label="anchor" href="#step-2-initialize-git"></a>
@@ -334,7 +350,7 @@ distinguishes an exported function from an internal helper?</p>
 <span></span>
 <span><span class="co"># If this doesn't work, you can create the repo manually on GitHub</span></span>
 <span><span class="co"># and then add the remote via the terminal:</span></span>
-<span><span class="co"># git remote add origin https://github.com/your-username/sePCA.git</span></span>
+<span><span class="co"># git remote add origin https://github.com/your-username/ADS8192.git</span></span>
 <span><span class="co"># git push -u origin main</span></span></code></pre></div>
 </div>
 <div class="section level3">
@@ -355,10 +371,10 @@ distinguishes an exported function from an internal helper?</p>
 </h2>
 <p>The <code>DESCRIPTION</code> file is the heart of your package
 metadata. Open it and edit:</p>
-<div class="sourceCode" id="cb7"><pre class="sourceCode yaml"><code class="sourceCode yaml"><span id="cb7-1"><a href="#cb7-1" tabindex="-1"></a><span class="fu">Package</span><span class="kw">:</span><span class="at"> sePCA</span></span>
-<span id="cb7-2"><a href="#cb7-2" tabindex="-1"></a><span class="fu">Title</span><span class="kw">:</span><span class="at"> PCA Analysis for SummarizedExperiment Objects</span></span>
+<div class="sourceCode" id="cb7"><pre class="sourceCode yaml"><code class="sourceCode yaml"><span id="cb7-1"><a href="#cb7-1" tabindex="-1"></a><span class="fu">Package</span><span class="kw">:</span><span class="at"> ADS8192</span></span>
+<span id="cb7-2"><a href="#cb7-2" tabindex="-1"></a><span class="fu">Title</span><span class="kw">:</span><span class="at"> ADS 8192 PCA Analysis Tools</span></span>
 <span id="cb7-3"><a href="#cb7-3" tabindex="-1"></a><span class="fu">Version</span><span class="kw">:</span><span class="at"> </span><span class="fl">0.0.0.9000</span></span>
-<span id="cb7-4"><a href="#cb7-4" tabindex="-1"></a><span class="fu">Authors@R</span><span class="kw">:</span><span class="at"> </span></span>
+<span id="cb7-4"><a href="#cb7-4" tabindex="-1"></a><span class="fu">Authors@R</span><span class="kw">:</span></span>
 <span id="cb7-5"><a href="#cb7-5" tabindex="-1"></a><span class="at">    person("Your", "Name", email = "you@example.com", role = c("aut", "cre"),</span></span>
 <span id="cb7-6"><a href="#cb7-6" tabindex="-1"></a><span class="at">           comment = c(ORCID = "YOUR-ORCID-ID"))</span></span>
 <span id="cb7-7"><a href="#cb7-7" tabindex="-1"></a><span class="fu">Description</span><span class="kw">:</span><span class="at"> Provides functions to perform principal component analysis (PCA)</span></span>
@@ -414,7 +430,7 @@ however you like, but a common pattern:</p>
 ├── data.R         # Functions for data handling (top_variable_features)
 ├── pca.R          # PCA-related functions
 ├── plotting.R     # Visualization functions
-└── sePCA-package.R  # Package-level documentation</code></pre>
+└── ADS8192-package.R  # Package-level documentation</code></pre>
 </div>
 <div class="section level3">
 <h3 id="create-the-files">Create the Files<a class="anchor" aria-label="anchor" href="#create-the-files"></a>
@@ -555,7 +571,7 @@ the functions without loading external data.</p>
 <span><span class="fu">use_data_raw</span><span class="op">(</span><span class="st">"example_se"</span><span class="op">)</span></span></code></pre></div>
 <p>This creates <code>data-raw/example_se.R</code>. Edit it:</p>
 <div class="sourceCode" id="cb20"><pre class="downlit sourceCode r">
-<code class="sourceCode R"><span><span class="co"># data-raw/example_se.R</span></span>
+<code class="sourceCode R"><span><span class="co"># data-raw/example_se.R — creates example_se dataset</span></span>
 <span></span>
 <span><span class="co"># Create a small example SummarizedExperiment</span></span>
 <span><span class="kw"><a href="https://rdrr.io/r/base/library.html" class="external-link">library</a></span><span class="op">(</span><span class="va"><a href="https://bioconductor.org/packages/SummarizedExperiment" class="external-link">SummarizedExperiment</a></span><span class="op">)</span></span>
@@ -703,10 +719,10 @@ package. Categorize each WARNING and NOTE as either “must fix” or
 <p>Open a <strong>fresh R session</strong> (important!) and try:</p>
 <div class="sourceCode" id="cb30"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="co"># Install from GitHub</span></span>
-<span><span class="co"># remotes::install_github("your-username/sePCA")</span></span>
+<span><span class="co"># remotes::install_github("your-username/ADS8192")</span></span>
 <span></span>
 <span><span class="co"># Load and test</span></span>
-<span><span class="kw"><a href="https://rdrr.io/r/base/library.html" class="external-link">library</a></span><span class="op">(</span><span class="va">sePCA</span><span class="op">)</span></span>
+<span><span class="kw"><a href="https://rdrr.io/r/base/library.html" class="external-link">library</a></span><span class="op">(</span><span class="va"><a href="https://github.com/St-Jude-MS-ABDS/ADS8192" class="external-link">ADS8192</a></span><span class="op">)</span></span>
 <span><span class="fu"><a href="https://rdrr.io/r/utils/data.html" class="external-link">data</a></span><span class="op">(</span><span class="va">example_se</span><span class="op">)</span></span>
 <span></span>
 <span><span class="va">result</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/run_pca.html">run_pca</a></span><span class="op">(</span><span class="va">example_se</span><span class="op">)</span></span>
@@ -724,24 +740,24 @@ package. Categorize each WARNING and NOTE as either “must fix” or
 <span id="cb32-2"><a href="#cb32-2" tabindex="-1"></a><span class="an">output:</span><span class="co"> github_document</span></span>
 <span id="cb32-3"><a href="#cb32-3" tabindex="-1"></a><span class="co">---</span></span>
 <span id="cb32-4"><a href="#cb32-4" tabindex="-1"></a></span>
-<span id="cb32-5"><a href="#cb32-5" tabindex="-1"></a><span class="fu"># sePCA</span></span>
+<span id="cb32-5"><a href="#cb32-5" tabindex="-1"></a><span class="fu"># ADS8192</span></span>
 <span id="cb32-6"><a href="#cb32-6" tabindex="-1"></a></span>
 <span id="cb32-7"><a href="#cb32-7" tabindex="-1"></a><span class="co">&lt;!-- badges: start --&gt;</span></span>
 <span id="cb32-8"><a href="#cb32-8" tabindex="-1"></a><span class="co">&lt;!-- badges: end --&gt;</span></span>
 <span id="cb32-9"><a href="#cb32-9" tabindex="-1"></a></span>
-<span id="cb32-10"><a href="#cb32-10" tabindex="-1"></a>sePCA provides tools for performing PCA on SummarizedExperiment objects.</span>
+<span id="cb32-10"><a href="#cb32-10" tabindex="-1"></a>ADS8192 provides tools for performing PCA on SummarizedExperiment objects.</span>
 <span id="cb32-11"><a href="#cb32-11" tabindex="-1"></a></span>
 <span id="cb32-12"><a href="#cb32-12" tabindex="-1"></a><span class="fu">## Installation</span></span>
-<span id="cb32-13"><a href="#cb32-13" tabindex="-1"></a> </span>
+<span id="cb32-13"><a href="#cb32-13" tabindex="-1"></a></span>
 <span id="cb32-14"><a href="#cb32-14" tabindex="-1"></a><span class="in">```r</span></span>
 <span id="cb32-15"><a href="#cb32-15" tabindex="-1"></a><span class="co"># Install from GitHub</span></span>
-<span id="cb32-16"><a href="#cb32-16" tabindex="-1"></a>remotes<span class="sc">::</span><span class="fu">install_github</span>(<span class="st">"your-username/sePCA"</span>)</span>
+<span id="cb32-16"><a href="#cb32-16" tabindex="-1"></a>remotes<span class="sc">::</span><span class="fu">install_github</span>(<span class="st">"your-username/ADS8192"</span>)</span>
 <span id="cb32-17"><a href="#cb32-17" tabindex="-1"></a><span class="in">```</span></span>
 <span id="cb32-18"><a href="#cb32-18" tabindex="-1"></a></span>
 <span id="cb32-19"><a href="#cb32-19" tabindex="-1"></a><span class="fu">## Quick Start</span></span>
 <span id="cb32-20"><a href="#cb32-20" tabindex="-1"></a></span>
 <span id="cb32-21"><a href="#cb32-21" tabindex="-1"></a><span class="in">```r</span></span>
-<span id="cb32-22"><a href="#cb32-22" tabindex="-1"></a><span class="fu">library</span>(sePCA)</span>
+<span id="cb32-22"><a href="#cb32-22" tabindex="-1"></a><span class="fu">library</span>(ADS8192)</span>
 <span id="cb32-23"><a href="#cb32-23" tabindex="-1"></a><span class="fu">library</span>(airway)</span>
 <span id="cb32-24"><a href="#cb32-24" tabindex="-1"></a></span>
 <span id="cb32-25"><a href="#cb32-25" tabindex="-1"></a><span class="co"># Load example data</span></span>
@@ -814,7 +830,7 @@ structure</li>
 <p>Add a package-level documentation file:</p>
 <div class="sourceCode" id="cb34"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="fu">use_package_doc</span><span class="op">(</span><span class="op">)</span></span></code></pre></div>
-<p>Edit <code>R/sePCA-package.R</code> to describe the package purpose
+<p>Edit <code>R/ADS8192-package.R</code> to describe the package purpose
 and main functions.</p>
 </div>
 <div class="section level3">
@@ -823,7 +839,7 @@ and main functions.</p>
 <p>From a fresh R session (restart R first!):</p>
 <ol style="list-style-type: decimal">
 <li>Install your package:
-<code>remotes::install_github("you/sePCA")</code>
+<code>remotes::install_github("you/ADS8192")</code>
 </li>
 <li>Run the README example</li>
 <li>Fix any issues</li>
@@ -835,7 +851,7 @@ and main functions.</p>
 <h2 id="quick-reference">Quick Reference<a class="anchor" aria-label="anchor" href="#quick-reference"></a>
 </h2>
 <div class="sourceCode" id="cb35"><pre class="downlit sourceCode r">
-<code class="sourceCode R"><span><span class="co"># Package development workflow</span></span>
+<code class="sourceCode R"><span><span class="co"># Package development quick reference</span></span>
 <span><span class="kw"><a href="https://rdrr.io/r/base/library.html" class="external-link">library</a></span><span class="op">(</span><span class="va"><a href="https://devtools.r-lib.org/" class="external-link">devtools</a></span><span class="op">)</span></span>
 <span><span class="kw"><a href="https://rdrr.io/r/base/library.html" class="external-link">library</a></span><span class="op">(</span><span class="va"><a href="https://usethis.r-lib.org" class="external-link">usethis</a></span><span class="op">)</span></span>
 <span></span>

@@ -39,7 +39,7 @@
     <li><a class="dropdown-item" href="../articles/HW1_Rubric.html">HW1 Rubric</a></li>
     <li><hr class="dropdown-divider"></li>
     <li><h6 class="dropdown-header" data-toc-skip>Lectures</h6></li>
-    <li><a class="dropdown-item" href="../articles/Lecture03_Data_Structures_Bioconductor.html">Lecture 03: Data Structures &amp; Bioconductor</a></li>
+    <li><a class="dropdown-item" href="../articles/Lecture04_Data_Structures_Bioconductor.html">Lecture 04: Data Structures &amp; Bioconductor</a></li>
     <li><a class="dropdown-item" href="../articles/Lecture05_Package_Development_devtools.html">Lecture 05: Package Dev (devtools)</a></li>
     <li><a class="dropdown-item" href="../articles/Lecture06_Package_Development_pkgdown_testthat.html">Lecture 06: Package Dev (pkgdown, testthat)</a></li>
     <li><a class="dropdown-item" href="../articles/Lecture07_Shiny_Reactivity.html">Lecture 07: Shiny Reactivity</a></li>
@@ -233,17 +233,17 @@ harder.</p>
 <code class="sourceCode R"><span><span class="co"># tests/testthat/test-data.R</span></span>
 <span></span>
 <span><span class="fu"><a href="https://testthat.r-lib.org/reference/test_that.html" class="external-link">test_that</a></span><span class="op">(</span><span class="st">"top_variable_features returns correct subset size"</span>, <span class="op">{</span></span>
-<span>    <span class="fu"><a href="https://rdrr.io/r/utils/data.html" class="external-link">data</a></span><span class="op">(</span><span class="va">example_se</span>, package <span class="op">=</span> <span class="st">"sePCA"</span><span class="op">)</span></span>
-<span>    </span>
+<span>    <span class="fu"><a href="https://rdrr.io/r/utils/data.html" class="external-link">data</a></span><span class="op">(</span><span class="va">example_se</span>, package <span class="op">=</span> <span class="st">"ADS8192"</span><span class="op">)</span></span>
+<span></span>
 <span>    <span class="va">se_top</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/top_variable_features.html">top_variable_features</a></span><span class="op">(</span><span class="va">example_se</span>, n <span class="op">=</span> <span class="fl">50</span><span class="op">)</span></span>
-<span>    </span>
+<span></span>
 <span>    <span class="fu"><a href="https://testthat.r-lib.org/reference/equality-expectations.html" class="external-link">expect_equal</a></span><span class="op">(</span><span class="fu"><a href="https://rdrr.io/r/base/nrow.html" class="external-link">nrow</a></span><span class="op">(</span><span class="va">se_top</span><span class="op">)</span>, <span class="fl">50</span><span class="op">)</span></span>
 <span>    <span class="fu"><a href="https://testthat.r-lib.org/reference/equality-expectations.html" class="external-link">expect_equal</a></span><span class="op">(</span><span class="fu"><a href="https://rdrr.io/r/base/nrow.html" class="external-link">ncol</a></span><span class="op">(</span><span class="va">se_top</span><span class="op">)</span>, <span class="fu"><a href="https://rdrr.io/r/base/nrow.html" class="external-link">ncol</a></span><span class="op">(</span><span class="va">example_se</span><span class="op">)</span><span class="op">)</span>  <span class="co"># Same samples</span></span>
 <span><span class="op">}</span><span class="op">)</span></span>
 <span></span>
 <span><span class="fu"><a href="https://testthat.r-lib.org/reference/test_that.html" class="external-link">test_that</a></span><span class="op">(</span><span class="st">"top_variable_features returns most variable genes"</span>, <span class="op">{</span></span>
-<span>    <span class="fu"><a href="https://rdrr.io/r/utils/data.html" class="external-link">data</a></span><span class="op">(</span><span class="va">example_se</span>, package <span class="op">=</span> <span class="st">"sePCA"</span><span class="op">)</span></span>
-<span>    </span>
+<span>    <span class="fu"><a href="https://rdrr.io/r/utils/data.html" class="external-link">data</a></span><span class="op">(</span><span class="va">example_se</span>, package <span class="op">=</span> <span class="st">"ADS8192"</span><span class="op">)</span></span>
+<span></span>
 <span>    <span class="va">se_top</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/top_variable_features.html">top_variable_features</a></span><span class="op">(</span><span class="va">example_se</span>, n <span class="op">=</span> <span class="fl">10</span><span class="op">)</span></span>
 <span>    <span class="va">mat</span> <span class="op">&lt;-</span> <span class="fu">SummarizedExperiment</span><span class="fu">::</span><span class="fu"><a href="https://rdrr.io/pkg/SummarizedExperiment/man/SummarizedExperiment-class.html" class="external-link">assay</a></span><span class="op">(</span><span class="va">se_top</span>, <span class="st">"counts"</span><span class="op">)</span></span>
 <span>    <span class="va">vars</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/base/apply.html" class="external-link">apply</a></span><span class="op">(</span><span class="va">mat</span>, <span class="fl">1</span>, <span class="va">var</span><span class="op">)</span></span>
@@ -255,18 +255,18 @@ harder.</p>
 <span><span class="op">}</span><span class="op">)</span></span>
 <span></span>
 <span><span class="fu"><a href="https://testthat.r-lib.org/reference/test_that.html" class="external-link">test_that</a></span><span class="op">(</span><span class="st">"top_variable_features handles n &gt; nrow gracefully"</span>, <span class="op">{</span></span>
-<span>    <span class="fu"><a href="https://rdrr.io/r/utils/data.html" class="external-link">data</a></span><span class="op">(</span><span class="va">example_se</span>, package <span class="op">=</span> <span class="st">"sePCA"</span><span class="op">)</span></span>
-<span>    </span>
+<span>    <span class="fu"><a href="https://rdrr.io/r/utils/data.html" class="external-link">data</a></span><span class="op">(</span><span class="va">example_se</span>, package <span class="op">=</span> <span class="st">"ADS8192"</span><span class="op">)</span></span>
+<span></span>
 <span>    <span class="va">se_all</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/top_variable_features.html">top_variable_features</a></span><span class="op">(</span><span class="va">example_se</span>, n <span class="op">=</span> <span class="fl">100000</span><span class="op">)</span></span>
-<span>    </span>
+<span></span>
 <span>    <span class="fu"><a href="https://testthat.r-lib.org/reference/equality-expectations.html" class="external-link">expect_equal</a></span><span class="op">(</span><span class="fu"><a href="https://rdrr.io/r/base/nrow.html" class="external-link">nrow</a></span><span class="op">(</span><span class="va">se_all</span><span class="op">)</span>, <span class="fu"><a href="https://rdrr.io/r/base/nrow.html" class="external-link">nrow</a></span><span class="op">(</span><span class="va">example_se</span><span class="op">)</span><span class="op">)</span></span>
 <span><span class="op">}</span><span class="op">)</span></span>
 <span></span>
 <span><span class="fu"><a href="https://testthat.r-lib.org/reference/test_that.html" class="external-link">test_that</a></span><span class="op">(</span><span class="st">"run_pca returns correct structure"</span>, <span class="op">{</span></span>
-<span>    <span class="fu"><a href="https://rdrr.io/r/utils/data.html" class="external-link">data</a></span><span class="op">(</span><span class="va">example_se</span>, package <span class="op">=</span> <span class="st">"sePCA"</span><span class="op">)</span></span>
-<span>    </span>
+<span>    <span class="fu"><a href="https://rdrr.io/r/utils/data.html" class="external-link">data</a></span><span class="op">(</span><span class="va">example_se</span>, package <span class="op">=</span> <span class="st">"ADS8192"</span><span class="op">)</span></span>
+<span></span>
 <span>    <span class="va">result</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/run_pca.html">run_pca</a></span><span class="op">(</span><span class="va">example_se</span>, n_top <span class="op">=</span> <span class="fl">50</span><span class="op">)</span></span>
-<span>    </span>
+<span></span>
 <span>    <span class="fu"><a href="https://testthat.r-lib.org/reference/inheritance-expectations.html" class="external-link">expect_type</a></span><span class="op">(</span><span class="va">result</span>, <span class="st">"list"</span><span class="op">)</span></span>
 <span>    <span class="fu"><a href="https://testthat.r-lib.org/reference/expect_named.html" class="external-link">expect_named</a></span><span class="op">(</span><span class="va">result</span>, <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="st">"pca"</span>, <span class="st">"scores"</span><span class="op">)</span><span class="op">)</span></span>
 <span><span class="op">}</span><span class="op">)</span></span></code></pre></div>
@@ -278,11 +278,11 @@ harder.</p>
 <div class="sourceCode" id="cb7"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="fu"><a href="https://testthat.r-lib.org/reference/test_that.html" class="external-link">test_that</a></span><span class="op">(</span><span class="st">"description of what we're testing"</span>, <span class="op">{</span></span>
 <span>    <span class="co"># ARRANGE - Set up data and conditions</span></span>
-<span>    <span class="fu"><a href="https://rdrr.io/r/utils/data.html" class="external-link">data</a></span><span class="op">(</span><span class="va">example_se</span>, package <span class="op">=</span> <span class="st">"sePCA"</span><span class="op">)</span></span>
-<span>    </span>
+<span>    <span class="fu"><a href="https://rdrr.io/r/utils/data.html" class="external-link">data</a></span><span class="op">(</span><span class="va">example_se</span>, package <span class="op">=</span> <span class="st">"ADS8192"</span><span class="op">)</span></span>
+<span></span>
 <span>    <span class="co"># ACT - Run the code being tested</span></span>
 <span>    <span class="va">result</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/top_variable_features.html">top_variable_features</a></span><span class="op">(</span><span class="va">example_se</span>, n <span class="op">=</span> <span class="fl">50</span><span class="op">)</span></span>
-<span>    </span>
+<span></span>
 <span>    <span class="co"># ASSERT - Check the results</span></span>
 <span>    <span class="fu"><a href="https://testthat.r-lib.org/reference/equality-expectations.html" class="external-link">expect_equal</a></span><span class="op">(</span><span class="fu"><a href="https://rdrr.io/r/base/nrow.html" class="external-link">nrow</a></span><span class="op">(</span><span class="va">result</span><span class="op">)</span>, <span class="fl">50</span><span class="op">)</span></span>
 <span><span class="op">}</span><span class="op">)</span></span></code></pre></div>
@@ -299,7 +299,7 @@ harder.</p>
 <span></span>
 <span><span class="co"># In RStudio: Ctrl+Shift+T</span></span></code></pre></div>
 <p>Expected output:</p>
-<pre><code>ℹ Testing sePCA
+<pre><code>ℹ Testing ADS8192
 ✔ | F W S  OK | Context
 ✔ |         4 | data
 
@@ -307,6 +307,47 @@ harder.</p>
 [ FAIL 0 | WARN 0 | SKIP 0 | PASS 4 ]</code></pre>
 <hr>
 </div>
+</div>
+<div class="section level2">
+<h2 id="common-testthat-expectations">Common testthat Expectations<a class="anchor" aria-label="anchor" href="#common-testthat-expectations"></a>
+</h2>
+<div class="sourceCode" id="cb10"><pre class="downlit sourceCode r">
+<code class="sourceCode R"><span><span class="co"># Common testthat expect_*() functions — reference</span></span>
+<span></span>
+<span><span class="co"># Equality</span></span>
+<span><span class="fu"><a href="https://testthat.r-lib.org/reference/equality-expectations.html" class="external-link">expect_equal</a></span><span class="op">(</span><span class="va">x</span>, <span class="va">y</span><span class="op">)</span>           <span class="co"># Equal with tolerance</span></span>
+<span><span class="fu"><a href="https://testthat.r-lib.org/reference/equality-expectations.html" class="external-link">expect_identical</a></span><span class="op">(</span><span class="va">x</span>, <span class="va">y</span><span class="op">)</span>       <span class="co"># Exactly identical</span></span>
+<span></span>
+<span><span class="co"># Types and classes</span></span>
+<span><span class="fu"><a href="https://testthat.r-lib.org/reference/inheritance-expectations.html" class="external-link">expect_type</a></span><span class="op">(</span><span class="va">x</span>, <span class="st">"list"</span><span class="op">)</span>       <span class="co"># Base R type</span></span>
+<span><span class="fu"><a href="https://testthat.r-lib.org/reference/inheritance-expectations.html" class="external-link">expect_s3_class</a></span><span class="op">(</span><span class="va">x</span>, <span class="st">"data.frame"</span><span class="op">)</span>  <span class="co"># S3 class</span></span>
+<span><span class="fu"><a href="https://testthat.r-lib.org/reference/inheritance-expectations.html" class="external-link">expect_s4_class</a></span><span class="op">(</span><span class="va">x</span>, <span class="st">"SummarizedExperiment"</span><span class="op">)</span>  <span class="co"># S4 class</span></span>
+<span></span>
+<span><span class="co"># Logical</span></span>
+<span><span class="fu"><a href="https://testthat.r-lib.org/reference/logical-expectations.html" class="external-link">expect_true</a></span><span class="op">(</span><span class="va">x</span><span class="op">)</span></span>
+<span><span class="fu"><a href="https://testthat.r-lib.org/reference/logical-expectations.html" class="external-link">expect_false</a></span><span class="op">(</span><span class="va">x</span><span class="op">)</span></span>
+<span><span class="fu"><a href="https://testthat.r-lib.org/reference/expect_null.html" class="external-link">expect_null</a></span><span class="op">(</span><span class="va">x</span><span class="op">)</span></span>
+<span></span>
+<span><span class="co"># Errors and warnings</span></span>
+<span><span class="fu"><a href="https://testthat.r-lib.org/reference/expect_error.html" class="external-link">expect_error</a></span><span class="op">(</span><span class="fu">f</span><span class="op">(</span><span class="op">)</span>, <span class="st">"pattern"</span><span class="op">)</span>     <span class="co"># Function errors with message</span></span>
+<span><span class="fu"><a href="https://testthat.r-lib.org/reference/expect_error.html" class="external-link">expect_warning</a></span><span class="op">(</span><span class="fu">f</span><span class="op">(</span><span class="op">)</span>, <span class="st">"pattern"</span><span class="op">)</span>   <span class="co"># Function warns with message</span></span>
+<span><span class="fu"><a href="https://testthat.r-lib.org/reference/expect_error.html" class="external-link">expect_message</a></span><span class="op">(</span><span class="fu">f</span><span class="op">(</span><span class="op">)</span>, <span class="st">"pattern"</span><span class="op">)</span>   <span class="co"># Function messages</span></span>
+<span></span>
+<span><span class="co"># Comparisons</span></span>
+<span><span class="fu"><a href="https://testthat.r-lib.org/reference/comparison-expectations.html" class="external-link">expect_gt</a></span><span class="op">(</span><span class="va">x</span>, <span class="va">y</span><span class="op">)</span>   <span class="co"># x &gt; y</span></span>
+<span><span class="fu"><a href="https://testthat.r-lib.org/reference/comparison-expectations.html" class="external-link">expect_lt</a></span><span class="op">(</span><span class="va">x</span>, <span class="va">y</span><span class="op">)</span>   <span class="co"># x &lt; y</span></span>
+<span><span class="fu"><a href="https://testthat.r-lib.org/reference/comparison-expectations.html" class="external-link">expect_gte</a></span><span class="op">(</span><span class="va">x</span>, <span class="va">y</span><span class="op">)</span>  <span class="co"># x &gt;= y</span></span>
+<span><span class="fu"><a href="https://testthat.r-lib.org/reference/comparison-expectations.html" class="external-link">expect_lte</a></span><span class="op">(</span><span class="va">x</span>, <span class="va">y</span><span class="op">)</span>  <span class="co"># x &lt;= y</span></span>
+<span></span>
+<span><span class="co"># Collections</span></span>
+<span><span class="fu"><a href="https://testthat.r-lib.org/reference/expect_length.html" class="external-link">expect_length</a></span><span class="op">(</span><span class="va">x</span>, <span class="fl">5</span><span class="op">)</span></span>
+<span><span class="fu"><a href="https://testthat.r-lib.org/reference/expect_named.html" class="external-link">expect_named</a></span><span class="op">(</span><span class="va">x</span>, <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="st">"a"</span>, <span class="st">"b"</span><span class="op">)</span><span class="op">)</span></span>
+<span><span class="fu"><a href="https://testthat.r-lib.org/reference/expect_setequal.html" class="external-link">expect_contains</a></span><span class="op">(</span><span class="va">x</span>, <span class="st">"value"</span><span class="op">)</span></span>
+<span></span>
+<span><span class="co"># Output</span></span>
+<span><span class="fu"><a href="https://testthat.r-lib.org/reference/expect_output.html" class="external-link">expect_output</a></span><span class="op">(</span><span class="fu"><a href="https://rdrr.io/r/base/print.html" class="external-link">print</a></span><span class="op">(</span><span class="va">x</span><span class="op">)</span>, <span class="st">"pattern"</span><span class="op">)</span></span>
+<span><span class="fu"><a href="https://testthat.r-lib.org/reference/expect_snapshot.html" class="external-link">expect_snapshot</a></span><span class="op">(</span><span class="va">x</span><span class="op">)</span>  <span class="co"># For complex output comparisons</span></span></code></pre></div>
+<hr>
 <div class="section level3">
 <h3 id="exercise-a-test-first-development">Exercise A: Test-First Development<a class="anchor" aria-label="anchor" href="#exercise-a-test-first-development"></a>
 </h3>
@@ -321,38 +362,38 @@ the test before fixing the bug.</p>
 <div class="section level4">
 <h4 id="step-1-write-a-failing-test">Step 1: Write a Failing Test<a class="anchor" aria-label="anchor" href="#step-1-write-a-failing-test"></a>
 </h4>
-<div class="sourceCode" id="cb10"><pre class="downlit sourceCode r">
+<div class="sourceCode" id="cb11"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="fu"><a href="https://testthat.r-lib.org/reference/test_that.html" class="external-link">test_that</a></span><span class="op">(</span><span class="st">"run_pca errors on negative n_top"</span>, <span class="op">{</span></span>
-<span>    <span class="fu"><a href="https://rdrr.io/r/utils/data.html" class="external-link">data</a></span><span class="op">(</span><span class="va">example_se</span>, package <span class="op">=</span> <span class="st">"sePCA"</span><span class="op">)</span></span>
-<span>    </span>
+<span>    <span class="fu"><a href="https://rdrr.io/r/utils/data.html" class="external-link">data</a></span><span class="op">(</span><span class="va">example_se</span>, package <span class="op">=</span> <span class="st">"ADS8192"</span><span class="op">)</span></span>
+<span></span>
 <span>    <span class="fu"><a href="https://testthat.r-lib.org/reference/expect_error.html" class="external-link">expect_error</a></span><span class="op">(</span><span class="fu"><a href="../reference/run_pca.html">run_pca</a></span><span class="op">(</span><span class="va">example_se</span>, n_top <span class="op">=</span> <span class="op">-</span><span class="fl">5</span><span class="op">)</span>, <span class="st">"positive"</span><span class="op">)</span></span>
 <span><span class="op">}</span><span class="op">)</span></span></code></pre></div>
 </div>
 <div class="section level4">
 <h4 id="step-2-run-test-should-fail">Step 2: Run Test (Should Fail)<a class="anchor" aria-label="anchor" href="#step-2-run-test-should-fail"></a>
 </h4>
-<div class="sourceCode" id="cb11"><pre class="downlit sourceCode r">
+<div class="sourceCode" id="cb12"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="fu">test</span><span class="op">(</span><span class="op">)</span>  <span class="co"># This should show 1 failure</span></span></code></pre></div>
 </div>
 <div class="section level4">
 <h4 id="step-3-fix-the-code">Step 3: Fix the Code<a class="anchor" aria-label="anchor" href="#step-3-fix-the-code"></a>
 </h4>
 <p>Add to <code><a href="../reference/run_pca.html">run_pca()</a></code>:</p>
-<div class="sourceCode" id="cb12"><pre class="downlit sourceCode r">
+<div class="sourceCode" id="cb13"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="va">run_pca</span> <span class="op">&lt;-</span> <span class="kw">function</span><span class="op">(</span><span class="va">se</span>, <span class="va">assay_name</span> <span class="op">=</span> <span class="st">"counts"</span>, <span class="va">n_top</span> <span class="op">=</span> <span class="fl">500</span>,</span>
 <span>                    <span class="va">scale</span> <span class="op">=</span> <span class="cn">TRUE</span>, <span class="va">log_transform</span> <span class="op">=</span> <span class="cn">TRUE</span><span class="op">)</span> <span class="op">{</span></span>
 <span>    <span class="co"># ADD THIS CHECK</span></span>
 <span>    <span class="kw">if</span> <span class="op">(</span><span class="op">!</span><span class="fu"><a href="https://rdrr.io/r/base/numeric.html" class="external-link">is.numeric</a></span><span class="op">(</span><span class="va">n_top</span><span class="op">)</span> <span class="op">||</span> <span class="va">n_top</span> <span class="op">&lt;=</span> <span class="fl">0</span><span class="op">)</span> <span class="op">{</span></span>
 <span>        <span class="kw"><a href="https://rdrr.io/r/base/stop.html" class="external-link">stop</a></span><span class="op">(</span><span class="st">"n_top must be a positive number"</span><span class="op">)</span></span>
 <span>    <span class="op">}</span></span>
-<span>    </span>
+<span></span>
 <span>    <span class="co"># ... rest of function</span></span>
 <span><span class="op">}</span></span></code></pre></div>
 </div>
 <div class="section level4">
 <h4 id="step-4-run-test-should-pass">Step 4: Run Test (Should Pass)<a class="anchor" aria-label="anchor" href="#step-4-run-test-should-pass"></a>
 </h4>
-<div class="sourceCode" id="cb13"><pre class="downlit sourceCode r">
+<div class="sourceCode" id="cb14"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="fu">test</span><span class="op">(</span><span class="op">)</span>  <span class="co"># All tests should pass now</span></span></code></pre></div>
 <hr>
 </div>
@@ -360,16 +401,16 @@ the test before fixing the bug.</p>
 <div class="section level3">
 <h3 id="write-tests-for-pca-functions">Write Tests for PCA Functions<a class="anchor" aria-label="anchor" href="#write-tests-for-pca-functions"></a>
 </h3>
-<div class="sourceCode" id="cb14"><pre class="downlit sourceCode r">
-<code class="sourceCode R"><span><span class="fu">use_test</span><span class="op">(</span><span class="st">"pca"</span><span class="op">)</span></span></code></pre></div>
 <div class="sourceCode" id="cb15"><pre class="downlit sourceCode r">
+<code class="sourceCode R"><span><span class="fu">use_test</span><span class="op">(</span><span class="st">"pca"</span><span class="op">)</span></span></code></pre></div>
+<div class="sourceCode" id="cb16"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="co"># tests/testthat/test-pca.R</span></span>
 <span></span>
 <span><span class="fu"><a href="https://testthat.r-lib.org/reference/test_that.html" class="external-link">test_that</a></span><span class="op">(</span><span class="st">"run_pca returns correct structure"</span>, <span class="op">{</span></span>
-<span>    <span class="fu"><a href="https://rdrr.io/r/utils/data.html" class="external-link">data</a></span><span class="op">(</span><span class="va">example_se</span>, package <span class="op">=</span> <span class="st">"sePCA"</span><span class="op">)</span></span>
-<span>    </span>
+<span>    <span class="fu"><a href="https://rdrr.io/r/utils/data.html" class="external-link">data</a></span><span class="op">(</span><span class="va">example_se</span>, package <span class="op">=</span> <span class="st">"ADS8192"</span><span class="op">)</span></span>
+<span></span>
 <span>    <span class="va">result</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/run_pca.html">run_pca</a></span><span class="op">(</span><span class="va">example_se</span>, n_top <span class="op">=</span> <span class="fl">50</span><span class="op">)</span></span>
-<span>    </span>
+<span></span>
 <span>    <span class="fu"><a href="https://testthat.r-lib.org/reference/inheritance-expectations.html" class="external-link">expect_type</a></span><span class="op">(</span><span class="va">result</span>, <span class="st">"list"</span><span class="op">)</span></span>
 <span>    <span class="fu"><a href="https://testthat.r-lib.org/reference/expect_named.html" class="external-link">expect_named</a></span><span class="op">(</span><span class="va">result</span>, <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="st">"pca"</span>, <span class="st">"scores"</span><span class="op">)</span><span class="op">)</span></span>
 <span>    <span class="fu"><a href="https://testthat.r-lib.org/reference/inheritance-expectations.html" class="external-link">expect_s3_class</a></span><span class="op">(</span><span class="va">result</span><span class="op">$</span><span class="va">pca</span>, <span class="st">"prcomp"</span><span class="op">)</span></span>
@@ -377,20 +418,20 @@ the test before fixing the bug.</p>
 <span><span class="op">}</span><span class="op">)</span></span>
 <span></span>
 <span><span class="fu"><a href="https://testthat.r-lib.org/reference/test_that.html" class="external-link">test_that</a></span><span class="op">(</span><span class="st">"run_pca scores contain sample metadata"</span>, <span class="op">{</span></span>
-<span>    <span class="fu"><a href="https://rdrr.io/r/utils/data.html" class="external-link">data</a></span><span class="op">(</span><span class="va">example_se</span>, package <span class="op">=</span> <span class="st">"sePCA"</span><span class="op">)</span></span>
-<span>    </span>
+<span>    <span class="fu"><a href="https://rdrr.io/r/utils/data.html" class="external-link">data</a></span><span class="op">(</span><span class="va">example_se</span>, package <span class="op">=</span> <span class="st">"ADS8192"</span><span class="op">)</span></span>
+<span></span>
 <span>    <span class="va">result</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/run_pca.html">run_pca</a></span><span class="op">(</span><span class="va">example_se</span>, n_top <span class="op">=</span> <span class="fl">50</span><span class="op">)</span></span>
-<span>    </span>
+<span></span>
 <span>    <span class="co"># Should have treatment column from colData</span></span>
 <span>    <span class="fu"><a href="https://testthat.r-lib.org/reference/logical-expectations.html" class="external-link">expect_true</a></span><span class="op">(</span><span class="st">"treatment"</span> <span class="op"><a href="https://rdrr.io/r/base/match.html" class="external-link">%in%</a></span> <span class="fu"><a href="https://rdrr.io/r/base/colnames.html" class="external-link">colnames</a></span><span class="op">(</span><span class="va">result</span><span class="op">$</span><span class="va">scores</span><span class="op">)</span><span class="op">)</span></span>
 <span>    <span class="fu"><a href="https://testthat.r-lib.org/reference/logical-expectations.html" class="external-link">expect_true</a></span><span class="op">(</span><span class="st">"sample_id"</span> <span class="op"><a href="https://rdrr.io/r/base/match.html" class="external-link">%in%</a></span> <span class="fu"><a href="https://rdrr.io/r/base/colnames.html" class="external-link">colnames</a></span><span class="op">(</span><span class="va">result</span><span class="op">$</span><span class="va">scores</span><span class="op">)</span><span class="op">)</span></span>
 <span><span class="op">}</span><span class="op">)</span></span>
 <span></span>
 <span><span class="fu"><a href="https://testthat.r-lib.org/reference/test_that.html" class="external-link">test_that</a></span><span class="op">(</span><span class="st">"run_pca returns expected number of PCs"</span>, <span class="op">{</span></span>
-<span>    <span class="fu"><a href="https://rdrr.io/r/utils/data.html" class="external-link">data</a></span><span class="op">(</span><span class="va">example_se</span>, package <span class="op">=</span> <span class="st">"sePCA"</span><span class="op">)</span></span>
-<span>    </span>
+<span>    <span class="fu"><a href="https://rdrr.io/r/utils/data.html" class="external-link">data</a></span><span class="op">(</span><span class="va">example_se</span>, package <span class="op">=</span> <span class="st">"ADS8192"</span><span class="op">)</span></span>
+<span></span>
 <span>    <span class="va">result</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/run_pca.html">run_pca</a></span><span class="op">(</span><span class="va">example_se</span>, n_top <span class="op">=</span> <span class="fl">50</span><span class="op">)</span></span>
-<span>    </span>
+<span></span>
 <span>    <span class="co"># Should have PCs equal to min(n_samples, n_features)</span></span>
 <span>    <span class="va">n_samples</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/base/nrow.html" class="external-link">ncol</a></span><span class="op">(</span><span class="va">example_se</span><span class="op">)</span></span>
 <span>    <span class="fu"><a href="https://testthat.r-lib.org/reference/logical-expectations.html" class="external-link">expect_true</a></span><span class="op">(</span><span class="fu"><a href="https://rdrr.io/r/base/paste.html" class="external-link">paste0</a></span><span class="op">(</span><span class="st">"PC"</span>, <span class="fl">1</span><span class="op">)</span> <span class="op"><a href="https://rdrr.io/r/base/match.html" class="external-link">%in%</a></span> <span class="fu"><a href="https://rdrr.io/r/base/colnames.html" class="external-link">colnames</a></span><span class="op">(</span><span class="va">result</span><span class="op">$</span><span class="va">scores</span><span class="op">)</span><span class="op">)</span></span>
@@ -398,14 +439,14 @@ the test before fixing the bug.</p>
 <span><span class="op">}</span><span class="op">)</span></span>
 <span></span>
 <span><span class="fu"><a href="https://testthat.r-lib.org/reference/test_that.html" class="external-link">test_that</a></span><span class="op">(</span><span class="st">"pca_variance_explained returns percentages"</span>, <span class="op">{</span></span>
-<span>    <span class="fu"><a href="https://rdrr.io/r/utils/data.html" class="external-link">data</a></span><span class="op">(</span><span class="va">example_se</span>, package <span class="op">=</span> <span class="st">"sePCA"</span><span class="op">)</span></span>
-<span>    </span>
+<span>    <span class="fu"><a href="https://rdrr.io/r/utils/data.html" class="external-link">data</a></span><span class="op">(</span><span class="va">example_se</span>, package <span class="op">=</span> <span class="st">"ADS8192"</span><span class="op">)</span></span>
+<span></span>
 <span>    <span class="va">result</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/run_pca.html">run_pca</a></span><span class="op">(</span><span class="va">example_se</span>, n_top <span class="op">=</span> <span class="fl">50</span><span class="op">)</span></span>
 <span>    <span class="va">var_df</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/pca_variance_explained.html">pca_variance_explained</a></span><span class="op">(</span><span class="va">result</span><span class="op">)</span></span>
-<span>    </span>
+<span></span>
 <span>    <span class="co"># Variance should sum to 100</span></span>
 <span>    <span class="fu"><a href="https://testthat.r-lib.org/reference/equality-expectations.html" class="external-link">expect_equal</a></span><span class="op">(</span><span class="fu"><a href="https://rdrr.io/r/base/sum.html" class="external-link">sum</a></span><span class="op">(</span><span class="va">var_df</span><span class="op">$</span><span class="va">variance_percent</span><span class="op">)</span>, <span class="fl">100</span>, tolerance <span class="op">=</span> <span class="fl">0.01</span><span class="op">)</span></span>
-<span>    </span>
+<span></span>
 <span>    <span class="co"># Should be sorted descending (PC1 explains most)</span></span>
 <span>    <span class="fu"><a href="https://testthat.r-lib.org/reference/logical-expectations.html" class="external-link">expect_true</a></span><span class="op">(</span><span class="va">var_df</span><span class="op">$</span><span class="va">variance_percent</span><span class="op">[</span><span class="fl">1</span><span class="op">]</span> <span class="op">&gt;=</span> <span class="va">var_df</span><span class="op">$</span><span class="va">variance_percent</span><span class="op">[</span><span class="fl">2</span><span class="op">]</span><span class="op">)</span></span>
 <span><span class="op">}</span><span class="op">)</span></span></code></pre></div>
@@ -431,7 +472,7 @@ website:</p>
 <div class="section level3">
 <h3 id="setting-up-pkgdown">Setting Up pkgdown<a class="anchor" aria-label="anchor" href="#setting-up-pkgdown"></a>
 </h3>
-<div class="sourceCode" id="cb16"><pre class="downlit sourceCode r">
+<div class="sourceCode" id="cb17"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="co"># Add pkgdown infrastructure</span></span>
 <span><span class="fu">use_pkgdown</span><span class="op">(</span><span class="op">)</span></span></code></pre></div>
 <p>This creates:</p>
@@ -444,7 +485,7 @@ website:</p>
 <div class="section level3">
 <h3 id="build-the-site-locally">Build the Site Locally<a class="anchor" aria-label="anchor" href="#build-the-site-locally"></a>
 </h3>
-<div class="sourceCode" id="cb17"><pre class="downlit sourceCode r">
+<div class="sourceCode" id="cb18"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="co"># Build the documentation site</span></span>
 <span><span class="fu">pkgdown</span><span class="fu">::</span><span class="fu"><a href="https://pkgdown.r-lib.org/reference/build_site.html" class="external-link">build_site</a></span><span class="op">(</span><span class="op">)</span></span></code></pre></div>
 <p>This creates a <code>docs/</code> directory with the website. Open
@@ -454,94 +495,94 @@ website:</p>
 <h3 id="customize-the-site">Customize the Site<a class="anchor" aria-label="anchor" href="#customize-the-site"></a>
 </h3>
 <p>Edit <code>_pkgdown.yml</code>:</p>
-<div class="sourceCode" id="cb18"><pre class="sourceCode yaml"><code class="sourceCode yaml"><span id="cb18-1"><a href="#cb18-1" tabindex="-1"></a><span class="fu">url</span><span class="kw">:</span><span class="at"> https://your-username.github.io/sePCA/</span></span>
-<span id="cb18-2"><a href="#cb18-2" tabindex="-1"></a></span>
-<span id="cb18-3"><a href="#cb18-3" tabindex="-1"></a><span class="fu">template</span><span class="kw">:</span></span>
-<span id="cb18-4"><a href="#cb18-4" tabindex="-1"></a><span class="at">  </span><span class="fu">bootstrap</span><span class="kw">:</span><span class="at"> </span><span class="dv">5</span></span>
-<span id="cb18-5"><a href="#cb18-5" tabindex="-1"></a><span class="at">  </span><span class="fu">bootswatch</span><span class="kw">:</span><span class="at"> flatly</span></span>
-<span id="cb18-6"><a href="#cb18-6" tabindex="-1"></a></span>
-<span id="cb18-7"><a href="#cb18-7" tabindex="-1"></a><span class="fu">navbar</span><span class="kw">:</span></span>
-<span id="cb18-8"><a href="#cb18-8" tabindex="-1"></a><span class="at">  </span><span class="fu">structure</span><span class="kw">:</span></span>
-<span id="cb18-9"><a href="#cb18-9" tabindex="-1"></a><span class="at">    </span><span class="fu">left</span><span class="kw">:</span><span class="at">  </span><span class="kw">[</span><span class="at">intro</span><span class="kw">,</span><span class="at"> reference</span><span class="kw">,</span><span class="at"> articles</span><span class="kw">]</span></span>
-<span id="cb18-10"><a href="#cb18-10" tabindex="-1"></a><span class="at">    </span><span class="fu">right</span><span class="kw">:</span><span class="at"> </span><span class="kw">[</span><span class="at">search</span><span class="kw">,</span><span class="at"> github</span><span class="kw">]</span></span>
-<span id="cb18-11"><a href="#cb18-11" tabindex="-1"></a></span>
-<span id="cb18-12"><a href="#cb18-12" tabindex="-1"></a><span class="fu">reference</span><span class="kw">:</span></span>
-<span id="cb18-13"><a href="#cb18-13" tabindex="-1"></a><span class="at">  </span><span class="kw">-</span><span class="at"> </span><span class="fu">title</span><span class="kw">:</span><span class="at"> </span><span class="st">"Data Handling"</span></span>
-<span id="cb18-14"><a href="#cb18-14" tabindex="-1"></a><span class="at">    </span><span class="fu">desc</span><span class="kw">:</span><span class="at"> </span><span class="st">"Create and manipulate SummarizedExperiment objects"</span></span>
-<span id="cb18-15"><a href="#cb18-15" tabindex="-1"></a><span class="at">    </span><span class="fu">contents</span><span class="kw">:</span></span>
-<span id="cb18-16"><a href="#cb18-16" tabindex="-1"></a><span class="at">      </span><span class="kw">-</span><span class="at"> top_variable_features</span></span>
-<span id="cb18-17"><a href="#cb18-17" tabindex="-1"></a><span class="at">  </span></span>
-<span id="cb18-18"><a href="#cb18-18" tabindex="-1"></a><span class="at">  </span><span class="kw">-</span><span class="at"> </span><span class="fu">title</span><span class="kw">:</span><span class="at"> </span><span class="st">"PCA Analysis"</span></span>
-<span id="cb18-19"><a href="#cb18-19" tabindex="-1"></a><span class="at">    </span><span class="fu">desc</span><span class="kw">:</span><span class="at"> </span><span class="st">"Run and analyze PCA"</span></span>
-<span id="cb18-20"><a href="#cb18-20" tabindex="-1"></a><span class="at">    </span><span class="fu">contents</span><span class="kw">:</span></span>
-<span id="cb18-21"><a href="#cb18-21" tabindex="-1"></a><span class="at">      </span><span class="kw">-</span><span class="at"> run_pca</span></span>
-<span id="cb18-22"><a href="#cb18-22" tabindex="-1"></a><span class="at">      </span><span class="kw">-</span><span class="at"> pca_variance_explained</span></span>
-<span id="cb18-23"><a href="#cb18-23" tabindex="-1"></a><span class="at">  </span></span>
-<span id="cb18-24"><a href="#cb18-24" tabindex="-1"></a><span class="at">  </span><span class="kw">-</span><span class="at"> </span><span class="fu">title</span><span class="kw">:</span><span class="at"> </span><span class="st">"Visualization"</span></span>
-<span id="cb18-25"><a href="#cb18-25" tabindex="-1"></a><span class="at">    </span><span class="fu">desc</span><span class="kw">:</span><span class="at"> </span><span class="st">"Create plots"</span></span>
-<span id="cb18-26"><a href="#cb18-26" tabindex="-1"></a><span class="at">    </span><span class="fu">contents</span><span class="kw">:</span></span>
-<span id="cb18-27"><a href="#cb18-27" tabindex="-1"></a><span class="at">      </span><span class="kw">-</span><span class="at"> plot_pca</span></span>
-<span id="cb18-28"><a href="#cb18-28" tabindex="-1"></a></span>
-<span id="cb18-29"><a href="#cb18-29" tabindex="-1"></a><span class="fu">articles</span><span class="kw">:</span></span>
-<span id="cb18-30"><a href="#cb18-30" tabindex="-1"></a><span class="at">  </span><span class="kw">-</span><span class="at"> </span><span class="fu">title</span><span class="kw">:</span><span class="at"> </span><span class="st">"Getting Started"</span></span>
-<span id="cb18-31"><a href="#cb18-31" tabindex="-1"></a><span class="at">    </span><span class="fu">contents</span><span class="kw">:</span></span>
-<span id="cb18-32"><a href="#cb18-32" tabindex="-1"></a><span class="at">      </span><span class="kw">-</span><span class="at"> getting-started</span></span></code></pre></div>
+<div class="sourceCode" id="cb19"><pre class="sourceCode yaml"><code class="sourceCode yaml"><span id="cb19-1"><a href="#cb19-1" tabindex="-1"></a><span class="fu">url</span><span class="kw">:</span><span class="at"> https://your-username.github.io/ADS8192/</span></span>
+<span id="cb19-2"><a href="#cb19-2" tabindex="-1"></a></span>
+<span id="cb19-3"><a href="#cb19-3" tabindex="-1"></a><span class="fu">template</span><span class="kw">:</span></span>
+<span id="cb19-4"><a href="#cb19-4" tabindex="-1"></a><span class="at">  </span><span class="fu">bootstrap</span><span class="kw">:</span><span class="at"> </span><span class="dv">5</span></span>
+<span id="cb19-5"><a href="#cb19-5" tabindex="-1"></a><span class="at">  </span><span class="fu">bootswatch</span><span class="kw">:</span><span class="at"> flatly</span></span>
+<span id="cb19-6"><a href="#cb19-6" tabindex="-1"></a></span>
+<span id="cb19-7"><a href="#cb19-7" tabindex="-1"></a><span class="fu">navbar</span><span class="kw">:</span></span>
+<span id="cb19-8"><a href="#cb19-8" tabindex="-1"></a><span class="at">  </span><span class="fu">structure</span><span class="kw">:</span></span>
+<span id="cb19-9"><a href="#cb19-9" tabindex="-1"></a><span class="at">    </span><span class="fu">left</span><span class="kw">:</span><span class="at">  </span><span class="kw">[</span><span class="at">intro</span><span class="kw">,</span><span class="at"> reference</span><span class="kw">,</span><span class="at"> articles</span><span class="kw">]</span></span>
+<span id="cb19-10"><a href="#cb19-10" tabindex="-1"></a><span class="at">    </span><span class="fu">right</span><span class="kw">:</span><span class="at"> </span><span class="kw">[</span><span class="at">search</span><span class="kw">,</span><span class="at"> github</span><span class="kw">]</span></span>
+<span id="cb19-11"><a href="#cb19-11" tabindex="-1"></a></span>
+<span id="cb19-12"><a href="#cb19-12" tabindex="-1"></a><span class="fu">reference</span><span class="kw">:</span></span>
+<span id="cb19-13"><a href="#cb19-13" tabindex="-1"></a><span class="at">  </span><span class="kw">-</span><span class="at"> </span><span class="fu">title</span><span class="kw">:</span><span class="at"> </span><span class="st">"Data Handling"</span></span>
+<span id="cb19-14"><a href="#cb19-14" tabindex="-1"></a><span class="at">    </span><span class="fu">desc</span><span class="kw">:</span><span class="at"> </span><span class="st">"Create and manipulate SummarizedExperiment objects"</span></span>
+<span id="cb19-15"><a href="#cb19-15" tabindex="-1"></a><span class="at">    </span><span class="fu">contents</span><span class="kw">:</span></span>
+<span id="cb19-16"><a href="#cb19-16" tabindex="-1"></a><span class="at">      </span><span class="kw">-</span><span class="at"> top_variable_features</span></span>
+<span id="cb19-17"><a href="#cb19-17" tabindex="-1"></a></span>
+<span id="cb19-18"><a href="#cb19-18" tabindex="-1"></a><span class="at">  </span><span class="kw">-</span><span class="at"> </span><span class="fu">title</span><span class="kw">:</span><span class="at"> </span><span class="st">"PCA Analysis"</span></span>
+<span id="cb19-19"><a href="#cb19-19" tabindex="-1"></a><span class="at">    </span><span class="fu">desc</span><span class="kw">:</span><span class="at"> </span><span class="st">"Run and analyze PCA"</span></span>
+<span id="cb19-20"><a href="#cb19-20" tabindex="-1"></a><span class="at">    </span><span class="fu">contents</span><span class="kw">:</span></span>
+<span id="cb19-21"><a href="#cb19-21" tabindex="-1"></a><span class="at">      </span><span class="kw">-</span><span class="at"> run_pca</span></span>
+<span id="cb19-22"><a href="#cb19-22" tabindex="-1"></a><span class="at">      </span><span class="kw">-</span><span class="at"> pca_variance_explained</span></span>
+<span id="cb19-23"><a href="#cb19-23" tabindex="-1"></a></span>
+<span id="cb19-24"><a href="#cb19-24" tabindex="-1"></a><span class="at">  </span><span class="kw">-</span><span class="at"> </span><span class="fu">title</span><span class="kw">:</span><span class="at"> </span><span class="st">"Visualization"</span></span>
+<span id="cb19-25"><a href="#cb19-25" tabindex="-1"></a><span class="at">    </span><span class="fu">desc</span><span class="kw">:</span><span class="at"> </span><span class="st">"Create plots"</span></span>
+<span id="cb19-26"><a href="#cb19-26" tabindex="-1"></a><span class="at">    </span><span class="fu">contents</span><span class="kw">:</span></span>
+<span id="cb19-27"><a href="#cb19-27" tabindex="-1"></a><span class="at">      </span><span class="kw">-</span><span class="at"> plot_pca</span></span>
+<span id="cb19-28"><a href="#cb19-28" tabindex="-1"></a></span>
+<span id="cb19-29"><a href="#cb19-29" tabindex="-1"></a><span class="fu">articles</span><span class="kw">:</span></span>
+<span id="cb19-30"><a href="#cb19-30" tabindex="-1"></a><span class="at">  </span><span class="kw">-</span><span class="at"> </span><span class="fu">title</span><span class="kw">:</span><span class="at"> </span><span class="st">"Getting Started"</span></span>
+<span id="cb19-31"><a href="#cb19-31" tabindex="-1"></a><span class="at">    </span><span class="fu">contents</span><span class="kw">:</span></span>
+<span id="cb19-32"><a href="#cb19-32" tabindex="-1"></a><span class="at">      </span><span class="kw">-</span><span class="at"> getting-started</span></span></code></pre></div>
 </div>
 <div class="section level3">
 <h3 id="create-a-getting-started-article">Create a “Getting Started” Article<a class="anchor" aria-label="anchor" href="#create-a-getting-started-article"></a>
 </h3>
-<div class="sourceCode" id="cb19"><pre class="downlit sourceCode r">
-<code class="sourceCode R"><span><span class="fu">use_vignette</span><span class="op">(</span><span class="st">"getting-started"</span>, title <span class="op">=</span> <span class="st">"Getting Started with sePCA"</span><span class="op">)</span></span></code></pre></div>
+<div class="sourceCode" id="cb20"><pre class="downlit sourceCode r">
+<code class="sourceCode R"><span><span class="fu">use_vignette</span><span class="op">(</span><span class="st">"getting-started"</span>, title <span class="op">=</span> <span class="st">"Getting Started with ADS8192"</span><span class="op">)</span></span></code></pre></div>
 <p>This creates <code>vignettes/getting-started.Rmd</code>. Edit it to
 include a tutorial:</p>
-<div class="sourceCode" id="cb20"><pre class="sourceCode markdown"><code class="sourceCode markdown"><span id="cb20-1"><a href="#cb20-1" tabindex="-1"></a><span class="co">---</span></span>
-<span id="cb20-2"><a href="#cb20-2" tabindex="-1"></a><span class="an">title:</span><span class="co"> "Getting Started with sePCA"</span></span>
-<span id="cb20-3"><a href="#cb20-3" tabindex="-1"></a><span class="an">output:</span><span class="co"> rmarkdown::html_vignette</span></span>
-<span id="cb20-4"><a href="#cb20-4" tabindex="-1"></a><span class="an">vignette:</span><span class="co"> &gt;</span></span>
-<span id="cb20-5"><a href="#cb20-5" tabindex="-1"></a><span class="co">  %\VignetteIndexEntry{Getting Started with sePCA}</span></span>
-<span id="cb20-6"><a href="#cb20-6" tabindex="-1"></a><span class="co">  %\VignetteEngine{knitr::rmarkdown}</span></span>
-<span id="cb20-7"><a href="#cb20-7" tabindex="-1"></a><span class="co">  %\VignetteEncoding{UTF-8}</span></span>
-<span id="cb20-8"><a href="#cb20-8" tabindex="-1"></a><span class="co">---</span></span>
-<span id="cb20-9"><a href="#cb20-9" tabindex="-1"></a></span>
-<span id="cb20-10"><a href="#cb20-10" tabindex="-1"></a><span class="in">```{r setup, include=FALSE}</span></span>
-<span id="cb20-11"><a href="#cb20-11" tabindex="-1"></a><span class="in">knitr::opts_chunk$set(</span></span>
-<span id="cb20-12"><a href="#cb20-12" tabindex="-1"></a><span class="in">  collapse = TRUE,</span></span>
-<span id="cb20-13"><a href="#cb20-13" tabindex="-1"></a><span class="in">  comment = "#&gt;"</span></span>
-<span id="cb20-14"><a href="#cb20-14" tabindex="-1"></a><span class="in">)</span></span>
-<span id="cb20-15"><a href="#cb20-15" tabindex="-1"></a><span class="in">```</span></span>
-<span id="cb20-16"><a href="#cb20-16" tabindex="-1"></a></span>
-<span id="cb20-17"><a href="#cb20-17" tabindex="-1"></a><span class="fu">## Introduction</span></span>
-<span id="cb20-18"><a href="#cb20-18" tabindex="-1"></a></span>
-<span id="cb20-19"><a href="#cb20-19" tabindex="-1"></a>sePCA makes it easy to run PCA on RNA-seq data stored in SummarizedExperiment objects.</span>
-<span id="cb20-20"><a href="#cb20-20" tabindex="-1"></a></span>
-<span id="cb20-21"><a href="#cb20-21" tabindex="-1"></a><span class="fu">## Quick Example</span></span>
-<span id="cb20-22"><a href="#cb20-22" tabindex="-1"></a></span>
-<span id="cb20-23"><a href="#cb20-23" tabindex="-1"></a><span class="in">```{r example}</span></span>
-<span id="cb20-24"><a href="#cb20-24" tabindex="-1"></a><span class="in">library(sePCA)</span></span>
-<span id="cb20-25"><a href="#cb20-25" tabindex="-1"></a></span>
-<span id="cb20-26"><a href="#cb20-26" tabindex="-1"></a><span class="in"># Load example data</span></span>
-<span id="cb20-27"><a href="#cb20-27" tabindex="-1"></a><span class="in">data(example_se)</span></span>
-<span id="cb20-28"><a href="#cb20-28" tabindex="-1"></a><span class="in">example_se</span></span>
-<span id="cb20-29"><a href="#cb20-29" tabindex="-1"></a></span>
-<span id="cb20-30"><a href="#cb20-30" tabindex="-1"></a><span class="in"># Run PCA</span></span>
-<span id="cb20-31"><a href="#cb20-31" tabindex="-1"></a><span class="in">result &lt;- run_pca(example_se, n_top = 50)</span></span>
-<span id="cb20-32"><a href="#cb20-32" tabindex="-1"></a></span>
-<span id="cb20-33"><a href="#cb20-33" tabindex="-1"></a><span class="in"># Plot</span></span>
-<span id="cb20-34"><a href="#cb20-34" tabindex="-1"></a><span class="in">plot_pca(result, color_by = "treatment")</span></span>
-<span id="cb20-35"><a href="#cb20-35" tabindex="-1"></a><span class="in">```</span></span>
-<span id="cb20-36"><a href="#cb20-36" tabindex="-1"></a></span>
-<span id="cb20-37"><a href="#cb20-37" tabindex="-1"></a><span class="fu">## Using Real Data</span></span>
-<span id="cb20-38"><a href="#cb20-38" tabindex="-1"></a></span>
-<span id="cb20-39"><a href="#cb20-39" tabindex="-1"></a><span class="in">```{r airway}</span></span>
-<span id="cb20-40"><a href="#cb20-40" tabindex="-1"></a><span class="in">library(airway)</span></span>
-<span id="cb20-41"><a href="#cb20-41" tabindex="-1"></a><span class="in">data(airway)</span></span>
-<span id="cb20-42"><a href="#cb20-42" tabindex="-1"></a></span>
-<span id="cb20-43"><a href="#cb20-43" tabindex="-1"></a><span class="in"># Run PCA on airway data</span></span>
-<span id="cb20-44"><a href="#cb20-44" tabindex="-1"></a><span class="in">result &lt;- run_pca(airway, n_top = 500)</span></span>
-<span id="cb20-45"><a href="#cb20-45" tabindex="-1"></a></span>
-<span id="cb20-46"><a href="#cb20-46" tabindex="-1"></a><span class="in"># Visualize treatment effect</span></span>
-<span id="cb20-47"><a href="#cb20-47" tabindex="-1"></a><span class="in">plot_pca(result, color_by = "dex", shape_by = "cell")</span></span>
-<span id="cb20-48"><a href="#cb20-48" tabindex="-1"></a><span class="in">```</span></span></code></pre></div>
+<div class="sourceCode" id="cb21"><pre class="sourceCode markdown"><code class="sourceCode markdown"><span id="cb21-1"><a href="#cb21-1" tabindex="-1"></a><span class="co">---</span></span>
+<span id="cb21-2"><a href="#cb21-2" tabindex="-1"></a><span class="an">title:</span><span class="co"> "Getting Started with ADS8192"</span></span>
+<span id="cb21-3"><a href="#cb21-3" tabindex="-1"></a><span class="an">output:</span><span class="co"> rmarkdown::html_vignette</span></span>
+<span id="cb21-4"><a href="#cb21-4" tabindex="-1"></a><span class="an">vignette:</span><span class="co"> &gt;</span></span>
+<span id="cb21-5"><a href="#cb21-5" tabindex="-1"></a><span class="co">  %\VignetteIndexEntry{Getting Started with ADS8192}</span></span>
+<span id="cb21-6"><a href="#cb21-6" tabindex="-1"></a><span class="co">  %\VignetteEngine{knitr::rmarkdown}</span></span>
+<span id="cb21-7"><a href="#cb21-7" tabindex="-1"></a><span class="co">  %\VignetteEncoding{UTF-8}</span></span>
+<span id="cb21-8"><a href="#cb21-8" tabindex="-1"></a><span class="co">---</span></span>
+<span id="cb21-9"><a href="#cb21-9" tabindex="-1"></a></span>
+<span id="cb21-10"><a href="#cb21-10" tabindex="-1"></a><span class="in">```{r setup, include=FALSE}</span></span>
+<span id="cb21-11"><a href="#cb21-11" tabindex="-1"></a><span class="in">knitr::opts_chunk$set(</span></span>
+<span id="cb21-12"><a href="#cb21-12" tabindex="-1"></a><span class="in">  collapse = TRUE,</span></span>
+<span id="cb21-13"><a href="#cb21-13" tabindex="-1"></a><span class="in">  comment = "#&gt;"</span></span>
+<span id="cb21-14"><a href="#cb21-14" tabindex="-1"></a><span class="in">)</span></span>
+<span id="cb21-15"><a href="#cb21-15" tabindex="-1"></a><span class="in">```</span></span>
+<span id="cb21-16"><a href="#cb21-16" tabindex="-1"></a></span>
+<span id="cb21-17"><a href="#cb21-17" tabindex="-1"></a><span class="fu">## Introduction</span></span>
+<span id="cb21-18"><a href="#cb21-18" tabindex="-1"></a></span>
+<span id="cb21-19"><a href="#cb21-19" tabindex="-1"></a>ADS8192 makes it easy to run PCA on RNA-seq data stored in SummarizedExperiment objects.</span>
+<span id="cb21-20"><a href="#cb21-20" tabindex="-1"></a></span>
+<span id="cb21-21"><a href="#cb21-21" tabindex="-1"></a><span class="fu">## Quick Example</span></span>
+<span id="cb21-22"><a href="#cb21-22" tabindex="-1"></a></span>
+<span id="cb21-23"><a href="#cb21-23" tabindex="-1"></a><span class="in">```{r example}</span></span>
+<span id="cb21-24"><a href="#cb21-24" tabindex="-1"></a><span class="in">library(ADS8192)</span></span>
+<span id="cb21-25"><a href="#cb21-25" tabindex="-1"></a></span>
+<span id="cb21-26"><a href="#cb21-26" tabindex="-1"></a><span class="in"># Load example data</span></span>
+<span id="cb21-27"><a href="#cb21-27" tabindex="-1"></a><span class="in">data(example_se)</span></span>
+<span id="cb21-28"><a href="#cb21-28" tabindex="-1"></a><span class="in">example_se</span></span>
+<span id="cb21-29"><a href="#cb21-29" tabindex="-1"></a></span>
+<span id="cb21-30"><a href="#cb21-30" tabindex="-1"></a><span class="in"># Run PCA</span></span>
+<span id="cb21-31"><a href="#cb21-31" tabindex="-1"></a><span class="in">result &lt;- run_pca(example_se, n_top = 50)</span></span>
+<span id="cb21-32"><a href="#cb21-32" tabindex="-1"></a></span>
+<span id="cb21-33"><a href="#cb21-33" tabindex="-1"></a><span class="in"># Plot</span></span>
+<span id="cb21-34"><a href="#cb21-34" tabindex="-1"></a><span class="in">plot_pca(result, color_by = "treatment")</span></span>
+<span id="cb21-35"><a href="#cb21-35" tabindex="-1"></a><span class="in">```</span></span>
+<span id="cb21-36"><a href="#cb21-36" tabindex="-1"></a></span>
+<span id="cb21-37"><a href="#cb21-37" tabindex="-1"></a><span class="fu">## Using Real Data</span></span>
+<span id="cb21-38"><a href="#cb21-38" tabindex="-1"></a></span>
+<span id="cb21-39"><a href="#cb21-39" tabindex="-1"></a><span class="in">```{r airway}</span></span>
+<span id="cb21-40"><a href="#cb21-40" tabindex="-1"></a><span class="in">library(airway)</span></span>
+<span id="cb21-41"><a href="#cb21-41" tabindex="-1"></a><span class="in">data(airway)</span></span>
+<span id="cb21-42"><a href="#cb21-42" tabindex="-1"></a></span>
+<span id="cb21-43"><a href="#cb21-43" tabindex="-1"></a><span class="in"># Run PCA on airway data</span></span>
+<span id="cb21-44"><a href="#cb21-44" tabindex="-1"></a><span class="in">result &lt;- run_pca(airway, n_top = 500)</span></span>
+<span id="cb21-45"><a href="#cb21-45" tabindex="-1"></a></span>
+<span id="cb21-46"><a href="#cb21-46" tabindex="-1"></a><span class="in"># Visualize treatment effect</span></span>
+<span id="cb21-47"><a href="#cb21-47" tabindex="-1"></a><span class="in">plot_pca(result, color_by = "dex", shape_by = "cell")</span></span>
+<span id="cb21-48"><a href="#cb21-48" tabindex="-1"></a><span class="in">```</span></span></code></pre></div>
 <blockquote>
 <p><strong>Exercise B:</strong> Ensure every argument of your exported
 functions is documented. Check by building the pkgdown site and clicking
@@ -567,33 +608,33 @@ and checks whenever you push code. This ensures:</p>
 <div class="section level3">
 <h3 id="set-up-github-actions">Set Up GitHub Actions<a class="anchor" aria-label="anchor" href="#set-up-github-actions"></a>
 </h3>
-<div class="sourceCode" id="cb21"><pre class="downlit sourceCode r">
+<div class="sourceCode" id="cb22"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="co"># R CMD check on push/PR</span></span>
 <span><span class="fu">use_github_action</span><span class="op">(</span><span class="st">"check-standard"</span><span class="op">)</span></span></code></pre></div>
 <p>This creates <code>.github/workflows/R-CMD-check.yaml</code>:</p>
-<div class="sourceCode" id="cb22"><pre class="sourceCode yaml"><code class="sourceCode yaml"><span id="cb22-1"><a href="#cb22-1" tabindex="-1"></a><span class="fu">on</span><span class="kw">:</span></span>
-<span id="cb22-2"><a href="#cb22-2" tabindex="-1"></a><span class="at">  </span><span class="fu">push</span><span class="kw">:</span></span>
-<span id="cb22-3"><a href="#cb22-3" tabindex="-1"></a><span class="at">    </span><span class="fu">branches</span><span class="kw">:</span><span class="at"> </span><span class="kw">[</span><span class="at">main</span><span class="kw">,</span><span class="at"> master</span><span class="kw">]</span></span>
-<span id="cb22-4"><a href="#cb22-4" tabindex="-1"></a><span class="at">  </span><span class="fu">pull_request</span><span class="kw">:</span></span>
-<span id="cb22-5"><a href="#cb22-5" tabindex="-1"></a><span class="at">    </span><span class="fu">branches</span><span class="kw">:</span><span class="at"> </span><span class="kw">[</span><span class="at">main</span><span class="kw">,</span><span class="at"> master</span><span class="kw">]</span></span>
-<span id="cb22-6"><a href="#cb22-6" tabindex="-1"></a></span>
-<span id="cb22-7"><a href="#cb22-7" tabindex="-1"></a><span class="fu">name</span><span class="kw">:</span><span class="at"> R-CMD-check</span></span>
-<span id="cb22-8"><a href="#cb22-8" tabindex="-1"></a></span>
-<span id="cb22-9"><a href="#cb22-9" tabindex="-1"></a><span class="fu">jobs</span><span class="kw">:</span></span>
-<span id="cb22-10"><a href="#cb22-10" tabindex="-1"></a><span class="at">  </span><span class="fu">R-CMD-check</span><span class="kw">:</span></span>
-<span id="cb22-11"><a href="#cb22-11" tabindex="-1"></a><span class="at">    </span><span class="fu">runs-on</span><span class="kw">:</span><span class="at"> ${{ matrix.config.os }}</span></span>
-<span id="cb22-12"><a href="#cb22-12" tabindex="-1"></a><span class="at">    </span><span class="fu">name</span><span class="kw">:</span><span class="at"> ${{ matrix.config.os }} (${{ matrix.config.r }})</span></span>
-<span id="cb22-13"><a href="#cb22-13" tabindex="-1"></a><span class="at">    </span><span class="fu">strategy</span><span class="kw">:</span></span>
-<span id="cb22-14"><a href="#cb22-14" tabindex="-1"></a><span class="at">      </span><span class="fu">matrix</span><span class="kw">:</span></span>
-<span id="cb22-15"><a href="#cb22-15" tabindex="-1"></a><span class="at">        </span><span class="fu">config</span><span class="kw">:</span></span>
-<span id="cb22-16"><a href="#cb22-16" tabindex="-1"></a><span class="at">          </span><span class="kw">-</span><span class="at"> </span><span class="kw">{</span><span class="fu">os</span><span class="kw">:</span><span class="at"> macos-latest</span><span class="kw">,</span><span class="at">   </span><span class="fu">r</span><span class="kw">:</span><span class="at"> </span><span class="st">'release'</span><span class="kw">}</span></span>
-<span id="cb22-17"><a href="#cb22-17" tabindex="-1"></a><span class="at">          </span><span class="kw">-</span><span class="at"> </span><span class="kw">{</span><span class="fu">os</span><span class="kw">:</span><span class="at"> windows-latest</span><span class="kw">,</span><span class="at"> </span><span class="fu">r</span><span class="kw">:</span><span class="at"> </span><span class="st">'release'</span><span class="kw">}</span></span>
-<span id="cb22-18"><a href="#cb22-18" tabindex="-1"></a><span class="at">          </span><span class="kw">-</span><span class="at"> </span><span class="kw">{</span><span class="fu">os</span><span class="kw">:</span><span class="at"> ubuntu-latest</span><span class="kw">,</span><span class="at">  </span><span class="fu">r</span><span class="kw">:</span><span class="at"> </span><span class="st">'release'</span><span class="kw">}</span></span></code></pre></div>
+<div class="sourceCode" id="cb23"><pre class="sourceCode yaml"><code class="sourceCode yaml"><span id="cb23-1"><a href="#cb23-1" tabindex="-1"></a><span class="fu">on</span><span class="kw">:</span></span>
+<span id="cb23-2"><a href="#cb23-2" tabindex="-1"></a><span class="at">  </span><span class="fu">push</span><span class="kw">:</span></span>
+<span id="cb23-3"><a href="#cb23-3" tabindex="-1"></a><span class="at">    </span><span class="fu">branches</span><span class="kw">:</span><span class="at"> </span><span class="kw">[</span><span class="at">main</span><span class="kw">,</span><span class="at"> master</span><span class="kw">]</span></span>
+<span id="cb23-4"><a href="#cb23-4" tabindex="-1"></a><span class="at">  </span><span class="fu">pull_request</span><span class="kw">:</span></span>
+<span id="cb23-5"><a href="#cb23-5" tabindex="-1"></a><span class="at">    </span><span class="fu">branches</span><span class="kw">:</span><span class="at"> </span><span class="kw">[</span><span class="at">main</span><span class="kw">,</span><span class="at"> master</span><span class="kw">]</span></span>
+<span id="cb23-6"><a href="#cb23-6" tabindex="-1"></a></span>
+<span id="cb23-7"><a href="#cb23-7" tabindex="-1"></a><span class="fu">name</span><span class="kw">:</span><span class="at"> R-CMD-check</span></span>
+<span id="cb23-8"><a href="#cb23-8" tabindex="-1"></a></span>
+<span id="cb23-9"><a href="#cb23-9" tabindex="-1"></a><span class="fu">jobs</span><span class="kw">:</span></span>
+<span id="cb23-10"><a href="#cb23-10" tabindex="-1"></a><span class="at">  </span><span class="fu">R-CMD-check</span><span class="kw">:</span></span>
+<span id="cb23-11"><a href="#cb23-11" tabindex="-1"></a><span class="at">    </span><span class="fu">runs-on</span><span class="kw">:</span><span class="at"> ${{ matrix.config.os }}</span></span>
+<span id="cb23-12"><a href="#cb23-12" tabindex="-1"></a><span class="at">    </span><span class="fu">name</span><span class="kw">:</span><span class="at"> ${{ matrix.config.os }} (${{ matrix.config.r }})</span></span>
+<span id="cb23-13"><a href="#cb23-13" tabindex="-1"></a><span class="at">    </span><span class="fu">strategy</span><span class="kw">:</span></span>
+<span id="cb23-14"><a href="#cb23-14" tabindex="-1"></a><span class="at">      </span><span class="fu">matrix</span><span class="kw">:</span></span>
+<span id="cb23-15"><a href="#cb23-15" tabindex="-1"></a><span class="at">        </span><span class="fu">config</span><span class="kw">:</span></span>
+<span id="cb23-16"><a href="#cb23-16" tabindex="-1"></a><span class="at">          </span><span class="kw">-</span><span class="at"> </span><span class="kw">{</span><span class="fu">os</span><span class="kw">:</span><span class="at"> macos-latest</span><span class="kw">,</span><span class="at">   </span><span class="fu">r</span><span class="kw">:</span><span class="at"> </span><span class="st">'release'</span><span class="kw">}</span></span>
+<span id="cb23-17"><a href="#cb23-17" tabindex="-1"></a><span class="at">          </span><span class="kw">-</span><span class="at"> </span><span class="kw">{</span><span class="fu">os</span><span class="kw">:</span><span class="at"> windows-latest</span><span class="kw">,</span><span class="at"> </span><span class="fu">r</span><span class="kw">:</span><span class="at"> </span><span class="st">'release'</span><span class="kw">}</span></span>
+<span id="cb23-18"><a href="#cb23-18" tabindex="-1"></a><span class="at">          </span><span class="kw">-</span><span class="at"> </span><span class="kw">{</span><span class="fu">os</span><span class="kw">:</span><span class="at"> ubuntu-latest</span><span class="kw">,</span><span class="at">  </span><span class="fu">r</span><span class="kw">:</span><span class="at"> </span><span class="st">'release'</span><span class="kw">}</span></span></code></pre></div>
 </div>
 <div class="section level3">
 <h3 id="add-pkgdown-deployment">Add pkgdown Deployment<a class="anchor" aria-label="anchor" href="#add-pkgdown-deployment"></a>
 </h3>
-<div class="sourceCode" id="cb23"><pre class="downlit sourceCode r">
+<div class="sourceCode" id="cb24"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="co"># Auto-deploy pkgdown site to GitHub Pages</span></span>
 <span><span class="fu">use_github_action</span><span class="op">(</span><span class="st">"pkgdown"</span><span class="op">)</span></span></code></pre></div>
 <p>This creates <code>.github/workflows/pkgdown.yaml</code> that:</p>
@@ -601,7 +642,7 @@ and checks whenever you push code. This ensures:</p>
 <li>Builds the pkgdown site</li>
 <li>Deploys to the <code>gh-pages</code> branch</li>
 <li>GitHub Pages serves it at
-<code>https://username.github.io/sePCA/</code>
+<code>https://username.github.io/ADS8192/</code>
 </li>
 </ol>
 </div>
@@ -620,7 +661,7 @@ and checks whenever you push code. This ensures:</p>
 <div class="section level3">
 <h3 id="push-and-verify">Push and Verify<a class="anchor" aria-label="anchor" href="#push-and-verify"></a>
 </h3>
-<div class="sourceCode" id="cb24"><pre class="downlit sourceCode r">
+<div class="sourceCode" id="cb25"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="co"># Commit all changes</span></span>
 <span><span class="co"># git add -A</span></span>
 <span><span class="co"># git commit -m "Add tests, pkgdown, and CI"</span></span>
@@ -632,14 +673,14 @@ and checks whenever you push code. This ensures:</p>
 <h3 id="adding-badges">Adding Badges<a class="anchor" aria-label="anchor" href="#adding-badges"></a>
 </h3>
 <p>Show off your CI status on your README:</p>
-<div class="sourceCode" id="cb25"><pre class="downlit sourceCode r">
+<div class="sourceCode" id="cb26"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="fu">use_github_actions_badge</span><span class="op">(</span><span class="st">"R-CMD-check"</span><span class="op">)</span></span>
 <span><span class="fu">use_github_actions_badge</span><span class="op">(</span><span class="st">"pkgdown"</span><span class="op">)</span></span></code></pre></div>
 <p>This adds to your README:</p>
-<div class="sourceCode" id="cb26"><pre class="sourceCode markdown"><code class="sourceCode markdown"><span id="cb26-1"><a href="#cb26-1" tabindex="-1"></a><span class="co">&lt;!-- badges: start --&gt;</span></span>
-<span id="cb26-2"><a href="#cb26-2" tabindex="-1"></a><span class="co">[</span><span class="al">![R-CMD-check](https://github.com/user/sePCA/actions/workflows/R-CMD-check.yaml/badge.svg)</span><span class="co">](https://github.com/user/sePCA/actions/workflows/R-CMD-check.yaml)</span></span>
-<span id="cb26-3"><a href="#cb26-3" tabindex="-1"></a><span class="co">[</span><span class="al">![pkgdown](https://github.com/user/sePCA/actions/workflows/pkgdown.yaml/badge.svg)</span><span class="co">](https://github.com/user/sePCA/actions/workflows/pkgdown.yaml)</span></span>
-<span id="cb26-4"><a href="#cb26-4" tabindex="-1"></a><span class="co">&lt;!-- badges: end --&gt;</span></span></code></pre></div>
+<div class="sourceCode" id="cb27"><pre class="sourceCode markdown"><code class="sourceCode markdown"><span id="cb27-1"><a href="#cb27-1" tabindex="-1"></a><span class="co">&lt;!-- badges: start --&gt;</span></span>
+<span id="cb27-2"><a href="#cb27-2" tabindex="-1"></a><span class="co">[</span><span class="al">![R-CMD-check](https://github.com/user/ADS8192/actions/workflows/R-CMD-check.yaml/badge.svg)</span><span class="co">](https://github.com/user/ADS8192/actions/workflows/R-CMD-check.yaml)</span></span>
+<span id="cb27-3"><a href="#cb27-3" tabindex="-1"></a><span class="co">[</span><span class="al">![pkgdown](https://github.com/user/ADS8192/actions/workflows/pkgdown.yaml/badge.svg)</span><span class="co">](https://github.com/user/ADS8192/actions/workflows/pkgdown.yaml)</span></span>
+<span id="cb27-4"><a href="#cb27-4" tabindex="-1"></a><span class="co">&lt;!-- badges: end --&gt;</span></span></code></pre></div>
 <hr>
 </div>
 </div>
@@ -653,10 +694,10 @@ and checks whenever you push code. This ensures:</p>
 <div class="section level4">
 <h4 id="step-1-implement">Step 1: Implement<a class="anchor" aria-label="anchor" href="#step-1-implement"></a>
 </h4>
-<div class="sourceCode" id="cb27"><pre class="downlit sourceCode r">
-<code class="sourceCode R"><span><span class="fu">use_r</span><span class="op">(</span><span class="st">"export"</span><span class="op">)</span></span></code></pre></div>
 <div class="sourceCode" id="cb28"><pre class="downlit sourceCode r">
-<code class="sourceCode R"><span><span class="co"># R/export.R</span></span>
+<code class="sourceCode R"><span><span class="fu">use_r</span><span class="op">(</span><span class="st">"export"</span><span class="op">)</span></span></code></pre></div>
+<div class="sourceCode" id="cb29"><pre class="downlit sourceCode r">
+<code class="sourceCode R"><span><span class="co"># R/export.R — save_pca_results() function</span></span>
 <span></span>
 <span><span class="co">#' Save PCA results to files</span></span>
 <span><span class="co">#'</span></span>
@@ -676,7 +717,7 @@ and checks whenever you push code. This ensures:</p>
 <span>    <span class="kw">if</span> <span class="op">(</span><span class="op">!</span><span class="fu"><a href="https://rdrr.io/r/base/files2.html" class="external-link">dir.exists</a></span><span class="op">(</span><span class="va">output_dir</span><span class="op">)</span><span class="op">)</span> <span class="op">{</span></span>
 <span>        <span class="fu"><a href="https://rdrr.io/r/base/files2.html" class="external-link">dir.create</a></span><span class="op">(</span><span class="va">output_dir</span>, recursive <span class="op">=</span> <span class="cn">TRUE</span><span class="op">)</span></span>
 <span>    <span class="op">}</span></span>
-<span>    </span>
+<span></span>
 <span>    <span class="co"># Save scores</span></span>
 <span>    <span class="va">scores_file</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/base/file.path.html" class="external-link">file.path</a></span><span class="op">(</span><span class="va">output_dir</span>, <span class="fu"><a href="https://rdrr.io/r/base/paste.html" class="external-link">paste0</a></span><span class="op">(</span><span class="va">prefix</span>, <span class="st">"_scores.tsv"</span><span class="op">)</span><span class="op">)</span></span>
 <span>    <span class="fu">utils</span><span class="fu">::</span><span class="fu"><a href="https://rdrr.io/r/utils/write.table.html" class="external-link">write.table</a></span><span class="op">(</span></span>
@@ -686,7 +727,7 @@ and checks whenever you push code. This ensures:</p>
 <span>        row.names <span class="op">=</span> <span class="cn">FALSE</span>,</span>
 <span>        quote <span class="op">=</span> <span class="cn">FALSE</span></span>
 <span>    <span class="op">)</span></span>
-<span>    </span>
+<span></span>
 <span>    <span class="co"># Save variance explained</span></span>
 <span>    <span class="va">var_file</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/base/file.path.html" class="external-link">file.path</a></span><span class="op">(</span><span class="va">output_dir</span>, <span class="fu"><a href="https://rdrr.io/r/base/paste.html" class="external-link">paste0</a></span><span class="op">(</span><span class="va">prefix</span>, <span class="st">"_variance.tsv"</span><span class="op">)</span><span class="op">)</span></span>
 <span>    <span class="va">var_df</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/pca_variance_explained.html">pca_variance_explained</a></span><span class="op">(</span><span class="va">pca_result</span><span class="op">)</span></span>
@@ -697,41 +738,41 @@ and checks whenever you push code. This ensures:</p>
 <span>        row.names <span class="op">=</span> <span class="cn">FALSE</span>,</span>
 <span>        quote <span class="op">=</span> <span class="cn">FALSE</span></span>
 <span>    <span class="op">)</span></span>
-<span>    </span>
+<span></span>
 <span>    <span class="fu"><a href="https://rdrr.io/r/base/message.html" class="external-link">message</a></span><span class="op">(</span><span class="st">"Saved: "</span>, <span class="va">scores_file</span><span class="op">)</span></span>
 <span>    <span class="fu"><a href="https://rdrr.io/r/base/message.html" class="external-link">message</a></span><span class="op">(</span><span class="st">"Saved: "</span>, <span class="va">var_file</span><span class="op">)</span></span>
-<span>    </span>
+<span></span>
 <span>    <span class="fu"><a href="https://rdrr.io/r/base/invisible.html" class="external-link">invisible</a></span><span class="op">(</span><span class="cn">NULL</span><span class="op">)</span></span>
 <span><span class="op">}</span></span></code></pre></div>
 </div>
 <div class="section level4">
 <h4 id="step-2-document">Step 2: Document<a class="anchor" aria-label="anchor" href="#step-2-document"></a>
 </h4>
-<div class="sourceCode" id="cb29"><pre class="downlit sourceCode r">
+<div class="sourceCode" id="cb30"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="fu">document</span><span class="op">(</span><span class="op">)</span>  <span class="co"># Generate Rd file</span></span></code></pre></div>
 </div>
 <div class="section level4">
 <h4 id="step-3-test">Step 3: Test<a class="anchor" aria-label="anchor" href="#step-3-test"></a>
 </h4>
-<div class="sourceCode" id="cb30"><pre class="downlit sourceCode r">
-<code class="sourceCode R"><span><span class="fu">use_test</span><span class="op">(</span><span class="st">"export"</span><span class="op">)</span></span></code></pre></div>
 <div class="sourceCode" id="cb31"><pre class="downlit sourceCode r">
+<code class="sourceCode R"><span><span class="fu">use_test</span><span class="op">(</span><span class="st">"export"</span><span class="op">)</span></span></code></pre></div>
+<div class="sourceCode" id="cb32"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="co"># tests/testthat/test-export.R</span></span>
 <span></span>
 <span><span class="fu"><a href="https://testthat.r-lib.org/reference/test_that.html" class="external-link">test_that</a></span><span class="op">(</span><span class="st">"save_pca_results creates files"</span>, <span class="op">{</span></span>
-<span>    <span class="fu"><a href="https://rdrr.io/r/utils/data.html" class="external-link">data</a></span><span class="op">(</span><span class="va">example_se</span>, package <span class="op">=</span> <span class="st">"sePCA"</span><span class="op">)</span></span>
+<span>    <span class="fu"><a href="https://rdrr.io/r/utils/data.html" class="external-link">data</a></span><span class="op">(</span><span class="va">example_se</span>, package <span class="op">=</span> <span class="st">"ADS8192"</span><span class="op">)</span></span>
 <span>    <span class="va">result</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/run_pca.html">run_pca</a></span><span class="op">(</span><span class="va">example_se</span>, n_top <span class="op">=</span> <span class="fl">50</span><span class="op">)</span></span>
-<span>    </span>
+<span></span>
 <span>    <span class="co"># Use a temporary directory</span></span>
 <span>    <span class="va">tmp_dir</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/base/tempfile.html" class="external-link">tempdir</a></span><span class="op">(</span><span class="op">)</span></span>
 <span>    <span class="va">output_dir</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/base/file.path.html" class="external-link">file.path</a></span><span class="op">(</span><span class="va">tmp_dir</span>, <span class="st">"test_output"</span><span class="op">)</span></span>
-<span>    </span>
+<span></span>
 <span>    <span class="fu"><a href="../reference/save_pca_results.html">save_pca_results</a></span><span class="op">(</span><span class="va">result</span>, <span class="va">output_dir</span>, prefix <span class="op">=</span> <span class="st">"test"</span><span class="op">)</span></span>
-<span>    </span>
+<span></span>
 <span>    <span class="co"># Check files exist</span></span>
 <span>    <span class="fu"><a href="https://testthat.r-lib.org/reference/logical-expectations.html" class="external-link">expect_true</a></span><span class="op">(</span><span class="fu"><a href="https://rdrr.io/r/base/files.html" class="external-link">file.exists</a></span><span class="op">(</span><span class="fu"><a href="https://rdrr.io/r/base/file.path.html" class="external-link">file.path</a></span><span class="op">(</span><span class="va">output_dir</span>, <span class="st">"test_scores.tsv"</span><span class="op">)</span><span class="op">)</span><span class="op">)</span></span>
 <span>    <span class="fu"><a href="https://testthat.r-lib.org/reference/logical-expectations.html" class="external-link">expect_true</a></span><span class="op">(</span><span class="fu"><a href="https://rdrr.io/r/base/files.html" class="external-link">file.exists</a></span><span class="op">(</span><span class="fu"><a href="https://rdrr.io/r/base/file.path.html" class="external-link">file.path</a></span><span class="op">(</span><span class="va">output_dir</span>, <span class="st">"test_variance.tsv"</span><span class="op">)</span><span class="op">)</span><span class="op">)</span></span>
-<span>    </span>
+<span></span>
 <span>    <span class="co"># Check scores file has correct structure</span></span>
 <span>    <span class="va">scores</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/utils/read.table.html" class="external-link">read.table</a></span><span class="op">(</span></span>
 <span>        <span class="fu"><a href="https://rdrr.io/r/base/file.path.html" class="external-link">file.path</a></span><span class="op">(</span><span class="va">output_dir</span>, <span class="st">"test_scores.tsv"</span><span class="op">)</span>,</span>
@@ -740,7 +781,7 @@ and checks whenever you push code. This ensures:</p>
 <span>    <span class="op">)</span></span>
 <span>    <span class="fu"><a href="https://testthat.r-lib.org/reference/logical-expectations.html" class="external-link">expect_true</a></span><span class="op">(</span><span class="st">"PC1"</span> <span class="op"><a href="https://rdrr.io/r/base/match.html" class="external-link">%in%</a></span> <span class="fu"><a href="https://rdrr.io/r/base/colnames.html" class="external-link">colnames</a></span><span class="op">(</span><span class="va">scores</span><span class="op">)</span><span class="op">)</span></span>
 <span>    <span class="fu"><a href="https://testthat.r-lib.org/reference/logical-expectations.html" class="external-link">expect_true</a></span><span class="op">(</span><span class="st">"sample_id"</span> <span class="op"><a href="https://rdrr.io/r/base/match.html" class="external-link">%in%</a></span> <span class="fu"><a href="https://rdrr.io/r/base/colnames.html" class="external-link">colnames</a></span><span class="op">(</span><span class="va">scores</span><span class="op">)</span><span class="op">)</span></span>
-<span>    </span>
+<span></span>
 <span>    <span class="co"># Clean up</span></span>
 <span>    <span class="fu"><a href="https://rdrr.io/r/base/unlink.html" class="external-link">unlink</a></span><span class="op">(</span><span class="va">output_dir</span>, recursive <span class="op">=</span> <span class="cn">TRUE</span><span class="op">)</span></span>
 <span><span class="op">}</span><span class="op">)</span></span></code></pre></div>
@@ -748,13 +789,13 @@ and checks whenever you push code. This ensures:</p>
 <div class="section level4">
 <h4 id="step-4-check">Step 4: Check<a class="anchor" aria-label="anchor" href="#step-4-check"></a>
 </h4>
-<div class="sourceCode" id="cb32"><pre class="downlit sourceCode r">
+<div class="sourceCode" id="cb33"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="fu">check</span><span class="op">(</span><span class="op">)</span>  <span class="co"># Should pass with 0 errors, 0 warnings</span></span></code></pre></div>
 </div>
 <div class="section level4">
 <h4 id="step-5-commit">Step 5: Commit<a class="anchor" aria-label="anchor" href="#step-5-commit"></a>
 </h4>
-<div class="sourceCode" id="cb33"><pre class="downlit sourceCode r">
+<div class="sourceCode" id="cb34"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="co"># git add -A</span></span>
 <span><span class="co"># git commit -m "Add save_pca_results() for exporting PCA outputs"</span></span>
 <span><span class="co"># git push</span></span></code></pre></div>
@@ -820,45 +861,6 @@ edge cases (what happens with n_top &gt; nrow?)</p>
 <p>Add R CMD check and pkgdown badges to your README.</p>
 <hr>
 </div>
-</div>
-<div class="section level2">
-<h2 id="common-testthat-expectations">Common testthat Expectations<a class="anchor" aria-label="anchor" href="#common-testthat-expectations"></a>
-</h2>
-<div class="sourceCode" id="cb34"><pre class="downlit sourceCode r">
-<code class="sourceCode R"><span><span class="co"># Equality</span></span>
-<span><span class="fu"><a href="https://testthat.r-lib.org/reference/equality-expectations.html" class="external-link">expect_equal</a></span><span class="op">(</span><span class="va">x</span>, <span class="va">y</span><span class="op">)</span>           <span class="co"># Equal with tolerance</span></span>
-<span><span class="fu"><a href="https://testthat.r-lib.org/reference/equality-expectations.html" class="external-link">expect_identical</a></span><span class="op">(</span><span class="va">x</span>, <span class="va">y</span><span class="op">)</span>       <span class="co"># Exactly identical</span></span>
-<span></span>
-<span><span class="co"># Types and classes</span></span>
-<span><span class="fu"><a href="https://testthat.r-lib.org/reference/inheritance-expectations.html" class="external-link">expect_type</a></span><span class="op">(</span><span class="va">x</span>, <span class="st">"list"</span><span class="op">)</span>       <span class="co"># Base R type</span></span>
-<span><span class="fu"><a href="https://testthat.r-lib.org/reference/inheritance-expectations.html" class="external-link">expect_s3_class</a></span><span class="op">(</span><span class="va">x</span>, <span class="st">"data.frame"</span><span class="op">)</span>  <span class="co"># S3 class</span></span>
-<span><span class="fu"><a href="https://testthat.r-lib.org/reference/inheritance-expectations.html" class="external-link">expect_s4_class</a></span><span class="op">(</span><span class="va">x</span>, <span class="st">"SummarizedExperiment"</span><span class="op">)</span>  <span class="co"># S4 class</span></span>
-<span></span>
-<span><span class="co"># Logical</span></span>
-<span><span class="fu"><a href="https://testthat.r-lib.org/reference/logical-expectations.html" class="external-link">expect_true</a></span><span class="op">(</span><span class="va">x</span><span class="op">)</span></span>
-<span><span class="fu"><a href="https://testthat.r-lib.org/reference/logical-expectations.html" class="external-link">expect_false</a></span><span class="op">(</span><span class="va">x</span><span class="op">)</span></span>
-<span><span class="fu"><a href="https://testthat.r-lib.org/reference/expect_null.html" class="external-link">expect_null</a></span><span class="op">(</span><span class="va">x</span><span class="op">)</span></span>
-<span></span>
-<span><span class="co"># Errors and warnings</span></span>
-<span><span class="fu"><a href="https://testthat.r-lib.org/reference/expect_error.html" class="external-link">expect_error</a></span><span class="op">(</span><span class="fu">f</span><span class="op">(</span><span class="op">)</span>, <span class="st">"pattern"</span><span class="op">)</span>     <span class="co"># Function errors with message</span></span>
-<span><span class="fu"><a href="https://testthat.r-lib.org/reference/expect_error.html" class="external-link">expect_warning</a></span><span class="op">(</span><span class="fu">f</span><span class="op">(</span><span class="op">)</span>, <span class="st">"pattern"</span><span class="op">)</span>   <span class="co"># Function warns with message</span></span>
-<span><span class="fu"><a href="https://testthat.r-lib.org/reference/expect_error.html" class="external-link">expect_message</a></span><span class="op">(</span><span class="fu">f</span><span class="op">(</span><span class="op">)</span>, <span class="st">"pattern"</span><span class="op">)</span>   <span class="co"># Function messages</span></span>
-<span></span>
-<span><span class="co"># Comparisons</span></span>
-<span><span class="fu"><a href="https://testthat.r-lib.org/reference/comparison-expectations.html" class="external-link">expect_gt</a></span><span class="op">(</span><span class="va">x</span>, <span class="va">y</span><span class="op">)</span>   <span class="co"># x &gt; y</span></span>
-<span><span class="fu"><a href="https://testthat.r-lib.org/reference/comparison-expectations.html" class="external-link">expect_lt</a></span><span class="op">(</span><span class="va">x</span>, <span class="va">y</span><span class="op">)</span>   <span class="co"># x &lt; y</span></span>
-<span><span class="fu"><a href="https://testthat.r-lib.org/reference/comparison-expectations.html" class="external-link">expect_gte</a></span><span class="op">(</span><span class="va">x</span>, <span class="va">y</span><span class="op">)</span>  <span class="co"># x &gt;= y</span></span>
-<span><span class="fu"><a href="https://testthat.r-lib.org/reference/comparison-expectations.html" class="external-link">expect_lte</a></span><span class="op">(</span><span class="va">x</span>, <span class="va">y</span><span class="op">)</span>  <span class="co"># x &lt;= y</span></span>
-<span></span>
-<span><span class="co"># Collections</span></span>
-<span><span class="fu"><a href="https://testthat.r-lib.org/reference/expect_length.html" class="external-link">expect_length</a></span><span class="op">(</span><span class="va">x</span>, <span class="fl">5</span><span class="op">)</span></span>
-<span><span class="fu"><a href="https://testthat.r-lib.org/reference/expect_named.html" class="external-link">expect_named</a></span><span class="op">(</span><span class="va">x</span>, <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="st">"a"</span>, <span class="st">"b"</span><span class="op">)</span><span class="op">)</span></span>
-<span><span class="fu"><a href="https://testthat.r-lib.org/reference/expect_setequal.html" class="external-link">expect_contains</a></span><span class="op">(</span><span class="va">x</span>, <span class="st">"value"</span><span class="op">)</span></span>
-<span></span>
-<span><span class="co"># Output</span></span>
-<span><span class="fu"><a href="https://testthat.r-lib.org/reference/expect_output.html" class="external-link">expect_output</a></span><span class="op">(</span><span class="fu"><a href="https://rdrr.io/r/base/print.html" class="external-link">print</a></span><span class="op">(</span><span class="va">x</span><span class="op">)</span>, <span class="st">"pattern"</span><span class="op">)</span></span>
-<span><span class="fu"><a href="https://testthat.r-lib.org/reference/expect_snapshot.html" class="external-link">expect_snapshot</a></span><span class="op">(</span><span class="va">x</span><span class="op">)</span>  <span class="co"># For complex output comparisons</span></span></code></pre></div>
-<hr>
 </div>
 <div class="section level2">
 <h2 id="session-info">Session Info<a class="anchor" aria-label="anchor" href="#session-info"></a>

@@ -41,7 +41,7 @@
     <li><a class="dropdown-item" href="articles/HW1_Rubric.html">HW1 Rubric</a></li>
     <li><hr class="dropdown-divider"></li>
     <li><h6 class="dropdown-header" data-toc-skip>Lectures</h6></li>
-    <li><a class="dropdown-item" href="articles/Lecture03_Data_Structures_Bioconductor.html">Lecture 03: Data Structures &amp; Bioconductor</a></li>
+    <li><a class="dropdown-item" href="articles/Lecture04_Data_Structures_Bioconductor.html">Lecture 04: Data Structures &amp; Bioconductor</a></li>
     <li><a class="dropdown-item" href="articles/Lecture05_Package_Development_devtools.html">Lecture 05: Package Dev (devtools)</a></li>
     <li><a class="dropdown-item" href="articles/Lecture06_Package_Development_pkgdown_testthat.html">Lecture 06: Package Dev (pkgdown, testthat)</a></li>
     <li><a class="dropdown-item" href="articles/Lecture07_Shiny_Reactivity.html">Lecture 07: Shiny Reactivity</a></li>
@@ -70,10 +70,20 @@
 <!-- badges: start -->
 <!-- badges: end -->
 <p>Course materials and reference implementation for <strong>ADS 8192: Developing Scientific Applications — Unit 1</strong>. This R package serves as both the source of all Unit 1 lecture content and the living reference implementation that students follow as they build their own packages.</p>
+<p>At the end of the course, students will be able to:</p>
+<ul>
+<li><p>Transform early-stage, exploratory research code into robust, maintainable, and scalable scientific applications and pipelines by applying software design principles, modular architectures, and well-defined interfaces. (CLO#1)</p></li>
+<li><p>Develop reproducible and portable computational environments, including encapsulated application deployments, and validate consistent execution across operating systems and computing platforms. (CLO#2)</p></li>
+<li><p>Utilize interoperable data structures and automated analytical workflows that support scalable execution, reuse, and integration within larger biomedical data science pipelines. (CLO#3)</p></li>
+<li><p>Apply collaborative software development practices, including version control and quality assurance, while effectively leveraging AI-assisted tools to accelerate development, testing, and documentation in a responsible and transparent manner. (CLO#4)</p></li>
+<li><p>Deploy and operate scientific applications on shared or remote computational infrastructures, and assess performance, reliability, cost, and resource trade-offs in applied biomedical settings. (CLO#5)</p></li>
+<li><p>Produce comprehensive documentation, automated tests, and standardized outputs that enable reproducibility and clearly communicate methods, assumptions, and results to diverse scientific and stakeholder audiences. (CLO#6)</p></li>
+</ul>
+<p>This unit touches on all of these objectives, but places particular emphasis on CLOs 1, 3, 5, and 6.</p>
 <div class="section level2">
 <h2 id="unit-1-overview">Unit 1 Overview<a class="anchor" aria-label="anchor" href="#unit-1-overview"></a>
 </h2>
-<p>Unit 1 teaches graduate students to build <strong>complete, reproducible scientific software in R</strong> — from raw analysis functions through a fully packaged, documented, and deployable application. The unit is organized around core software engineering principles that apply in any language or domain:</p>
+<p>Unit 1 teaches graduate students to build <strong>complete, reproducible scientific software in R</strong> — from raw analysis functions through a fully packaged, documented, and deployable application. The unit is organized around a common software engineering principle that applies in any language or domain:</p>
 <blockquote>
 <p><strong>Separation of concerns.</strong> Write your analysis logic once as small, testable, composable functions. Then add thin presentation layers — an R API, a Shiny web app, and a command-line interface — that delegate to those functions without duplicating logic.</p>
 </blockquote>
@@ -94,7 +104,7 @@
 <li>
 <strong>Document thoroughly.</strong> Every exported function gets <code>roxygen2</code> documentation; the package ships a <code>pkgdown</code> site; a README and vignette provide onboarding for new users.</li>
 <li>
-<strong>Test meaningfully.</strong> <code>testthat</code> (edition 3) tests cover both expected behavior and informative error cases, giving confidence that changes don’t silently break results.</li>
+<strong>Test meaningfully.</strong> <code>testthat</code> tests cover both expected behavior and informative error cases, giving confidence that changes don’t silently break results.</li>
 <li>
 <strong>Think about user experience.</strong> Shiny apps include input validation with friendly messages; CLIs print help text and produce standard file formats (TSV); error messages tell the user <em>what went wrong and what to do about it</em>.</li>
 <li>
@@ -185,9 +195,9 @@
 </tr></thead>
 <tbody>
 <tr class="odd">
-<td>03</td>
+<td>04</td>
 <td>Data Structures &amp; Bioconductor</td>
-<td>Build a <code>SummarizedExperiment</code> from scratch; write constructor, analysis, plotting, and export functions with input validation</td>
+<td>Build an S4 class from scratch; write constructor, analysis, plotting, and export functions with input validation for homework 1</td>
 </tr>
 <tr class="even">
 <td>05</td>
@@ -241,7 +251,8 @@
 <div class="section level3">
 <h3 id="hw1--culminating-project">HW1 — Culminating Project<a class="anchor" aria-label="anchor" href="#hw1--culminating-project"></a>
 </h3>
-<p>HW1 is the capstone deliverable for Unit 1. Each student selects a project (or proposes a custom one) and delivers a public GitHub repository containing an R package with:</p>
+<p>HW1 is the capstone deliverable for Unit 1 and will be what students work on during labs.</p>
+<p>Each student selects a project (or proposes a custom one) and delivers a public GitHub repository containing an R package with:</p>
 <table class="table">
 <colgroup>
 <col width="27%">
@@ -262,7 +273,7 @@
 <tr class="even">
 <td>Core Analysis Functions</td>
 <td>5</td>
-<td>Analysis, summary, and plotting functions operating on SE/SCE objects</td>
+<td>Analysis, summary, and plotting functions operating on common data structures</td>
 </tr>
 <tr class="odd">
 <td>Testing</td>
@@ -295,22 +306,18 @@
 </tbody>
 </table>
 <p>Projects span bulk RNA-seq (<code>SummarizedExperiment</code>) and single-cell RNA-seq (<code>SingleCellExperiment</code>) analyses — PCA, UMAP, differential expression, clustering, QC, normalization, heatmaps, gene set scoring, correlation networks, and more. All use real Bioconductor datasets.</p>
+<p>As we progress through the lectures, we’ll build out the reference implementation for one of these projects (PCA Explorer) in this repository. Students will follow the same design and structure to build their own package, but with their chosen analysis and dataset.</p>
 </div>
 </div>
 <div class="section level2">
 <h2 id="reference-implementation-this-package">Reference Implementation (This Package)<a class="anchor" aria-label="anchor" href="#reference-implementation-this-package"></a>
 </h2>
-<p>This repository <strong>is</strong> the reference implementation (Project 0: PCA Explorer). Students cannot choose this project but use it as a structural guide. It demonstrates the full layered architecture — core analysis functions with R API, Shiny, and CLI presentation layers — on the Bioconductor <code>airway</code> dataset (human airway smooth muscle RNA-seq, 8 samples, dexamethasone treatment vs. control).</p>
+<p>This repository <strong>is</strong> the reference implementation (Project 0: PCA Explorer). Students cannot choose this project but use it as a structural guide. It demonstrates the full layered architecture — core analysis functions with R API, Shiny, and CLI presentation layers — for a basic R package providing PCA tooling.</p>
 <div class="section level3">
 <h3 id="installation">Installation<a class="anchor" aria-label="anchor" href="#installation"></a>
 </h3>
 <div class="sourceCode" id="cb1"><pre class="downlit sourceCode r">
-<code class="sourceCode R"><span><span class="co"># Install Bioconductor dependencies</span></span>
-<span><span class="kw">if</span> <span class="op">(</span><span class="op">!</span><span class="kw"><a href="https://rdrr.io/r/base/library.html" class="external-link">require</a></span><span class="op">(</span><span class="st"><a href="https://bioconductor.github.io/BiocManager/" class="external-link">"BiocManager"</a></span>, quietly <span class="op">=</span> <span class="cn">TRUE</span><span class="op">)</span><span class="op">)</span></span>
-<span>    <span class="fu"><a href="https://rdrr.io/r/utils/install.packages.html" class="external-link">install.packages</a></span><span class="op">(</span><span class="st">"BiocManager"</span><span class="op">)</span></span>
-<span><span class="fu">BiocManager</span><span class="fu">::</span><span class="fu"><a href="https://bioconductor.github.io/BiocManager/reference/install.html" class="external-link">install</a></span><span class="op">(</span><span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="st">"SummarizedExperiment"</span>, <span class="st">"airway"</span><span class="op">)</span><span class="op">)</span></span>
-<span></span>
-<span><span class="co"># Install the course package</span></span>
+<code class="sourceCode R"><span><span class="co"># Install the course package</span></span>
 <span><span class="fu">remotes</span><span class="fu">::</span><span class="fu">install_github</span><span class="op">(</span><span class="st">"St-Jude-MS-ABDS/ADS8192"</span><span class="op">)</span></span></code></pre></div>
 </div>
 <div class="section level3">

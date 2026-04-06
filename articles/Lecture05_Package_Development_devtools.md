@@ -63,11 +63,11 @@ script. But scripts have limitations:
 
 | Script                          | Package                                                                            |
 |---------------------------------|------------------------------------------------------------------------------------|
-| `source("path/to/file.R")`      | [`library(sePCA)`](https://rdrr.io/r/base/library.html)                            |
+| `source("path/to/file.R")`      | [`library(ADS8192)`](https://github.com/St-Jude-MS-ABDS/ADS8192)                   |
 | Paths break when you move files | Installed; works anywhere                                                          |
 | Dependency conflicts            | Explicit dependency management                                                     |
 | No help documentation           | [`?run_pca`](https://st-jude-ms-abds.github.io/ADS8192/reference/run_pca.md) works |
-| Hard to share                   | `install_github("you/sePCA")`                                                      |
+| Hard to share                   | `install_github("you/ADS8192")`                                                    |
 | No tests                        | Automated testing with testthat                                                    |
 
 **A package is the fundamental unit of shareable, reproducible code in
@@ -93,14 +93,12 @@ expose, what it should hide, and how users should move through the API.
 
 Before we begin, ensure you have:
 
-Your `analysis_core.R` script from Lecture 3 with the five functions
+Your `analysis_core.R` script from Lecture 3 with analysis functions
 
 Git installed and configured
 (`git config --global user.name "Your Name"`)
 
 A GitHub account
-
-RStudio (recommended) or another IDE with R support
 
 ``` r
 # Install development tools if needed
@@ -146,20 +144,32 @@ library(usethis)
 
 # Create the package (choose your own name!)
 # This creates a new directory with the package structure
-create_package("~/sePCA")  # Or wherever you want it
+create_package("~/ADS8192")  # Or wherever you want it
 
 # This will open a new RStudio session in the package directory
 ```
 
 After running this, you’ll see:
 
-    sePCA/
+    ADS8192/
     ├── .Rbuildignore
     ├── .gitignore
     ├── DESCRIPTION
     ├── NAMESPACE
     ├── R/
-    └── sePCA.Rproj
+    └── ADS8192.Rproj
+
+> **Note:** Two important files are created automatically by `usethis`:
+>
+> - **`.Rbuildignore`** — tells `R CMD build` which files to exclude
+>   from the package tarball. For example, the `.Rproj` file,
+>   `data-raw/` scripts, and development notes should be listed here.
+>   They don’t belong in the installed package.
+> - **`.gitignore`** — tells Git which files not to track. This
+>   typically includes compiled artifacts (`.o`, `.so`), `.Rproj.user/`,
+>   and temporary files. You rarely need to edit these manually —
+>   `usethis` functions like `use_data_raw()` automatically add the
+>   right entries.
 
 ### Step 2: Initialize Git
 
@@ -186,7 +196,7 @@ use_github()
 
 # If this doesn't work, you can create the repo manually on GitHub
 # and then add the remote via the terminal:
-# git remote add origin https://github.com/your-username/sePCA.git
+# git remote add origin https://github.com/your-username/ADS8192.git
 # git push -u origin main
 ```
 
@@ -209,10 +219,10 @@ The `DESCRIPTION` file is the heart of your package metadata. Open it
 and edit:
 
 ``` yaml
-Package: sePCA
-Title: PCA Analysis for SummarizedExperiment Objects
+Package: ADS8192
+Title: ADS 8192 PCA Analysis Tools
 Version: 0.0.0.9000
-Authors@R: 
+Authors@R:
     person("Your", "Name", email = "you@example.com", role = c("aut", "cre"),
            comment = c(ORCID = "YOUR-ORCID-ID"))
 Description: Provides functions to perform principal component analysis (PCA)
@@ -273,7 +283,7 @@ like, but a common pattern:
     ├── data.R         # Functions for data handling (top_variable_features)
     ├── pca.R          # PCA-related functions
     ├── plotting.R     # Visualization functions
-    └── sePCA-package.R  # Package-level documentation
+    └── ADS8192-package.R  # Package-level documentation
 
 ### Create the Files
 
@@ -413,7 +423,7 @@ use_data_raw("example_se")
 This creates `data-raw/example_se.R`. Edit it:
 
 ``` r
-# data-raw/example_se.R
+# data-raw/example_se.R — creates example_se dataset
 
 # Create a small example SummarizedExperiment
 library(SummarizedExperiment)
@@ -568,10 +578,10 @@ Open a **fresh R session** (important!) and try:
 
 ``` r
 # Install from GitHub
-# remotes::install_github("your-username/sePCA")
+# remotes::install_github("your-username/ADS8192")
 
 # Load and test
-library(sePCA)
+library(ADS8192)
 data(example_se)
 
 result <- run_pca(example_se)
@@ -593,24 +603,24 @@ Edit `README.Rmd`:
 output: github_document
 ---
 
-# sePCA
+# ADS8192
 
 <!-- badges: start -->
 <!-- badges: end -->
 
-sePCA provides tools for performing PCA on SummarizedExperiment objects.
+ADS8192 provides tools for performing PCA on SummarizedExperiment objects.
 
 ## Installation
- 
+
 ```r
 # Install from GitHub
-remotes::install_github("your-username/sePCA")
+remotes::install_github("your-username/ADS8192")
 ```
 
 ## Quick Start
 
 ```r
-library(sePCA)
+library(ADS8192)
 library(airway)
 
 # Load example data
@@ -680,14 +690,14 @@ Add a package-level documentation file:
 use_package_doc()
 ```
 
-Edit `R/sePCA-package.R` to describe the package purpose and main
+Edit `R/ADS8192-package.R` to describe the package purpose and main
 functions.
 
 ### Micro-task 2: Fresh Install Test
 
 From a fresh R session (restart R first!):
 
-1.  Install your package: `remotes::install_github("you/sePCA")`
+1.  Install your package: `remotes::install_github("you/ADS8192")`
 2.  Run the README example
 3.  Fix any issues
 
@@ -696,7 +706,7 @@ From a fresh R session (restart R first!):
 ## Quick Reference
 
 ``` r
-# Package development workflow
+# Package development quick reference
 library(devtools)
 library(usethis)
 

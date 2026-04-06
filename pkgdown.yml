@@ -5,7 +5,7 @@ articles:
   articles/course-setup: course-setup.html
   getting-started: getting-started.html
   articles/HW1_Rubric: HW1_Rubric.html
-  articles/Lecture03_Data_Structures_Bioconductor: Lecture03_Data_Structures_Bioconductor.html
+  articles/Lecture04_Data_Structures_Bioconductor: Lecture04_Data_Structures_Bioconductor.html
   articles/Lecture05_Package_Development_devtools: Lecture05_Package_Development_devtools.html
   articles/Lecture06_Package_Development_pkgdown_testthat: Lecture06_Package_Development_pkgdown_testthat.html
   articles/Lecture07_Shiny_Reactivity: Lecture07_Shiny_Reactivity.html
@@ -14,7 +14,7 @@ articles:
   articles/Lecture10_CLI_Packaging_Installation: Lecture10_CLI_Packaging_Installation.html
   articles/Lecture11_Review_QA: Lecture11_Review_QA.html
   articles/project-selection: project-selection.html
-last_built: 2026-04-01T21:32Z
+last_built: 2026-04-06T19:00Z
 urls:
   reference: https://st-jude-ms-abds.github.io/ADS8192/reference
   article: https://st-jude-ms-abds.github.io/ADS8192/articles

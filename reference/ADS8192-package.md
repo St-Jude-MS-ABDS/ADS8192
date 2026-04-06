@@ -43,7 +43,7 @@ Useful links:
 
 - <https://github.com/St-Jude-MS-ABDS/ADS8192>
 
-- <https://automatic-engine-4qp7m5e.pages.github.io/>
+- <https://st-jude-ms-abds.github.io/ADS8192/>
 
 - Report bugs at <https://github.com/St-Jude-MS-ABDS/ADS8192/issues>
 

@@ -147,17 +147,17 @@ This creates `tests/testthat/test-data.R`. Edit it:
 # tests/testthat/test-data.R
 
 test_that("top_variable_features returns correct subset size", {
-    data(example_se, package = "sePCA")
-    
+    data(example_se, package = "ADS8192")
+
     se_top <- top_variable_features(example_se, n = 50)
-    
+
     expect_equal(nrow(se_top), 50)
     expect_equal(ncol(se_top), ncol(example_se))  # Same samples
 })
 
 test_that("top_variable_features returns most variable genes", {
-    data(example_se, package = "sePCA")
-    
+    data(example_se, package = "ADS8192")
+
     se_top <- top_variable_features(example_se, n = 10)
     mat <- SummarizedExperiment::assay(se_top, "counts")
     vars <- apply(mat, 1, var)
@@ -169,18 +169,18 @@ test_that("top_variable_features returns most variable genes", {
 })
 
 test_that("top_variable_features handles n > nrow gracefully", {
-    data(example_se, package = "sePCA")
-    
+    data(example_se, package = "ADS8192")
+
     se_all <- top_variable_features(example_se, n = 100000)
-    
+
     expect_equal(nrow(se_all), nrow(example_se))
 })
 
 test_that("run_pca returns correct structure", {
-    data(example_se, package = "sePCA")
-    
+    data(example_se, package = "ADS8192")
+
     result <- run_pca(example_se, n_top = 50)
-    
+
     expect_type(result, "list")
     expect_named(result, c("pca", "scores"))
 })
@@ -193,11 +193,11 @@ Every test follows this pattern:
 ``` r
 test_that("description of what we're testing", {
     # ARRANGE - Set up data and conditions
-    data(example_se, package = "sePCA")
-    
+    data(example_se, package = "ADS8192")
+
     # ACT - Run the code being tested
     result <- top_variable_features(example_se, n = 50)
-    
+
     # ASSERT - Check the results
     expect_equal(nrow(result), 50)
 })
@@ -217,12 +217,54 @@ test_file("tests/testthat/test-data.R")
 
 Expected output:
 
-    ℹ Testing sePCA
+    ℹ Testing ADS8192
     ✔ | F W S  OK | Context
     ✔ |         4 | data
 
     ══ Results ═════════════════════════════════════════════════════════════════
     [ FAIL 0 | WARN 0 | SKIP 0 | PASS 4 ]
+
+------------------------------------------------------------------------
+
+## Common testthat Expectations
+
+``` r
+# Common testthat expect_*() functions — reference
+
+# Equality
+expect_equal(x, y)           # Equal with tolerance
+expect_identical(x, y)       # Exactly identical
+
+# Types and classes
+expect_type(x, "list")       # Base R type
+expect_s3_class(x, "data.frame")  # S3 class
+expect_s4_class(x, "SummarizedExperiment")  # S4 class
+
+# Logical
+expect_true(x)
+expect_false(x)
+expect_null(x)
+
+# Errors and warnings
+expect_error(f(), "pattern")     # Function errors with message
+expect_warning(f(), "pattern")   # Function warns with message
+expect_message(f(), "pattern")   # Function messages
+
+# Comparisons
+expect_gt(x, y)   # x > y
+expect_lt(x, y)   # x < y
+expect_gte(x, y)  # x >= y
+expect_lte(x, y)  # x <= y
+
+# Collections
+expect_length(x, 5)
+expect_named(x, c("a", "b"))
+expect_contains(x, "value")
+
+# Output
+expect_output(print(x), "pattern")
+expect_snapshot(x)  # For complex output comparisons
+```
 
 ------------------------------------------------------------------------
 
@@ -241,8 +283,8 @@ doesn’t validate that `n_top` is a positive integer. Let’s fix that.
 
 ``` r
 test_that("run_pca errors on negative n_top", {
-    data(example_se, package = "sePCA")
-    
+    data(example_se, package = "ADS8192")
+
     expect_error(run_pca(example_se, n_top = -5), "positive")
 })
 ```
@@ -265,7 +307,7 @@ run_pca <- function(se, assay_name = "counts", n_top = 500,
     if (!is.numeric(n_top) || n_top <= 0) {
         stop("n_top must be a positive number")
     }
-    
+
     # ... rest of function
 }
 ```
@@ -288,10 +330,10 @@ use_test("pca")
 # tests/testthat/test-pca.R
 
 test_that("run_pca returns correct structure", {
-    data(example_se, package = "sePCA")
-    
+    data(example_se, package = "ADS8192")
+
     result <- run_pca(example_se, n_top = 50)
-    
+
     expect_type(result, "list")
     expect_named(result, c("pca", "scores"))
     expect_s3_class(result$pca, "prcomp")
@@ -299,20 +341,20 @@ test_that("run_pca returns correct structure", {
 })
 
 test_that("run_pca scores contain sample metadata", {
-    data(example_se, package = "sePCA")
-    
+    data(example_se, package = "ADS8192")
+
     result <- run_pca(example_se, n_top = 50)
-    
+
     # Should have treatment column from colData
     expect_true("treatment" %in% colnames(result$scores))
     expect_true("sample_id" %in% colnames(result$scores))
 })
 
 test_that("run_pca returns expected number of PCs", {
-    data(example_se, package = "sePCA")
-    
+    data(example_se, package = "ADS8192")
+
     result <- run_pca(example_se, n_top = 50)
-    
+
     # Should have PCs equal to min(n_samples, n_features)
     n_samples <- ncol(example_se)
     expect_true(paste0("PC", 1) %in% colnames(result$scores))
@@ -320,14 +362,14 @@ test_that("run_pca returns expected number of PCs", {
 })
 
 test_that("pca_variance_explained returns percentages", {
-    data(example_se, package = "sePCA")
-    
+    data(example_se, package = "ADS8192")
+
     result <- run_pca(example_se, n_top = 50)
     var_df <- pca_variance_explained(result)
-    
+
     # Variance should sum to 100
     expect_equal(sum(var_df$variance_percent), 100, tolerance = 0.01)
-    
+
     # Should be sorted descending (PC1 explains most)
     expect_true(var_df$variance_percent[1] >= var_df$variance_percent[2])
 })
@@ -374,7 +416,7 @@ This creates a `docs/` directory with the website. Open
 Edit `_pkgdown.yml`:
 
 ``` yaml
-url: https://your-username.github.io/sePCA/
+url: https://your-username.github.io/ADS8192/
 
 template:
   bootstrap: 5
@@ -390,13 +432,13 @@ reference:
     desc: "Create and manipulate SummarizedExperiment objects"
     contents:
       - top_variable_features
-  
+
   - title: "PCA Analysis"
     desc: "Run and analyze PCA"
     contents:
       - run_pca
       - pca_variance_explained
-  
+
   - title: "Visualization"
     desc: "Create plots"
     contents:
@@ -411,7 +453,7 @@ articles:
 ### Create a “Getting Started” Article
 
 ``` r
-use_vignette("getting-started", title = "Getting Started with sePCA")
+use_vignette("getting-started", title = "Getting Started with ADS8192")
 ```
 
 This creates `vignettes/getting-started.Rmd`. Edit it to include a
@@ -419,10 +461,10 @@ tutorial:
 
 ```` markdown
 ---
-title: "Getting Started with sePCA"
+title: "Getting Started with ADS8192"
 output: rmarkdown::html_vignette
 vignette: >
-  %\VignetteIndexEntry{Getting Started with sePCA}
+  %\VignetteIndexEntry{Getting Started with ADS8192}
   %\VignetteEngine{knitr::rmarkdown}
   %\VignetteEncoding{UTF-8}
 ---
@@ -436,12 +478,12 @@ knitr::opts_chunk$set(
 
 ## Introduction
 
-sePCA makes it easy to run PCA on RNA-seq data stored in SummarizedExperiment objects.
+ADS8192 makes it easy to run PCA on RNA-seq data stored in SummarizedExperiment objects.
 
 ## Quick Example
 
 ```{r example}
-library(sePCA)
+library(ADS8192)
 
 # Load example data
 data(example_se)
@@ -526,7 +568,7 @@ This creates `.github/workflows/pkgdown.yaml` that:
 
 1.  Builds the pkgdown site
 2.  Deploys to the `gh-pages` branch
-3.  GitHub Pages serves it at `https://username.github.io/sePCA/`
+3.  GitHub Pages serves it at `https://username.github.io/ADS8192/`
 
 ### Configure GitHub Pages
 
@@ -563,8 +605,8 @@ This adds to your README:
 
 ``` markdown
 <!-- badges: start -->
-[![R-CMD-check](https://github.com/user/sePCA/actions/workflows/R-CMD-check.yaml/badge.svg)](https://github.com/user/sePCA/actions/workflows/R-CMD-check.yaml)
-[![pkgdown](https://github.com/user/sePCA/actions/workflows/pkgdown.yaml/badge.svg)](https://github.com/user/sePCA/actions/workflows/pkgdown.yaml)
+[![R-CMD-check](https://github.com/user/ADS8192/actions/workflows/R-CMD-check.yaml/badge.svg)](https://github.com/user/ADS8192/actions/workflows/R-CMD-check.yaml)
+[![pkgdown](https://github.com/user/ADS8192/actions/workflows/pkgdown.yaml/badge.svg)](https://github.com/user/ADS8192/actions/workflows/pkgdown.yaml)
 <!-- badges: end -->
 ```
 
@@ -583,7 +625,7 @@ use_r("export")
 ```
 
 ``` r
-# R/export.R
+# R/export.R — save_pca_results() function
 
 #' Save PCA results to files
 #'
@@ -603,7 +645,7 @@ save_pca_results <- function(pca_result, output_dir, prefix = "pca") {
     if (!dir.exists(output_dir)) {
         dir.create(output_dir, recursive = TRUE)
     }
-    
+
     # Save scores
     scores_file <- file.path(output_dir, paste0(prefix, "_scores.tsv"))
     utils::write.table(
@@ -613,7 +655,7 @@ save_pca_results <- function(pca_result, output_dir, prefix = "pca") {
         row.names = FALSE,
         quote = FALSE
     )
-    
+
     # Save variance explained
     var_file <- file.path(output_dir, paste0(prefix, "_variance.tsv"))
     var_df <- pca_variance_explained(pca_result)
@@ -624,10 +666,10 @@ save_pca_results <- function(pca_result, output_dir, prefix = "pca") {
         row.names = FALSE,
         quote = FALSE
     )
-    
+
     message("Saved: ", scores_file)
     message("Saved: ", var_file)
-    
+
     invisible(NULL)
 }
 ```
@@ -648,19 +690,19 @@ use_test("export")
 # tests/testthat/test-export.R
 
 test_that("save_pca_results creates files", {
-    data(example_se, package = "sePCA")
+    data(example_se, package = "ADS8192")
     result <- run_pca(example_se, n_top = 50)
-    
+
     # Use a temporary directory
     tmp_dir <- tempdir()
     output_dir <- file.path(tmp_dir, "test_output")
-    
+
     save_pca_results(result, output_dir, prefix = "test")
-    
+
     # Check files exist
     expect_true(file.exists(file.path(output_dir, "test_scores.tsv")))
     expect_true(file.exists(file.path(output_dir, "test_variance.tsv")))
-    
+
     # Check scores file has correct structure
     scores <- read.table(
         file.path(output_dir, "test_scores.tsv"),
@@ -669,7 +711,7 @@ test_that("save_pca_results creates files", {
     )
     expect_true("PC1" %in% colnames(scores))
     expect_true("sample_id" %in% colnames(scores))
-    
+
     # Clean up
     unlink(output_dir, recursive = TRUE)
 })
@@ -742,46 +784,6 @@ Build the pkgdown site locally and commit the config changes
 ### Optional: Badges
 
 Add R CMD check and pkgdown badges to your README.
-
-------------------------------------------------------------------------
-
-## Common testthat Expectations
-
-``` r
-# Equality
-expect_equal(x, y)           # Equal with tolerance
-expect_identical(x, y)       # Exactly identical
-
-# Types and classes
-expect_type(x, "list")       # Base R type
-expect_s3_class(x, "data.frame")  # S3 class
-expect_s4_class(x, "SummarizedExperiment")  # S4 class
-
-# Logical
-expect_true(x)
-expect_false(x)
-expect_null(x)
-
-# Errors and warnings
-expect_error(f(), "pattern")     # Function errors with message
-expect_warning(f(), "pattern")   # Function warns with message
-expect_message(f(), "pattern")   # Function messages
-
-# Comparisons
-expect_gt(x, y)   # x > y
-expect_lt(x, y)   # x < y
-expect_gte(x, y)  # x >= y
-expect_lte(x, y)  # x <= y
-
-# Collections
-expect_length(x, 5)
-expect_named(x, c("a", "b"))
-expect_contains(x, "value")
-
-# Output
-expect_output(print(x), "pattern")
-expect_snapshot(x)  # For complex output comparisons
-```
 
 ------------------------------------------------------------------------
 

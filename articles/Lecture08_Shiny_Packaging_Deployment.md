@@ -5,7 +5,7 @@
 By the end of this session, you will be able to:
 
 1.  Add a Shiny application to the package as a function and document it
-2.  Deploy the application to a hosting platform (shinyapps.io or Posit
+2.  Deploy the application to a hosting platform (Posit Connect or Posit
     Cloud)
 3.  Add inputs for flexibility and interactive elements in outputs
 4.  Explain why packaging, optional dependencies, and deployment are
@@ -67,16 +67,16 @@ After packaging, users can:
 
 ``` r
 # Install once
-remotes::install_github("you/sePCA")
+remotes::install_github("you/ADS8192")
 
 # Run anywhere
-sePCA::run_app()
+ADS8192::run_app()
 ```
 
 Benefits:
 
 - **Single install command** handles all dependencies
-- **Works anywhere** — no file paths to manage  
+- **Works anywhere** — no file paths to manage
 - **Version-controlled** — users get consistent behavior
 - **Documented** —
   [`?run_app`](https://st-jude-ms-abds.github.io/ADS8192/reference/run_app.md)
@@ -103,7 +103,7 @@ declared, and how should failures be handled for real users.
 
 The conventional location is `inst/app/`:
 
-    sePCA/
+    ADS8192/
     ├── DESCRIPTION
     ├── NAMESPACE
     ├── R/
@@ -119,7 +119,7 @@ The conventional location is `inst/app/`:
 Why `inst/`?
 
 - Files in `inst/` are copied as-is when the package is installed
-- They’re accessible via `system.file("app", package = "sePCA")`
+- They’re accessible via `system.file("app", package = "ADS8192")`
 - The actual app logic lives in `R/` for documentation and testing
 
 ### Step 1: Create the Directory Structure
@@ -134,7 +134,7 @@ dir.create("inst/app", recursive = TRUE)
 #### R/app_ui.R
 
 ``` r
-# R/app_ui.R
+# R/app_ui.R — Shiny UI definition
 
 #' Shiny App UI
 #'
@@ -142,12 +142,12 @@ dir.create("inst/app", recursive = TRUE)
 #' @noRd
 app_ui <- function() {
     bslib::page_sidebar(
-        title = "sePCA Explorer",
+        title = "ADS8192 Explorer",
         theme = bslib::bs_theme(bootswatch = "flatly"),
-        
+
         sidebar = bslib::sidebar(
             shiny::h4(shiny::icon("cogs"), "Analysis Settings"),
-            
+
             shiny::numericInput(
                 "n_top",
                 "Top variable genes:",
@@ -155,18 +155,18 @@ app_ui <- function() {
             ),
             shiny::checkboxInput("log_transform", "Log-transform counts", TRUE),
             shiny::checkboxInput("scale", "Scale features", TRUE),
-            
+
             shiny::hr(),
             shiny::h4(shiny::icon("palette"), "Visualization"),
-            
+
             shiny::selectInput("color_by", "Color by:", choices = NULL),
             shiny::selectInput("shape_by", "Shape by:", choices = NULL),
             shiny::sliderInput("point_size", "Point size:", 4, 1, 10, 1),
-            
+
             shiny::hr(),
             shiny::downloadButton("download_plot", "Download Plot")
         ),
-        
+
         bslib::navset_card_tab(
             bslib::nav_panel(
                 "PCA Plot",
@@ -188,7 +188,7 @@ app_ui <- function() {
 #### R/app_server.R
 
 ``` r
-# R/app_server.R
+# R/app_server.R — Shiny server logic
 
 #' Shiny App Server
 #'
@@ -209,7 +209,7 @@ app_server <- function(input, output, session) {
         data("airway", package = "airway", envir = environment())
         get("airway", envir = environment())
     })
-    
+
     # Update select inputs based on available metadata
     shiny::observe({
         se <- se_data()
@@ -217,11 +217,11 @@ app_server <- function(input, output, session) {
         shiny::updateSelectInput(session, "color_by", choices = cols)
         shiny::updateSelectInput(session, "shape_by", choices = c("None", cols))
     })
-    
+
     # Compute PCA
     pca_result <- shiny::reactive({
         shiny::req(se_data(), input$n_top)
-        
+
         run_pca(
             se_data(),
             n_top = input$n_top,
@@ -229,17 +229,17 @@ app_server <- function(input, output, session) {
             scale = input$scale
         )
     })
-    
+
     # PCA scatter plot
     output$pca_plot <- shiny::renderPlot({
         shiny::req(pca_result(), input$color_by)
-        
+
         shape <- if (is.null(input$shape_by) || input$shape_by == "None") {
             NULL
         } else {
             input$shape_by
         }
-        
+
         plot_pca(
             pca_result(),
             color_by = input$color_by,
@@ -247,15 +247,15 @@ app_server <- function(input, output, session) {
             point_size = input$point_size
         )
     })
-    
+
     # Variance plot
     output$variance_plot <- shiny::renderPlot({
         shiny::req(pca_result())
-        
+
         var_df <- pca_variance_explained(pca_result())
         var_df <- var_df[seq_len(min(8, nrow(var_df))), ]
         var_df$PC <- factor(var_df$PC, levels = var_df$PC)
-        
+
         ggplot2::ggplot(var_df, ggplot2::aes(x = .data$PC, y = .data$variance_percent)) +
             ggplot2::geom_col(fill = "steelblue") +
             ggplot2::geom_text(
@@ -269,7 +269,7 @@ app_server <- function(input, output, session) {
             ) +
             ggplot2::ylim(0, max(var_df$variance_percent) * 1.15)
     })
-    
+
     # Scores table
     output$scores_table <- DT::renderDataTable({
         shiny::req(pca_result())
@@ -278,7 +278,7 @@ app_server <- function(input, output, session) {
             options = list(pageLength = 10, scrollX = TRUE)
         )
     })
-    
+
     # Download handler
     output$download_plot <- shiny::downloadHandler(
         filename = function() {
@@ -290,14 +290,14 @@ app_server <- function(input, output, session) {
             } else {
                 input$shape_by
             }
-            
+
             p <- plot_pca(
                 pca_result(),
                 color_by = input$color_by,
                 shape_by = shape,
                 point_size = input$point_size
             )
-            
+
             ggplot2::ggsave(file, p, width = 8, height = 6, dpi = 150)
         }
     )
@@ -309,7 +309,7 @@ app_server <- function(input, output, session) {
 ``` r
 # R/run_app.R
 
-#' Run the sePCA Shiny Application
+#' Run the ADS8192 Shiny Application
 #'
 #' Launches an interactive Shiny application for exploring PCA results
 #' on SummarizedExperiment data.
@@ -337,13 +337,13 @@ run_app <- function(...) {
     if (!requireNamespace("airway", quietly = TRUE)) {
         stop("Package 'airway' is required. Install with: BiocManager::install('airway')")
     }
-    
+
     app <- shiny::shinyApp(
         ui = app_ui(),
         server = app_server,
         ...
     )
-    
+
     shiny::runApp(app)
 }
 ```
@@ -351,25 +351,25 @@ run_app <- function(...) {
 ### Step 3: Create inst/app/app.R (Optional Entry Point)
 
 This allows running the app via
-`shiny::runApp(system.file("app", package = "sePCA"))`:
+`shiny::runApp(system.file("app", package = "ADS8192"))`:
 
 ``` r
 # inst/app/app.R
 
-# Launch the sePCA Shiny application
+# Launch the ADS8192 Shiny application
 # This file exists for compatibility with runApp()
-# Preferred method: sePCA::run_app()
+# Preferred method: ADS8192::run_app()
 
-if (!requireNamespace("sePCA", quietly = TRUE)) {
-    stop("Please install sePCA first: remotes::install_github('you/sePCA')")
+if (!requireNamespace("ADS8192", quietly = TRUE)) {
+    stop("Please install ADS8192 first: remotes::install_github('you/ADS8192')")
 }
 
-sePCA:::app_ui
-sePCA:::app_server
+ADS8192:::app_ui
+ADS8192:::app_server
 
 shiny::shinyApp(
-    ui = sePCA:::app_ui(),
-    server = sePCA:::app_server
+    ui = ADS8192:::app_ui(),
+    server = ADS8192:::app_server
 )
 ```
 
@@ -411,6 +411,103 @@ Suggests:
 - Keeps the core package lightweight
 - [`run_app()`](https://st-jude-ms-abds.github.io/ADS8192/reference/run_app.md)
   checks for packages at runtime
+
+### Checking for Optional Dependencies
+
+When your function requires a package that is in `Suggests`, you must
+check for it at runtime and give a helpful error message if it’s
+missing. Two approaches:
+
+#### `requireNamespace()` — Lightweight Check
+
+Best for checking inside a function body before using the package:
+
+``` r
+# In run_app() or any function that needs optional packages
+run_app <- function(...) {
+    # Check for CRAN packages
+    if (!requireNamespace("shiny", quietly = TRUE)) {
+        stop(
+            "Package 'shiny' is required to run the app.\n",
+            "Install it with: install.packages('shiny')",
+            call. = FALSE
+        )
+    }
+
+    # Check for Bioconductor packages
+    if (!requireNamespace("airway", quietly = TRUE)) {
+        stop(
+            "Package 'airway' is required to run the app.\n",
+            "Install it with: BiocManager::install('airway')",
+            call. = FALSE
+        )
+    }
+
+    # ... rest of function
+}
+```
+
+#### `rlang::check_installed()` — Richer Messages
+
+[`rlang::check_installed()`](https://rlang.r-lib.org/reference/is_installed.html)
+provides nicer error messages and in some interactive contexts offers to
+install the package for you:
+
+``` r
+run_app <- function(...) {
+    rlang::check_installed(
+        c("shiny", "bslib", "DT"),
+        reason = "to run the Shiny app"
+    )
+    rlang::check_installed(
+        "airway",
+        reason = "to load the example dataset"
+    )
+    # ... rest of function
+}
+```
+
+#### Best Practice: Check Once at the Entry Point
+
+For functions where an entire block of functionality depends on optional
+packages (like
+[`run_app()`](https://st-jude-ms-abds.github.io/ADS8192/reference/run_app.md)),
+check all required packages **once at the top** of the function. Don’t
+scatter checks throughout the code — it leads to confusing partial
+failures:
+
+``` r
+# Good: check everything upfront
+run_app <- function(...) {
+    required_pkgs <- c("shiny", "bslib", "DT")
+    missing_pkgs <- required_pkgs[!sapply(required_pkgs, requireNamespace, quietly = TRUE)]
+    if (length(missing_pkgs) > 0) {
+        stop(
+            "The following packages are required but not installed:\n",
+            paste0("  - ", missing_pkgs, collapse = "\n"), "\n",
+            "Install them with: install.packages(c(",
+            paste0('"', missing_pkgs, '"', collapse = ", "), "))",
+            call. = FALSE
+        )
+    }
+
+    if (!requireNamespace("airway", quietly = TRUE)) {
+        stop(
+            "Package 'airway' (Bioconductor) is required.\n",
+            "Install it with: BiocManager::install('airway')",
+            call. = FALSE
+        )
+    }
+
+    # All dependencies confirmed — proceed
+    app <- shiny::shinyApp(ui = app_ui(), server = app_server, ...)
+    shiny::runApp(app)
+}
+```
+
+This pattern is exactly what the
+[`ADS8192::run_app()`](https://st-jude-ms-abds.github.io/ADS8192/reference/run_app.md)
+function uses.
 
 ### Graceful Fallbacks
 
@@ -472,10 +569,10 @@ vignette: >
 
 ## Launching the App
 
-After installing sePCA, launch the interactive PCA explorer:
+After installing ADS8192, launch the interactive PCA explorer:
 
 ```r
-library(sePCA)
+library(ADS8192)
 run_app()
 ```
 
@@ -610,24 +707,24 @@ Create `tests/testthat/test-app.R`:
 test_that("app starts without error", {
     skip_on_cran()  # Skip on CRAN (no display)
     skip_if_not_installed("shinytest2")
-    
+
     app <- shinytest2::AppDriver$new(
-        app_dir = system.file("app", package = "sePCA"),
+        app_dir = system.file("app", package = "ADS8192"),
         name = "pca-app"
     )
-    
+
     # Check initial state
     expect_equal(app$get_value(input = "n_top"), 500)
-    
+
     # Change an input
     app$set_inputs(n_top = 1000)
-    
+
     # Wait for outputs to update
     app$wait_for_idle()
-    
+
     # Take a snapshot (optional)
     app$expect_screenshot()
-    
+
     app$stop()
 })
 ```
@@ -650,16 +747,86 @@ No errors in the R console during use
 
 ## Part 6: Deployment
 
-Naturally, we want to share our app with others! There are a few
-different approaches to do this, but the simplest is to deploy to Posit
-Cloud for free.
+After packaging the app inside your R package, you can make it available
+to others in several ways. The right choice depends on your audience,
+infrastructure, and maintenance capacity.
 
-### Option 1: Posit Cloud
+### Deployment Options
+
+| Option                   | Audience               | Cost                | Infrastructure               |
+|--------------------------|------------------------|---------------------|------------------------------|
+| Posit Connect            | Internal/institutional | Subscription        | Posit-managed or self-hosted |
+| Self-hosted Shiny Server | Any                    | Free (open source)  | Your own server              |
+| Posit Cloud              | Teaching/demos         | Free tier available | Posit-managed                |
+
+> **Note:** shinyapps.io has been deprecated and should not be used for
+> new deployments.
+
+#### Option 1: Posit Connect (Recommended for Institutions)
+
+[Posit Connect](https://posit.co/products/enterprise/connect/) is a
+publishing platform for R (and Python) content. It can host Shiny apps,
+R Markdown reports, APIs, and more.
+
+- **Posit-managed hosting**: Posit offers a hosted version — no server
+  to maintain
+- **Self-hosted**: Deploy on your institution’s own server (common in
+  regulated environments like healthcare/research)
+- Supports authentication, scheduled reports, and access control
+- St. Jude users: check with your IT department for institutional access
+
+``` r
+# Deploy to Posit Connect using rsconnect
+install.packages("rsconnect")
+rsconnect::deployApp(
+    appDir = system.file("app", package = "ADS8192"),
+    appName = "ads8192-pca-explorer",
+    server = "your-connect-server.example.com"
+)
+```
+
+#### Option 2: Self-hosted Shiny Server (Open Source)
+
+Run Shiny Server on any Linux VM or HPC login node:
+
+``` bash
+# On a Linux server
+sudo apt-get install r-base
+# Install Shiny Server: https://posit.co/download/shiny-server/
+# Place your app.R in /srv/shiny-server/
+```
+
+Your app is then accessible at `http://your-server:3838/app-name/`.
+
+- Free, open source
+- Full control over the environment
+- Requires server administration (updates, security, SSL)
+- Good option for HPC environments or institutional clusters
+
+#### Option 3: Posit Cloud (Teaching and Demos)
+
+[Posit Cloud](https://posit.cloud/) is a browser-based RStudio
+environment:
 
 1.  Create a new project from Git
-2.  Install your package: `remotes::install_github("you/sePCA")`
-3.  Create an `app.R` that calls `sePCA::run_app()`
-4.  Click “Publish”
+2.  Install your package: `remotes::install_github("you/ADS8192")`
+3.  Create an `app.R` that calls
+    [`ADS8192::run_app()`](https://st-jude-ms-abds.github.io/ADS8192/reference/run_app.md)
+4.  Click **Publish** → **Shiny**
+
+Best for course demonstrations and quick sharing. The free tier has
+compute limitations that make it unsuitable for production use.
+
+#### Choosing a Deployment Strategy
+
+For scientific software in a research institution:
+
+- **Internal tool for your lab**: Posit Connect on institutional
+  infrastructure is the most maintainable option
+- **Public-facing demo**: Posit Cloud is fast to set up
+- **Pipeline-adjacent tool** on an HPC cluster: consider whether a Shiny
+  app is the right interface at all — a CLI or R API may serve pipeline
+  users better
 
 ### Record the URL
 
@@ -668,13 +835,13 @@ After deploying, add to your README:
 ``` markdown
 ## Interactive App
 
-Try the app online: https://your-account.shinyapps.io/sePCA/
-
-Or run locally:
+Run locally:
 
 ```r
-sePCA::run_app()
+ADS8192::run_app()
 ```
+
+Or access the deployed version at: <https://your-deployment-url/>
 
     ---
 
@@ -716,10 +883,10 @@ sePCA::run_app()
     .rs.restartR()
 
     # Install from GitHub
-    remotes::install_github("you/sePCA")
+    remotes::install_github("you/ADS8192")
 
     # Run the app
-    sePCA::run_app()
+    ADS8192::run_app()
 
 ### Micro-task 2: Update README
 
@@ -731,7 +898,8 @@ Add an “Interactive App” section to README with:
 
 ### Optional: Deploy
 
-Deploy to shinyapps.io and record the URL in your README.
+Deploy to Posit Connect or Posit Cloud and record the URL in your
+README.
 
 ------------------------------------------------------------------------
 
@@ -739,7 +907,7 @@ Deploy to shinyapps.io and record the URL in your README.
 
 ### Final Directory Structure
 
-    sePCA/
+    ADS8192/
     ├── DESCRIPTION
     ├── NAMESPACE
     ├── LICENSE.md
