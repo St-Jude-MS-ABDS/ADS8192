@@ -1,0 +1,7 @@
+.container-xxl, .container-xl, .container-lg, .container-md, .container-sm, .container {
+    max-width: 90%;
+}
+
+.row>main {
+    max-width: 70%;
+}
