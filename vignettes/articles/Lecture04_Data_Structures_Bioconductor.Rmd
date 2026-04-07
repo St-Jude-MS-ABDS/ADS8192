@@ -21,6 +21,16 @@ knitr::opts_chunk$set(
 )
 ```
 
+<style type="text/css">
+.container-xxl, .container-xl, .container-lg, .container-md, .container-sm, .container {
+    max-width: 90%;
+}
+
+.row>main {
+    max-width: 70%;
+}
+</style>
+
 # Learning Objectives
 
 By the end of this session, you will be able to:
@@ -538,39 +548,130 @@ rowData(airway_subset)
 colData(airway_subset)
 ```
 
+### Creating a `SummarizedExperiment` from Components
+
+Creating a `SummarizedExperiment` is simple, you just need to provide the assay matrix, sample metadata, and optionally feature metadata. The constructor will check that everything is properly aligned (matching row and column names) and will throw an error if not.
+
+```{r create-se-simple}
+# Minimal example: 3 genes x 3 samples
+counts_mat <- matrix(
+    c(100, 200, 150,
+       50,  80,  60,
+      400, 350, 420),
+    nrow = 3, ncol = 3,
+    dimnames = list(
+        c("GeneA", "GeneB", "GeneC"),
+        c("S1", "S2", "S3")
+    )
+)
+
+sample_meta <- data.frame(
+    treatment = factor(c("ctrl", "trt", "trt")),
+    row.names = c("S1", "S2", "S3")
+)
+
+# rowData is optional — omit it and SE still works fine
+gene_meta <- data.frame(
+    biotype = c("protein_coding", "lncRNA", "protein_coding"),
+    row.names = c("GeneA", "GeneB", "GeneC")
+)
+
+se <- SummarizedExperiment(
+    assays  = list(counts = counts_mat),
+    colData = sample_meta,
+    rowData = gene_meta   # optional
+)
+
+se
+```
+
 ---
  
-# Building the Analysis Core
+# Building Functions
 
-Now we'll build a set of reusable functions that form the "analysis core" of our package. These functions will later be:
+Now we'll switch tack. If you haven't already, choose a project from the [Project Selection Guide](https://st-jude-ms-abds.github.io/ADS8192/articles/project-selection.html).
+
+For the rest of this course, you'll be building a package around that project. 
+
+In this lecture, we'll focus on the "analysis core" — the set of functions that take structured objects as input and return well-defined outputs. These functions will form the backbone of your package and will later be:
 
 1. Packaged into an R package (Lecture 5)
 2. Wrapped by a Shiny app (Lectures 7-8)
 3. Exposed via a CLI (Lectures 9-10)
 
-## Creating a SummarizedExperiment from Components
 
-The `SummarizedExperiment()` constructor is straightforward — pass a named list
-of assay matrices, a sample metadata data.frame, and optionally gene metadata:
+## Getting the Data
+
+First, you'll need data to operate on. All of the projects in the guide have code to pull real data for use.
+
+There are all sorts of avenues to get data for testing and development — from public repositories like GEO and SRA, to simulated data, to data you've generated yourself. 
+
+For this lecture, we'll build a realistic dummy dataset from scratch that mimics the structure of a typical RNA-seq experiment. 
+
+<details>
+<summary>Data preparation code</summary>
 
 ```{r create-se}
-# Extract components from airway
-test_counts <- assay(airway, "counts")
-test_meta <- as.data.frame(colData(airway))
+# --- Build realistic dummy data from scratch ---
+set.seed(42)
+n_genes   <- 5000
+n_samples <- 9                    # 3 groups × 3 replicates
+gene_names   <- paste0("Gene", seq_len(n_genes))
+sample_names <- paste0("S",    seq_len(n_samples))
 
-# Create a new SE directly — the constructor is already a clear one-liner
-my_se <- SummarizedExperiment(
-    assays = list(counts = test_counts),
-    colData = test_meta
+# Background counts: all genes, all samples (Poisson, mean 80)
+counts_mat <- matrix(
+    rpois(n_genes * n_samples, lambda = 80),
+    nrow = n_genes, ncol = n_samples,
+    dimnames = list(gene_names, sample_names)
 )
 
-# Verify it worked
+# Add group-specific signal to distinct marker gene sets (500 genes each).
+# This creates three well-separated clusters in PCA.
+# Group 1 (S1-S3, ctrl):  genes 1-500 upregulated
+counts_mat[1:500,     1:3] <- counts_mat[1:500,     1:3] +
+    matrix(rpois(500 * 3, lambda = 300), 500, 3)
+# Group 2 (S4-S6, trt_A): genes 501-1000 upregulated
+counts_mat[501:1000,  4:6] <- counts_mat[501:1000,  4:6] +
+    matrix(rpois(500 * 3, lambda = 300), 500, 3)
+# Group 3 (S7-S9, trt_B): genes 1001-1500 upregulated
+counts_mat[1001:1500, 7:9] <- counts_mat[1001:1500, 7:9] +
+    matrix(rpois(500 * 3, lambda = 300), 500, 3)
+
+# Sample metadata: 3 treatment groups, 2 batches
+sample_meta <- data.frame(
+    treatment = factor(rep(c("ctrl", "trt_A", "trt_B"), each = 3)),
+    batch     = factor(rep(c("A", "B", "A"), times = 3)),
+    row.names = sample_names
+)
+
+# Gene metadata: biotype sampled for all 5000 genes
+gene_meta <- data.frame(
+    symbol  = gene_names,
+    biotype = sample(
+        c("protein_coding", "lncRNA", "pseudogene", "miRNA"),
+        size    = n_genes,
+        replace = TRUE,
+        prob    = c(0.60, 0.20, 0.15, 0.05)
+    ),
+    row.names = gene_names
+)
+
+# Assemble — row and column names must match across components
+my_se <- SummarizedExperiment(
+    assays  = list(counts = counts_mat),
+    colData = sample_meta,
+    rowData = gene_meta
+)
+
+# Verify: dimensions and structure
 my_se
-dim(my_se)
-colData(my_se)
+dim(my_se)                        # 5000 genes x 9 samples
+colData(my_se)                    # sample treatment and batch
+table(rowData(my_se)$biotype)     # gene biotype breakdown
 ```
 
-> **Exercise:** Modify the constructor call above to also include `rowData`. Extract it from `airway` first, then pass it via the `rowData` argument.
+</details>
 
 ---
 
