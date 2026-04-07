@@ -1,110 +1,19 @@
 # Lecture 4: Data Structures & R Ecosystems (Bioconductor)
 
-## Learning Objectives
+## Motivation
 
-By the end of this session, you will be able to:
+The first half of “data science” is data. This key facet is often
+overlooked and underappreciated, but how data is managed and structured
+is a critical aspect of robust analysis and maintainable scientific
+software. It can enable or constain how quickly and easily you can
+perform analyses, build tools, and collaborate with others.
 
-1.  Generate a `SummarizedExperiment` object from raw assay data and
-    sample metadata
-2.  Find and use Bioconductor package documentation (vignettes/manuals)
-    to select an appropriate existing container before building anything
-    custom
-3.  Build a complete analysis core: constructor, feature selection,
-    analysis, summary, plotting, and export functions
-4.  Prepare a bundled example dataset using a `data-raw/` script
-5.  Write small, testable functions with input validation that take
-    structured objects as input and return well-defined outputs
-6.  See how one set of core functions powers three interfaces (R API,
-    Shiny, CLI)
+If your data structures are reliable and your code accepts and returns
+well-defined objects, you can test them more easily, hand them to
+collaborators with less explanation, and reuse the same code across
+experiments and analyses more effectively.
 
-**Course Learning Outcomes (CLOs):** CLO 1, 3
-
-### Motivation
-
-Scientific software becomes fragile very quickly when assay matrices,
-sample metadata, and feature annotations drift out of sync. A good data
-model prevents entire classes of silent mistakes before you ever write a
-plot, app, or pipeline.
-
-This lecture matters because robust containers and clear function
-contracts save time later. If your data structure is reliable and your
-core functions accept and return well-defined objects, you can test them
-more easily, hand them to collaborators with less explanation, and reuse
-the same analysis logic across package code, Shiny apps, and CLIs
-without constant rewrites.
-
-### Evaluation Checklist
-
-Before you adopt or build a data structure, ask:
-
-- Does it fit the scientific problem and expected scale?
-- Does its data model keep related pieces synchronized?
-- Is the input/output contract explicit and documented?
-- Does it interoperate with packages you and your team already use?
-- Is it maintained and broadly understood in the community?
-- Would extending an existing container be safer than creating a new
-  class?
-
-### Scientific Use Case
-
-A collaborator gives you raw counts, sample metadata, and gene
-annotations as three CSV files from a pilot RNA-seq experiment. You need
-exploratory analysis this week, but six months from now the same work
-may need to support a package, dashboard, or pipeline. Which design
-choices now will keep that future refactor small?
-
-------------------------------------------------------------------------
-
-## Why Do Data Structures Matter?
-
-### The Problem with Loose Data
-
-Imagine you’re analyzing gene expression data. You might have:
-
-- A **counts matrix**: genes × samples
-- A **sample metadata table**: sample info (treatment, batch, etc.)
-- A **gene annotation table**: gene symbols, descriptions, etc.
-
-If these are three separate objects, you face several problems:
-
-``` r
-# Dangerous: Three separate objects that can get out of sync
-counts <- read.csv("counts.csv", row.names = 1)
-sample_info <- read.csv("sample_metadata.csv")
-gene_info <- read.csv("gene_annotations.csv")
-
-# What happens if you subset counts but forget to subset sample_info?
-counts_subset <- counts[, 1:5]
-# sample_info still has all samples - now mismatched!
-
-# What if you accidentally reorder one but not the others?
-counts <- counts[, order(colnames(counts))]
-# Now sample_info doesn't match the column order!
-```
-
-### The Solution: Structured Containers
-
-Bioconductor’s `SummarizedExperiment` class keeps everything
-synchronized:
-
-                        colData (sample metadata)
-                        ┌───────────────────────┐
-                        │ sample treatment batch │
-                        │ S1     trt      A     │
-                        │ S2     ctrl     A     │
-                        │ S3     trt      B     │
-                        └───────────────────────┘
-                                  ↓
-                  ┌───────────────────────────────┐
-                  │        assays (counts)         │
-       rowData    │         S1    S2    S3         │
-       (genes)  → │ gene1  100   150   120         │
-                  │ gene2   50    75    60         │
-                  │ gene3  200   180   210         │
-                  └───────────────────────────────┘
-
-When you subset or reorder a `SummarizedExperiment`, all components stay
-synchronized automatically.
+Thus,
 
 ------------------------------------------------------------------------
 
@@ -124,6 +33,8 @@ Discuss in groups and sketch a simple structure. Think about:
 For instance, if we just used a list with elements for fields we care
 about, it might look like:
 
+Example list-based structure
+
 ``` r
 gene <- list(
     gene_id = "ENSG00000141510",
@@ -137,11 +48,31 @@ gene <- list(
 )
 ```
 
-What are the issues of such a simple approach?
+What are the most immediate issues of such a simple approach?
 
 ------------------------------------------------------------------------
 
-### Why S4 in Bioconductor?
+## Object Oriented Programming in R
+
+R has several systems for defining custom classes and methods, each with
+their own advantages and tradeoffs:
+
+- **[S3](https://adv-r.hadley.nz/s3.html)**: Informal, flexible, and
+  widely used. Classes are just character vectors, and method dispatch
+  is based on naming conventions (e.g., `print.myclass()`). No formal
+  class definitions or validity checks.
+- **[S4](https://adv-r.hadley.nz/s4.html)**: Formal class definitions
+  with typed slots, validity checks, and formal method dispatch. More
+  robust but more verbose and complex to set up.
+- **[R6](https://adv-r.hadley.nz/r6.html)**: Reference classes with
+  mutable state and object-oriented programming features. Less common in
+  bioinformatics but useful for certain applications.
+
+You can read more about these individual systems and [their
+tradeoffs](https://adv-r.hadley.nz/oo-tradeoffs.html) in the Advanced R
+book, but we will focus mostly on S4 for reasons described below.
+
+## Why S4 in Bioconductor?
 
 Bioconductor packages rely heavily on R’s **S4 classes** because they
 provide:
@@ -151,14 +82,24 @@ provide:
 - **Method dispatch** (functions behave differently based on object
   class)
 
-`SummarizedExperiment` is an S4 class. Its formal structure and methods
-keep assays, rowData, and colData synchronized and enforce consistency.
+These are very attractive features for building complex data structures
+that need to be robust and interoperable across a large ecosystem of
+packages. S3 is much more flexible and simpler, but it lacks the formal
+structure and safety guarantees that S4 provides.
+
+S3 provides limited mechanisms to keep users from doing really stupid
+things with your objects, which is important when your objects are
+complex and serve as the basis for many downstream analyses.
+
+S4 also requires more upfront thought and design, which should generally
+be encouraged for scientific software.
 
 ### S4-Style Sketch (Class + Constructor)
 
-Building a custom S4 class for our gene above might look like this. The
-first step is registering the class and its **slots** — the typed fields
-every instance must carry:
+Building a custom S4 class for our gene above might look like this.
+
+The first step is registering the class and its **slots** — the typed
+fields every instance must carry:
 
 ``` r
 # setClass() registers the class with R's S4 system.
@@ -209,15 +150,17 @@ Gene <- function(gene_id, symbol, chr, start, end, strand, biotype) {
 A class with no validity check will happily hold nonsense — a gene where
 `start > end`, or a `strand` character that is neither `"+"` nor `"-"`.
 
-**What is an invariant?** An invariant is a condition that must *always*
-be true for an object to be considered valid — regardless of how it was
-created or modified. For a genomic coordinate object, `start <= end` is
-an invariant: there is no meaningful gene where the end comes before the
-start. `strand %in% c("+", "-", "*")` is another — the strand field only
-makes sense for a fixed vocabulary of values. Invariants are distinct
-from *defaults* (which are suggestions) and *types* (which R enforces
-slot-by-slot) — they encode domain knowledge that the type system alone
-cannot express.
+> **What is an invariant?**
+>
+> An invariant is a condition that must *always* be true for an object
+> to be considered valid — regardless of how it was created or modified.
+> For a genomic coordinate object, `start <= end` is an invariant: there
+> is no meaningful gene where the end comes before the start.
+> `strand %in% c("+", "-", "*")` is another — the strand field only
+> makes sense for a fixed vocabulary of values. Invariants are distinct
+> from *defaults* (which are suggestions) and *types* (which R enforces
+> slot-by-slot) — they encode domain knowledge that the type system
+> alone cannot express.
 
 [`setValidity()`](https://rdrr.io/r/methods/validObject.html) lets you
 encode these invariants as a function that is checked every time
@@ -421,35 +364,26 @@ constant reimplementations and refactors that can break backwards
 compatibility (looking at you, `Seurat`).
 
 Before embarking on such an endeavor, it is in your best interest to
-determine if existing data structures already exist for your data
-modality and what you want to achieve.
+determine if there are adequate already existing data structures for
+your data modality and what you want to achieve.
 
 In this case, Bioconductor already has battle-tested data structures for
-many common assay types — including general count data —
-e.g. `SummarizedExperiment` and domain-specific extensions like
-`SingleCellExperiment`, `SpatialExperiment`, etc. These classes have
-been tested, documented, and widely adopted by the community. They also
-interoperate with hundreds of downstream packages that expect these
-containers.
+many common assay types and ’omics-related elements — including
+representations of genomic features (`GenomicFeatures`, `GenomicRanges`)
+and general count data (`SummarizedExperiment` and domain-specific
+extensions like `SingleCellExperiment`, `SpatialExperiment`). These
+classes have been tested, documented, and widely adopted by the
+community. They also interoperate with hundreds of downstream packages
+that expect these containers.
 
-Before you create a new class or container, spend a few minutes checking
-whether the ecosystem already solved the problem:
+### The “Do I Really Need to Roll My Own?” Checklist
 
-``` r
-# Read the class help and vignette first
-?SummarizedExperiment
-browseVignettes(package = "SummarizedExperiment")
+Before you adopt or build a data structure, consider:
 
-# If you expect single-cell-specific behavior, compare the next layer up
-?SingleCellExperiment
-browseVignettes(package = "SingleCellExperiment")
-```
-
-Look for:
-
-- **Problem fit**: Does the class match the sort of data you have?
+- **Problem fit**: Does an existing class match the sort of data you
+  have?
 - **Data model fit**: Can it represent the different facets of the data
-  (counts, sample metadata, feature metadata)without hacks?
+  (counts, sample metadata, feature metadata) without hacks?
 - **Contract clarity**: Are the accessors and invariants clear from the
   docs?
 - **Interoperability**: Do downstream packages already expect this
@@ -463,13 +397,66 @@ already exists.
 
 ![](https://imgs.xkcd.com/comics/standards.png)
 
+If you *do* decide to build your own structure, design carefully, choose
+an appropriate base class (S4 is not the only option), and ensure your
+implementation is robust and well-documented.
+
+------------------------------------------------------------------------
+
+## Scientific Software Ecosystems
+
+More often than not, you will be building on existing software
+ecosystems rather than starting from scratch. This is especially true in
+bioinformatics, where the complexity of the data and analyses often
+necessitates building on top of established tools and data structures.
+
+### CRAN - The Comprehensive R Archive Network
+
+CRAN is the primary repository for general R packages. It has strict
+submission guidelines to ensure quality and stability, but it is not
+domain-specific. CRAN packages can be used in any context, but they may
+not have the specialized data structures or methods needed for
+bioinformatics. That said, many CRAN packages are widely used in
+bioinformatics workflows (e.g., `ggplot2`, `dplyr`, `purrr`), and
+Bioconductor packages often depend on CRAN packages for core
+functionality.
+
+Any time you install a package with
+[`install.packages()`](https://rdrr.io/r/utils/install.packages.html),
+you’re pulling from CRAN.
+
+### Bioconductor - Open Source Software for Bioinformatics
+
+[Bioconductor](https://www.bioconductor.org/) is a more specialized
+repository focused on repeatable analysis of biological data.
+
+It includes core packages that define data structures and methods for
+common bioinformatics data types (e.g., `SummarizedExperiment`,
+`SingleCellExperiment`, `GenomicRanges`), as well as hundreds of
+downstream packages that build on these foundations to provide tools for
+specific analyses (e.g., differential expression, clustering, gene set
+analysis).
+
+Bioconductor has their [own set of submission
+guidelines](https://bioconductor.org/developers/package-submission/)
+that emphasize interoperability, documentation, and testing. Submission
+review is an interactive process performed on Github.
+
+As you dive deeper into bioinformatics and computational biology, you’ll
+find yourself becoming very familiar with Bioconductor’s core data
+structures and methods, and you’ll likely be building your own tools
+that operate on these objects. Understanding the design and structure of
+these classes will help you write more robust and interoperable R code.
+
 ------------------------------------------------------------------------
 
 ## An Illustrative Example: SummarizedExperiment
 
+Let’s take a look at a very common S4 class offered by Bioconductor -
+[SummarizedExperiment](https://bioconductor.org/packages/devel/bioc/vignettes/SummarizedExperiment/inst/doc/SummarizedExperiment.html).
+
 We’ll use the `airway` dataset, which contains RNA-seq data from airway
-smooth muscle cells, to look at a very common S4 class offered by
-Bioconductor - `SummarizedExperiment`.
+smooth muscle cells.
 
 ``` r
 library(SummarizedExperiment)
@@ -478,7 +465,6 @@ library(ComplexHeatmap)
 library(ggplot2)
 
 data("airway")
-airway
 ```
 
 ### Exploring the Structure
@@ -486,7 +472,7 @@ airway
 #### What class is this object?
 
 ``` r
-class(airway)
+airway
 ```
 
 `RangedSummarizedExperiment` is an extension of `SummarizedExperiment`
@@ -528,7 +514,7 @@ airway$group <- paste(airway$cell, airway$dex, sep = "_")
 # Equivalent to: colData(airway)$group <- paste(colData(airway)$cell, colData(airway)$dex, sep = "_")
 ```
 
-#### Gene/Feature Data (rowData)
+#### Feature Metadata (rowData)
 
 The
 [`rowData()`](https://rdrr.io/pkg/SummarizedExperiment/man/SummarizedExperiment-class.html)
@@ -593,13 +579,13 @@ colData(airway_subset)
 
 #### Creating a `SummarizedExperiment` from Components
 
-Creating a `SummarizedExperiment` is simple, you just need to provide
-the assay matrix, sample metadata, and optionally feature metadata. The
-constructor will check that everything is properly aligned (matching row
-and column names) and will throw an error if not.
+Actually creating a `SummarizedExperiment` is simple, you just need to
+provide the assay matrix, sample metadata, and optionally feature
+metadata. The constructor will check that everything is properly aligned
+(matching row and column names) and will throw an error if not.
 
 ``` r
-# Minimal example: 3 genes x 3 samples
+# Tiny example: 3 genes x 3 samples
 counts_mat <- matrix(
     c(100, 200, 150,
        50,  80,  60,
@@ -636,32 +622,34 @@ se
 ## Building Functions
 
 Now we’ll switch tack. If you haven’t already, choose a project from the
-[Project Selection
-Guide](https://st-jude-ms-abds.github.io/ADS8192/articles/project-selection.html).
+`vignette("project-selection")` vignette.
 
-For the rest of this course, you’ll be building a package around that
+For the rest of this unit, you’ll be building a package around that
 project.
 
-In this lecture, we’ll focus on the “analysis core” — the set of
-functions that take structured objects as input and return well-defined
-outputs. These functions will form the backbone of your package and will
-later be:
+You’ll note that each project has a “raw code” version of the analysis,
+which is a single R script that performs the entire analysis from start
+to finish. This is a common way to start an analysis — you just write
+code that gets the job done, without worrying much about structure or
+reusability.
 
-1.  Packaged into an R package (Lecture 5)
-2.  Wrapped by a Shiny app (Lectures 7-8)
-3.  Exposed via a CLI (Lectures 9-10)
+Once the code/analysis is deemed useful, you might go back and refactor
+it into a more modular, reusable form for future use or sharing with
+others. This is where the package structure and data structures we
+discussed come into play.
 
 ### Getting the Data
 
-First, you’ll need data to operate on. All of the projects in the guide
-have code to pull real data for use.
+First, you’ll need data to operate on. All of the projects in the
+project guide have code to pull real data for use.
 
 There are all sorts of avenues to get data for testing and development —
-from public repositories like GEO and SRA, to simulated data, to data
-you’ve generated yourself.
+from public repositories like GEO (Gene Expression Omnibus, which
+contains much more than just gene expression data), to simulated data,
+to data you’ve generated yourself.
 
-For this lecture, we’ll build a realistic dummy dataset from scratch
-that mimics the structure of a typical RNA-seq experiment.
+For my package, I’ll use a realistic dummy dataset from scratch that
+mimics the structure of a typical RNA-seq experiment.
 
 Data preparation code
 
@@ -992,51 +980,6 @@ head(scores_back)
 
 ------------------------------------------------------------------------
 
-## Visualization with ComplexHeatmap
-
-Let’s visualize the top variable genes using a heatmap. This is a common
-way to explore patterns in gene expression data.
-
-``` r
-# Get top 20 most variable genes for visualization
-se_top20 <- top_variable_features(airway, n = 20)
-
-# Extract and log-transform the counts
-heatmap_mat <- log2(assay(se_top20, "counts") + 1)
-
-# Scale by row (gene) for better visualization
-heatmap_mat <- t(scale(t(heatmap_mat)))
-```
-
-``` r
-# Create annotation for columns (samples)
-col_anno <- HeatmapAnnotation(
-    treatment = airway$dex,
-    cell_line = airway$cell,
-    col = list(
-        treatment = c("trt" = "steelblue", "untrt" = "salmon"),
-        cell_line = c("N052611" = "#E41A1C", "N061011" = "#377EB8", 
-                      "N080611" = "#4DAF4A", "N61311" = "#984EA3")
-    )
-)
-
-# Create the heatmap
-Heatmap(
-    heatmap_mat,
-    name = "Z-score",
-    top_annotation = col_anno,
-    show_row_names = TRUE,
-    show_column_names = TRUE,
-    column_title = "Top 20 Variable Genes",
-    row_names_gp = gpar(fontsize = 8)
-)
-```
-
-> **Exercise D:** Modify the code to show the top 50 variable genes. You
-> may need to adjust `show_row_names` for readability.
-
-------------------------------------------------------------------------
-
 ## Preparing Example Data (`data-raw/`)
 
 Every package you build for
@@ -1119,9 +1062,9 @@ The five functions above form the **analysis core**. For HW1, you will
 expose them through **three interfaces** — each calling the same core
 functions:
 
-                        Analysis Core
+                    Analysis Core
       run_pca() → plot_pca() → save_pca_results()
-            ↑            ↑            ↑            
+            ↑            ↑           ↑            
        ┌────┴────┐  ┌────┴────┐  ┌───┴─────┐
        │ R API   │  │ Shiny   │  │  CLI    │
        │ (users) │  │ (web)   │  │(scripts)│
@@ -1255,86 +1198,6 @@ Write 3-5 sentences describing why a structured container
 - Advanced R sections on OOP + S4 (alignment workbook links)
 - SummarizedExperiment vignette (run
   [`vignette("SummarizedExperiment")`](https://bioconductor.org/packages/release/bioc/vignettes/SummarizedExperiment/inst/doc/SummarizedExperiment.html))
-
-------------------------------------------------------------------------
-
-## Appendix: Complete Function Reference
-
-``` r
-# SAVE THIS AS: analysis_core.R
-
-#' Select top variable features
-top_variable_features <- function(se, n = 500, assay_name = "counts") {
-    mat <- assay(se, assay_name)
-    vars <- apply(mat, 1, var)
-    top_idx <- order(vars, decreasing = TRUE)[seq_len(min(n, length(vars)))]
-    se[top_idx, ]
-}
-
-#' Run PCA on a SummarizedExperiment
-run_pca <- function(se, assay_name = "counts", n_top = 500, 
-                    scale = TRUE, log_transform = TRUE) {
-    se_top <- top_variable_features(se, n = n_top, assay_name = assay_name)
-    mat <- assay(se_top, assay_name)
-    if (log_transform) mat <- log2(mat + 1)
-    mat_t <- t(mat)
-    pca_result <- prcomp(mat_t, scale. = scale, center = TRUE)
-    scores <- as.data.frame(pca_result$x)
-    scores$sample_id <- rownames(scores)
-    col_data <- as.data.frame(colData(se))
-    col_data$sample_id <- rownames(col_data)
-    scores <- merge(scores, col_data, by = "sample_id")
-    list(pca = pca_result, scores = scores)
-}
-
-#' Get variance explained by each PC
-pca_variance_explained <- function(pca_result) {
-    pca <- pca_result$pca
-    var_explained <- pca$sdev^2 / sum(pca$sdev^2) * 100
-    data.frame(PC = paste0("PC", seq_along(var_explained)), 
-               variance_percent = var_explained)
-}
-
-#' Create a PCA scatter plot
-plot_pca <- function(pca_result, color_by = NULL, shape_by = NULL, 
-                     pcs = c(1, 2), point_size = 4) {
-    scores <- pca_result$scores
-    var_exp <- pca_variance_explained(pca_result)
-    pc_x <- paste0("PC", pcs[1])
-    pc_y <- paste0("PC", pcs[2])
-    var_x <- round(var_exp$variance_percent[pcs[1]], 1)
-    var_y <- round(var_exp$variance_percent[pcs[2]], 1)
-    p <- ggplot(scores, aes(x = .data[[pc_x]], y = .data[[pc_y]])) +
-        theme_minimal(base_size = 14) +
-        labs(x = paste0(pc_x, " (", var_x, "% variance)"),
-             y = paste0(pc_y, " (", var_y, "% variance)"),
-             title = "PCA Plot")
-    if (!is.null(color_by)) p <- p + aes(color = .data[[color_by]])
-    if (!is.null(shape_by)) p <- p + aes(shape = .data[[shape_by]])
-    p + geom_point(size = point_size)
-}
-
-#' Save PCA results to files
-save_pca_results <- function(pca_result, output_dir, color_by = NULL) {
-    if (!is.character(output_dir) || length(output_dir) != 1) {
-        stop("output_dir must be a single directory path")
-    }
-    if (!dir.exists(output_dir)) dir.create(output_dir, recursive = TRUE)
-    scores_file <- file.path(output_dir, "pca_scores.tsv")
-    write.table(pca_result$scores, scores_file, sep = "\t",
-                row.names = FALSE, quote = FALSE)
-    var_df <- pca_variance_explained(pca_result)
-    var_file <- file.path(output_dir, "pca_variance.tsv")
-    write.table(var_df, var_file, sep = "\t",
-                row.names = FALSE, quote = FALSE)
-    if (!is.null(color_by)) {
-        plot_file <- file.path(output_dir, "pca_plot.png")
-        p <- plot_pca(pca_result, color_by = color_by)
-        ggplot2::ggsave(plot_file, p, width = 8, height = 6, dpi = 150)
-    }
-    invisible(NULL)
-}
-```
 
 ------------------------------------------------------------------------
 

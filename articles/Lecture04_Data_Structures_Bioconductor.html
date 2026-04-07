@@ -81,128 +81,20 @@ Andrews</h4>
 
     
     
-<style type="text/css">
-.container-xxl, .container-xl, .container-lg, .container-md, .container-sm, .container {
-    max-width: 90%;
-}
-
-.row>main {
-    max-width: 70%;
-}
-</style>
 <div class="section level2">
-<h2 id="learning-objectives">Learning Objectives<a class="anchor" aria-label="anchor" href="#learning-objectives"></a>
+<h2 id="motivation">Motivation<a class="anchor" aria-label="anchor" href="#motivation"></a>
 </h2>
-<p>By the end of this session, you will be able to:</p>
-<ol style="list-style-type: decimal">
-<li>Generate a <code>SummarizedExperiment</code> object from raw assay
-data and sample metadata</li>
-<li>Find and use Bioconductor package documentation (vignettes/manuals)
-to select an appropriate existing container before building anything
-custom</li>
-<li>Build a complete analysis core: constructor, feature selection,
-analysis, summary, plotting, and export functions</li>
-<li>Prepare a bundled example dataset using a <code>data-raw/</code>
-script</li>
-<li>Write small, testable functions with input validation that take
-structured objects as input and return well-defined outputs</li>
-<li>See how one set of core functions powers three interfaces (R API,
-Shiny, CLI)</li>
-</ol>
-<p><strong>Course Learning Outcomes (CLOs):</strong> CLO 1, 3</p>
-<div class="section level3">
-<h3 id="motivation">Motivation<a class="anchor" aria-label="anchor" href="#motivation"></a>
-</h3>
-<p>Scientific software becomes fragile very quickly when assay matrices,
-sample metadata, and feature annotations drift out of sync. A good data
-model prevents entire classes of silent mistakes before you ever write a
-plot, app, or pipeline.</p>
-<p>This lecture matters because robust containers and clear function
-contracts save time later. If your data structure is reliable and your
-core functions accept and return well-defined objects, you can test them
-more easily, hand them to collaborators with less explanation, and reuse
-the same analysis logic across package code, Shiny apps, and CLIs
-without constant rewrites.</p>
-</div>
-<div class="section level3">
-<h3 id="evaluation-checklist">Evaluation Checklist<a class="anchor" aria-label="anchor" href="#evaluation-checklist"></a>
-</h3>
-<p>Before you adopt or build a data structure, ask:</p>
-<ul>
-<li>Does it fit the scientific problem and expected scale?</li>
-<li>Does its data model keep related pieces synchronized?</li>
-<li>Is the input/output contract explicit and documented?</li>
-<li>Does it interoperate with packages you and your team already
-use?</li>
-<li>Is it maintained and broadly understood in the community?</li>
-<li>Would extending an existing container be safer than creating a new
-class?</li>
-</ul>
-</div>
-<div class="section level3">
-<h3 id="scientific-use-case">Scientific Use Case<a class="anchor" aria-label="anchor" href="#scientific-use-case"></a>
-</h3>
-<p>A collaborator gives you raw counts, sample metadata, and gene
-annotations as three CSV files from a pilot RNA-seq experiment. You need
-exploratory analysis this week, but six months from now the same work
-may need to support a package, dashboard, or pipeline. Which design
-choices now will keep that future refactor small?</p>
+<p>The first half of “data science” is data. This key facet is often
+overlooked and underappreciated, but how data is managed and structured
+is a critical aspect of robust analysis and maintainable scientific
+software. It can enable or constain how quickly and easily you can
+perform analyses, build tools, and collaborate with others.</p>
+<p>If your data structures are reliable and your code accepts and
+returns well-defined objects, you can test them more easily, hand them
+to collaborators with less explanation, and reuse the same code across
+experiments and analyses more effectively.</p>
+<p>Thus,</p>
 <hr>
-</div>
-</div>
-<div class="section level2">
-<h2 id="why-do-data-structures-matter">Why Do Data Structures Matter?<a class="anchor" aria-label="anchor" href="#why-do-data-structures-matter"></a>
-</h2>
-<div class="section level3">
-<h3 id="the-problem-with-loose-data">The Problem with Loose Data<a class="anchor" aria-label="anchor" href="#the-problem-with-loose-data"></a>
-</h3>
-<p>Imagine you’re analyzing gene expression data. You might have:</p>
-<ul>
-<li>A <strong>counts matrix</strong>: genes × samples</li>
-<li>A <strong>sample metadata table</strong>: sample info (treatment,
-batch, etc.)</li>
-<li>A <strong>gene annotation table</strong>: gene symbols,
-descriptions, etc.</li>
-</ul>
-<p>If these are three separate objects, you face several problems:</p>
-<div class="sourceCode" id="cb1"><pre class="downlit sourceCode r">
-<code class="sourceCode R"><span><span class="co"># Dangerous: Three separate objects that can get out of sync</span></span>
-<span><span class="va">counts</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/utils/read.table.html" class="external-link">read.csv</a></span><span class="op">(</span><span class="st">"counts.csv"</span>, row.names <span class="op">=</span> <span class="fl">1</span><span class="op">)</span></span>
-<span><span class="va">sample_info</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/utils/read.table.html" class="external-link">read.csv</a></span><span class="op">(</span><span class="st">"sample_metadata.csv"</span><span class="op">)</span></span>
-<span><span class="va">gene_info</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/utils/read.table.html" class="external-link">read.csv</a></span><span class="op">(</span><span class="st">"gene_annotations.csv"</span><span class="op">)</span></span>
-<span></span>
-<span><span class="co"># What happens if you subset counts but forget to subset sample_info?</span></span>
-<span><span class="va">counts_subset</span> <span class="op">&lt;-</span> <span class="va">counts</span><span class="op">[</span>, <span class="fl">1</span><span class="op">:</span><span class="fl">5</span><span class="op">]</span></span>
-<span><span class="co"># sample_info still has all samples - now mismatched!</span></span>
-<span></span>
-<span><span class="co"># What if you accidentally reorder one but not the others?</span></span>
-<span><span class="va">counts</span> <span class="op">&lt;-</span> <span class="va">counts</span><span class="op">[</span>, <span class="fu"><a href="https://rdrr.io/r/base/order.html" class="external-link">order</a></span><span class="op">(</span><span class="fu"><a href="https://rdrr.io/r/base/colnames.html" class="external-link">colnames</a></span><span class="op">(</span><span class="va">counts</span><span class="op">)</span><span class="op">)</span><span class="op">]</span></span>
-<span><span class="co"># Now sample_info doesn't match the column order!</span></span></code></pre></div>
-</div>
-<div class="section level3">
-<h3 id="the-solution-structured-containers">The Solution: Structured Containers<a class="anchor" aria-label="anchor" href="#the-solution-structured-containers"></a>
-</h3>
-<p>Bioconductor’s <code>SummarizedExperiment</code> class keeps
-everything synchronized:</p>
-<pre><code>                    colData (sample metadata)
-                    ┌───────────────────────┐
-                    │ sample treatment batch │
-                    │ S1     trt      A     │
-                    │ S2     ctrl     A     │
-                    │ S3     trt      B     │
-                    └───────────────────────┘
-                              ↓
-              ┌───────────────────────────────┐
-              │        assays (counts)         │
-   rowData    │         S1    S2    S3         │
-   (genes)  → │ gene1  100   150   120         │
-              │ gene2   50    75    60         │
-              │ gene3  200   180   210         │
-              └───────────────────────────────┘</code></pre>
-<p>When you subset or reorder a <code>SummarizedExperiment</code>, all
-components stay synchronized automatically.</p>
-<hr>
-</div>
 </div>
 <div class="section level2">
 <h2 id="group-discussion-pseudocode-designing-a-gene-data-structure">Group Discussion + Pseudocode: Designing a Gene Data Structure<a class="anchor" aria-label="anchor" href="#group-discussion-pseudocode-designing-a-gene-data-structure"></a>
@@ -223,7 +115,9 @@ end, strand in {+,-})?</li>
 </h3>
 <p>For instance, if we just used a list with elements for fields we care
 about, it might look like:</p>
-<div class="sourceCode" id="cb3"><pre class="downlit sourceCode r">
+<details><summary>
+Example list-based structure
+</summary><div class="sourceCode" id="cb1"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="va">gene</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/base/list.html" class="external-link">list</a></span><span class="op">(</span></span>
 <span>    gene_id <span class="op">=</span> <span class="st">"ENSG00000141510"</span>,</span>
 <span>    symbol <span class="op">=</span> <span class="st">"TP53"</span>,</span>
@@ -234,12 +128,40 @@ about, it might look like:</p>
 <span>    biotype <span class="op">=</span> <span class="st">"protein_coding"</span>,</span>
 <span>    length <span class="op">=</span> <span class="fl">7687550</span> <span class="op">-</span> <span class="fl">7661779</span> <span class="op">+</span> <span class="fl">1</span>  <span class="co"># derived</span></span>
 <span><span class="op">)</span></span></code></pre></div>
-<p>What are the issues of such a simple approach?</p>
+</details><p>What are the most immediate issues of such a simple approach?</p>
 <hr>
 </div>
-<div class="section level3">
-<h3 id="why-s4-in-bioconductor">Why S4 in Bioconductor?<a class="anchor" aria-label="anchor" href="#why-s4-in-bioconductor"></a>
-</h3>
+</div>
+<div class="section level2">
+<h2 id="object-oriented-programming-in-r">Object Oriented Programming in R<a class="anchor" aria-label="anchor" href="#object-oriented-programming-in-r"></a>
+</h2>
+<p>R has several systems for defining custom classes and methods, each
+with their own advantages and tradeoffs:</p>
+<ul>
+<li>
+<strong><a href="https://adv-r.hadley.nz/s3.html" class="external-link">S3</a></strong>:
+Informal, flexible, and widely used. Classes are just character vectors,
+and method dispatch is based on naming conventions (e.g.,
+<code>print.myclass()</code>). No formal class definitions or validity
+checks.</li>
+<li>
+<strong><a href="https://adv-r.hadley.nz/s4.html" class="external-link">S4</a></strong>:
+Formal class definitions with typed slots, validity checks, and formal
+method dispatch. More robust but more verbose and complex to set
+up.</li>
+<li>
+<strong><a href="https://adv-r.hadley.nz/r6.html" class="external-link">R6</a></strong>:
+Reference classes with mutable state and object-oriented programming
+features. Less common in bioinformatics but useful for certain
+applications.</li>
+</ul>
+<p>You can read more about these individual systems and <a href="https://adv-r.hadley.nz/oo-tradeoffs.html" class="external-link">their tradeoffs</a> in
+the Advanced R book, but we will focus mostly on S4 for reasons
+described below.</p>
+</div>
+<div class="section level2">
+<h2 id="why-s4-in-bioconductor">Why S4 in Bioconductor?<a class="anchor" aria-label="anchor" href="#why-s4-in-bioconductor"></a>
+</h2>
 <p>Bioconductor packages rely heavily on R’s <strong>S4 classes</strong>
 because they provide:</p>
 <ul>
@@ -252,17 +174,23 @@ types)</li>
 <strong>Method dispatch</strong> (functions behave differently based
 on object class)</li>
 </ul>
-<p><code>SummarizedExperiment</code> is an S4 class. Its formal
-structure and methods keep assays, rowData, and colData synchronized and
-enforce consistency.</p>
-</div>
+<p>These are very attractive features for building complex data
+structures that need to be robust and interoperable across a large
+ecosystem of packages. S3 is much more flexible and simpler, but it
+lacks the formal structure and safety guarantees that S4 provides.</p>
+<p>S3 provides limited mechanisms to keep users from doing really stupid
+things with your objects, which is important when your objects are
+complex and serve as the basis for many downstream analyses.</p>
+<p>S4 also requires more upfront thought and design, which should
+generally be encouraged for scientific software.</p>
 <div class="section level3">
 <h3 id="s4-style-sketch-class-constructor">S4-Style Sketch (Class + Constructor)<a class="anchor" aria-label="anchor" href="#s4-style-sketch-class-constructor"></a>
 </h3>
-<p>Building a custom S4 class for our gene above might look like this.
-The first step is registering the class and its <strong>slots</strong> —
-the typed fields every instance must carry:</p>
-<div class="sourceCode" id="cb4"><pre class="downlit sourceCode r">
+<p>Building a custom S4 class for our gene above might look like
+this.</p>
+<p>The first step is registering the class and its
+<strong>slots</strong> — the typed fields every instance must carry:</p>
+<div class="sourceCode" id="cb2"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="co"># setClass() registers the class with R's S4 system.</span></span>
 <span><span class="co"># `slots` is a named character vector: name -&gt; type.</span></span>
 <span><span class="co"># R enforces these types at construction time: passing a non-character to</span></span>
@@ -281,7 +209,7 @@ the typed fields every instance must carry:</p>
 a <strong>constructor function</strong> so callers don’t need to know
 the internal class name — and so we have one place to coerce types, run
 checks, and set defaults:</p>
-<div class="sourceCode" id="cb5"><pre class="downlit sourceCode r">
+<div class="sourceCode" id="cb3"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="co"># The constructor is just a regular function. It:</span></span>
 <span><span class="co">#   1. Accepts user-friendly types (numeric start/end is fine)</span></span>
 <span><span class="co">#   2. Coerces them to the slot types the class expects</span></span>
@@ -307,20 +235,22 @@ checks, and set defaults:</p>
 <p>A class with no validity check will happily hold nonsense — a gene
 where <code>start &gt; end</code>, or a <code>strand</code> character
 that is neither <code>"+"</code> nor <code>"-"</code>.</p>
-<p><strong>What is an invariant?</strong> An invariant is a condition
-that must <em>always</em> be true for an object to be considered valid —
-regardless of how it was created or modified. For a genomic coordinate
-object, <code>start &lt;= end</code> is an invariant: there is no
-meaningful gene where the end comes before the start.
-<code>strand %in% c("+", "-", "*")</code> is another — the strand field
-only makes sense for a fixed vocabulary of values. Invariants are
-distinct from <em>defaults</em> (which are suggestions) and
-<em>types</em> (which R enforces slot-by-slot) — they encode domain
+<blockquote>
+<p><strong>What is an invariant?</strong></p>
+<p>An invariant is a condition that must <em>always</em> be true for an
+object to be considered valid — regardless of how it was created or
+modified. For a genomic coordinate object, <code>start &lt;= end</code>
+is an invariant: there is no meaningful gene where the end comes before
+the start. <code>strand %in% c("+", "-", "*")</code> is another — the
+strand field only makes sense for a fixed vocabulary of values.
+Invariants are distinct from <em>defaults</em> (which are suggestions)
+and <em>types</em> (which R enforces slot-by-slot) — they encode domain
 knowledge that the type system alone cannot express.</p>
+</blockquote>
 <p><code><a href="https://rdrr.io/r/methods/validObject.html" class="external-link">setValidity()</a></code> lets you encode these invariants as a
 function that is checked every time <code><a href="https://rdrr.io/r/methods/validObject.html" class="external-link">validObject()</a></code> is called
 (and optionally on every <code><a href="https://rdrr.io/r/methods/new.html" class="external-link">new()</a></code>):</p>
-<div class="sourceCode" id="cb6"><pre class="downlit sourceCode r">
+<div class="sourceCode" id="cb4"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="fu"><a href="https://rdrr.io/r/methods/validObject.html" class="external-link">setValidity</a></span><span class="op">(</span><span class="st">"Gene"</span>, <span class="kw">function</span><span class="op">(</span><span class="va">x</span><span class="op">)</span> <span class="op">{</span></span>
 <span>    <span class="va">errors</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/base/character.html" class="external-link">character</a></span><span class="op">(</span><span class="op">)</span></span>
 <span></span>
@@ -362,7 +292,7 @@ after programmatic slot replacement — not just at construction time.</p>
 details: if you ever rename a slot, every caller breaks. <strong>Generic
 functions</strong> give you a stable API that can evolve independently
 of the internal representation:</p>
-<div class="sourceCode" id="cb7"><pre class="downlit sourceCode r">
+<div class="sourceCode" id="cb5"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="co"># --- Getters ---</span></span>
 <span><span class="co"># setGeneric() creates a new generic if one doesn't already exist.</span></span>
 <span><span class="co"># The second argument is the default method body (usually just callNextMethod()</span></span>
@@ -415,7 +345,7 @@ of the internal representation:</p>
 format. Overriding <code><a href="https://rdrr.io/r/methods/show.html" class="external-link">show()</a></code> gives users a clean summary — and
 it’s the method called automatically when you type the object name at
 the prompt:</p>
-<div class="sourceCode" id="cb8"><pre class="downlit sourceCode r">
+<div class="sourceCode" id="cb6"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="kw"><a href="https://rdrr.io/r/methods/setMethod.html" class="external-link">setMethod</a></span><span class="op">(</span><span class="st">"show"</span>, <span class="st">"Gene"</span>, <span class="kw">function</span><span class="op">(</span><span class="va">x</span><span class="op">)</span> <span class="op">{</span></span>
 <span>    <span class="fu"><a href="https://rdrr.io/r/base/cat.html" class="external-link">cat</a></span><span class="op">(</span><span class="st">"Gene:"</span>, <span class="va">x</span><span class="op">@</span><span class="va">symbol</span>, <span class="st">"("</span>, <span class="va">x</span><span class="op">@</span><span class="va">gene_id</span>, <span class="st">")\n"</span><span class="op">)</span></span>
 <span>    <span class="fu"><a href="https://rdrr.io/r/base/cat.html" class="external-link">cat</a></span><span class="op">(</span><span class="st">"  Location:"</span>, <span class="fu"><a href="https://rdrr.io/r/base/paste.html" class="external-link">paste0</a></span><span class="op">(</span><span class="st">"chr"</span>, <span class="va">x</span><span class="op">@</span><span class="va">chr</span>, <span class="st">":"</span>,</span>
@@ -433,7 +363,7 @@ the prompt:</p>
 <p>Some properties are fully determined by existing slots — storing them
 would create redundancy and a risk of inconsistency. Instead, define
 them as methods that compute on demand:</p>
-<div class="sourceCode" id="cb9"><pre class="downlit sourceCode r">
+<div class="sourceCode" id="cb7"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="co"># R already has a length() generic; we just add a method for our class.</span></span>
 <span><span class="kw"><a href="https://rdrr.io/r/methods/setMethod.html" class="external-link">setMethod</a></span><span class="op">(</span><span class="st">"length"</span>, <span class="st">"Gene"</span>, <span class="kw">function</span><span class="op">(</span><span class="va">x</span><span class="op">)</span> <span class="op">{</span></span>
 <span>    <span class="va">x</span><span class="op">@</span><span class="va">end</span> <span class="op">-</span> <span class="va">x</span><span class="op">@</span><span class="va">start</span> <span class="op">+</span> <span class="fl">1L</span></span>
@@ -444,7 +374,7 @@ them as methods that compute on demand:</p>
 <h3 id="full-usage-example">Full Usage Example<a class="anchor" aria-label="anchor" href="#full-usage-example"></a>
 </h3>
 <p>Putting it all together:</p>
-<div class="sourceCode" id="cb10"><pre class="downlit sourceCode r">
+<div class="sourceCode" id="cb8"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="co"># Construction — types are coerced automatically</span></span>
 <span><span class="va">tp53</span> <span class="op">&lt;-</span> <span class="fu">Gene</span><span class="op">(</span></span>
 <span>    gene_id <span class="op">=</span> <span class="st">"ENSG00000141510"</span>,</span>
@@ -514,33 +444,28 @@ structure can lead to serious headaches downstream that result in
 constant reimplementations and refactors that can break backwards
 compatibility (looking at you, <code>Seurat</code>).</p>
 <p>Before embarking on such an endeavor, it is in your best interest to
-determine if existing data structures already exist for your data
-modality and what you want to achieve.</p>
+determine if there are adequate already existing data structures for
+your data modality and what you want to achieve.</p>
 <p>In this case, Bioconductor already has battle-tested data structures
-for many common assay types — including general count data —
-e.g. <code>SummarizedExperiment</code> and domain-specific extensions
-like <code>SingleCellExperiment</code>, <code>SpatialExperiment</code>,
-etc. These classes have been tested, documented, and widely adopted by
-the community. They also interoperate with hundreds of downstream
-packages that expect these containers.</p>
-<p>Before you create a new class or container, spend a few minutes
-checking whether the ecosystem already solved the problem:</p>
-<div class="sourceCode" id="cb11"><pre class="downlit sourceCode r">
-<code class="sourceCode R"><span><span class="co"># Read the class help and vignette first</span></span>
-<span><span class="op">?</span><span class="va">SummarizedExperiment</span></span>
-<span><span class="fu"><a href="https://rdrr.io/r/utils/browseVignettes.html" class="external-link">browseVignettes</a></span><span class="op">(</span>package <span class="op">=</span> <span class="st">"SummarizedExperiment"</span><span class="op">)</span></span>
-<span></span>
-<span><span class="co"># If you expect single-cell-specific behavior, compare the next layer up</span></span>
-<span><span class="op">?</span><span class="va">SingleCellExperiment</span></span>
-<span><span class="fu"><a href="https://rdrr.io/r/utils/browseVignettes.html" class="external-link">browseVignettes</a></span><span class="op">(</span>package <span class="op">=</span> <span class="st">"SingleCellExperiment"</span><span class="op">)</span></span></code></pre></div>
-<p>Look for:</p>
+for many common assay types and ’omics-related elements — including
+representations of genomic features (<code>GenomicFeatures</code>,
+<code>GenomicRanges</code>) and general count data
+(<code>SummarizedExperiment</code> and domain-specific extensions like
+<code>SingleCellExperiment</code>, <code>SpatialExperiment</code>).
+These classes have been tested, documented, and widely adopted by the
+community. They also interoperate with hundreds of downstream packages
+that expect these containers.</p>
+<div class="section level3">
+<h3 id="the-do-i-really-need-to-roll-my-own-checklist">The “Do I Really Need to Roll My Own?” Checklist<a class="anchor" aria-label="anchor" href="#the-do-i-really-need-to-roll-my-own-checklist"></a>
+</h3>
+<p>Before you adopt or build a data structure, consider:</p>
 <ul>
 <li>
-<strong>Problem fit</strong>: Does the class match the sort of data
-you have?</li>
+<strong>Problem fit</strong>: Does an existing class match the sort
+of data you have?</li>
 <li>
 <strong>Data model fit</strong>: Can it represent the different
-facets of the data (counts, sample metadata, feature metadata)without
+facets of the data (counts, sample metadata, feature metadata) without
 hacks?</li>
 <li>
 <strong>Contract clarity</strong>: Are the accessors and invariants
@@ -557,30 +482,81 @@ important, but knowing when to reuse existing ones is just as crucial.
 Don’t reinvent the wheel if a well-designed, community-supported
 solution already exists.</p>
 <p><img src="https://imgs.xkcd.com/comics/standards.png"></p>
+<p>If you <em>do</em> decide to build your own structure, design
+carefully, choose an appropriate base class (S4 is not the only option),
+and ensure your implementation is robust and well-documented.</p>
 <hr>
+</div>
+</div>
+<div class="section level2">
+<h2 id="scientific-software-ecosystems">Scientific Software Ecosystems<a class="anchor" aria-label="anchor" href="#scientific-software-ecosystems"></a>
+</h2>
+<p>More often than not, you will be building on existing software
+ecosystems rather than starting from scratch. This is especially true in
+bioinformatics, where the complexity of the data and analyses often
+necessitates building on top of established tools and data
+structures.</p>
+<div class="section level3">
+<h3 id="cran---the-comprehensive-r-archive-network">CRAN - The Comprehensive R Archive Network<a class="anchor" aria-label="anchor" href="#cran---the-comprehensive-r-archive-network"></a>
+</h3>
+<p>CRAN is the primary repository for general R packages. It has strict
+submission guidelines to ensure quality and stability, but it is not
+domain-specific. CRAN packages can be used in any context, but they may
+not have the specialized data structures or methods needed for
+bioinformatics. That said, many CRAN packages are widely used in
+bioinformatics workflows (e.g., <code>ggplot2</code>,
+<code>dplyr</code>, <code>purrr</code>), and Bioconductor packages often
+depend on CRAN packages for core functionality.</p>
+<p>Any time you install a package with <code><a href="https://rdrr.io/r/utils/install.packages.html" class="external-link">install.packages()</a></code>,
+you’re pulling from CRAN.</p>
+</div>
+<div class="section level3">
+<h3 id="bioconductor---open-source-software-for-bioinformatics">Bioconductor - Open Source Software for Bioinformatics<a class="anchor" aria-label="anchor" href="#bioconductor---open-source-software-for-bioinformatics"></a>
+</h3>
+<p><a href="https://www.bioconductor.org/" class="external-link">Bioconductor</a> is a more
+specialized repository focused on repeatable analysis of biological
+data.</p>
+<p>It includes core packages that define data structures and methods for
+common bioinformatics data types (e.g.,
+<code>SummarizedExperiment</code>, <code>SingleCellExperiment</code>,
+<code>GenomicRanges</code>), as well as hundreds of downstream packages
+that build on these foundations to provide tools for specific analyses
+(e.g., differential expression, clustering, gene set analysis).</p>
+<p>Bioconductor has their <a href="https://bioconductor.org/developers/package-submission/" class="external-link">own set
+of submission guidelines</a> that emphasize interoperability,
+documentation, and testing. Submission review is an interactive process
+performed on Github.</p>
+<p>As you dive deeper into bioinformatics and computational biology,
+you’ll find yourself becoming very familiar with Bioconductor’s core
+data structures and methods, and you’ll likely be building your own
+tools that operate on these objects. Understanding the design and
+structure of these classes will help you write more robust and
+interoperable R code.</p>
+<hr>
+</div>
 </div>
 <div class="section level2">
 <h2 id="an-illustrative-example-summarizedexperiment">An Illustrative Example: SummarizedExperiment<a class="anchor" aria-label="anchor" href="#an-illustrative-example-summarizedexperiment"></a>
 </h2>
+<p>Let’s take a look at a very common S4 class offered by Bioconductor -
+<a href="https://bioconductor.org/packages/devel/bioc/vignettes/SummarizedExperiment/inst/doc/SummarizedExperiment.html" class="external-link">SummarizedExperiment</a>.</p>
 <p>We’ll use the <code>airway</code> dataset, which contains RNA-seq
-data from airway smooth muscle cells, to look at a very common S4 class
-offered by Bioconductor - <code>SummarizedExperiment</code>.</p>
-<div class="sourceCode" id="cb12"><pre class="downlit sourceCode r">
+data from airway smooth muscle cells.</p>
+<div class="sourceCode" id="cb9"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="kw"><a href="https://rdrr.io/r/base/library.html" class="external-link">library</a></span><span class="op">(</span><span class="va"><a href="https://bioconductor.org/packages/SummarizedExperiment" class="external-link">SummarizedExperiment</a></span><span class="op">)</span></span>
 <span><span class="kw"><a href="https://rdrr.io/r/base/library.html" class="external-link">library</a></span><span class="op">(</span><span class="va">airway</span><span class="op">)</span></span>
 <span><span class="kw"><a href="https://rdrr.io/r/base/library.html" class="external-link">library</a></span><span class="op">(</span><span class="va"><a href="https://github.com/jokergoo/ComplexHeatmap" class="external-link">ComplexHeatmap</a></span><span class="op">)</span></span>
 <span><span class="kw"><a href="https://rdrr.io/r/base/library.html" class="external-link">library</a></span><span class="op">(</span><span class="va"><a href="https://ggplot2.tidyverse.org" class="external-link">ggplot2</a></span><span class="op">)</span></span>
 <span></span>
-<span><span class="fu"><a href="https://rdrr.io/r/utils/data.html" class="external-link">data</a></span><span class="op">(</span><span class="st">"airway"</span><span class="op">)</span></span>
-<span><span class="va">airway</span></span></code></pre></div>
+<span><span class="fu"><a href="https://rdrr.io/r/utils/data.html" class="external-link">data</a></span><span class="op">(</span><span class="st">"airway"</span><span class="op">)</span></span></code></pre></div>
 <div class="section level3">
 <h3 id="exploring-the-structure">Exploring the Structure<a class="anchor" aria-label="anchor" href="#exploring-the-structure"></a>
 </h3>
 <div class="section level4">
 <h4 id="what-class-is-this-object">What class is this object?<a class="anchor" aria-label="anchor" href="#what-class-is-this-object"></a>
 </h4>
-<div class="sourceCode" id="cb13"><pre class="downlit sourceCode r">
-<code class="sourceCode R"><span><span class="fu"><a href="https://rdrr.io/r/base/class.html" class="external-link">class</a></span><span class="op">(</span><span class="va">airway</span><span class="op">)</span></span></code></pre></div>
+<div class="sourceCode" id="cb10"><pre class="downlit sourceCode r">
+<code class="sourceCode R"><span><span class="va">airway</span></span></code></pre></div>
 <p><code>RangedSummarizedExperiment</code> is an extension of
 <code>SummarizedExperiment</code> that also stores genomic ranges for
 each feature (gene).</p>
@@ -601,12 +577,12 @@ organized.</p>
 </h4>
 <p>The <code><a href="https://rdrr.io/pkg/SummarizedExperiment/man/SummarizedExperiment-class.html" class="external-link">colData()</a></code> function extracts sample-level
 metadata:</p>
-<div class="sourceCode" id="cb14"><pre class="downlit sourceCode r">
+<div class="sourceCode" id="cb11"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="fu"><a href="https://rdrr.io/pkg/SummarizedExperiment/man/SummarizedExperiment-class.html" class="external-link">colData</a></span><span class="op">(</span><span class="va">airway</span><span class="op">)</span></span></code></pre></div>
 <p>Key variables: - <code>cell</code>: Cell line identifier -
 <code>dex</code>: Treatment status - “trt” (dexamethasone) or “untrt”
 (control)</p>
-<div class="sourceCode" id="cb15"><pre class="downlit sourceCode r">
+<div class="sourceCode" id="cb12"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="co"># Access as a data.frame</span></span>
 <span><span class="fu"><a href="https://rdrr.io/r/base/as.data.frame.html" class="external-link">as.data.frame</a></span><span class="op">(</span><span class="fu"><a href="https://rdrr.io/pkg/SummarizedExperiment/man/SummarizedExperiment-class.html" class="external-link">colData</a></span><span class="op">(</span><span class="va">airway</span><span class="op">)</span><span class="op">)</span></span>
 <span></span>
@@ -619,11 +595,11 @@ metadata:</p>
 <span><span class="co"># Equivalent to: colData(airway)$group &lt;- paste(colData(airway)$cell, colData(airway)$dex, sep = "_")</span></span></code></pre></div>
 </div>
 <div class="section level4">
-<h4 id="genefeature-data-rowdata">Gene/Feature Data (rowData)<a class="anchor" aria-label="anchor" href="#genefeature-data-rowdata"></a>
+<h4 id="feature-metadata-rowdata">Feature Metadata (rowData)<a class="anchor" aria-label="anchor" href="#feature-metadata-rowdata"></a>
 </h4>
 <p>The <code><a href="https://rdrr.io/pkg/SummarizedExperiment/man/SummarizedExperiment-class.html" class="external-link">rowData()</a></code> function extracts feature-level (gene)
 metadata:</p>
-<div class="sourceCode" id="cb16"><pre class="downlit sourceCode r">
+<div class="sourceCode" id="cb13"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="fu"><a href="https://rdrr.io/pkg/SummarizedExperiment/man/SummarizedExperiment-class.html" class="external-link">rowData</a></span><span class="op">(</span><span class="va">airway</span><span class="op">)</span></span>
 <span></span>
 <span><span class="co"># To add columns to rowData, it must be accessed directly rather than using `$` on</span></span>
@@ -639,7 +615,7 @@ metadata:</p>
 </h4>
 <p>The actual expression data is stored in “assays”. This dataset has
 one assay called “counts”:</p>
-<div class="sourceCode" id="cb17"><pre class="downlit sourceCode r">
+<div class="sourceCode" id="cb14"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="co"># What assays are available?</span></span>
 <span><span class="fu"><a href="https://rdrr.io/pkg/SummarizedExperiment/man/SummarizedExperiment-class.html" class="external-link">assayNames</a></span><span class="op">(</span><span class="va">airway</span><span class="op">)</span></span>
 <span></span>
@@ -667,7 +643,7 @@ these data structures share the baseline functionality and structure of
 <p>Generally, you can interact with a <code>SummarizedExperiment</code>
 object as you would with a typical matrix or data.frame, but it also has
 specialized accessors for its components.</p>
-<div class="sourceCode" id="cb18"><pre class="downlit sourceCode r">
+<div class="sourceCode" id="cb15"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="co"># Subsetting works like a matrix, but keeps everything in sync</span></span>
 <span><span class="va">airway_subset</span> <span class="op">&lt;-</span> <span class="va">airway</span><span class="op">[</span><span class="fl">1</span><span class="op">:</span><span class="fl">100</span>, <span class="fl">1</span><span class="op">:</span><span class="fl">4</span><span class="op">]</span>  <span class="co"># first 100 genes, first 4 samples</span></span>
 <span></span>
@@ -678,12 +654,13 @@ specialized accessors for its components.</p>
 <div class="section level4">
 <h4 id="creating-a-summarizedexperiment-from-components">Creating a <code>SummarizedExperiment</code> from Components<a class="anchor" aria-label="anchor" href="#creating-a-summarizedexperiment-from-components"></a>
 </h4>
-<p>Creating a <code>SummarizedExperiment</code> is simple, you just need
-to provide the assay matrix, sample metadata, and optionally feature
-metadata. The constructor will check that everything is properly aligned
-(matching row and column names) and will throw an error if not.</p>
-<div class="sourceCode" id="cb19"><pre class="downlit sourceCode r">
-<code class="sourceCode R"><span><span class="co"># Minimal example: 3 genes x 3 samples</span></span>
+<p>Actually creating a <code>SummarizedExperiment</code> is simple, you
+just need to provide the assay matrix, sample metadata, and optionally
+feature metadata. The constructor will check that everything is properly
+aligned (matching row and column names) and will throw an error if
+not.</p>
+<div class="sourceCode" id="cb16"><pre class="downlit sourceCode r">
+<code class="sourceCode R"><span><span class="co"># Tiny example: 3 genes x 3 samples</span></span>
 <span><span class="va">counts_mat</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/base/matrix.html" class="external-link">matrix</a></span><span class="op">(</span></span>
 <span>    <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="fl">100</span>, <span class="fl">200</span>, <span class="fl">150</span>,</span>
 <span>       <span class="fl">50</span>,  <span class="fl">80</span>,  <span class="fl">60</span>,</span>
@@ -721,32 +698,32 @@ metadata. The constructor will check that everything is properly aligned
 <h2 id="building-functions">Building Functions<a class="anchor" aria-label="anchor" href="#building-functions"></a>
 </h2>
 <p>Now we’ll switch tack. If you haven’t already, choose a project from
-the <a href="https://st-jude-ms-abds.github.io/ADS8192/articles/project-selection.html">Project
-Selection Guide</a>.</p>
-<p>For the rest of this course, you’ll be building a package around that
+the <code>vignette("project-selection")</code> vignette.</p>
+<p>For the rest of this unit, you’ll be building a package around that
 project.</p>
-<p>In this lecture, we’ll focus on the “analysis core” — the set of
-functions that take structured objects as input and return well-defined
-outputs. These functions will form the backbone of your package and will
-later be:</p>
-<ol style="list-style-type: decimal">
-<li>Packaged into an R package (Lecture 5)</li>
-<li>Wrapped by a Shiny app (Lectures 7-8)</li>
-<li>Exposed via a CLI (Lectures 9-10)</li>
-</ol>
+<p>You’ll note that each project has a “raw code” version of the
+analysis, which is a single R script that performs the entire analysis
+from start to finish. This is a common way to start an analysis — you
+just write code that gets the job done, without worrying much about
+structure or reusability.</p>
+<p>Once the code/analysis is deemed useful, you might go back and
+refactor it into a more modular, reusable form for future use or sharing
+with others. This is where the package structure and data structures we
+discussed come into play.</p>
 <div class="section level3">
 <h3 id="getting-the-data">Getting the Data<a class="anchor" aria-label="anchor" href="#getting-the-data"></a>
 </h3>
 <p>First, you’ll need data to operate on. All of the projects in the
-guide have code to pull real data for use.</p>
+project guide have code to pull real data for use.</p>
 <p>There are all sorts of avenues to get data for testing and
-development — from public repositories like GEO and SRA, to simulated
-data, to data you’ve generated yourself.</p>
-<p>For this lecture, we’ll build a realistic dummy dataset from scratch
-that mimics the structure of a typical RNA-seq experiment.</p>
+development — from public repositories like GEO (Gene Expression
+Omnibus, which contains much more than just gene expression data), to
+simulated data, to data you’ve generated yourself.</p>
+<p>For my package, I’ll use a realistic dummy dataset from scratch that
+mimics the structure of a typical RNA-seq experiment.</p>
 <details><summary>
 Data preparation code
-</summary><div class="sourceCode" id="cb20"><pre class="downlit sourceCode r">
+</summary><div class="sourceCode" id="cb17"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="co"># --- Build realistic dummy data from scratch ---</span></span>
 <span><span class="fu"><a href="https://rdrr.io/r/base/Random.html" class="external-link">set.seed</a></span><span class="op">(</span><span class="fl">42</span><span class="op">)</span></span>
 <span><span class="va">n_genes</span>   <span class="op">&lt;-</span> <span class="fl">5000</span></span>
@@ -811,7 +788,7 @@ Data preparation code
 Variable Genes<a class="anchor" aria-label="anchor" href="#function-1-top_variable_features-select-most-variable-genes"></a>
 </h3>
 <p>For PCA, we typically want to focus on the most variable genes:</p>
-<div class="sourceCode" id="cb21"><pre class="downlit sourceCode r">
+<div class="sourceCode" id="cb18"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="co">#' Select top variable features</span></span>
 <span><span class="co">#'</span></span>
 <span><span class="co">#' @param se A SummarizedExperiment object</span></span>
@@ -832,7 +809,7 @@ Variable Genes<a class="anchor" aria-label="anchor" href="#function-1-top_variab
 <span>    <span class="co"># Subset the SummarizedExperiment</span></span>
 <span>    <span class="va">se</span><span class="op">[</span><span class="va">top_idx</span>, <span class="op">]</span></span>
 <span><span class="op">}</span></span></code></pre></div>
-<div class="sourceCode" id="cb22"><pre class="downlit sourceCode r">
+<div class="sourceCode" id="cb19"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="co"># Get top 500 variable genes</span></span>
 <span><span class="va">se_top</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/top_variable_features.html">top_variable_features</a></span><span class="op">(</span><span class="va">airway</span>, n <span class="op">=</span> <span class="fl">500</span><span class="op">)</span></span>
 <span><span class="fu"><a href="https://rdrr.io/r/base/dim.html" class="external-link">dim</a></span><span class="op">(</span><span class="va">se_top</span><span class="op">)</span></span></code></pre></div>
@@ -847,7 +824,7 @@ What advantage does this provide?</p>
 <h3 id="function-2-run_pca-perform-pca">Function 2: <code>run_pca()</code> — Perform PCA<a class="anchor" aria-label="anchor" href="#function-2-run_pca-perform-pca"></a>
 </h3>
 <p>Now let’s run PCA on our data:</p>
-<div class="sourceCode" id="cb23"><pre class="downlit sourceCode r">
+<div class="sourceCode" id="cb20"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="co">#' Run PCA on a SummarizedExperiment</span></span>
 <span><span class="co">#'</span></span>
 <span><span class="co">#' @param se A SummarizedExperiment object</span></span>
@@ -892,7 +869,7 @@ What advantage does this provide?</p>
 <span>        scores <span class="op">=</span> <span class="va">scores</span></span>
 <span>    <span class="op">)</span><span class="op">)</span></span>
 <span><span class="op">}</span></span></code></pre></div>
-<div class="sourceCode" id="cb24"><pre class="downlit sourceCode r">
+<div class="sourceCode" id="cb21"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="co"># Run PCA on airway data</span></span>
 <span><span class="va">pca_result</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/run_pca.html">run_pca</a></span><span class="op">(</span><span class="va">airway</span>, n_top <span class="op">=</span> <span class="fl">500</span><span class="op">)</span></span>
 <span></span>
@@ -907,7 +884,7 @@ What advantage does this provide?</p>
 <h3 id="function-3-pca_variance_explained-helper-for-variance">Function 3: <code>pca_variance_explained()</code> — Helper for
 Variance<a class="anchor" aria-label="anchor" href="#function-3-pca_variance_explained-helper-for-variance"></a>
 </h3>
-<div class="sourceCode" id="cb25"><pre class="downlit sourceCode r">
+<div class="sourceCode" id="cb22"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="co">#' Get variance explained by each PC</span></span>
 <span><span class="co">#'</span></span>
 <span><span class="co">#' @param pca_result Output from run_pca()</span></span>
@@ -922,7 +899,7 @@ Variance<a class="anchor" aria-label="anchor" href="#function-3-pca_variance_exp
 <span>        variance_percent <span class="op">=</span> <span class="va">var_explained</span></span>
 <span>    <span class="op">)</span></span>
 <span><span class="op">}</span></span></code></pre></div>
-<div class="sourceCode" id="cb26"><pre class="downlit sourceCode r">
+<div class="sourceCode" id="cb23"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="va">var_df</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/pca_variance_explained.html">pca_variance_explained</a></span><span class="op">(</span><span class="va">pca_result</span><span class="op">)</span></span>
 <span><span class="fu"><a href="https://rdrr.io/r/utils/head.html" class="external-link">head</a></span><span class="op">(</span><span class="va">var_df</span><span class="op">)</span></span></code></pre></div>
 <hr>
@@ -930,7 +907,7 @@ Variance<a class="anchor" aria-label="anchor" href="#function-3-pca_variance_exp
 <div class="section level3">
 <h3 id="function-4-plot_pca-visualize-pca-results">Function 4: <code>plot_pca()</code> — Visualize PCA Results<a class="anchor" aria-label="anchor" href="#function-4-plot_pca-visualize-pca-results"></a>
 </h3>
-<div class="sourceCode" id="cb27"><pre class="downlit sourceCode r">
+<div class="sourceCode" id="cb24"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="co">#' Create a PCA scatter plot</span></span>
 <span><span class="co">#'</span></span>
 <span><span class="co">#' @param pca_result Output from run_pca()</span></span>
@@ -980,10 +957,10 @@ Variance<a class="anchor" aria-label="anchor" href="#function-3-pca_variance_exp
 <div class="section level4">
 <h4 id="creating-pca-visualizations">Creating PCA Visualizations<a class="anchor" aria-label="anchor" href="#creating-pca-visualizations"></a>
 </h4>
-<div class="sourceCode" id="cb28"><pre class="downlit sourceCode r">
+<div class="sourceCode" id="cb25"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="co"># Basic PCA plot colored by treatment</span></span>
 <span><span class="fu"><a href="../reference/plot_pca.html">plot_pca</a></span><span class="op">(</span><span class="va">pca_result</span>, color_by <span class="op">=</span> <span class="st">"dex"</span><span class="op">)</span></span></code></pre></div>
-<div class="sourceCode" id="cb29"><pre class="downlit sourceCode r">
+<div class="sourceCode" id="cb26"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="co"># Color by treatment, shape by cell line</span></span>
 <span><span class="fu"><a href="../reference/plot_pca.html">plot_pca</a></span><span class="op">(</span><span class="va">pca_result</span>, color_by <span class="op">=</span> <span class="st">"dex"</span>, shape_by <span class="op">=</span> <span class="st">"cell"</span><span class="op">)</span></span></code></pre></div>
 <blockquote>
@@ -1000,7 +977,7 @@ Files<a class="anchor" aria-label="anchor" href="#function-5-save_pca_results-ex
 <p>The CLI and reproducible scripts need to write analysis outputs to
 disk. This function exports PCA scores, variance, and optionally a plot
 — the same outputs your CLI subcommand will produce:</p>
-<div class="sourceCode" id="cb30"><pre class="downlit sourceCode r">
+<div class="sourceCode" id="cb27"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="co">#' Save PCA results to files</span></span>
 <span><span class="co">#'</span></span>
 <span><span class="co">#' @param pca_result Output from run_pca()</span></span>
@@ -1040,7 +1017,7 @@ disk. This function exports PCA scores, variance, and optionally a plot
 <span>    </span>
 <span>    <span class="fu"><a href="https://rdrr.io/r/base/invisible.html" class="external-link">invisible</a></span><span class="op">(</span><span class="cn">NULL</span><span class="op">)</span></span>
 <span><span class="op">}</span></span></code></pre></div>
-<div class="sourceCode" id="cb31"><pre class="downlit sourceCode r">
+<div class="sourceCode" id="cb28"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="co"># Save results to a temporary directory</span></span>
 <span><span class="va">tmp_out</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/base/file.path.html" class="external-link">file.path</a></span><span class="op">(</span><span class="fu"><a href="https://rdrr.io/r/base/tempfile.html" class="external-link">tempdir</a></span><span class="op">(</span><span class="op">)</span>, <span class="st">"pca_output"</span><span class="op">)</span></span>
 <span><span class="fu"><a href="../reference/save_pca_results.html">save_pca_results</a></span><span class="op">(</span><span class="va">pca_result</span>, <span class="va">tmp_out</span>, color_by <span class="op">=</span> <span class="st">"dex"</span><span class="op">)</span></span>
@@ -1061,49 +1038,6 @@ analysis core and the command line.</p>
 </div>
 </div>
 <div class="section level2">
-<h2 id="visualization-with-complexheatmap">Visualization with ComplexHeatmap<a class="anchor" aria-label="anchor" href="#visualization-with-complexheatmap"></a>
-</h2>
-<p>Let’s visualize the top variable genes using a heatmap. This is a
-common way to explore patterns in gene expression data.</p>
-<div class="sourceCode" id="cb32"><pre class="downlit sourceCode r">
-<code class="sourceCode R"><span><span class="co"># Get top 20 most variable genes for visualization</span></span>
-<span><span class="va">se_top20</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/top_variable_features.html">top_variable_features</a></span><span class="op">(</span><span class="va">airway</span>, n <span class="op">=</span> <span class="fl">20</span><span class="op">)</span></span>
-<span></span>
-<span><span class="co"># Extract and log-transform the counts</span></span>
-<span><span class="va">heatmap_mat</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/base/Log.html" class="external-link">log2</a></span><span class="op">(</span><span class="fu"><a href="https://rdrr.io/pkg/SummarizedExperiment/man/SummarizedExperiment-class.html" class="external-link">assay</a></span><span class="op">(</span><span class="va">se_top20</span>, <span class="st">"counts"</span><span class="op">)</span> <span class="op">+</span> <span class="fl">1</span><span class="op">)</span></span>
-<span></span>
-<span><span class="co"># Scale by row (gene) for better visualization</span></span>
-<span><span class="va">heatmap_mat</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/base/t.html" class="external-link">t</a></span><span class="op">(</span><span class="fu"><a href="https://rdrr.io/r/base/scale.html" class="external-link">scale</a></span><span class="op">(</span><span class="fu"><a href="https://rdrr.io/r/base/t.html" class="external-link">t</a></span><span class="op">(</span><span class="va">heatmap_mat</span><span class="op">)</span><span class="op">)</span><span class="op">)</span></span></code></pre></div>
-<div class="sourceCode" id="cb33"><pre class="downlit sourceCode r">
-<code class="sourceCode R"><span><span class="co"># Create annotation for columns (samples)</span></span>
-<span><span class="va">col_anno</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/pkg/ComplexHeatmap/man/HeatmapAnnotation.html" class="external-link">HeatmapAnnotation</a></span><span class="op">(</span></span>
-<span>    treatment <span class="op">=</span> <span class="va">airway</span><span class="op">$</span><span class="va">dex</span>,</span>
-<span>    cell_line <span class="op">=</span> <span class="va">airway</span><span class="op">$</span><span class="va">cell</span>,</span>
-<span>    col <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/list.html" class="external-link">list</a></span><span class="op">(</span></span>
-<span>        treatment <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="st">"trt"</span> <span class="op">=</span> <span class="st">"steelblue"</span>, <span class="st">"untrt"</span> <span class="op">=</span> <span class="st">"salmon"</span><span class="op">)</span>,</span>
-<span>        cell_line <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="st">"N052611"</span> <span class="op">=</span> <span class="st">"#E41A1C"</span>, <span class="st">"N061011"</span> <span class="op">=</span> <span class="st">"#377EB8"</span>, </span>
-<span>                      <span class="st">"N080611"</span> <span class="op">=</span> <span class="st">"#4DAF4A"</span>, <span class="st">"N61311"</span> <span class="op">=</span> <span class="st">"#984EA3"</span><span class="op">)</span></span>
-<span>    <span class="op">)</span></span>
-<span><span class="op">)</span></span>
-<span></span>
-<span><span class="co"># Create the heatmap</span></span>
-<span><span class="fu"><a href="https://rdrr.io/pkg/ComplexHeatmap/man/Heatmap.html" class="external-link">Heatmap</a></span><span class="op">(</span></span>
-<span>    <span class="va">heatmap_mat</span>,</span>
-<span>    name <span class="op">=</span> <span class="st">"Z-score"</span>,</span>
-<span>    top_annotation <span class="op">=</span> <span class="va">col_anno</span>,</span>
-<span>    show_row_names <span class="op">=</span> <span class="cn">TRUE</span>,</span>
-<span>    show_column_names <span class="op">=</span> <span class="cn">TRUE</span>,</span>
-<span>    column_title <span class="op">=</span> <span class="st">"Top 20 Variable Genes"</span>,</span>
-<span>    row_names_gp <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/grid/gpar.html" class="external-link">gpar</a></span><span class="op">(</span>fontsize <span class="op">=</span> <span class="fl">8</span><span class="op">)</span></span>
-<span><span class="op">)</span></span></code></pre></div>
-<blockquote>
-<p><strong>Exercise D:</strong> Modify the code to show the top 50
-variable genes. You may need to adjust <code>show_row_names</code> for
-readability.</p>
-</blockquote>
-<hr>
-</div>
-<div class="section level2">
 <h2 id="preparing-example-data-data-raw">Preparing Example Data (<code>data-raw/</code>)<a class="anchor" aria-label="anchor" href="#preparing-example-data-data-raw"></a>
 </h2>
 <p>Every package you build for <a href="HW1_Rubric.html">HW1</a> must
@@ -1112,7 +1046,7 @@ that is loadable via <code><a href="https://rdrr.io/r/utils/data.html" class="ex
 generated by a reproducible script in <code>data-raw/</code>. Here is
 the pattern for our reference package, starting from the full
 <code>airway</code> dataset:</p>
-<div class="sourceCode" id="cb34"><pre class="downlit sourceCode r">
+<div class="sourceCode" id="cb29"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="co">## data-raw/example_se.R</span></span>
 <span><span class="co">## -----------------------------------------------------------</span></span>
 <span><span class="co">## This script creates a small example SummarizedExperiment</span></span>
@@ -1226,9 +1160,9 @@ variables or specific file paths</li>
 <p>The five functions above form the <strong>analysis core</strong>. For
 HW1, you will expose them through <strong>three interfaces</strong> —
 each calling the same core functions:</p>
-<pre><code>                    Analysis Core
+<pre><code>                Analysis Core
   run_pca() → plot_pca() → save_pca_results()
-        ↑            ↑            ↑            
+        ↑            ↑           ↑            
    ┌────┴────┐  ┌────┴────┐  ┌───┴─────┐
    │ R API   │  │ Shiny   │  │  CLI    │
    │ (users) │  │ (web)   │  │(scripts)│
@@ -1237,7 +1171,7 @@ each calling the same core functions:</p>
 <h4 id="interface-1-r-api-lectures-56">Interface 1: R API (Lectures 5–6)<a class="anchor" aria-label="anchor" href="#interface-1-r-api-lectures-56"></a>
 </h4>
 <p>Users call your exported functions directly from R:</p>
-<div class="sourceCode" id="cb36"><pre class="downlit sourceCode r">
+<div class="sourceCode" id="cb31"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="kw"><a href="https://rdrr.io/r/base/library.html" class="external-link">library</a></span><span class="op">(</span><span class="va"><a href="https://github.com/St-Jude-MS-ABDS/ADS8192" class="external-link">ADS8192</a></span><span class="op">)</span></span>
 <span><span class="fu"><a href="https://rdrr.io/r/utils/data.html" class="external-link">data</a></span><span class="op">(</span><span class="st">"example_se"</span><span class="op">)</span></span>
 <span><span class="va">result</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/run_pca.html">run_pca</a></span><span class="op">(</span><span class="va">example_se</span>, n_top <span class="op">=</span> <span class="fl">500</span><span class="op">)</span></span>
@@ -1248,7 +1182,7 @@ each calling the same core functions:</p>
 <h4 id="interface-2-shiny-app-lectures-78">Interface 2: Shiny App (Lectures 7–8)<a class="anchor" aria-label="anchor" href="#interface-2-shiny-app-lectures-78"></a>
 </h4>
 <p>The Shiny server calls the same functions reactively:</p>
-<div class="sourceCode" id="cb37"><pre class="downlit sourceCode r">
+<div class="sourceCode" id="cb32"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="co"># Inside app_server.R (simplified)</span></span>
 <span><span class="va">result</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/pkg/shiny/man/reactive.html" class="external-link">reactive</a></span><span class="op">(</span><span class="op">{</span></span>
 <span>    <span class="fu"><a href="../reference/run_pca.html">run_pca</a></span><span class="op">(</span><span class="fu"><a href="https://rdrr.io/r/utils/data.html" class="external-link">data</a></span><span class="op">(</span><span class="op">)</span>, n_top <span class="op">=</span> <span class="va">input</span><span class="op">$</span><span class="va">n_top</span><span class="op">)</span></span>
@@ -1263,7 +1197,7 @@ each calling the same core functions:</p>
 </h4>
 <p>The CLI script in <code>exec/</code> parses arguments and calls the
 same functions:</p>
-<div class="sourceCode" id="cb38"><pre class="downlit sourceCode r">
+<div class="sourceCode" id="cb33"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="co">#!/usr/bin/env Rapp</span></span>
 <span><span class="co">#| name: sePCA</span></span>
 <span><span class="co">#| description: PCA analysis for SummarizedExperiment data.</span></span>
@@ -1369,88 +1303,9 @@ choose your project!</li>
 </div>
 </div>
 <div class="section level2">
-<h2 id="appendix-complete-function-reference">Appendix: Complete Function Reference<a class="anchor" aria-label="anchor" href="#appendix-complete-function-reference"></a>
-</h2>
-<div class="sourceCode" id="cb39"><pre class="downlit sourceCode r">
-<code class="sourceCode R"><span><span class="co"># SAVE THIS AS: analysis_core.R</span></span>
-<span></span>
-<span><span class="co">#' Select top variable features</span></span>
-<span><span class="va">top_variable_features</span> <span class="op">&lt;-</span> <span class="kw">function</span><span class="op">(</span><span class="va">se</span>, <span class="va">n</span> <span class="op">=</span> <span class="fl">500</span>, <span class="va">assay_name</span> <span class="op">=</span> <span class="st">"counts"</span><span class="op">)</span> <span class="op">{</span></span>
-<span>    <span class="va">mat</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/pkg/SummarizedExperiment/man/SummarizedExperiment-class.html" class="external-link">assay</a></span><span class="op">(</span><span class="va">se</span>, <span class="va">assay_name</span><span class="op">)</span></span>
-<span>    <span class="va">vars</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/base/apply.html" class="external-link">apply</a></span><span class="op">(</span><span class="va">mat</span>, <span class="fl">1</span>, <span class="va">var</span><span class="op">)</span></span>
-<span>    <span class="va">top_idx</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/base/order.html" class="external-link">order</a></span><span class="op">(</span><span class="va">vars</span>, decreasing <span class="op">=</span> <span class="cn">TRUE</span><span class="op">)</span><span class="op">[</span><span class="fu"><a href="https://rdrr.io/r/base/seq.html" class="external-link">seq_len</a></span><span class="op">(</span><span class="fu"><a href="https://rdrr.io/r/base/Extremes.html" class="external-link">min</a></span><span class="op">(</span><span class="va">n</span>, <span class="fu"><a href="https://rdrr.io/r/base/length.html" class="external-link">length</a></span><span class="op">(</span><span class="va">vars</span><span class="op">)</span><span class="op">)</span><span class="op">)</span><span class="op">]</span></span>
-<span>    <span class="va">se</span><span class="op">[</span><span class="va">top_idx</span>, <span class="op">]</span></span>
-<span><span class="op">}</span></span>
-<span></span>
-<span><span class="co">#' Run PCA on a SummarizedExperiment</span></span>
-<span><span class="va">run_pca</span> <span class="op">&lt;-</span> <span class="kw">function</span><span class="op">(</span><span class="va">se</span>, <span class="va">assay_name</span> <span class="op">=</span> <span class="st">"counts"</span>, <span class="va">n_top</span> <span class="op">=</span> <span class="fl">500</span>, </span>
-<span>                    <span class="va">scale</span> <span class="op">=</span> <span class="cn">TRUE</span>, <span class="va">log_transform</span> <span class="op">=</span> <span class="cn">TRUE</span><span class="op">)</span> <span class="op">{</span></span>
-<span>    <span class="va">se_top</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/top_variable_features.html">top_variable_features</a></span><span class="op">(</span><span class="va">se</span>, n <span class="op">=</span> <span class="va">n_top</span>, assay_name <span class="op">=</span> <span class="va">assay_name</span><span class="op">)</span></span>
-<span>    <span class="va">mat</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/pkg/SummarizedExperiment/man/SummarizedExperiment-class.html" class="external-link">assay</a></span><span class="op">(</span><span class="va">se_top</span>, <span class="va">assay_name</span><span class="op">)</span></span>
-<span>    <span class="kw">if</span> <span class="op">(</span><span class="va">log_transform</span><span class="op">)</span> <span class="va">mat</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/base/Log.html" class="external-link">log2</a></span><span class="op">(</span><span class="va">mat</span> <span class="op">+</span> <span class="fl">1</span><span class="op">)</span></span>
-<span>    <span class="va">mat_t</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/base/t.html" class="external-link">t</a></span><span class="op">(</span><span class="va">mat</span><span class="op">)</span></span>
-<span>    <span class="va">pca_result</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/stats/prcomp.html" class="external-link">prcomp</a></span><span class="op">(</span><span class="va">mat_t</span>, scale. <span class="op">=</span> <span class="va">scale</span>, center <span class="op">=</span> <span class="cn">TRUE</span><span class="op">)</span></span>
-<span>    <span class="va">scores</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/base/as.data.frame.html" class="external-link">as.data.frame</a></span><span class="op">(</span><span class="va">pca_result</span><span class="op">$</span><span class="va">x</span><span class="op">)</span></span>
-<span>    <span class="va">scores</span><span class="op">$</span><span class="va">sample_id</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/base/colnames.html" class="external-link">rownames</a></span><span class="op">(</span><span class="va">scores</span><span class="op">)</span></span>
-<span>    <span class="va">col_data</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/base/as.data.frame.html" class="external-link">as.data.frame</a></span><span class="op">(</span><span class="fu"><a href="https://rdrr.io/pkg/SummarizedExperiment/man/SummarizedExperiment-class.html" class="external-link">colData</a></span><span class="op">(</span><span class="va">se</span><span class="op">)</span><span class="op">)</span></span>
-<span>    <span class="va">col_data</span><span class="op">$</span><span class="va">sample_id</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/base/colnames.html" class="external-link">rownames</a></span><span class="op">(</span><span class="va">col_data</span><span class="op">)</span></span>
-<span>    <span class="va">scores</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/base/merge.html" class="external-link">merge</a></span><span class="op">(</span><span class="va">scores</span>, <span class="va">col_data</span>, by <span class="op">=</span> <span class="st">"sample_id"</span><span class="op">)</span></span>
-<span>    <span class="fu"><a href="https://rdrr.io/r/base/list.html" class="external-link">list</a></span><span class="op">(</span>pca <span class="op">=</span> <span class="va">pca_result</span>, scores <span class="op">=</span> <span class="va">scores</span><span class="op">)</span></span>
-<span><span class="op">}</span></span>
-<span></span>
-<span><span class="co">#' Get variance explained by each PC</span></span>
-<span><span class="va">pca_variance_explained</span> <span class="op">&lt;-</span> <span class="kw">function</span><span class="op">(</span><span class="va">pca_result</span><span class="op">)</span> <span class="op">{</span></span>
-<span>    <span class="va">pca</span> <span class="op">&lt;-</span> <span class="va">pca_result</span><span class="op">$</span><span class="va">pca</span></span>
-<span>    <span class="va">var_explained</span> <span class="op">&lt;-</span> <span class="va">pca</span><span class="op">$</span><span class="va">sdev</span><span class="op">^</span><span class="fl">2</span> <span class="op">/</span> <span class="fu"><a href="https://rdrr.io/r/base/sum.html" class="external-link">sum</a></span><span class="op">(</span><span class="va">pca</span><span class="op">$</span><span class="va">sdev</span><span class="op">^</span><span class="fl">2</span><span class="op">)</span> <span class="op">*</span> <span class="fl">100</span></span>
-<span>    <span class="fu"><a href="https://rdrr.io/r/base/data.frame.html" class="external-link">data.frame</a></span><span class="op">(</span>PC <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/paste.html" class="external-link">paste0</a></span><span class="op">(</span><span class="st">"PC"</span>, <span class="fu"><a href="https://rdrr.io/r/base/seq.html" class="external-link">seq_along</a></span><span class="op">(</span><span class="va">var_explained</span><span class="op">)</span><span class="op">)</span>, </span>
-<span>               variance_percent <span class="op">=</span> <span class="va">var_explained</span><span class="op">)</span></span>
-<span><span class="op">}</span></span>
-<span></span>
-<span><span class="co">#' Create a PCA scatter plot</span></span>
-<span><span class="va">plot_pca</span> <span class="op">&lt;-</span> <span class="kw">function</span><span class="op">(</span><span class="va">pca_result</span>, <span class="va">color_by</span> <span class="op">=</span> <span class="cn">NULL</span>, <span class="va">shape_by</span> <span class="op">=</span> <span class="cn">NULL</span>, </span>
-<span>                     <span class="va">pcs</span> <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="fl">1</span>, <span class="fl">2</span><span class="op">)</span>, <span class="va">point_size</span> <span class="op">=</span> <span class="fl">4</span><span class="op">)</span> <span class="op">{</span></span>
-<span>    <span class="va">scores</span> <span class="op">&lt;-</span> <span class="va">pca_result</span><span class="op">$</span><span class="va">scores</span></span>
-<span>    <span class="va">var_exp</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/pca_variance_explained.html">pca_variance_explained</a></span><span class="op">(</span><span class="va">pca_result</span><span class="op">)</span></span>
-<span>    <span class="va">pc_x</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/base/paste.html" class="external-link">paste0</a></span><span class="op">(</span><span class="st">"PC"</span>, <span class="va">pcs</span><span class="op">[</span><span class="fl">1</span><span class="op">]</span><span class="op">)</span></span>
-<span>    <span class="va">pc_y</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/base/paste.html" class="external-link">paste0</a></span><span class="op">(</span><span class="st">"PC"</span>, <span class="va">pcs</span><span class="op">[</span><span class="fl">2</span><span class="op">]</span><span class="op">)</span></span>
-<span>    <span class="va">var_x</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/base/Round.html" class="external-link">round</a></span><span class="op">(</span><span class="va">var_exp</span><span class="op">$</span><span class="va">variance_percent</span><span class="op">[</span><span class="va">pcs</span><span class="op">[</span><span class="fl">1</span><span class="op">]</span><span class="op">]</span>, <span class="fl">1</span><span class="op">)</span></span>
-<span>    <span class="va">var_y</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/base/Round.html" class="external-link">round</a></span><span class="op">(</span><span class="va">var_exp</span><span class="op">$</span><span class="va">variance_percent</span><span class="op">[</span><span class="va">pcs</span><span class="op">[</span><span class="fl">2</span><span class="op">]</span><span class="op">]</span>, <span class="fl">1</span><span class="op">)</span></span>
-<span>    <span class="va">p</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://ggplot2.tidyverse.org/reference/ggplot.html" class="external-link">ggplot</a></span><span class="op">(</span><span class="va">scores</span>, <span class="fu"><a href="https://ggplot2.tidyverse.org/reference/aes.html" class="external-link">aes</a></span><span class="op">(</span>x <span class="op">=</span> <span class="va">.data</span><span class="op">[[</span><span class="va">pc_x</span><span class="op">]</span><span class="op">]</span>, y <span class="op">=</span> <span class="va">.data</span><span class="op">[[</span><span class="va">pc_y</span><span class="op">]</span><span class="op">]</span><span class="op">)</span><span class="op">)</span> <span class="op">+</span></span>
-<span>        <span class="fu"><a href="https://ggplot2.tidyverse.org/reference/ggtheme.html" class="external-link">theme_minimal</a></span><span class="op">(</span>base_size <span class="op">=</span> <span class="fl">14</span><span class="op">)</span> <span class="op">+</span></span>
-<span>        <span class="fu"><a href="https://ggplot2.tidyverse.org/reference/labs.html" class="external-link">labs</a></span><span class="op">(</span>x <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/paste.html" class="external-link">paste0</a></span><span class="op">(</span><span class="va">pc_x</span>, <span class="st">" ("</span>, <span class="va">var_x</span>, <span class="st">"% variance)"</span><span class="op">)</span>,</span>
-<span>             y <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/paste.html" class="external-link">paste0</a></span><span class="op">(</span><span class="va">pc_y</span>, <span class="st">" ("</span>, <span class="va">var_y</span>, <span class="st">"% variance)"</span><span class="op">)</span>,</span>
-<span>             title <span class="op">=</span> <span class="st">"PCA Plot"</span><span class="op">)</span></span>
-<span>    <span class="kw">if</span> <span class="op">(</span><span class="op">!</span><span class="fu"><a href="https://rdrr.io/r/base/NULL.html" class="external-link">is.null</a></span><span class="op">(</span><span class="va">color_by</span><span class="op">)</span><span class="op">)</span> <span class="va">p</span> <span class="op">&lt;-</span> <span class="va">p</span> <span class="op">+</span> <span class="fu"><a href="https://ggplot2.tidyverse.org/reference/aes.html" class="external-link">aes</a></span><span class="op">(</span>color <span class="op">=</span> <span class="va">.data</span><span class="op">[[</span><span class="va">color_by</span><span class="op">]</span><span class="op">]</span><span class="op">)</span></span>
-<span>    <span class="kw">if</span> <span class="op">(</span><span class="op">!</span><span class="fu"><a href="https://rdrr.io/r/base/NULL.html" class="external-link">is.null</a></span><span class="op">(</span><span class="va">shape_by</span><span class="op">)</span><span class="op">)</span> <span class="va">p</span> <span class="op">&lt;-</span> <span class="va">p</span> <span class="op">+</span> <span class="fu"><a href="https://ggplot2.tidyverse.org/reference/aes.html" class="external-link">aes</a></span><span class="op">(</span>shape <span class="op">=</span> <span class="va">.data</span><span class="op">[[</span><span class="va">shape_by</span><span class="op">]</span><span class="op">]</span><span class="op">)</span></span>
-<span>    <span class="va">p</span> <span class="op">+</span> <span class="fu"><a href="https://ggplot2.tidyverse.org/reference/geom_point.html" class="external-link">geom_point</a></span><span class="op">(</span>size <span class="op">=</span> <span class="va">point_size</span><span class="op">)</span></span>
-<span><span class="op">}</span></span>
-<span></span>
-<span><span class="co">#' Save PCA results to files</span></span>
-<span><span class="va">save_pca_results</span> <span class="op">&lt;-</span> <span class="kw">function</span><span class="op">(</span><span class="va">pca_result</span>, <span class="va">output_dir</span>, <span class="va">color_by</span> <span class="op">=</span> <span class="cn">NULL</span><span class="op">)</span> <span class="op">{</span></span>
-<span>    <span class="kw">if</span> <span class="op">(</span><span class="op">!</span><span class="fu"><a href="https://rdrr.io/r/base/character.html" class="external-link">is.character</a></span><span class="op">(</span><span class="va">output_dir</span><span class="op">)</span> <span class="op">||</span> <span class="fu"><a href="https://rdrr.io/r/base/length.html" class="external-link">length</a></span><span class="op">(</span><span class="va">output_dir</span><span class="op">)</span> <span class="op">!=</span> <span class="fl">1</span><span class="op">)</span> <span class="op">{</span></span>
-<span>        <span class="kw"><a href="https://rdrr.io/r/base/stop.html" class="external-link">stop</a></span><span class="op">(</span><span class="st">"output_dir must be a single directory path"</span><span class="op">)</span></span>
-<span>    <span class="op">}</span></span>
-<span>    <span class="kw">if</span> <span class="op">(</span><span class="op">!</span><span class="fu"><a href="https://rdrr.io/r/base/files2.html" class="external-link">dir.exists</a></span><span class="op">(</span><span class="va">output_dir</span><span class="op">)</span><span class="op">)</span> <span class="fu"><a href="https://rdrr.io/r/base/files2.html" class="external-link">dir.create</a></span><span class="op">(</span><span class="va">output_dir</span>, recursive <span class="op">=</span> <span class="cn">TRUE</span><span class="op">)</span></span>
-<span>    <span class="va">scores_file</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/base/file.path.html" class="external-link">file.path</a></span><span class="op">(</span><span class="va">output_dir</span>, <span class="st">"pca_scores.tsv"</span><span class="op">)</span></span>
-<span>    <span class="fu"><a href="https://rdrr.io/r/utils/write.table.html" class="external-link">write.table</a></span><span class="op">(</span><span class="va">pca_result</span><span class="op">$</span><span class="va">scores</span>, <span class="va">scores_file</span>, sep <span class="op">=</span> <span class="st">"\t"</span>,</span>
-<span>                row.names <span class="op">=</span> <span class="cn">FALSE</span>, quote <span class="op">=</span> <span class="cn">FALSE</span><span class="op">)</span></span>
-<span>    <span class="va">var_df</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/pca_variance_explained.html">pca_variance_explained</a></span><span class="op">(</span><span class="va">pca_result</span><span class="op">)</span></span>
-<span>    <span class="va">var_file</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/base/file.path.html" class="external-link">file.path</a></span><span class="op">(</span><span class="va">output_dir</span>, <span class="st">"pca_variance.tsv"</span><span class="op">)</span></span>
-<span>    <span class="fu"><a href="https://rdrr.io/r/utils/write.table.html" class="external-link">write.table</a></span><span class="op">(</span><span class="va">var_df</span>, <span class="va">var_file</span>, sep <span class="op">=</span> <span class="st">"\t"</span>,</span>
-<span>                row.names <span class="op">=</span> <span class="cn">FALSE</span>, quote <span class="op">=</span> <span class="cn">FALSE</span><span class="op">)</span></span>
-<span>    <span class="kw">if</span> <span class="op">(</span><span class="op">!</span><span class="fu"><a href="https://rdrr.io/r/base/NULL.html" class="external-link">is.null</a></span><span class="op">(</span><span class="va">color_by</span><span class="op">)</span><span class="op">)</span> <span class="op">{</span></span>
-<span>        <span class="va">plot_file</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/base/file.path.html" class="external-link">file.path</a></span><span class="op">(</span><span class="va">output_dir</span>, <span class="st">"pca_plot.png"</span><span class="op">)</span></span>
-<span>        <span class="va">p</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/plot_pca.html">plot_pca</a></span><span class="op">(</span><span class="va">pca_result</span>, color_by <span class="op">=</span> <span class="va">color_by</span><span class="op">)</span></span>
-<span>        <span class="fu">ggplot2</span><span class="fu">::</span><span class="fu"><a href="https://ggplot2.tidyverse.org/reference/ggsave.html" class="external-link">ggsave</a></span><span class="op">(</span><span class="va">plot_file</span>, <span class="va">p</span>, width <span class="op">=</span> <span class="fl">8</span>, height <span class="op">=</span> <span class="fl">6</span>, dpi <span class="op">=</span> <span class="fl">150</span><span class="op">)</span></span>
-<span>    <span class="op">}</span></span>
-<span>    <span class="fu"><a href="https://rdrr.io/r/base/invisible.html" class="external-link">invisible</a></span><span class="op">(</span><span class="cn">NULL</span><span class="op">)</span></span>
-<span><span class="op">}</span></span></code></pre></div>
-<hr>
-</div>
-<div class="section level2">
 <h2 id="session-info">Session Info<a class="anchor" aria-label="anchor" href="#session-info"></a>
 </h2>
-<div class="sourceCode" id="cb40"><pre class="downlit sourceCode r">
+<div class="sourceCode" id="cb34"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="fu"><a href="https://rdrr.io/r/utils/sessionInfo.html" class="external-link">sessionInfo</a></span><span class="op">(</span><span class="op">)</span></span></code></pre></div>
 </div>
   </main><aside class="col-md-3"><nav id="toc" aria-label="Table of contents"><h2>On this page</h2>
