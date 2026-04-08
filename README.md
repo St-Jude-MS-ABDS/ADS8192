@@ -63,8 +63,8 @@ All lectures are available as pkgdown articles on the [course site](https://st-j
 
 | # | Topic | What Students Learn |
 |---|-------|---------------------|
-| 04 | Data Structures & Bioconductor | Build an S4 class from scratch; write constructor, analysis, plotting, and export functions with input validation for homework 1 |
-| 05 | Package Development (devtools) | Turn loose scripts into a valid R package; `DESCRIPTION`, `NAMESPACE`, `roxygen2` exports/imports, `devtools::check()` |
+| 04 | Data Structures & Bioconductor | Build an S4 class from scratch; translating raw code to composable functions |
+| 05 | Package Development (devtools) | Turn functions into a valid R package; `DESCRIPTION`, `NAMESPACE`, `roxygen2` exports/imports, `devtools::check()` |
 | 06 | Package Development (pkgdown, testthat) | Write `testthat` tests (happy path + error cases); build and deploy a `pkgdown` documentation site |
 | 07 | Shiny Reactivity | Understand the reactive graph; build a UI with `bslib`; connect inputs → reactive expressions → outputs |
 | 08 | Shiny Packaging & Deployment | Embed a Shiny app inside an R package (`run_app()`); deploy to Posit Connect |
@@ -76,12 +76,12 @@ Each lecture includes working code examples (using the `airway` dataset), in-cla
 
 ## Assessments
 
-- **Quizzes** (one per lecture): theory, design rationale, and conceptual understanding
-- **Homework 1** (25 pts): Build a complete R package implementing one of 13 small computational analyses with all three interfaces. See the [HW1 Rubric](https://st-jude-ms-abds.github.io/ADS8192/articles/HW1_Rubric.html) and [Project Selection Guide](https://st-jude-ms-abds.github.io/ADS8192/articles/project-selection.html).
+- **Homework 1** (25 pts): Build a complete R package implementing one of 12 small computational analyses with all three interfaces. See the [HW1 Rubric](https://st-jude-ms-abds.github.io/ADS8192/articles/HW1_Rubric.html) and [Project Selection Guide](https://st-jude-ms-abds.github.io/ADS8192/articles/project-selection.html).
+- **Quiz** (10 pts, at the end of the week): A 20 question quiz covering theory, design rationale, and conceptual understanding. Open book, take as many times as you need on your own time, no pressure.
 
-### HW1 — Culminating Project
+### Homework 1
 
-HW1 is the capstone deliverable for Unit 1 and will be what students work on during labs. 
+Homework 1 is the capstone deliverable for Unit 1 and will be what students work on during labs. 
 
 Each student selects a project (or proposes a custom one) and delivers a public GitHub repository containing an R package with:
 
@@ -101,7 +101,7 @@ As we progress through the lectures, we'll build out the reference implementatio
 
 ## Reference Implementation (This Package)
 
-This repository **is** the reference implementation (Project 0: PCA Explorer). Students cannot choose this project but use it as a structural guide. It demonstrates the full layered architecture — core analysis functions with R API, Shiny, and CLI presentation layers — for a basic R package providing PCA tooling.
+This repository **is** the reference implementation (Project 0: PCA Explorer) serving as an example of what will be built during the labs. Students cannot choose this project but use it as a structural guide. It demonstrates the full layered architecture — core analysis functions with R API, Shiny, and CLI presentation layers — for a basic R package providing PCA and associated visualizations.
 
 ### Installation
 
@@ -154,19 +154,6 @@ Rscript -e "Rapp::install_pkg_cli_apps('ADS8192')"
 # Run PCA from the terminal
 ADS8192 pca --counts counts.tsv --meta samples.tsv --output results/ --color-by treatment
 ```
-
-### Core Functions
-
-| Function | Purpose |
-|----------|---------|
-| `top_variable_features()` | Select the N most variable genes |
-| `run_pca()` | Run PCA, return scores + metadata |
-| `pca_variance_explained()` | Variance explained per PC |
-| `plot_pca()` | PCA scatter plot (`ggplot2`) |
-| `plot_variance_explained()` | Variance explained bar chart (`ggplot2`) |
-| `save_pca_results()` | Export results to TSV files |
-| `run_app()` | Launch the Shiny PCA Explorer |
-
 
 ## Links
 
