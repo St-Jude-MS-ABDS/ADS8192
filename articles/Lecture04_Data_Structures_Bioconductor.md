@@ -13,7 +13,8 @@ well-defined objects, you can test them more easily, hand them to
 collaborators with less explanation, and reuse the same code across
 experiments and analyses more effectively.
 
-Thus,
+Thus, we start our learning journey at it’s proper place - at the
+beginning, down in the dirt with the data itself.
 
 ------------------------------------------------------------------------
 

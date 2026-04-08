@@ -198,12 +198,12 @@
 <tr class="odd">
 <td>04</td>
 <td>Data Structures &amp; Bioconductor</td>
-<td>Build an S4 class from scratch; write constructor, analysis, plotting, and export functions with input validation for homework 1</td>
+<td>Build an S4 class from scratch; translating raw code to composable functions</td>
 </tr>
 <tr class="even">
 <td>05</td>
 <td>Package Development (devtools)</td>
-<td>Turn loose scripts into a valid R package; <code>DESCRIPTION</code>, <code>NAMESPACE</code>, <code>roxygen2</code> exports/imports, <code>devtools::check()</code>
+<td>Turn functions into a valid R package; <code>DESCRIPTION</code>, <code>NAMESPACE</code>, <code>roxygen2</code> exports/imports, <code>devtools::check()</code>
 </td>
 </tr>
 <tr class="odd">
@@ -245,14 +245,14 @@
 </h2>
 <ul>
 <li>
-<strong>Quizzes</strong> (one per lecture): theory, design rationale, and conceptual understanding</li>
+<strong>Homework 1</strong> (25 pts): Build a complete R package implementing one of 12 small computational analyses with all three interfaces. See the <a href="https://st-jude-ms-abds.github.io/ADS8192/articles/HW1_Rubric.html">HW1 Rubric</a> and <a href="https://st-jude-ms-abds.github.io/ADS8192/articles/project-selection.html">Project Selection Guide</a>.</li>
 <li>
-<strong>Homework 1</strong> (25 pts): Build a complete R package implementing one of 13 small computational analyses with all three interfaces. See the <a href="https://st-jude-ms-abds.github.io/ADS8192/articles/HW1_Rubric.html">HW1 Rubric</a> and <a href="https://st-jude-ms-abds.github.io/ADS8192/articles/project-selection.html">Project Selection Guide</a>.</li>
+<strong>Quiz</strong> (10 pts, at the end of the week): A 20 question quiz covering theory, design rationale, and conceptual understanding. Open book, take as many times as you need on your own time, no pressure.</li>
 </ul>
 <div class="section level3">
-<h3 id="hw1--culminating-project">HW1 — Culminating Project<a class="anchor" aria-label="anchor" href="#hw1--culminating-project"></a>
+<h3 id="homework-1">Homework 1<a class="anchor" aria-label="anchor" href="#homework-1"></a>
 </h3>
-<p>HW1 is the capstone deliverable for Unit 1 and will be what students work on during labs.</p>
+<p>Homework 1 is the capstone deliverable for Unit 1 and will be what students work on during labs.</p>
 <p>Each student selects a project (or proposes a custom one) and delivers a public GitHub repository containing an R package with:</p>
 <table class="table">
 <colgroup>
@@ -313,7 +313,7 @@
 <div class="section level2">
 <h2 id="reference-implementation-this-package">Reference Implementation (This Package)<a class="anchor" aria-label="anchor" href="#reference-implementation-this-package"></a>
 </h2>
-<p>This repository <strong>is</strong> the reference implementation (Project 0: PCA Explorer). Students cannot choose this project but use it as a structural guide. It demonstrates the full layered architecture — core analysis functions with R API, Shiny, and CLI presentation layers — for a basic R package providing PCA tooling.</p>
+<p>This repository <strong>is</strong> the reference implementation (Project 0: PCA Explorer) serving as an example of what will be built during the labs. Students cannot choose this project but use it as a structural guide. It demonstrates the full layered architecture — core analysis functions with R API, Shiny, and CLI presentation layers — for a basic R package providing PCA and associated visualizations.</p>
 <div class="section level3">
 <h3 id="installation">Installation<a class="anchor" aria-label="anchor" href="#installation"></a>
 </h3>
@@ -357,50 +357,6 @@
 <span id="cb5-3"><a href="#cb5-3" tabindex="-1"></a></span>
 <span id="cb5-4"><a href="#cb5-4" tabindex="-1"></a><span class="co"># Run PCA from the terminal</span></span>
 <span id="cb5-5"><a href="#cb5-5" tabindex="-1"></a><span class="ex">ADS8192</span> pca <span class="at">--counts</span> counts.tsv <span class="at">--meta</span> samples.tsv <span class="at">--output</span> results/ <span class="at">--color-by</span> treatment</span></code></pre></div>
-</div>
-<div class="section level3">
-<h3 id="core-functions">Core Functions<a class="anchor" aria-label="anchor" href="#core-functions"></a>
-</h3>
-<table class="table">
-<colgroup>
-<col width="52%">
-<col width="47%">
-</colgroup>
-<thead><tr class="header">
-<th>Function</th>
-<th>Purpose</th>
-</tr></thead>
-<tbody>
-<tr class="odd">
-<td><code><a href="reference/top_variable_features.html">top_variable_features()</a></code></td>
-<td>Select the N most variable genes</td>
-</tr>
-<tr class="even">
-<td><code><a href="reference/run_pca.html">run_pca()</a></code></td>
-<td>Run PCA, return scores + metadata</td>
-</tr>
-<tr class="odd">
-<td><code><a href="reference/pca_variance_explained.html">pca_variance_explained()</a></code></td>
-<td>Variance explained per PC</td>
-</tr>
-<tr class="even">
-<td><code><a href="reference/plot_pca.html">plot_pca()</a></code></td>
-<td>PCA scatter plot (<code>ggplot2</code>)</td>
-</tr>
-<tr class="odd">
-<td><code><a href="reference/plot_variance_explained.html">plot_variance_explained()</a></code></td>
-<td>Variance explained bar chart (<code>ggplot2</code>)</td>
-</tr>
-<tr class="even">
-<td><code><a href="reference/save_pca_results.html">save_pca_results()</a></code></td>
-<td>Export results to TSV files</td>
-</tr>
-<tr class="odd">
-<td><code><a href="reference/run_app.html">run_app()</a></code></td>
-<td>Launch the Shiny PCA Explorer</td>
-</tr>
-</tbody>
-</table>
 </div>
 </div>
 <div class="section level2">
