@@ -674,7 +674,7 @@ usually a good thing. If you find yourself writing a function with 200+
 lines or dozens of parameters, it’s probably a sign that you should
 break it up into smaller pieces.
 
-These projects should be in the 4-10 function range.
+These projects should be in the ~4-10 function range.
 
 This doesn’t have to be perfect, it can and probably will change as you
 start implementing. Having a rough plan tends to help you stay focused
@@ -690,13 +690,36 @@ Perform PCA on the data 3.
 Helper function to calculate variance explained by PCs 4.
 [`plot_pca()`](https://st-jude-ms-abds.github.io/ADS8192/reference/plot_pca.md):
 Create a PCA scatter plot colored by sample metadata 5.
-`save_results()`: Save PCA results and plots to disk
+[`plot_variance_explained()`](https://st-jude-ms-abds.github.io/ADS8192/reference/plot_variance_explained.md):
+Create a bar chart of variance explained per PC 6.
+[`save_pca_results()`](https://st-jude-ms-abds.github.io/ADS8192/reference/save_pca_results.md):
+Save PCA results to disk
 
 ------------------------------------------------------------------------
 
-### Function 1: `top_variable_features()` — Select Most Variable Genes
+Let’s walk through the raw analysis code from the [Project 0
+reference](https://st-jude-ms-abds.github.io/ADS8192/articles/project-selection.md)
+step by step, then refactor each piece into a reusable function. The raw
+script lives in the project description — here we’ll pull out each
+section and show how it becomes a package function.
 
-For PCA, we typically want to focus on the most variable genes:
+### Step 1: Feature Selection
+
+The raw script selects the 500 most variable genes by row variance:
+
+``` r
+# --- Feature selection: top 500 most variable genes ---
+mat <- assay(airway, "counts")
+vars <- apply(mat, 1, stats::var)
+top_idx <- order(vars, decreasing = TRUE)[seq_len(500)]
+se_top <- airway[top_idx, ]
+```
+
+This is a natural boundary for a function — it takes a
+`SummarizedExperiment` and returns a subsetted one. We can also make the
+number of genes (`n`) and the assay name configurable:
+
+**Refactored function: `top_variable_features()`**
 
 ``` r
 #' Select top variable features
@@ -707,16 +730,9 @@ For PCA, we typically want to focus on the most variable genes:
 #'
 #' @return A SummarizedExperiment subset to the top n variable features
 top_variable_features <- function(se, n = 500, assay_name = "counts") {
-    # Get the assay data
     mat <- assay(se, assay_name)
-    
-    # Calculate variance for each gene (row)
-    vars <- apply(mat, 1, var)
-    
-    # Get indices of top n most variable
+    vars <- apply(mat, 1, stats::var)
     top_idx <- order(vars, decreasing = TRUE)[seq_len(min(n, length(vars)))]
-    
-    # Subset the SummarizedExperiment
     se[top_idx, ]
 }
 ```
@@ -727,14 +743,36 @@ se_top <- top_variable_features(airway, n = 500)
 dim(se_top)
 ```
 
-> **Discussion:** Why do we return the subsetted `SummarizedExperiment`
-> rather than just a matrix of values? What advantage does this provide?
-
 ------------------------------------------------------------------------
 
-### Function 2: `run_pca()` — Perform PCA
+### Step 2: PCA
 
-Now let’s run PCA on our data:
+The raw script runs PCA on the filtered data, log-transforms,
+transposes, then merges the PC scores back with sample metadata:
+
+``` r
+# --- PCA ---
+mat <- assay(se_top, "counts")
+mat <- log2(mat + 1)                 # log-transform with pseudocount
+mat_t <- t(mat)                      # prcomp expects samples as rows
+pca_result <- prcomp(mat_t, scale. = TRUE, center = TRUE)
+
+# Build scores data.frame merged with sample metadata
+scores <- as.data.frame(pca_result$x)
+scores$sample_id <- rownames(scores)
+col_data <- as.data.frame(colData(airway))
+col_data$sample_id <- rownames(col_data)
+scores <- merge(scores, col_data, by = "sample_id")
+scores <- scores[order(scores$sample_id), ]
+rownames(scores) <- NULL
+```
+
+This is the most complex step. The function wraps feature selection
+*and* PCA together, since they’re always run in sequence. We expose
+`log_transform` and `scale` as parameters so the user can control the
+preprocessing:
+
+**Refactored function: `run_pca()`**
 
 ``` r
 #' Run PCA on a SummarizedExperiment
@@ -748,38 +786,42 @@ Now let’s run PCA on our data:
 #' @return A list with:
 #'   - pca: The prcomp object
 #'   - scores: A data.frame of PC scores merged with sample metadata
-run_pca <- function(se, assay_name = "counts", n_top = 500, 
+run_pca <- function(se, assay_name = "counts", n_top = 500,
                     scale = TRUE, log_transform = TRUE) {
     # Subset to top variable features
     se_top <- top_variable_features(se, n = n_top, assay_name = assay_name)
-    
+
     # Get the data matrix
     mat <- assay(se_top, assay_name)
-    
+
     # Log-transform if requested (add pseudocount to avoid log(0))
     if (log_transform) {
         mat <- log2(mat + 1)
     }
-    
+
     # Transpose: prcomp expects samples as rows
     mat_t <- t(mat)
-    
+
     # Run PCA
     pca_result <- prcomp(mat_t, scale. = scale, center = TRUE)
-    
+
     # Create scores data.frame with sample metadata
     scores <- as.data.frame(pca_result$x)
     scores$sample_id <- rownames(scores)
-    
-    # Merge with colData
+
+    # Merge with colData, preserving sample order
     col_data <- as.data.frame(colData(se))
     col_data$sample_id <- rownames(col_data)
     scores <- merge(scores, col_data, by = "sample_id")
-    
-    return(list(
+
+    # Sort by sample_id for deterministic output
+    scores <- scores[order(scores$sample_id), ]
+    rownames(scores) <- NULL
+
+    list(
         pca = pca_result,
         scores = scores
-    ))
+    )
 }
 ```
 
@@ -796,7 +838,25 @@ summary(pca_result$pca)
 
 ------------------------------------------------------------------------
 
-### Function 3: `pca_variance_explained()` — Helper for Variance
+### Step 3: Variance Explained
+
+The raw script computes the percentage of variance captured by each PC:
+
+``` r
+# --- Variance explained ---
+var_explained <- pca_result$sdev^2 / sum(pca_result$sdev^2) * 100
+var_df <- data.frame(
+    PC = paste0("PC", seq_along(var_explained)),
+    variance_percent = var_explained
+)
+```
+
+This is a small helper — it extracts the variance info from a `prcomp`
+object into a tidy data.frame. We wrap it in a function that takes the
+output of
+[`run_pca()`](https://st-jude-ms-abds.github.io/ADS8192/reference/run_pca.md):
+
+**Refactored function: `pca_variance_explained()`**
 
 ``` r
 #' Get variance explained by each PC
@@ -807,7 +867,7 @@ summary(pca_result$pca)
 pca_variance_explained <- function(pca_result) {
     pca <- pca_result$pca
     var_explained <- pca$sdev^2 / sum(pca$sdev^2) * 100
-    
+
     data.frame(
         PC = paste0("PC", seq_along(var_explained)),
         variance_percent = var_explained
@@ -822,7 +882,46 @@ head(var_df)
 
 ------------------------------------------------------------------------
 
-### Function 4: `plot_pca()` — Visualize PCA Results
+### Step 4: Visualization
+
+The raw script produces two plots — a PCA scatter and a variance bar
+chart:
+
+``` r
+# --- PCA scatter plot ---
+var_x <- round(var_df$variance_percent[1], 1)
+var_y <- round(var_df$variance_percent[2], 1)
+
+p_pca <- ggplot(scores, aes(x = .data[["PC1"]], y = .data[["PC2"]])) +
+    geom_point(aes(color = .data[["dex"]]), size = 4) +
+    theme_bw(base_size = 14) +
+    labs(x = paste0("PC1 (", var_x, "% variance)"),
+         y = paste0("PC2 (", var_y, "% variance)"),
+         title = "PCA Plot")
+print(p_pca)
+
+# --- Variance explained bar chart ---
+var_top <- var_df[1:8, ]
+var_top$PC <- factor(var_top$PC, levels = var_top$PC)
+
+p_var <- ggplot(var_top, aes(x = .data$PC, y = .data$variance_percent)) +
+    geom_col(fill = "steelblue") +
+    geom_text(aes(label = sprintf("%.1f%%", .data$variance_percent)),
+              vjust = -0.5, size = 4) +
+    theme_bw(base_size = 14) +
+    labs(x = "Principal Component", y = "Variance Explained (%)") +
+    ylim(0, max(var_top$variance_percent) * 1.15)
+print(p_var)
+```
+
+These naturally become two functions.
+[`plot_pca()`](https://st-jude-ms-abds.github.io/ADS8192/reference/plot_pca.md)
+generalizes the scatter plot to support arbitrary PC axes, color, and
+shape mappings.
+[`plot_variance_explained()`](https://st-jude-ms-abds.github.io/ADS8192/reference/plot_variance_explained.md)
+wraps the bar chart:
+
+**Refactored function: `plot_pca()`**
 
 ``` r
 #' Create a PCA scatter plot
@@ -834,49 +933,85 @@ head(var_df)
 #' @param point_size Size of points (default: 4)
 #'
 #' @return A ggplot object
-plot_pca <- function(pca_result, color_by = NULL, shape_by = NULL, 
+plot_pca <- function(pca_result, color_by = NULL, shape_by = NULL,
                      pcs = c(1, 2), point_size = 4) {
     scores <- pca_result$scores
     var_exp <- pca_variance_explained(pca_result)
-    
+
     # Build PC column names
     pc_x <- paste0("PC", pcs[1])
     pc_y <- paste0("PC", pcs[2])
-    
+
+    # Validate requested PCs exist
+    if (!pc_x %in% colnames(scores)) {
+        stop("PC", pcs[1], " not found in scores. Only ",
+             sum(grepl("^PC\\d+$", colnames(scores))), " PCs available.",
+             call. = FALSE)
+    }
+    if (!pc_y %in% colnames(scores)) {
+        stop("PC", pcs[2], " not found in scores. Only ",
+             sum(grepl("^PC\\d+$", colnames(scores))), " PCs available.",
+             call. = FALSE)
+    }
+
     # Get variance percentages for axis labels
     var_x <- round(var_exp$variance_percent[pcs[1]], 1)
     var_y <- round(var_exp$variance_percent[pcs[2]], 1)
-    
-    # Build the plot
+
     p <- ggplot(scores, aes(x = .data[[pc_x]], y = .data[[pc_y]])) +
-        theme_minimal(base_size = 14) +
+        theme_bw(base_size = 14) +
         labs(
             x = paste0(pc_x, " (", var_x, "% variance)"),
             y = paste0(pc_y, " (", var_y, "% variance)"),
             title = "PCA Plot"
         )
-    
-    # Add color aesthetic if specified
+
+    # Add aesthetics if specified
     if (!is.null(color_by)) {
         p <- p + aes(color = .data[[color_by]])
     }
-    
-    # Add shape aesthetic if specified
+
     if (!is.null(shape_by)) {
         p <- p + aes(shape = .data[[shape_by]])
     }
-    
-    # Add points
+
     p <- p + geom_point(size = point_size)
-    
-    return(p)
+
+    p
 }
 ```
 
-#### Creating PCA Visualizations
+**Refactored function: `plot_variance_explained()`**
 
 ``` r
-# Basic PCA plot colored by treatment
+#' Plot variance explained by principal components
+#'
+#' @param pca_result Output from run_pca()
+#' @param n_pcs Maximum number of PCs to display (default: 8)
+#'
+#' @return A ggplot object
+plot_variance_explained <- function(pca_result, n_pcs = 8) {
+    var_df <- pca_variance_explained(pca_result)
+    var_df <- var_df[seq_len(min(n_pcs, nrow(var_df))), ]
+    var_df$PC <- factor(var_df$PC, levels = var_df$PC)
+
+    ggplot(var_df, aes(x = .data$PC, y = .data$variance_percent)) +
+        geom_col(fill = "steelblue") +
+        geom_text(
+            aes(label = sprintf("%.1f%%", .data$variance_percent)),
+            vjust = -0.5, size = 4
+        ) +
+        theme_bw(base_size = 14) +
+        labs(
+            x = "Principal Component",
+            y = "Variance Explained (%)"
+        ) +
+        ylim(0, max(var_df$variance_percent) * 1.15)
+}
+```
+
+``` r
+# PCA scatter colored by treatment
 plot_pca(pca_result, color_by = "dex")
 ```
 
@@ -885,55 +1020,78 @@ plot_pca(pca_result, color_by = "dex")
 plot_pca(pca_result, color_by = "dex", shape_by = "cell")
 ```
 
-> **Exercise C:** Create a PCA plot showing PC2 vs PC3 instead of PC1 vs
-> PC2. What do you observe?
+``` r
+# Variance explained bar chart
+plot_variance_explained(pca_result)
+```
 
 ------------------------------------------------------------------------
 
-### Function 5: `save_pca_results()` — Export Results to Files
+### Step 5: Export
 
-The CLI and reproducible scripts need to write analysis outputs to disk.
-This function exports PCA scores, variance, and optionally a plot — the
-same outputs your CLI subcommand will produce:
+The raw script writes the scores and variance tables to TSV files:
+
+``` r
+# --- Export TSVs ---
+output_dir <- file.path(tempdir(), "pca_output")
+dir.create(output_dir, recursive = TRUE, showWarnings = FALSE)
+
+write.table(scores, file.path(output_dir, "pca_scores.tsv"),
+            sep = "\t", row.names = FALSE, quote = FALSE)
+write.table(var_df, file.path(output_dir, "pca_variance.tsv"),
+            sep = "\t", row.names = FALSE, quote = FALSE)
+
+cat("Wrote results to:", output_dir, "\n")
+list.files(output_dir)
+```
+
+The function version takes the
+[`run_pca()`](https://st-jude-ms-abds.github.io/ADS8192/reference/run_pca.md)
+output and a directory, with an optional `prefix` for filenames. Every
+project in the [Project Selection
+Guide](https://st-jude-ms-abds.github.io/ADS8192/articles/project-selection.md)
+must produce TSV files from the CLI — this export function is the bridge
+between the analysis core and the command line:
+
+**Refactored function: `save_pca_results()`**
 
 ``` r
 #' Save PCA results to files
 #'
 #' @param pca_result Output from run_pca()
 #' @param output_dir Directory to save files (created if it doesn't exist)
-#' @param color_by Optional: metadata column for PCA plot coloring
+#' @param prefix Prefix for filenames (default: "pca")
 #'
 #' @return Invisible NULL; called for side effects (writing files)
-save_pca_results <- function(pca_result, output_dir, color_by = NULL) {
-    if (!is.character(output_dir) || length(output_dir) != 1) {
-        stop("output_dir must be a single directory path")
-    }
-    
+save_pca_results <- function(pca_result, output_dir, prefix = "pca") {
     if (!dir.exists(output_dir)) {
         dir.create(output_dir, recursive = TRUE)
     }
-    
-    # Export PCA scores
-    scores_file <- file.path(output_dir, "pca_scores.tsv")
-    write.table(pca_result$scores, scores_file, sep = "\t",
-                row.names = FALSE, quote = FALSE)
-    message("Wrote: ", scores_file)
-    
-    # Export variance explained
+
+    # Save scores
+    scores_file <- file.path(output_dir, paste0(prefix, "_scores.tsv"))
+    write.table(
+        pca_result$scores,
+        scores_file,
+        sep = "\t",
+        row.names = FALSE,
+        quote = FALSE
+    )
+
+    # Save variance explained
+    var_file <- file.path(output_dir, paste0(prefix, "_variance.tsv"))
     var_df <- pca_variance_explained(pca_result)
-    var_file <- file.path(output_dir, "pca_variance.tsv")
-    write.table(var_df, var_file, sep = "\t",
-                row.names = FALSE, quote = FALSE)
-    message("Wrote: ", var_file)
-    
-    # Optionally save the plot
-    if (!is.null(color_by)) {
-        plot_file <- file.path(output_dir, "pca_plot.png")
-        p <- plot_pca(pca_result, color_by = color_by)
-        ggplot2::ggsave(plot_file, p, width = 8, height = 6, dpi = 150)
-        message("Wrote: ", plot_file)
-    }
-    
+    write.table(
+        var_df,
+        var_file,
+        sep = "\t",
+        row.names = FALSE,
+        quote = FALSE
+    )
+
+    message("Saved: ", scores_file)
+    message("Saved: ", var_file)
+
     invisible(NULL)
 }
 ```
@@ -941,7 +1099,7 @@ save_pca_results <- function(pca_result, output_dir, color_by = NULL) {
 ``` r
 # Save results to a temporary directory
 tmp_out <- file.path(tempdir(), "pca_output")
-save_pca_results(pca_result, tmp_out, color_by = "dex")
+save_pca_results(pca_result, tmp_out)
 
 # Check what was created
 list.files(tmp_out)
@@ -952,10 +1110,50 @@ scores_back <- read.table(file.path(tmp_out, "pca_scores.tsv"),
 head(scores_back)
 ```
 
-> **Note:** Every project in the [Project Selection
-> Guide](https://st-jude-ms-abds.github.io/ADS8192/articles/project-selection.md)
-> must produce TSV files from the CLI. Your export function is the
-> bridge between the analysis core and the command line.
+------------------------------------------------------------------------
+
+### Verifying Equivalence
+
+We’ve broken the raw script into six functions. Let’s confirm they
+produce the same results as the original inline code:
+
+``` r
+# --- Run the original raw approach ---
+mat_raw <- assay(airway, "counts")
+vars_raw <- apply(mat_raw, 1, stats::var)
+top_idx_raw <- order(vars_raw, decreasing = TRUE)[seq_len(500)]
+se_top_raw <- airway[top_idx_raw, ]
+
+mat_raw <- assay(se_top_raw, "counts")
+mat_raw <- log2(mat_raw + 1)
+pca_raw <- prcomp(t(mat_raw), scale. = TRUE, center = TRUE)
+
+scores_raw <- as.data.frame(pca_raw$x)
+scores_raw$sample_id <- rownames(scores_raw)
+col_data_raw <- as.data.frame(colData(airway))
+col_data_raw$sample_id <- rownames(col_data_raw)
+scores_raw <- merge(scores_raw, col_data_raw, by = "sample_id")
+scores_raw <- scores_raw[order(scores_raw$sample_id), ]
+rownames(scores_raw) <- NULL
+
+var_raw <- pca_raw$sdev^2 / sum(pca_raw$sdev^2) * 100
+var_df_raw <- data.frame(
+    PC = paste0("PC", seq_along(var_raw)),
+    variance_percent = var_raw
+)
+
+# --- Run via package functions ---
+result_pkg <- run_pca(airway, n_top = 500)
+var_df_pkg <- pca_variance_explained(result_pkg)
+
+# --- Compare ---
+all.equal(scores_raw, result_pkg$scores)
+all.equal(var_df_raw, var_df_pkg)
+```
+
+The functions produce identical outputs to the raw script — but they’re
+composable, testable, and ready to be called from an R API, a Shiny app,
+or a CLI.
 
 ------------------------------------------------------------------------
 
@@ -970,28 +1168,15 @@ for our reference package, starting from the full `airway` dataset:
 
 ``` r
 ## data-raw/example_se.R
-## -----------------------------------------------------------
-## This script creates a small example SummarizedExperiment
-## from the airway dataset for use in package examples and tests.
-## -----------------------------------------------------------
 library(SummarizedExperiment)
 library(airway)
 
 data("airway")
 
-# Keep top 100 most variable genes + 400 random genes = 500 total
-counts <- assay(airway, "counts")
-vars <- apply(counts, 1, var)
-top100 <- names(sort(vars, decreasing = TRUE))[1:100]
+# Transformations, subsetting, etc could go here if I wanted to 
+# alter the dataset in any way.
 
-set.seed(42)
-rest <- sample(setdiff(rownames(counts), top100), 400)
-
-example_se <- airway[c(top100, rest), ]
-
-# Simplify colData to the columns students will use
-colData(example_se) <- colData(example_se)[, c("cell", "dex")]
-colnames(colData(example_se)) <- c("cell_line", "treatment")
+example_se <- airway
 
 # Save to data/
 usethis::use_data(example_se, overwrite = TRUE)
@@ -1007,122 +1192,34 @@ can load it with `data("example_se")`.
 
 ------------------------------------------------------------------------
 
-## Summary: The Analysis Core
-
-We now have five core functions that work together — everything a
-student package needs for the [HW1
-rubric](https://st-jude-ms-abds.github.io/ADS8192/articles/HW1_Rubric.md):
-
-| Rubric Category       | Function                                                                                                    | Input                   | Output            |
-|-----------------------|-------------------------------------------------------------------------------------------------------------|-------------------------|-------------------|
-| Analysis \#1 (1 pt)   | [`top_variable_features()`](https://st-jude-ms-abds.github.io/ADS8192/reference/top_variable_features.md)   | SE + n                  | Subsetted SE      |
-| Analysis \#2 (1 pt)   | [`run_pca()`](https://st-jude-ms-abds.github.io/ADS8192/reference/run_pca.md)                               | SE + parameters         | list(pca, scores) |
-| Summary/metric (1 pt) | [`pca_variance_explained()`](https://st-jude-ms-abds.github.io/ADS8192/reference/pca_variance_explained.md) | PCA result              | data.frame        |
-| Plotting (1 pt)       | [`plot_pca()`](https://st-jude-ms-abds.github.io/ADS8192/reference/plot_pca.md)                             | PCA result + aesthetics | ggplot            |
-| Export (CLI)          | [`save_pca_results()`](https://st-jude-ms-abds.github.io/ADS8192/reference/save_pca_results.md)             | PCA result + output dir | TSV files on disk |
-
-Design principles shared by all five:
-
-- **Take structured objects as input** — Not loose matrices that can get
-  out of sync
-- **Return well-defined outputs** — Predictable return types make them
-  composable
-- **Validate inputs with [`stop()`](https://rdrr.io/r/base/stop.html)**
-  — Informative error messages, not silent failures
-- **Are small and testable** — Each does one thing well
-- **Are reusable** — They don’t depend on global variables or specific
-  file paths
-
-------------------------------------------------------------------------
-
 ## Three Interfaces, One Core
 
-The five functions above form the **analysis core**. For HW1, you will
-expose them through **three interfaces** — each calling the same core
-functions:
+The six functions above form the **analysis core**. In future lectures,
+we will expose them through **three interfaces** — each calling the same
+core functions:
 
-                    Analysis Core
-      run_pca() → plot_pca() → save_pca_results()
-            ↑            ↑           ↑            
-       ┌────┴────┐  ┌────┴────┐  ┌───┴─────┐
-       │ R API   │  │ Shiny   │  │  CLI    │
-       │ (users) │  │ (web)   │  │(scripts)│
-       └─────────┘  └─────────┘  └─────────┘
+1.  R API (Lectures 5–6)
 
-#### Interface 1: R API (Lectures 5–6)
+- Users call your exported functions directly from R after loading your
+  package.
 
-Users call your exported functions directly from R:
+2.  Shiny App (Lectures 7–8)
 
-``` r
-library(ADS8192)
-data("example_se")
-result <- run_pca(example_se, n_top = 500)
-plot_pca(result, color_by = "treatment")
-save_pca_results(result, "results/")
-```
+- An interactive web app that calls the same functions in response to
+  user inputs.
 
-#### Interface 2: Shiny App (Lectures 7–8)
+3.  CLI via Rapp (Lectures 9–10)
 
-The Shiny server calls the same functions reactively:
-
-``` r
-# Inside app_server.R (simplified)
-result <- reactive({
-    run_pca(data(), n_top = input$n_top)
-})
-
-output$pca_plot <- renderPlot({
-    plot_pca(result(), color_by = input$color_by)
-})
-```
-
-#### Interface 3: CLI via Rapp (Lectures 9–10)
-
-The CLI script in `exec/` parses arguments and calls the same functions:
-
-``` r
-#!/usr/bin/env Rapp
-#| name: sePCA
-#| description: PCA analysis for SummarizedExperiment data.
-
-suppressPackageStartupMessages(library(ADS8192))
-
-counts <- ""   # --counts FILE
-meta   <- ""   # --meta   FILE
-output <- ""   # --output DIR
-n_top  <- 500L # --n-top  INT
-
-# Read data, build SE, run analysis, save results
-counts_df <- read.table(counts, sep = "\t", header = TRUE, row.names = 1)
-meta_df   <- read.table(meta,   sep = "\t", header = TRUE, row.names = 1)
-se     <- SummarizedExperiment(
-    assays = list(counts = as.matrix(counts_df)),
-    colData = meta_df
-)
-result <- run_pca(se, n_top = n_top)
-save_pca_results(result, output)
-```
+- A command-line interface that parses arguments and calls the same
+  functions from the terminal.
 
 > **Key insight:** Fix a bug in
 > [`run_pca()`](https://st-jude-ms-abds.github.io/ADS8192/reference/run_pca.md)
 > and it’s fixed in all three interfaces. Add a feature to
 > [`plot_pca()`](https://st-jude-ms-abds.github.io/ADS8192/reference/plot_pca.md)
-> and the Shiny app and CLI both benefit. This is the power of the
-> “three interfaces, one core” architecture.
-
-------------------------------------------------------------------------
-
-## Debrief & Reflection
-
-Before leaving this lecture, make sure you can answer:
-
-- Why is reusing `SummarizedExperiment` usually better than inventing a
-  custom container?
-- Which parts of today’s PCA workflow are domain logic, and which parts
-  are interface or packaging concerns?
-- If your future project needs a new abstraction, could it be a thin
-  wrapper around an existing Bioconductor class instead of a brand-new
-  data structure?
+> and the Shiny app and CLI both benefit. This is the power of multiple
+> thin wrappers around the same core functions to serve different types
+> of users.
 
 ------------------------------------------------------------------------
 
@@ -1130,53 +1227,23 @@ Before leaving this lecture, make sure you can answer:
 
 ### Micro-task 1: Create `analysis_core.R`
 
-Put all five functions into a single script called `analysis_core.R`:
-[`top_variable_features()`](https://st-jude-ms-abds.github.io/ADS8192/reference/top_variable_features.md),
-[`run_pca()`](https://st-jude-ms-abds.github.io/ADS8192/reference/run_pca.md),
-[`pca_variance_explained()`](https://st-jude-ms-abds.github.io/ADS8192/reference/pca_variance_explained.md),
-[`plot_pca()`](https://st-jude-ms-abds.github.io/ADS8192/reference/plot_pca.md),
-and
-[`save_pca_results()`](https://st-jude-ms-abds.github.io/ADS8192/reference/save_pca_results.md).
+Translate your raw analysis code into a set of composable functions in
+`R/analysis_core.R`. You can follow the pattern we used above, but adapt
+it to your specific analysis and dataset.
 
-Requirements:
+We’ll talk more about proper documentation in a later lecture, but if
+you can describe the parameters of each function as I do above you’ll be
+saving yourself a bit of later effort.
 
-- roxygen2-style comment header for every function (`#' @param`,
-  `#' @return`)
-- Input validation using [`stop()`](https://rdrr.io/r/base/stop.html) in
-  [`save_pca_results()`](https://st-jude-ms-abds.github.io/ADS8192/reference/save_pca_results.md)
-- No [`library()`](https://rdrr.io/r/base/library.html) calls inside the
-  functions (we’ll handle dependencies properly in Lecture 5)
-
-### Micro-task 2: Choose Your Project & Write `data-raw/`
-
-Browse the [Project Selection
-Guide](https://st-jude-ms-abds.github.io/ADS8192/articles/project-selection.md)
-and pick your HW1 project. Then write the `data-raw/example_se.R` (or
-`example_sce.R`) script that downloads your chosen Bioconductor dataset
-and prepares a bundled example object. Verify that your script runs
-end-to-end and that you can call `usethis::use_data()` on the result.
-
-### Micro-task 3: Reflection
+### Micro-task 2: Reflection
 
 Write 3-5 sentences describing why a structured container
 (`SummarizedExperiment`) is preferable to passing 3 separate
-`data.frames` around. Consider:
+`data.frames`/`matrix` objects around. Consider:
 
 - What happens when you subset?
 - What happens when you reorder?
 - How does it affect function signatures?
-
-### Reading
-
-- [Project Selection
-  Guide](https://st-jude-ms-abds.github.io/ADS8192/articles/project-selection.md)
-  — choose your project!
-- [HW1
-  Rubric](https://st-jude-ms-abds.github.io/ADS8192/articles/HW1_Rubric.md)
-  — the grading criteria
-- Advanced R sections on OOP + S4 (alignment workbook links)
-- SummarizedExperiment vignette (run
-  [`vignette("SummarizedExperiment")`](https://bioconductor.org/packages/release/bioc/vignettes/SummarizedExperiment/inst/doc/SummarizedExperiment.html))
 
 ------------------------------------------------------------------------
 
