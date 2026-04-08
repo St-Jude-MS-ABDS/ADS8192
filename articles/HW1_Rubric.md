@@ -2,11 +2,21 @@
 
 ## Overview
 
-Submit a public GitHub repository URL containing an R package that
-implements your chosen analysis on `SummarizedExperiment` or
-`SingleCellExperiment` objects (see the [Project Selection
-Guide](https://st-jude-ms-abds.github.io/ADS8192/articles/project-selection.md))
-with three interfaces: R API, Shiny app, and CLI.
+Submit a public GitHub repository URL containing an R package for your
+chosen
+[project](https://st-jude-ms-abds.github.io/ADS8192/articles/project-selection.md).
+
+The README should include installation instructions, quick-start
+examples for usage of the package and CLI, a link to the deployed Shiny
+app, and a link to the pkgdown site.
+
+### Due Date: Monday, April 20th - 11:59 PM
+
+Generally, you should be able to complete most of this assignment during
+the unit 1 lab sessions.
+
+There will be a review/help session on the Monday it is due for hands-on
+help from instructors.
 
 ------------------------------------------------------------------------
 
@@ -37,34 +47,40 @@ complete, author info is provided, etc
 
 ## 2. Core Analysis Functions (5 pts)
 
-| Points | Criterion                                                      | Check                                         |
-|--------|----------------------------------------------------------------|-----------------------------------------------|
-| 1      | First analysis function (project-specific)                     | Correct return type, well-defined behavior    |
-| 1      | Second analysis function (project-specific)                    | Correct return type, well-defined behavior    |
-| 1      | Third analysis function (project-specific)                     | Correct return type, well-defined behavior    |
-| 1      | Summary/metric function (project-specific)                     | Returns meaningful summary data.frame         |
-| 1      | Plotting function returns a ggplot with appropriate aesthetics | Returns ggplot object with informative labels |
+| Points | Criterion                                                                                                             | Check                                                                                                      |
+|--------|-----------------------------------------------------------------------------------------------------------------------|------------------------------------------------------------------------------------------------------------|
+| 1      | Functions accept SE or SCE input and return well structured output (SE/SCE, list, data.frame)                         | Input validation with informative errors                                                                   |
+| 1      | Plotting function returns a ggplot with appropriate aesthetics; supports at least 2 plot types or configurable output | Returns ggplot object with informative labels                                                              |
+| 1      | Functions are modular and composable (not one monolithic function)                                                    | Each function performs a single logical step; can be used independently                                    |
+| 1      | Output parity with the original analysis                                                                              | Same data with same parameters produces same results (or similar for non-deterministic outputs)            |
+| 1      | Improper parameter values produce informative error messages                                                          | graceful [`stop()`](https://rdrr.io/r/base/stop.html) with informative message if user feeds invalid input |
 
 **Checklist:**
 
 All core functions work on the project’s dataset
 
-Functions accept SE or SCE input (not raw matrices)
-
-Functions return well-defined types (SE/SCE, list, data.frame, ggplot)
+Functions accept SE or SCE input (not raw matrices) and return
+well-defined types (SE/SCE, list, data.frame, ggplot)
 
 Input validation with informative error messages
+
+Functions decompose the analysis into reusable, composable steps (not
+one monolithic function)
+
+Output parity with the original analysis (same data + parameters
+produces same/similar results; there may be slight variation with
+non-deterministic algorithms like UMAP).
 
 ------------------------------------------------------------------------
 
 ## 3. Testing (4 pts)
 
-| Points | Criterion                                         | Check                                                                                                   |
-|--------|---------------------------------------------------|---------------------------------------------------------------------------------------------------------|
-| 1      | testthat infrastructure set up correctly          | `tests/testthat.R` + `tests/testthat/` exist                                                            |
-| 1      | At least 8 test expectations across 2+ test files | `devtools::test()` shows pass count                                                                     |
-| 1      | Tests cover both “happy path” and error cases     | At least 1 [`expect_error()`](https://testthat.r-lib.org/reference/expect_error.html) for invalid input |
-| 1      | All tests pass                                    | `devtools::test()` — 0 failures                                                                         |
+| Points | Criterion                                     | Check                                                                                                   |
+|--------|-----------------------------------------------|---------------------------------------------------------------------------------------------------------|
+| 1      | testthat infrastructure set up correctly      | `tests/testthat.R` + `tests/testthat/` exist                                                            |
+| 1      | All exported functions tested                 | `devtools::test()` shows pass count                                                                     |
+| 1      | Tests cover both “happy path” and error cases | At least 1 [`expect_error()`](https://testthat.r-lib.org/reference/expect_error.html) for invalid input |
+| 1      | All tests pass                                | `devtools::test()` — 0 failures                                                                         |
 
 **Checklist:**
 
@@ -80,12 +96,13 @@ Tests don’t depend on global state or specific file paths
 
 ## 4. Documentation (4 pts)
 
-| Points | Criterion                                                     | Check                                                                                                  |
-|--------|---------------------------------------------------------------|--------------------------------------------------------------------------------------------------------|
-| 1      | All exported functions have roxygen2 documentation            | `?function_name` shows help for every export                                                           |
-| 1      | All `@param`, `@return`, and `@export` tags present           | No “Undocumented arguments” warnings                                                                   |
-| 1      | README with installation instructions and quick-start example | README renders on GitHub with working example                                                          |
-| 1      | pkgdown site deployed successfully                            | [`pkgdown::build_site()`](https://pkgdown.r-lib.org/reference/build_site.html) completes without error |
+| Points | Criterion                                                          | Check                                                                                                  |
+|--------|--------------------------------------------------------------------|--------------------------------------------------------------------------------------------------------|
+| 1      | All exported functions have roxygen2 documentation                 | `?function_name` shows help for every export                                                           |
+| 1      | All `@param`, `@return`, `@importFrom`, and `@export` tags present | No “Undocumented arguments” warnings                                                                   |
+| 0.5    | README with installation instructions and quick-start example      | README renders on GitHub with working example                                                          |
+| 0.5    | At least one vignette                                              | `vignettes/` contains at least one .Rmd with usage examples that renders properly                      |
+| 1      | pkgdown site deployed successfully                                 | [`pkgdown::build_site()`](https://pkgdown.r-lib.org/reference/build_site.html) completes without error |
 
 **Checklist:**
 
@@ -95,29 +112,32 @@ README includes install command + runnable example
 
 pkgdown site deployed and shows reference pages
 
-At least one vignette or pkgdown article exists
+At least one vignette exists and renders on pkgdown site
 
 ------------------------------------------------------------------------
 
 ## 5. Shiny App (4 pts)
 
-| Points | Criterion                                                                                                                 | Check                                                                            |
-|--------|---------------------------------------------------------------------------------------------------------------------------|----------------------------------------------------------------------------------|
-| 1      | [`run_app()`](https://st-jude-ms-abds.github.io/ADS8192/reference/run_app.md) launches without error from a clean session | App opens in browser                                                             |
-| 1      | App calls package core functions (not reimplemented logic)                                                                | Analysis and plotting use your exported functions, not reimplemented code        |
-| 1      | Inputs change the outputs reactively with basic validation                                                                | Changing parameters re-runs analysis; invalid values show user-friendly messages |
-| 1      | App is deployed and usable via Posit Connect                                                                              | App URL is accessible and functional                                             |
+| Points | Criterion                                                                             | Check                                                                            |
+|--------|---------------------------------------------------------------------------------------|----------------------------------------------------------------------------------|
+| 1      | App functions launches without error from a clean session                             | App opens & works                                                                |
+| 1      | App calls package core functions (not reimplemented logic)                            | Analysis and plotting use your exported functions, not reimplemented code        |
+| 1      | At least 2 user-adjustable inputs change the outputs reactively with basic validation | Changing parameters re-runs analysis; invalid values show user-friendly messages |
+| 1      | App is deployed and usable via Posit Connect                                          | App URL is accessible and functional                                             |
 
 **Checklist:**
 
-[`library(pkg); run_app()`](https://rdrr.io/r/base/library.html) works
-in fresh R session
+[`library(pkg); app_function()`](https://rdrr.io/r/base/library.html)
+works in fresh R session
 
 At least 2 user-adjustable inputs that affect output
 
 Visualization updates when parameters change
 
 No R console errors during normal use
+
+App deployed to Posit Connect and accessible via URL (provide URL in
+README)
 
 ------------------------------------------------------------------------
 
@@ -128,7 +148,7 @@ No R console errors during normal use
 | 1      | CLI entry point exists in `exec/`                                                                                                                                     | Rapp app file present and functional                               |
 | 1      | Exported launcher installer function (e.g. `install_mypkg_cli()`) that wraps [`Rapp::install_pkg_cli_apps()`](https://rdrr.io/pkg/Rapp/man/install_pkg_cli_apps.html) | After `mypkg::install_mypkg_cli()`, the CLI is available on `PATH` |
 | 1      | `--help` displays usage information                                                                                                                                   | Shows arguments, descriptions, and defaults                        |
-| 1      | CLI produces output files and calls package core functions                                                                                                            | TSV output files created; uses package functions internally        |
+| 1      | CLI produces output files and calls package core functions                                                                                                            | output files created; uses package functions internally            |
 
 **Checklist:**
 
@@ -141,7 +161,7 @@ An exported `install_*_cli()` function exists and installs launchers
 After running the launcher installer, the CLI works directly from the
 terminal (e.g. `mypkg pca --help`)
 
-Running CLI produces the expected TSV output files
+Running CLI produces the expected output files
 
 CLI calls your exported core functions (not raw analysis functions
 directly)
@@ -165,10 +185,3 @@ README documents both launcher installation and fallback usage
 | **Total**                        | **25** |
 
 ------------------------------------------------------------------------
-
-## Bonus (not graded, but encouraged)
-
-- GitHub Actions CI running R CMD check
-- CI badge in README
-- Tagged release (e.g., v0.1.0)
-- Output parity test (CLI produces same results as R API)

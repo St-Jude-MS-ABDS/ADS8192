@@ -73,7 +73,7 @@
                         <h4 data-toc-skip class="author">Jared
 Andrews</h4>
             
-            <h4 data-toc-skip class="date">2026-04-07</h4>
+            <h4 data-toc-skip class="date">2026-04-08</h4>
       
       <small class="dont-index">Source: <a href="https://github.com/St-Jude-MS-ABDS/ADS8192/blob/main/vignettes/articles/HW1_Rubric.Rmd" class="external-link"><code>vignettes/articles/HW1_Rubric.Rmd</code></a></small>
       <div class="d-none name"><code>HW1_Rubric.Rmd</code></div>
@@ -84,11 +84,20 @@ Andrews</h4>
 <div class="section level2">
 <h2 id="overview">Overview<a class="anchor" aria-label="anchor" href="#overview"></a>
 </h2>
-<p>Submit a public GitHub repository URL containing an R package that
-implements your chosen analysis on <code>SummarizedExperiment</code> or
-<code>SingleCellExperiment</code> objects (see the <a href="project-selection.html">Project Selection Guide</a>) with three
-interfaces: R API, Shiny app, and CLI.</p>
+<p>Submit a public GitHub repository URL containing an R package for
+your chosen <a href="project-selection.html">project</a>.</p>
+<p>The README should include installation instructions, quick-start
+examples for usage of the package and CLI, a link to the deployed Shiny
+app, and a link to the pkgdown site.</p>
+<div class="section level3">
+<h3 id="due-date-monday-april-20th---1159-pm">Due Date: Monday, April 20th - 11:59 PM<a class="anchor" aria-label="anchor" href="#due-date-monday-april-20th---1159-pm"></a>
+</h3>
+<p>Generally, you should be able to complete most of this assignment
+during the unit 1 lab sessions.</p>
+<p>There will be a review/help session on the Monday it is due for
+hands-on help from instructors.</p>
 <hr>
+</div>
 </div>
 <div class="section level2">
 <h2 id="package-structure-installation-4-pts">1. Package Structure &amp; Installation (4 pts)<a class="anchor" aria-label="anchor" href="#package-structure-installation-4-pts"></a>
@@ -170,28 +179,34 @@ etc</label></li>
 <tbody>
 <tr class="odd">
 <td>1</td>
-<td>First analysis function (project-specific)</td>
-<td>Correct return type, well-defined behavior</td>
+<td>Functions accept SE or SCE input and return well structured output
+(SE/SCE, list, data.frame)</td>
+<td>Input validation with informative errors</td>
 </tr>
 <tr class="even">
 <td>1</td>
-<td>Second analysis function (project-specific)</td>
-<td>Correct return type, well-defined behavior</td>
-</tr>
-<tr class="odd">
-<td>1</td>
-<td>Third analysis function (project-specific)</td>
-<td>Correct return type, well-defined behavior</td>
-</tr>
-<tr class="even">
-<td>1</td>
-<td>Summary/metric function (project-specific)</td>
-<td>Returns meaningful summary data.frame</td>
-</tr>
-<tr class="odd">
-<td>1</td>
-<td>Plotting function returns a ggplot with appropriate aesthetics</td>
+<td>Plotting function returns a ggplot with appropriate aesthetics;
+supports at least 2 plot types or configurable output</td>
 <td>Returns ggplot object with informative labels</td>
+</tr>
+<tr class="odd">
+<td>1</td>
+<td>Functions are modular and composable (not one monolithic
+function)</td>
+<td>Each function performs a single logical step; can be used
+independently</td>
+</tr>
+<tr class="even">
+<td>1</td>
+<td>Output parity with the original analysis</td>
+<td>Same data with same parameters produces same results (or similar for
+non-deterministic outputs)</td>
+</tr>
+<tr class="odd">
+<td>1</td>
+<td>Improper parameter values produce informative error messages</td>
+<td>graceful <code><a href="https://rdrr.io/r/base/stop.html" class="external-link">stop()</a></code> with informative message if user feeds
+invalid input</td>
 </tr>
 </tbody>
 </table>
@@ -200,11 +215,17 @@ etc</label></li>
 <li><label><input type="checkbox">All core functions work on the
 project’s dataset</label></li>
 <li><label><input type="checkbox">Functions accept SE or SCE input
-(not raw matrices)</label></li>
-<li><label><input type="checkbox">Functions return well-defined types
-(SE/SCE, list, data.frame, ggplot)</label></li>
+(not raw matrices) and return well-defined types (SE/SCE, list,
+data.frame, ggplot)</label></li>
 <li><label><input type="checkbox">Input validation with informative
 error messages</label></li>
+<li><label><input type="checkbox">Functions decompose the analysis
+into reusable, composable steps (not one monolithic
+function)</label></li>
+<li><label><input type="checkbox">Output parity with the original
+analysis (same data + parameters produces same/similar results; there
+may be slight variation with non-deterministic algorithms like
+UMAP).</label></li>
 </ul>
 <hr>
 </div>
@@ -232,7 +253,7 @@ exist</td>
 </tr>
 <tr class="even">
 <td>1</td>
-<td>At least 8 test expectations across 2+ test files</td>
+<td>All exported functions tested</td>
 <td>
 <code>devtools::test()</code> shows pass count</td>
 </tr>
@@ -285,16 +306,23 @@ or specific file paths</label></li>
 </tr>
 <tr class="even">
 <td>1</td>
-<td>All <code>@param</code>, <code>@return</code>, and
-<code>@export</code> tags present</td>
+<td>All <code>@param</code>, <code>@return</code>,
+<code>@importFrom</code>, and <code>@export</code> tags present</td>
 <td>No “Undocumented arguments” warnings</td>
 </tr>
 <tr class="odd">
-<td>1</td>
+<td>0.5</td>
 <td>README with installation instructions and quick-start example</td>
 <td>README renders on GitHub with working example</td>
 </tr>
 <tr class="even">
+<td>0.5</td>
+<td>At least one vignette</td>
+<td>
+<code>vignettes/</code> contains at least one .Rmd with usage
+examples that renders properly</td>
+</tr>
+<tr class="odd">
 <td>1</td>
 <td>pkgdown site deployed successfully</td>
 <td>
@@ -310,8 +338,8 @@ help</label></li>
 runnable example</label></li>
 <li><label><input type="checkbox">pkgdown site deployed and shows
 reference pages</label></li>
-<li><label><input type="checkbox">At least one vignette or pkgdown
-article exists</label></li>
+<li><label><input type="checkbox">At least one vignette exists and
+renders on pkgdown site</label></li>
 </ul>
 <hr>
 </div>
@@ -332,10 +360,8 @@ article exists</label></li>
 <tbody>
 <tr class="odd">
 <td>1</td>
-<td>
-<code><a href="../reference/run_app.html">run_app()</a></code> launches without error from a clean
-session</td>
-<td>App opens in browser</td>
+<td>App functions launches without error from a clean session</td>
+<td>App opens &amp; works</td>
 </tr>
 <tr class="even">
 <td>1</td>
@@ -345,7 +371,8 @@ code</td>
 </tr>
 <tr class="odd">
 <td>1</td>
-<td>Inputs change the outputs reactively with basic validation</td>
+<td>At least 2 user-adjustable inputs change the outputs reactively with
+basic validation</td>
 <td>Changing parameters re-runs analysis; invalid values show
 user-friendly messages</td>
 </tr>
@@ -358,14 +385,16 @@ user-friendly messages</td>
 </table>
 <p><strong>Checklist:</strong></p>
 <ul class="task-list">
-<li><label><input type="checkbox"><code><a href="https://rdrr.io/r/base/library.html" class="external-link">library(pkg); run_app()</a></code>
-works in fresh R session</label></li>
+<li><label><input type="checkbox"><code><a href="https://rdrr.io/r/base/library.html" class="external-link">library(pkg); app_function()</a></code> works in
+fresh R session</label></li>
 <li><label><input type="checkbox">At least 2 user-adjustable inputs
 that affect output</label></li>
 <li><label><input type="checkbox">Visualization updates when
 parameters change</label></li>
 <li><label><input type="checkbox">No R console errors during normal
 use</label></li>
+<li><label><input type="checkbox">App deployed to Posit Connect and
+accessible via URL (provide URL in README)</label></li>
 </ul>
 <hr>
 </div>
@@ -409,7 +438,7 @@ on <code>PATH</code>
 <tr class="even">
 <td>1</td>
 <td>CLI produces output files and calls package core functions</td>
-<td>TSV output files created; uses package functions internally</td>
+<td>output files created; uses package functions internally</td>
 </tr>
 </tbody>
 </table>
@@ -424,7 +453,7 @@ text during development</label></li>
 installer, the CLI works directly from the terminal
 (e.g. <code>mypkg pca --help</code>)</label></li>
 <li><label><input type="checkbox">Running CLI produces the expected
-TSV output files</label></li>
+output files</label></li>
 <li><label><input type="checkbox">CLI calls your exported core
 functions (not raw analysis functions directly)</label></li>
 <li><label><input type="checkbox">All arguments work</label></li>
@@ -473,16 +502,6 @@ installation and fallback usage</label></li>
 </tbody>
 </table>
 <hr>
-</div>
-<div class="section level2">
-<h2 id="bonus-not-graded-but-encouraged">Bonus (not graded, but encouraged)<a class="anchor" aria-label="anchor" href="#bonus-not-graded-but-encouraged"></a>
-</h2>
-<ul>
-<li>GitHub Actions CI running R CMD check</li>
-<li>CI badge in README</li>
-<li>Tagged release (e.g., v0.1.0)</li>
-<li>Output parity test (CLI produces same results as R API)</li>
-</ul>
 </div>
   </main><aside class="col-md-3"><nav id="toc" aria-label="Table of contents"><h2>On this page</h2>
     </nav></aside>

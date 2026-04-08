@@ -621,10 +621,13 @@ se
 
 ## Building Functions
 
-Now we’ll switch tack. If you haven’t already, choose a project from the
-`vignette("project-selection")` vignette.
+Now we’ll switch tack. If you haven’t already, take 5-10 minutes to
+choose a project from the [Project Selection
+Guide](https://st-jude-ms-abds.github.io/ADS8192/articles/project-selection.html).
+Remember you cannot choose the same project as a classmate, so first
+come first served.
 
-For the rest of this unit, you’ll be building a package around that
+For the rest of this unit, you’ll be building an R package around that
 project.
 
 You’ll note that each project has a “raw code” version of the analysis,
@@ -635,83 +638,59 @@ reusability.
 
 Once the code/analysis is deemed useful, you might go back and refactor
 it into a more modular, reusable form for future use or sharing with
-others. This is where the package structure and data structures we
-discussed come into play.
+others.
 
 ### Getting the Data
 
 First, you’ll need data to operate on. All of the projects in the
-project guide have code to pull real data for use.
+project guide have code to pull real data for use. Some of them may
+subset the data to make it easier to handle for development and testing
+purposes.
 
 There are all sorts of avenues to get data for testing and development —
 from public repositories like GEO (Gene Expression Omnibus, which
 contains much more than just gene expression data), to simulated data,
 to data you’ve generated yourself.
 
-For my package, I’ll use a realistic dummy dataset from scratch that
-mimics the structure of a typical RNA-seq experiment.
+For my package, I’ll use the airway dataset we used above.
 
-Data preparation code
+### Planning Functions
 
-``` r
-# --- Build realistic dummy data from scratch ---
-set.seed(42)
-n_genes   <- 5000
-n_samples <- 9                    # 3 groups × 3 replicates
-gene_names   <- paste0("Gene", seq_len(n_genes))
-sample_names <- paste0("S",    seq_len(n_samples))
+Before the begin coding, it’s worth spending a few minutes to plan out
+the functions you’ll want to build.
 
-# Background counts: all genes, all samples (Poisson, mean 80)
-counts_mat <- matrix(
-    rpois(n_genes * n_samples, lambda = 80),
-    nrow = n_genes, ncol = n_samples,
-    dimnames = list(gene_names, sample_names)
-)
+- What are the key steps in your analysis?
+- Which parts of the code are most reusable?
+- Which parameters should be adjustable for greatest flexibility?
 
-# Add group-specific signal to distinct marker gene sets (500 genes each).
-# This creates three well-separated clusters in PCA.
-# Group 1 (S1-S3, ctrl):  genes 1-500 upregulated
-counts_mat[1:500,     1:3] <- counts_mat[1:500,     1:3] +
-    matrix(rpois(500 * 3, lambda = 300), 500, 3)
-# Group 2 (S4-S6, trt_A): genes 501-1000 upregulated
-counts_mat[501:1000,  4:6] <- counts_mat[501:1000,  4:6] +
-    matrix(rpois(500 * 3, lambda = 300), 500, 3)
-# Group 3 (S7-S9, trt_B): genes 1001-1500 upregulated
-counts_mat[1001:1500, 7:9] <- counts_mat[1001:1500, 7:9] +
-    matrix(rpois(500 * 3, lambda = 300), 500, 3)
+Take ~10 minutes to sketch out a plan for the functions you think you
+need. It’s often helpful to write out the pseudocode for each function —
+what inputs it will take, what outputs it will produce, and the key
+steps it will perform.
 
-# Sample metadata: 3 treatment groups, 2 batches
-sample_meta <- data.frame(
-    treatment = factor(rep(c("ctrl", "trt_A", "trt_B"), each = 3)),
-    batch     = factor(rep(c("A", "B", "A"), times = 3)),
-    row.names = sample_names
-)
+Generally, you want a function to do one or two things cleanly.
+Sometimes, some complexity is necessary, but striving for simplicity is
+usually a good thing. If you find yourself writing a function with 200+
+lines or dozens of parameters, it’s probably a sign that you should
+break it up into smaller pieces.
 
-# Gene metadata: biotype sampled for all 5000 genes
-gene_meta <- data.frame(
-    symbol  = gene_names,
-    biotype = sample(
-        c("protein_coding", "lncRNA", "pseudogene", "miRNA"),
-        size    = n_genes,
-        replace = TRUE,
-        prob    = c(0.60, 0.20, 0.15, 0.05)
-    ),
-    row.names = gene_names
-)
+These projects should be in the 4-10 function range.
 
-# Assemble — row and column names must match across components
-my_se <- SummarizedExperiment(
-    assays  = list(counts = counts_mat),
-    colData = sample_meta,
-    rowData = gene_meta
-)
+This doesn’t have to be perfect, it can and probably will change as you
+start implementing. Having a rough plan tends to help you stay focused
+and makes it easier to actually start breaking up what can be a daunting
+analyis (particularly if you didn’t write it yourself).
 
-# Verify: dimensions and structure
-my_se
-dim(my_se)                        # 5000 genes x 9 samples
-colData(my_se)                    # sample treatment and batch
-table(rowData(my_se)$biotype)     # gene biotype breakdown
-```
+In my case, I think I’ll need functions for the following: 1.
+[`top_variable_features()`](https://st-jude-ms-abds.github.io/ADS8192/reference/top_variable_features.md):
+Select the most variable genes for PCA 2.
+[`run_pca()`](https://st-jude-ms-abds.github.io/ADS8192/reference/run_pca.md):
+Perform PCA on the data 3.
+[`pca_variance_explained()`](https://st-jude-ms-abds.github.io/ADS8192/reference/pca_variance_explained.md):
+Helper function to calculate variance explained by PCs 4.
+[`plot_pca()`](https://st-jude-ms-abds.github.io/ADS8192/reference/plot_pca.md):
+Create a PCA scatter plot colored by sample metadata 5.
+`save_results()`: Save PCA results and plots to disk
 
 ------------------------------------------------------------------------
 
