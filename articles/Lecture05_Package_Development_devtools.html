@@ -37,15 +37,15 @@
 <li><a class="dropdown-item" href="../articles/course-setup.html">Course Setup</a></li>
     <li><a class="dropdown-item" href="../articles/getting-started.html">Getting Started</a></li>
     <li><a class="dropdown-item" href="../articles/project-selection.html">Project Selection Guide</a></li>
-    <li><a class="dropdown-item" href="../articles/HW1_Rubric.html">HW1 Rubric</a></li>
+    <li><a class="dropdown-item" href="../articles/HW1_Rubric.html">Homework 1 Rubric</a></li>
     <li><hr class="dropdown-divider"></li>
     <li><h6 class="dropdown-header" data-toc-skip>Lectures</h6></li>
-    <li><a class="dropdown-item" href="../articles/Lecture04_Data_Structures_Bioconductor.html">Lecture 04: Data Structures &amp; Bioconductor</a></li>
-    <li><a class="dropdown-item" href="../articles/Lecture05_Package_Development_devtools.html">Lecture 05: Package Dev (devtools)</a></li>
-    <li><a class="dropdown-item" href="../articles/Lecture06_Package_Development_pkgdown_testthat.html">Lecture 06: Package Dev (pkgdown, testthat)</a></li>
-    <li><a class="dropdown-item" href="../articles/Lecture07_Shiny_Reactivity.html">Lecture 07: Shiny Reactivity</a></li>
-    <li><a class="dropdown-item" href="../articles/Lecture08_Shiny_Packaging_Deployment.html">Lecture 08: Shiny Packaging &amp; Deployment</a></li>
-    <li><a class="dropdown-item" href="../articles/Lecture09_CLI_Design_Rapp.html">Lecture 09: CLI Design (Rapp)</a></li>
+    <li><a class="dropdown-item" href="../articles/Lecture04_Data_Structures_Bioconductor.html">Lecture 04: Data Structures &amp; R Ecosystems</a></li>
+    <li><a class="dropdown-item" href="../articles/Lecture05_Package_Development_devtools.html">Lecture 05: R Package Development (devtools)</a></li>
+    <li><a class="dropdown-item" href="../articles/Lecture06_Package_Development_pkgdown_testthat.html">Lecture 06: R Package Documentation &amp; Testing (pkgdown, testthat)</a></li>
+    <li><a class="dropdown-item" href="../articles/Lecture07_Shiny_Reactivity.html">Lecture 07: Shiny Application Development</a></li>
+    <li><a class="dropdown-item" href="../articles/Lecture08_Shiny_Packaging_Deployment.html">Lecture 08: Shiny Application Packaging &amp; Deployment</a></li>
+    <li><a class="dropdown-item" href="../articles/Lecture09_CLI_Design_Rapp.html">Lecture 09: CLI Design &amp; Development(Rapp)</a></li>
     <li><a class="dropdown-item" href="../articles/Lecture10_CLI_Packaging_Installation.html">Lecture 10: CLI Packaging &amp; Installation</a></li>
     <li><a class="dropdown-item" href="../articles/Lecture11_Review_QA.html">Lecture 11: Review &amp; Q/A</a></li>
   </ul>
@@ -82,9 +82,21 @@ Andrews</h4>
     
     
 <div class="section level2">
-<h2 id="learning-objectives">Learning Objectives<a class="anchor" aria-label="anchor" href="#learning-objectives"></a>
+<h2 id="motivation">Motivation<a class="anchor" aria-label="anchor" href="#motivation"></a>
 </h2>
-<p>By the end of this session, you will be able to:</p>
+<p>Many research projects begin as scripts that only make sense to the
+original author and only run in one working directory. Packaging forces
+you to turn that private workflow into something installable,
+documented, and reusable by other people.</p>
+<p>This can also personally save you time and sanity in a variety of
+ways - generic reuseability, minimal editing to apply to new
+datasets/experiments, preparedness for publication, and not having to
+remember exactly which script had which bit of code you used in that one
+analysis 6 months ago.</p>
+<div class="section level3">
+<h3 id="learning-objectives">Learning Objectives<a class="anchor" aria-label="anchor" href="#learning-objectives"></a>
+</h3>
+<p>By the end of this lab, you will be able to:</p>
 <ol style="list-style-type: decimal">
 <li>Use <code>usethis</code> and <code>devtools</code> to scaffold
 package infrastructure instead of hand-building it</li>
@@ -98,57 +110,19 @@ GitHub</li>
 <li>Diagnose and resolve common development issues (namespacing, missing
 Imports, R CMD check warnings)</li>
 </ol>
-<p><strong>Course Learning Outcomes (CLOs):</strong> CLO 1, 4, 6</p>
-<div class="section level3">
-<h3 id="motivation">Motivation<a class="anchor" aria-label="anchor" href="#motivation"></a>
-</h3>
-<p>Many research projects begin as scripts that only make sense to the
-original author and only run in one working directory. Packaging forces
-you to turn that private workflow into something installable,
-documented, and reusable by other people.</p>
-<p>That matters for scientific software because package boundaries make
-assumptions visible. A small public API, explicit dependencies, and
-generated documentation save time for your future self, reduce
-onboarding time for collaborators, and make it far easier to test or
-extend the code without breaking everything around it.</p>
-</div>
-<div class="section level3">
-<h3 id="evaluation-checklist">Evaluation Checklist<a class="anchor" aria-label="anchor" href="#evaluation-checklist"></a>
-</h3>
-<p>Before you introduce a packaging tool or workflow, ask:</p>
-<ul>
-<li>Does it solve infrastructure that should not be custom work?</li>
-<li>Does it make the package contract clearer for users and
-collaborators?</li>
-<li>Does it reduce hidden state, manual steps, or copy-paste setup?</li>
-<li>Does it align with standard R package workflows that others already
-know?</li>
-<li>Will it make clean installs, testing, and maintenance easier six
-months from now?</li>
-<li>Are you using it to support a clear API, or just generating files
-without design intent?</li>
-</ul>
-</div>
-<div class="section level3">
-<h3 id="scientific-use-case">Scientific Use Case<a class="anchor" aria-label="anchor" href="#scientific-use-case"></a>
-</h3>
-<p>You inherit a 700-line exploratory RNA-seq script from a graduate
-student who is graduating next month. The code “works on their laptop,”
-but a collaborator now wants to install it from GitHub, read help pages,
-and call only two functions from another project. What has to change
-first: the science, or the software boundaries?</p>
 <hr>
 </div>
 </div>
 <div class="section level2">
-<h2 id="why-package-your-code">Why Package Your Code?<a class="anchor" aria-label="anchor" href="#why-package-your-code"></a>
+<h2 id="taking-the-next-step">Taking the Next Step<a class="anchor" aria-label="anchor" href="#taking-the-next-step"></a>
 </h2>
-<div class="section level3">
-<h3 id="from-script-to-application">From Script to Application<a class="anchor" aria-label="anchor" href="#from-script-to-application"></a>
-</h3>
-<p>In Lecture 3, we created an “analysis core” — a set of functions in a
+<p>In Lecture 4, we created an “analysis core” — a set of functions in a
 script. But scripts have limitations:</p>
 <table class="table">
+<colgroup>
+<col width="47%">
+<col width="52%">
+</colgroup>
 <thead><tr class="header">
 <th>Script</th>
 <th>Package</th>
@@ -163,11 +137,11 @@ script. But scripts have limitations:</p>
 <td>Installed; works anywhere</td>
 </tr>
 <tr class="odd">
-<td>Dependency conflicts</td>
+<td>No formal dependency management</td>
 <td>Explicit dependency management</td>
 </tr>
 <tr class="even">
-<td>No help documentation</td>
+<td>No formal help documentation</td>
 <td>
 <code><a href="../reference/run_pca.html">?run_pca</a></code> works</td>
 </tr>
@@ -176,35 +150,35 @@ script. But scripts have limitations:</p>
 <td><code>install_github("you/ADS8192")</code></td>
 </tr>
 <tr class="even">
-<td>No tests</td>
-<td>Automated testing with testthat</td>
+<td>No tests to ensure correctness</td>
+<td>Automated testing simple to implement</td>
 </tr>
 </tbody>
 </table>
-<p><strong>A package is the fundamental unit of shareable, reproducible
-code in R.</strong></p>
-<hr>
-</div>
+<p>An R package is barely more complicated than a script, but it
+provides many benefits even if you’re the only one who will ever use it.
+It can be a little intimating at first, but once you build a package
+once, it becomes a natural way to organize code.</p>
 <div class="section level3">
-<h3 id="why-reuse-package-tooling">Why Reuse Package Tooling?<a class="anchor" aria-label="anchor" href="#why-reuse-package-tooling"></a>
+<h3 id="package-development-tools">Package Development Tools<a class="anchor" aria-label="anchor" href="#package-development-tools"></a>
 </h3>
-<p>The package files in this lecture are not an invitation to manually
-recreate package infrastructure forever. In production work:</p>
+<p>Fortunately, there are a number of R packages that provide
+scaffolding and convenience functions to make package development
+easier:</p>
 <ul>
 <li>
-<code>usethis</code> gives you consistent scaffolding faster than
-hand-editing every file</li>
+<code>usethis</code> quickly generates package infrastructure
+(DESCRIPTION, NAMESPACE, R/ directory, README, data-raw/, etc) and
+automates common tasks like adding dependencies, creating documentation
+stubs, and setting up Github</li>
 <li>
 <code>devtools</code> standardizes the edit-document-test-check
 loop</li>
 <li>
-<code>roxygen2</code> keeps documentation close to the code it
-describes</li>
+<code>roxygen2</code> parses specially formatted comments to
+generate documentation automatically</li>
 </ul>
-<p>Reinventing any of those layers is usually wasted effort. The design
-work that still belongs to you is deciding what the package should
-expose, what it should hide, and how users should move through the
-API.</p>
+<p>We’ll use all of these tools to help build our package.</p>
 </div>
 </div>
 <div class="section level2">
@@ -213,7 +187,7 @@ API.</p>
 <p>Before we begin, ensure you have:</p>
 <ul class="task-list">
 <li><label><input type="checkbox">Your <code>analysis_core.R</code>
-script from Lecture 3 with analysis functions</label></li>
+script from Lecture 4 with analysis functions</label></li>
 <li><label><input type="checkbox">Git installed and configured
 (<code>git config --global user.name "Your Name"</code>)</label></li>
 <li><label><input type="checkbox">A GitHub account</label></li>
@@ -224,67 +198,7 @@ script from Lecture 3 with analysis functions</label></li>
 <hr>
 </div>
 <div class="section level2">
-<h2 id="part-1-define-the-package-api">Part 1: Define the Package API<a class="anchor" aria-label="anchor" href="#part-1-define-the-package-api"></a>
-</h2>
-<p>Before writing code, let’s define the <strong>user story</strong> and
-<strong>public API</strong>.</p>
-<div class="section level3">
-<h3 id="user-story">User Story<a class="anchor" aria-label="anchor" href="#user-story"></a>
-</h3>
-<blockquote>
-<p>As a bioinformatics researcher, I want to quickly run PCA on a
-SummarizedExperiment and create publication-ready visualizations, so
-that I can explore batch effects and sample groupings in my RNA-seq
-data.</p>
-</blockquote>
-</div>
-<div class="section level3">
-<h3 id="public-api-exported-functions">Public API (Exported Functions)<a class="anchor" aria-label="anchor" href="#public-api-exported-functions"></a>
-</h3>
-<table class="table">
-<colgroup>
-<col width="34%">
-<col width="37%">
-<col width="27%">
-</colgroup>
-<thead><tr class="header">
-<th>Function</th>
-<th>Exported?</th>
-<th>Reason</th>
-</tr></thead>
-<tbody>
-<tr class="odd">
-<td><code><a href="../reference/top_variable_features.html">top_variable_features()</a></code></td>
-<td>Yes</td>
-<td>Users may want to filter separately</td>
-</tr>
-<tr class="even">
-<td><code><a href="../reference/run_pca.html">run_pca()</a></code></td>
-<td>Yes</td>
-<td>Core analysis function</td>
-</tr>
-<tr class="odd">
-<td><code><a href="../reference/pca_variance_explained.html">pca_variance_explained()</a></code></td>
-<td>Yes</td>
-<td>Useful standalone</td>
-</tr>
-<tr class="even">
-<td><code><a href="../reference/plot_pca.html">plot_pca()</a></code></td>
-<td>Yes</td>
-<td>Core visualization</td>
-</tr>
-</tbody>
-</table>
-<blockquote>
-<p><strong>Exercise A:</strong> Are there any functions you might add
-later that should be <strong>internal</strong> (not exported)? What
-distinguishes an exported function from an internal helper?</p>
-</blockquote>
-<hr>
-</div>
-</div>
-<div class="section level2">
-<h2 id="part-2-create-the-package-skeleton">Part 2: Create the Package Skeleton<a class="anchor" aria-label="anchor" href="#part-2-create-the-package-skeleton"></a>
+<h2 id="part-1-create-the-package-skeleton">Part 1: Create the Package Skeleton<a class="anchor" aria-label="anchor" href="#part-1-create-the-package-skeleton"></a>
 </h2>
 <div class="section level3">
 <h3 id="step-1-create-the-package">Step 1: Create the Package<a class="anchor" aria-label="anchor" href="#step-1-create-the-package"></a>
@@ -368,7 +282,7 @@ rarely need to edit these manually — <code>usethis</code> functions like
 </div>
 </div>
 <div class="section level2">
-<h2 id="part-3-the-description-file">Part 3: The DESCRIPTION File<a class="anchor" aria-label="anchor" href="#part-3-the-description-file"></a>
+<h2 id="part-2-the-description-file">Part 2: The DESCRIPTION File<a class="anchor" aria-label="anchor" href="#part-2-the-description-file"></a>
 </h2>
 <p>The <code>DESCRIPTION</code> file is the heart of your package
 metadata. Open it and edit:</p>
@@ -420,7 +334,7 @@ Suggests rather than Imports? What’s the difference?</p>
 </div>
 </div>
 <div class="section level2">
-<h2 id="part-4-move-functions-to-r">Part 4: Move Functions to R/<a class="anchor" aria-label="anchor" href="#part-4-move-functions-to-r"></a>
+<h2 id="part-3-move-functions-to-r">Part 3: Move Functions to R/<a class="anchor" aria-label="anchor" href="#part-3-move-functions-to-r"></a>
 </h2>
 <div class="section level3">
 <h3 id="package-structure-for-code">Package Structure for Code<a class="anchor" aria-label="anchor" href="#package-structure-for-code"></a>
@@ -523,7 +437,7 @@ clarity)</strong></p>
 </div>
 </div>
 <div class="section level2">
-<h2 id="part-5-generate-documentation">Part 5: Generate Documentation<a class="anchor" aria-label="anchor" href="#part-5-generate-documentation"></a>
+<h2 id="part-4-generate-documentation">Part 4: Generate Documentation<a class="anchor" aria-label="anchor" href="#part-4-generate-documentation"></a>
 </h2>
 <div class="section level3">
 <h3 id="run-roxygen2">Run roxygen2<a class="anchor" aria-label="anchor" href="#run-roxygen2"></a>
@@ -563,7 +477,7 @@ documented function</li>
 </div>
 </div>
 <div class="section level2">
-<h2 id="part-6-add-example-data">Part 6: Add Example Data<a class="anchor" aria-label="anchor" href="#part-6-add-example-data"></a>
+<h2 id="part-5-add-example-data">Part 5: Add Example Data<a class="anchor" aria-label="anchor" href="#part-5-add-example-data"></a>
 </h2>
 <p>Let’s include a small example dataset so users (and tests) can try
 the functions without loading external data.</p>
@@ -650,7 +564,7 @@ the functions without loading external data.</p>
 <hr>
 </div>
 <div class="section level2">
-<h2 id="part-7-r-cmd-check">Part 7: R CMD check<a class="anchor" aria-label="anchor" href="#part-7-r-cmd-check"></a>
+<h2 id="part-6-r-cmd-check">Part 6: R CMD check<a class="anchor" aria-label="anchor" href="#part-6-r-cmd-check"></a>
 </h2>
 <p>This is the moment of truth! <code>R CMD check</code> runs ~50 checks
 to validate your package.</p>
@@ -698,7 +612,7 @@ package. Categorize each WARNING and NOTE as either “must fix” or
 </div>
 </div>
 <div class="section level2">
-<h2 id="part-8-push-to-github-and-test-install">Part 8: Push to GitHub and Test Install<a class="anchor" aria-label="anchor" href="#part-8-push-to-github-and-test-install"></a>
+<h2 id="part-7-push-to-github-and-test-install">Part 7: Push to GitHub and Test Install<a class="anchor" aria-label="anchor" href="#part-7-push-to-github-and-test-install"></a>
 </h2>
 <div class="section level3">
 <h3 id="commit-and-push">Commit and Push<a class="anchor" aria-label="anchor" href="#commit-and-push"></a>
@@ -732,7 +646,7 @@ package. Categorize each WARNING and NOTE as either “must fix” or
 </div>
 </div>
 <div class="section level2">
-<h2 id="part-9-add-a-readme">Part 9: Add a README<a class="anchor" aria-label="anchor" href="#part-9-add-a-readme"></a>
+<h2 id="part-8-add-a-readme">Part 8: Add a README<a class="anchor" aria-label="anchor" href="#part-8-add-a-readme"></a>
 </h2>
 <div class="sourceCode" id="cb31"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="fu">use_readme_rmd</span><span class="op">(</span><span class="op">)</span></span></code></pre></div>
@@ -804,8 +718,8 @@ exposes the analysis core as documented exported functions.</p>
 <ul>
 <li>Why is <code>usethis</code> worth reusing instead of hand-writing
 package scaffolding?</li>
-<li>Which of your current functions are true user-facing API, and which
-should become internal helpers?</li>
+<li>Which of your current functions are important for a user to be able
+to access, and which (if any) could become internal helpers?</li>
 <li>If a collaborator only reads the README and function help, what
 package design choices will make the code feel coherent instead of
 script-like?</li>

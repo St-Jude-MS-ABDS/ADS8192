@@ -14,7 +14,20 @@ collaborators with less explanation, and reuse the same code across
 experiments and analyses more effectively.
 
 Thus, we start our learning journey at it’s proper place - at the
-beginning, down in the dirt with the data itself.
+beginning, with the data itself.
+
+### Learning Objectives
+
+By the end of this lecture, you will be able to:
+
+1.  Determine when to build your own data structure vs reuse an existing
+    one
+2.  Create a custom S4 class in R with slots, validity checks, and
+    methods
+3.  Describe the difference between CRAN and Bioconductor
+4.  Name and interact with the core components of a
+    `SummarizedExperiment` object
+5.  Convert raw analysis code into modular functions
 
 ------------------------------------------------------------------------
 

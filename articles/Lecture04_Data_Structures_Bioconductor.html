@@ -37,15 +37,15 @@
 <li><a class="dropdown-item" href="../articles/course-setup.html">Course Setup</a></li>
     <li><a class="dropdown-item" href="../articles/getting-started.html">Getting Started</a></li>
     <li><a class="dropdown-item" href="../articles/project-selection.html">Project Selection Guide</a></li>
-    <li><a class="dropdown-item" href="../articles/HW1_Rubric.html">HW1 Rubric</a></li>
+    <li><a class="dropdown-item" href="../articles/HW1_Rubric.html">Homework 1 Rubric</a></li>
     <li><hr class="dropdown-divider"></li>
     <li><h6 class="dropdown-header" data-toc-skip>Lectures</h6></li>
-    <li><a class="dropdown-item" href="../articles/Lecture04_Data_Structures_Bioconductor.html">Lecture 04: Data Structures &amp; Bioconductor</a></li>
-    <li><a class="dropdown-item" href="../articles/Lecture05_Package_Development_devtools.html">Lecture 05: Package Dev (devtools)</a></li>
-    <li><a class="dropdown-item" href="../articles/Lecture06_Package_Development_pkgdown_testthat.html">Lecture 06: Package Dev (pkgdown, testthat)</a></li>
-    <li><a class="dropdown-item" href="../articles/Lecture07_Shiny_Reactivity.html">Lecture 07: Shiny Reactivity</a></li>
-    <li><a class="dropdown-item" href="../articles/Lecture08_Shiny_Packaging_Deployment.html">Lecture 08: Shiny Packaging &amp; Deployment</a></li>
-    <li><a class="dropdown-item" href="../articles/Lecture09_CLI_Design_Rapp.html">Lecture 09: CLI Design (Rapp)</a></li>
+    <li><a class="dropdown-item" href="../articles/Lecture04_Data_Structures_Bioconductor.html">Lecture 04: Data Structures &amp; R Ecosystems</a></li>
+    <li><a class="dropdown-item" href="../articles/Lecture05_Package_Development_devtools.html">Lecture 05: R Package Development (devtools)</a></li>
+    <li><a class="dropdown-item" href="../articles/Lecture06_Package_Development_pkgdown_testthat.html">Lecture 06: R Package Documentation &amp; Testing (pkgdown, testthat)</a></li>
+    <li><a class="dropdown-item" href="../articles/Lecture07_Shiny_Reactivity.html">Lecture 07: Shiny Application Development</a></li>
+    <li><a class="dropdown-item" href="../articles/Lecture08_Shiny_Packaging_Deployment.html">Lecture 08: Shiny Application Packaging &amp; Deployment</a></li>
+    <li><a class="dropdown-item" href="../articles/Lecture09_CLI_Design_Rapp.html">Lecture 09: CLI Design &amp; Development(Rapp)</a></li>
     <li><a class="dropdown-item" href="../articles/Lecture10_CLI_Packaging_Installation.html">Lecture 10: CLI Packaging &amp; Installation</a></li>
     <li><a class="dropdown-item" href="../articles/Lecture11_Review_QA.html">Lecture 11: Review &amp; Q/A</a></li>
   </ul>
@@ -94,8 +94,23 @@ returns well-defined objects, you can test them more easily, hand them
 to collaborators with less explanation, and reuse the same code across
 experiments and analyses more effectively.</p>
 <p>Thus, we start our learning journey at it’s proper place - at the
-beginning, down in the dirt with the data itself.</p>
+beginning, with the data itself.</p>
+<div class="section level3">
+<h3 id="learning-objectives">Learning Objectives<a class="anchor" aria-label="anchor" href="#learning-objectives"></a>
+</h3>
+<p>By the end of this lecture, you will be able to:</p>
+<ol style="list-style-type: decimal">
+<li>Determine when to build your own data structure vs reuse an existing
+one</li>
+<li>Create a custom S4 class in R with slots, validity checks, and
+methods</li>
+<li>Describe the difference between CRAN and Bioconductor</li>
+<li>Name and interact with the core components of a
+<code>SummarizedExperiment</code> object</li>
+<li>Convert raw analysis code into modular functions</li>
+</ol>
 <hr>
+</div>
 </div>
 <div class="section level2">
 <h2 id="group-discussion-pseudocode-designing-a-gene-data-structure">Group Discussion + Pseudocode: Designing a Gene Data Structure<a class="anchor" aria-label="anchor" href="#group-discussion-pseudocode-designing-a-gene-data-structure"></a>
