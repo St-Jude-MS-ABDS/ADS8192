@@ -300,6 +300,44 @@ metadata. Open it and edit:</p>
 <span id="cb7-12"><a href="#cb7-12" tabindex="-1"></a><span class="fu">Encoding</span><span class="kw">:</span><span class="at"> UTF-8</span></span>
 <span id="cb7-13"><a href="#cb7-13" tabindex="-1"></a><span class="fu">Roxygen</span><span class="kw">:</span><span class="at"> list(markdown = TRUE)</span></span>
 <span id="cb7-14"><a href="#cb7-14" tabindex="-1"></a><span class="fu">RoxygenNote</span><span class="kw">:</span><span class="at"> </span><span class="fl">7.2.3</span></span></code></pre></div>
+<p>We will add more to this file later. For now, make sure to fill in
+the <code>Authors@R</code> field with your name and email, and
+optionally your ORCID. The <code>Description</code> should be a concise
+summary of what your package does. The <code>Roxygen</code> field tells
+roxygen2 to use markdown formatting in the documentation, which allows
+for nicer formatting in help files.</p>
+<div class="section level3">
+<h3 id="software-licensing">Software Licensing<a class="anchor" aria-label="anchor" href="#software-licensing"></a>
+</h3>
+<p>Software can be published under various licenses. The MIT License is
+a permissive open-source license that allows others to use, modify, and
+distribute your code with minimal restrictions. By choosing the MIT
+License, you are allowing others to freely use your code while also
+disclaiming any warranties or liabilities. This is a common choice for
+academic software projects that aim to maximize reuse and
+collaboration.</p>
+<p>This is not the only license, but if you want people to be able to
+use your code without worrying about legal issues, the MIT License is a
+good default.</p>
+</div>
+<div class="section level3">
+<h3 id="versioning">Versioning<a class="anchor" aria-label="anchor" href="#versioning"></a>
+</h3>
+<p><a href="https://semver.org/" class="external-link">Semantic versioning</a> is a common
+convention for version numbers. The format is
+<code>MAJOR.MINOR.PATCH</code>. For development versions, it’s common to
+use <code>0.0.0.9000</code> or similar to indicate that it’s not a
+stable release yet. When you make a first stable release, you might
+change it to <code>1.0.0</code>. Then, for bug fixes, you would
+increment the PATCH version (e.g. <code>1.0.1</code>), and for new
+features that are backward compatible, you would increment the MINOR
+version (e.g. <code>1.1.0</code>). For breaking changes, you would
+increment the MAJOR version (e.g. <code>2.0.0</code>). Much modern
+software uses semantic versioning to communicate the stability and
+compatibility of releases.</p>
+<p>In general, it’s best to keep major, breaking releases to a
+minimum.</p>
+</div>
 <div class="section level3">
 <h3 id="adding-dependencies">Adding Dependencies<a class="anchor" aria-label="anchor" href="#adding-dependencies"></a>
 </h3>
@@ -310,15 +348,10 @@ DESCRIPTION.</p>
 <code class="sourceCode R"><span><span class="co"># Add packages to Imports (required to run)</span></span>
 <span><span class="fu">use_package</span><span class="op">(</span><span class="st">"SummarizedExperiment"</span><span class="op">)</span></span>
 <span><span class="fu">use_package</span><span class="op">(</span><span class="st">"ggplot2"</span><span class="op">)</span></span>
-<span><span class="fu">use_package</span><span class="op">(</span><span class="st">"rlang"</span><span class="op">)</span>  <span class="co"># For .data pronoun in ggplot aes()</span></span>
 <span></span>
-<span><span class="co"># Add packages to Suggests (optional, for examples/tests)</span></span>
+<span><span class="co"># Add packages to Suggests (optional, for examples/tests or optional features)</span></span>
 <span><span class="fu">use_package</span><span class="op">(</span><span class="st">"testthat"</span>, type <span class="op">=</span> <span class="st">"Suggests"</span><span class="op">)</span></span>
-<span><span class="fu">use_package</span><span class="op">(</span><span class="st">"knitr"</span>, type <span class="op">=</span> <span class="st">"Suggests"</span><span class="op">)</span></span>
-<span></span>
-<span><span class="co"># NOTE: For Bioconductor packages, you may also need:</span></span>
-<span><span class="co"># BiocManager::install("SummarizedExperiment")</span></span>
-<span><span class="co"># and add 'biocViews:' to your DESCRIPTION (can be left empty)</span></span></code></pre></div>
+<span><span class="fu">use_package</span><span class="op">(</span><span class="st">"knitr"</span>, type <span class="op">=</span> <span class="st">"Suggests"</span><span class="op">)</span></span></code></pre></div>
 <p>After running these, your DESCRIPTION will include:</p>
 <div class="sourceCode" id="cb9"><pre class="sourceCode yaml"><code class="sourceCode yaml"><span id="cb9-1"><a href="#cb9-1" tabindex="-1"></a><span class="fu">Imports</span><span class="kw">:</span></span>
 <span id="cb9-2"><a href="#cb9-2" tabindex="-1"></a><span class="at">    ggplot2,</span></span>
@@ -326,10 +359,6 @@ DESCRIPTION.</p>
 <span id="cb9-4"><a href="#cb9-4" tabindex="-1"></a><span class="fu">Suggests</span><span class="kw">:</span></span>
 <span id="cb9-5"><a href="#cb9-5" tabindex="-1"></a><span class="at">    knitr,</span></span>
 <span id="cb9-6"><a href="#cb9-6" tabindex="-1"></a><span class="at">    testthat</span></span></code></pre></div>
-<blockquote>
-<p><strong>Exercise B:</strong> Why do we put <code>testthat</code> in
-Suggests rather than Imports? What’s the difference?</p>
-</blockquote>
 <hr>
 </div>
 </div>
@@ -340,7 +369,8 @@ Suggests rather than Imports? What’s the difference?</p>
 <h3 id="package-structure-for-code">Package Structure for Code<a class="anchor" aria-label="anchor" href="#package-structure-for-code"></a>
 </h3>
 <p>All R code goes in the <code>R/</code> directory. You can organize it
-however you like, but a common pattern:</p>
+however you like, it’s typical to break up your functions into multiple
+files based on functionality. For example:</p>
 <pre><code>R/
 ├── data.R         # Functions for data handling (top_variable_features)
 ├── pca.R          # PCA-related functions
@@ -377,8 +407,7 @@ changes:</p>
 <h4 id="after-package-style">After (Package Style)<a class="anchor" aria-label="anchor" href="#after-package-style"></a>
 </h4>
 <p>Two options for using functions from other packages:</p>
-<p><strong>Option 1: Full namespace (recommended for
-clarity)</strong></p>
+<p><strong>Option 1: Full namespace</strong></p>
 <div class="sourceCode" id="cb13"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="co"># In R/data.R</span></span>
 <span><span class="va">top_variable_features</span> <span class="op">&lt;-</span> <span class="kw">function</span><span class="op">(</span><span class="va">se</span>, <span class="va">n</span> <span class="op">=</span> <span class="fl">500</span>, <span class="va">assay_name</span> <span class="op">=</span> <span class="st">"counts"</span><span class="op">)</span> <span class="op">{</span></span>
@@ -394,6 +423,13 @@ clarity)</strong></p>
 <span>  <span class="va">mat</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/pkg/SummarizedExperiment/man/SummarizedExperiment-class.html" class="external-link">assay</a></span><span class="op">(</span><span class="va">se</span>, <span class="va">assay_name</span><span class="op">)</span></span>
 <span>  <span class="co"># ...</span></span>
 <span><span class="op">}</span></span></code></pre></div>
+<p>Importing these functions makes your code cleaner, but you must
+ensure that the package is listed in Imports and that you run
+<code>document()</code> to update the NAMESPACE.</p>
+<p>At times, you may run into conflicts between packages
+(e.g. <code><a href="https://dplyr.tidyverse.org/reference/filter.html" class="external-link">dplyr::filter()</a></code> vs <code><a href="https://rdrr.io/r/stats/filter.html" class="external-link">stats::filter()</a></code>). In
+those cases, it is usually best to use the full namespace syntax to
+avoid ambiguity.</p>
 </div>
 <div class="section level4">
 <h4 id="complete-example-rdata-r">Complete Example: R/data.R<a class="anchor" aria-label="anchor" href="#complete-example-rdata-r"></a>
@@ -408,13 +444,18 @@ clarity)</strong></p>
 <span><span class="co">#' @param assay_name Name of assay to use (default: "counts")</span></span>
 <span><span class="co">#'</span></span>
 <span><span class="co">#' @return A SummarizedExperiment subset to the top n variable features</span></span>
+<span><span class="co">#'</span></span>
+<span><span class="co">#' @importFrom SummarizedExperiment assay</span></span>
 <span><span class="co">#' @export</span></span>
 <span><span class="co">#'</span></span>
 <span><span class="co">#' @examples</span></span>
 <span><span class="co">#' # Assuming 'se' is a SummarizedExperiment</span></span>
-<span><span class="co">#' # se_top &lt;- top_variable_features(se, n = 500)</span></span>
+<span><span class="co">#' library(airway)</span></span>
+<span><span class="co">#' data(airway)</span></span>
+<span><span class="co">#'</span></span>
+<span><span class="co">#' airway_top &lt;- top_variable_features(airway, n = 500)</span></span>
 <span><span class="va">top_variable_features</span> <span class="op">&lt;-</span> <span class="kw">function</span><span class="op">(</span><span class="va">se</span>, <span class="va">n</span> <span class="op">=</span> <span class="fl">500</span>, <span class="va">assay_name</span> <span class="op">=</span> <span class="st">"counts"</span><span class="op">)</span> <span class="op">{</span></span>
-<span>    <span class="va">mat</span> <span class="op">&lt;-</span> <span class="fu">SummarizedExperiment</span><span class="fu">::</span><span class="fu"><a href="https://rdrr.io/pkg/SummarizedExperiment/man/SummarizedExperiment-class.html" class="external-link">assay</a></span><span class="op">(</span><span class="va">se</span>, <span class="va">assay_name</span><span class="op">)</span></span>
+<span>    <span class="va">mat</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/pkg/SummarizedExperiment/man/SummarizedExperiment-class.html" class="external-link">assay</a></span><span class="op">(</span><span class="va">se</span>, <span class="va">assay_name</span><span class="op">)</span></span>
 <span>    <span class="va">vars</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/base/apply.html" class="external-link">apply</a></span><span class="op">(</span><span class="va">mat</span>, <span class="fl">1</span>, <span class="va">var</span><span class="op">)</span></span>
 <span>    <span class="va">top_idx</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/base/order.html" class="external-link">order</a></span><span class="op">(</span><span class="va">vars</span>, decreasing <span class="op">=</span> <span class="cn">TRUE</span><span class="op">)</span><span class="op">[</span><span class="fu"><a href="https://rdrr.io/r/base/seq.html" class="external-link">seq_len</a></span><span class="op">(</span><span class="fu"><a href="https://rdrr.io/r/base/Extremes.html" class="external-link">min</a></span><span class="op">(</span><span class="va">n</span>, <span class="fu"><a href="https://rdrr.io/r/base/length.html" class="external-link">length</a></span><span class="op">(</span><span class="va">vars</span><span class="op">)</span><span class="op">)</span><span class="op">)</span><span class="op">]</span></span>
 <span>    <span class="va">se</span><span class="op">[</span><span class="va">top_idx</span>, <span class="op">]</span></span>
@@ -424,11 +465,14 @@ clarity)</strong></p>
 <li>
 <code>#' @export</code> — Makes the function available to users</li>
 <li>
-<code>#' @param</code> — Documents each parameter</li>
+<code>#' @param</code> — Documents each parameter, indicating
+expected types and defaults</li>
 <li>
-<code>#' @return</code> — Documents the return value</li>
+<code>#' @return</code> — Documents the return value, i.e. what the
+user gets back when they call the function</li>
 <li>
-<code>#' @examples</code> — Provides runnable examples</li>
+<code>#' @examples</code> — Provides standalone runnable
+examples</li>
 <li>
 <code>pkg::fun()</code> syntax — Explicit namespacing</li>
 </ul>

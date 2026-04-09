@@ -5,7 +5,7 @@
 The first half of “data science” is data. This key facet is often
 overlooked and underappreciated, but how data is managed and structured
 is a critical aspect of robust analysis and maintainable scientific
-software. It can enable or constain how quickly and easily you can
+software. It can enable or constrain how quickly and easily you can
 perform analyses, build tools, and collaborate with others.
 
 If your data structures are reliable and your code accepts and returns
@@ -14,7 +14,8 @@ collaborators with less explanation, and reuse the same code across
 experiments and analyses more effectively.
 
 Thus, we start our learning journey at it’s proper place - at the
-beginning, with the data itself.
+beginning, down in the unstructured primordial muck with the data
+itself.
 
 ### Learning Objectives
 
