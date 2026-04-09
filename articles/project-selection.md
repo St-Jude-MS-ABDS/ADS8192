@@ -63,8 +63,10 @@ for exact requirements.
 
 ## Project 0: PCA Explorer (Reference Implementation)
 
-> *This is the course example. You may NOT choose this project — it is
-> provided as a reference for structure and style.*
+> *This is the course example.* You may *NOT* choose this project — it
+> is provided as a reference for structure and style. The lectures will
+> demonstrate the process of this project being converted into a full R
+> package with a Shiny app and CLI, documentation, and tests.
 
 PCA is a very common first step in exploratory analysis of
 high-dimensional data. It reduces thousands of features to a few
