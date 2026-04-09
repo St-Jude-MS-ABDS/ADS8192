@@ -538,7 +538,9 @@ And much more. If it passes, you have a valid package that can be built and inst
 check()
 ```
 
-If there are issues, it will categorize them as ERROR, WARNING, or NOTE. Errors must be fixed before you can build/install the package. Warnings and Notes should be reviewed and fixed if possible, but some may be acceptable for early development. `check` is quite clear about the specific issues, so read the output carefully and address each item.
+If there are issues, it will categorize them as ERROR, WARNING, or NOTE. Errors must be fixed before you can build/install the package. Warnings and Notes should be reviewed and fixed if possible, but some may be acceptable for early development. `check` is quite clear about the specific issues, so read the output carefully and address each item. A clean `check` is pretty much pure bliss.
+
+It's okay if you have some warnings/notes at this stage, but try to fix all errors. If you have errors that you don't understand, feel free to ask for help.
 
 ## Common Issues and Fixes
 
@@ -575,11 +577,11 @@ Package suggested but not available: 'foo'
 
 **Fix:** Wrap example code in `\dontrun{}` or add the package to Suggests.
 
-> **Exercise C:** Run `check()` on your package. Categorize each WARNING and NOTE as either "must fix" or "acceptable for now."
-
 ---
 
 # Part 7: Push to GitHub and Test Install
+
+Now that you've hopefully got a useable package, it's time to start tracking the code properly.
 
 ## Commit and Push
 
@@ -594,17 +596,17 @@ Package suggested but not available: 'foo'
 # git push
 ```
 
-In RStudio, use the Git pane (Ctrl+Alt+M to commit).
+There is also an easy to use [Desktop App](https://desktop.github.com/) if you prefer a GUI for Git.
 
 ## Test Installation
 
-Open a **fresh R session** (important!) and try:
+Now we can try installing the package as an end-user would. Open a **fresh R session** and try:
 
 ```{r test-install, eval=FALSE}
 # Install from GitHub
 # remotes::install_github("your-username/ADS8192")
 
-# Load and test
+# Load and test your package, here's what mine looks like:
 library(ADS8192)
 data(example_se)
 
@@ -616,11 +618,19 @@ plot_pca(result, color_by = "treatment")
 
 # Part 8: Add a README
 
+The README is the first thing users see when they visit your GitHub repo. It should provide a clear overview of what the package does, how to install it, and a quick example of how to use it.
+
+Repos with sucky READMEs are less likely to be used. Writing good documentation often reveals flaws or rough edges in the software design, and it can be an effective way to step back and think about the user experience of your package.
+
+You can be a flat out savant with code, but if your documentation is bad, no one will use it. Conversely, even a mediocre package can be widely used if it has clear, easy to follow documentation (...looking at you again, `Seurat`).
+
+We can use Rmd to create a README with rich formatting and examples. `usethis` has a convenient function to set this up:
+
 ```{r readme}
 use_readme_rmd()
 ```
 
-Edit `README.Rmd`:
+Then we can edit `README.Rmd` to add installation instructions, usage examples, and any other relevant info. Here's a simple example:
 
 ````markdown
 ---
@@ -629,8 +639,6 @@ output: github_document
 
 # ADS8192
 
-<!-- badges: start -->
-<!-- badges: end -->
 
 ADS8192 provides tools for performing PCA on SummarizedExperiment objects.
 
@@ -664,6 +672,8 @@ Then build the README:
 build_readme()
 ```
 
+This will generate a `README.md` file that is rendered from the Rmd. When you push this to GitHub, it will be displayed on the repo homepage.
+
 ---
 
 # Summary
@@ -678,19 +688,7 @@ Today we:
 6. Ran `devtools::check()` and fixed issues
 7. Published to GitHub and tested installation
 
-## Package Milestone
-
-✅ A valid GitHub-hosted R package that installs successfully and exposes the analysis core as documented exported functions.
-
----
-
-## Debrief & Reflection
-
-Before moving on, make sure you can explain:
-
-- Why is `usethis` worth reusing instead of hand-writing package scaffolding?
-- Which of your current functions are important for a user to be able to access, and which (if any) could become internal helpers?
-- If a collaborator only reads the README and function help, what package design choices will make the code feel coherent instead of script-like?
+We did a lot, give yourself a little pat on the back.
 
 ---
 
@@ -698,8 +696,8 @@ Before moving on, make sure you can explain:
 
 ## Reading
 
-- Skim the Bioconductor Contributions book sections on package structure
-- R Packages book: https://r-pkgs.org (chapters 1-7)
+- Skim the [Bioconductor Contributions book](https://contributions.bioconductor.org/)
+- See the [R Packages book](https://r-pkgs.org) for more in-depth details of package development 
 
 ## Micro-task 1: Package-Level Documentation
 
@@ -709,19 +707,14 @@ Add a package-level documentation file:
 use_package_doc()
 ```
 
-Edit `R/ADS8192-package.R` to describe the package purpose and main functions.
+Edit the resulting file to describe the package purpose and main functions.
 
-## Micro-task 2: Fresh Install Test
-
-From a fresh R session (restart R first!):
-
-1. Install your package: `remotes::install_github("you/ADS8192")`
-2. Run the README example
-3. Fix any issues
 
 ---
 
-# Quick Reference
+# Cheatsheet
+
+Always nice to have a handy reference lying around.
 
 ```{r quick-ref, eval=FALSE, class.source = "fold-hide"}
 # Package development quick reference
@@ -738,8 +731,8 @@ use_mit_license()
 use_readme_rmd()
 
 # Add dependencies
-use_package("ggplot2")              # Imports
-use_package("testthat", "Suggests") # Suggests
+use_package("ggplot2")              # to Imports
+use_package("testthat", "Suggests") # to Suggests
 
 # Create files
 use_r("filename")                   # R code
