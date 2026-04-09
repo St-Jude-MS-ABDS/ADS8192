@@ -175,6 +175,20 @@ Roxygen: list(markdown = TRUE)
 RoxygenNote: 7.2.3
 ```
 
+We will add more to this file later. For now, make sure to fill in the `Authors@R` field with your name and email, and optionally your ORCID. The `Description` should be a concise summary of what your package does.  The `Roxygen` field tells roxygen2 to use markdown formatting in the documentation, which allows for nicer formatting in help files.
+
+## Software Licensing
+
+Software can be published under various licenses. The MIT License is a permissive open-source license that allows others to use, modify, and distribute your code with minimal restrictions. By choosing the MIT License, you are allowing others to freely use your code while also disclaiming any warranties or liabilities. This is a common choice for academic software projects that aim to maximize reuse and collaboration. 
+
+This is not the only license, but if you want people to be able to use your code without worrying about legal issues, the MIT License is a good default.
+
+## Versioning
+
+[Semantic versioning](https://semver.org/) is a common convention for version numbers. The format is `MAJOR.MINOR.PATCH`. For development versions, it's common to use `0.0.0.9000` or similar to indicate that it's not a stable release yet. When you make a first stable release, you might change it to `1.0.0`. Then, for bug fixes, you would increment the PATCH version (e.g. `1.0.1`), and for new features that are backward compatible, you would increment the MINOR version (e.g. `1.1.0`). For breaking changes, you would increment the MAJOR version (e.g. `2.0.0`). Much modern software uses semantic versioning to communicate the stability and compatibility of releases.
+
+In general, it's best to keep major, breaking releases to a minimum.
+
 ## Adding Dependencies
 
 **Critical:** In packages, we don't use `library()`. Instead, we declare dependencies in DESCRIPTION.
@@ -183,15 +197,10 @@ RoxygenNote: 7.2.3
 # Add packages to Imports (required to run)
 use_package("SummarizedExperiment")
 use_package("ggplot2")
-use_package("rlang")  # For .data pronoun in ggplot aes()
 
-# Add packages to Suggests (optional, for examples/tests)
+# Add packages to Suggests (optional, for examples/tests or optional features)
 use_package("testthat", type = "Suggests")
 use_package("knitr", type = "Suggests")
-
-# NOTE: For Bioconductor packages, you may also need:
-# BiocManager::install("SummarizedExperiment")
-# and add 'biocViews:' to your DESCRIPTION (can be left empty)
 ```
 
 After running these, your DESCRIPTION will include:
@@ -205,7 +214,7 @@ Suggests:
     testthat
 ```
 
-> **Exercise B:** Why do we put `testthat` in Suggests rather than Imports? What's the difference?
+
 
 ---
 
@@ -213,7 +222,7 @@ Suggests:
 
 ## Package Structure for Code
 
-All R code goes in the `R/` directory. You can organize it however you like, but a common pattern:
+All R code goes in the `R/` directory. You can organize it however you like, it's typical to break up your functions into multiple files based on functionality. For example:
 
 ```
 R/
@@ -252,7 +261,7 @@ top_variable_features <- function(se, n = 500, assay_name = "counts") {
 
 Two options for using functions from other packages:
 
-**Option 1: Full namespace (recommended for clarity)**
+**Option 1: Full namespace**
 
 ```{r namespace-style, eval=FALSE}
 # In R/data.R
@@ -274,6 +283,10 @@ top_variable_features <- function(se, n = 500, assay_name = "counts") {
 }
 ```
 
+Importing these functions makes your code cleaner, but you must ensure that the package is listed in Imports and that you run `document()` to update the NAMESPACE.
+
+At times, you may run into conflicts between packages (e.g. `dplyr::filter()` vs `stats::filter()`). In those cases, it is usually best to use the full namespace syntax to avoid ambiguity.
+
 ### Complete Example: R/data.R
 
 ```{r data-r}
@@ -286,13 +299,18 @@ top_variable_features <- function(se, n = 500, assay_name = "counts") {
 #' @param assay_name Name of assay to use (default: "counts")
 #'
 #' @return A SummarizedExperiment subset to the top n variable features
+#'
+#' @importFrom SummarizedExperiment assay
 #' @export
 #'
 #' @examples
 #' # Assuming 'se' is a SummarizedExperiment
-#' # se_top <- top_variable_features(se, n = 500)
+#' library(airway)
+#' data(airway)
+#'
+#' airway_top <- top_variable_features(airway, n = 500)
 top_variable_features <- function(se, n = 500, assay_name = "counts") {
-    mat <- SummarizedExperiment::assay(se, assay_name)
+    mat <- assay(se, assay_name)
     vars <- apply(mat, 1, var)
     top_idx <- order(vars, decreasing = TRUE)[seq_len(min(n, length(vars)))]
     se[top_idx, ]
@@ -302,9 +320,9 @@ top_variable_features <- function(se, n = 500, assay_name = "counts") {
 Note the key additions:
 
 - `#' @export` — Makes the function available to users
-- `#' @param` — Documents each parameter
-- `#' @return` — Documents the return value
-- `#' @examples` — Provides runnable examples
+- `#' @param` — Documents each parameter, indicating expected types and defaults
+- `#' @return` — Documents the return value, i.e. what the user gets back when they call the function
+- `#' @examples` — Provides standalone runnable examples
 - `pkg::fun()` syntax — Explicit namespacing
 
 ---

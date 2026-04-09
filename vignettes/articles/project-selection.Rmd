@@ -792,9 +792,9 @@ usethis::use_data(example_sce, overwrite = TRUE)
 **What users should be able to do:**
 
 - Select the most variable genes
-- Run k-means clustering across a range of k values (2..max_k)
+- Run k-means clustering across a range of k values (2..max_k), see `?kmeans`
 - Compute clustering quality metrics (total within-cluster sum of squares,
-  average silhouette width, and gap statistic) for each k
+  average silhouette width, and gap statistic) for each k, see `?silhouette` and `?clusGap`
 - Evaluate cluster assignments against known cell type labels using the
   Adjusted Rand Index (ARI) when reference labels are available
 - Visualize clusters on a PCA projection, colored by cluster assignment
@@ -839,17 +839,17 @@ mat_norm <- log2(t(t(mat) / lib_sizes * 1e6) + 1)
 pca <- prcomp(t(mat_norm), scale. = TRUE, center = TRUE)
 pca_mat <- pca$x[, 1:20]  # first 20 PCs for clustering
 
-# --- K-means across k = 2..15 ---
-max_k <- 15
+# --- K-means across k = 5..20 ---
+max_k <- 20
 n_starts <- 25
 set.seed(42)
 
-metrics <- data.frame(k = 2:max_k, wss = NA_real_, avg_silhouette = NA_real_)
+metrics <- data.frame(k = 5:max_k, wss = NA_real_, avg_silhouette = NA_real_)
 km_list <- list()
-for (k in 2:max_k) {
+for (k in 5:max_k) {
     km <- kmeans(pca_mat, centers = k, nstart = n_starts)
     km_list[[as.character(k)]] <- km
-    metrics$wss[k - 1] <- km$tot.withinss
+    metrics$wss[k - 1] <- km$tot.withinss # Total within-cluster sum of squares
     sil <- silhouette(km$cluster, dist(pca_mat))
     metrics$avg_silhouette[k - 1] <- mean(sil[, "sil_width"])
 }
@@ -858,12 +858,12 @@ for (k in 2:max_k) {
 gap_stat <- clusGap(pca_mat, FUN = kmeans, nstart = n_starts,
                     K.max = max_k, B = 20)
 gap_tab <- as.data.frame(gap_stat$Tab)
-metrics$gap <- gap_tab$gap[2:max_k]
-metrics$gap_se <- gap_tab$SE.sim[2:max_k]
+metrics$gap <- gap_tab$gap[5:max_k]
+metrics$gap_se <- gap_tab$SE.sim[5:max_k]
 
 # --- Adjusted Rand Index vs known cell types ---
-evaluation <- data.frame(k = 2:max_k, ari = NA_real_)
-for (k in 2:max_k) {
+evaluation <- data.frame(k = 5:max_k, ari = NA_real_)
+for (k in 5:max_k) {
     pred <- km_list[[as.character(k)]]$cluster
     tab <- table(cell_type, pred)
     n <- sum(tab)
@@ -1009,6 +1009,7 @@ pass/fail counts
 library(SingleCellExperiment)
 library(scRNAseq)
 library(ggplot2)
+library(patchwork)
 
 # --- Load data ---
 sce <- LunSpikeInData()
@@ -1086,7 +1087,7 @@ p4 <- ggplot(qc_metrics, aes(x = n_genes, y = entropy, color = status)) +
     theme_bw() + labs(x = "Genes Detected", y = "Shannon Entropy")
 
 # Print panels (use patchwork or gridExtra for combined layout)
-print(p1); print(p2); print(p3); print(p4)
+(p1 | p2) / (p3 | p4)
 
 # --- Export ---
 output_dir <- file.path(tempdir(), "qc_output")
@@ -1245,7 +1246,7 @@ rse <- rse[keep_genes, ]
 
 # Get clinical metadata
 clin <- colData(brca)
-pam50 <- clin[colnames(rse), "subtype_PAM50.mRNA"]
+pam50 <- clin[colnames(rse), "PAM50.mRNA"]
 
 se <- SummarizedExperiment(
     assays  = list(exprs = assay(rse)),
@@ -1255,11 +1256,6 @@ se <- SummarizedExperiment(
 # --- Get MSigDB Hallmark gene sets ---
 hallmarks <- msigdbr(species = "Homo sapiens", collection = "H")
 gene_sets <- split(hallmarks$gene_symbol, hallmarks$gs_name)
-# Keep 5 sets for tractable visualization
-keep_sets <- c("HALLMARK_E2F_TARGETS", "HALLMARK_INFLAMMATORY_RESPONSE",
-               "HALLMARK_MYC_TARGETS_V1", "HALLMARK_INTERFERON_GAMMA_RESPONSE",
-               "HALLMARK_APOPTOSIS")
-gene_sets <- gene_sets[keep_sets]
 
 # --- Compute per-sample gene set scores ---
 mat <- assay(se, "exprs")
@@ -1309,7 +1305,7 @@ colnames(summary_df) <- c("gene_set", "pam50", "mean_score", "sd_score")
 p <- ggplot(scores_df, aes(x = pam50, y = score, fill = pam50)) +
     geom_boxplot(outlier.size = 0.5) +
     facet_wrap(~ gene_set, scales = "free_y") +
-    theme_bw(base_size = 12) +
+    theme_bw(base_size = 6) +
     theme(axis.text.x = element_text(angle = 45, hjust = 1)) +
     labs(x = "PAM50 Subtype", y = "Gene Set Score (mean z)",
          title = "Hallmark Gene Set Scores by PAM50 Subtype")
