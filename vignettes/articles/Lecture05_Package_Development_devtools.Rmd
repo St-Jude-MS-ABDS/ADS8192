@@ -329,6 +329,51 @@ Note the key additions:
 
 # Part 4: Generate Documentation
 
+We'll talk more deeply about documentation in the next lecture, but for now, writing very basic docstrings for our functions while they're fresh is quick and easy.
+
+AI is *very* good at writing documentation, so there is no modern excuse for poorly documented software. 
+
+## Docstrings with Roxygen2
+
+Roxygen2 parses specially formatted comments (starting with `#'`) to generate help files and the NAMESPACE. The format is simple but powerful. Here's an example for our `top_variable_features()` function:
+
+```{r data-r}
+#' Select top variable features
+#'
+#' @param se A SummarizedExperiment object
+#' @param n Number of top variable features to select (default: 500)
+#' @param assay_name Name of assay to use (default: "counts")
+#'
+#' @return A SummarizedExperiment subset to the top n variable features
+#'
+#' @importFrom SummarizedExperiment assay
+#' @export
+#'
+#' @examples
+#' # Assuming 'se' is a SummarizedExperiment
+#' library(airway)
+#' data(airway)
+#'
+#' airway_top <- top_variable_features(airway, n = 500)
+top_variable_features <- function(se, n = 500, assay_name = "counts") {
+    mat <- assay(se, assay_name)
+    vars <- apply(mat, 1, var)
+    top_idx <- order(vars, decreasing = TRUE)[seq_len(min(n, length(vars)))]
+    se[top_idx, ]
+}
+```
+
+Note the key additions:
+
+- The block starts with a title line.
+- `#' @param` — Documents each parameter, indicating expected types and defaults
+- `#' @return` — Documents the return value, i.e. what the user gets back when they call the function
+- `#' @importFrom` — Specifies functions to import from other packages for use in the function
+- `#' @export` — Makes the function available to users of the package - not all functions have to be exported
+- `#' @examples` — Provides standalone runnable examples
+
+We'll talk about long-form documentation and best practices for docstrings in the next lab, but this is a good start.
+
 ## Run roxygen2
 
 ```{r document}
@@ -354,6 +399,8 @@ export(run_pca)
 export(top_variable_features)
 ```
 
+This file is what controls which functions are available to users when they load the package. Only functions listed here can be accessed with `library(ADS8192)`. Internal helper functions that are not exported will not be listed here and cannot be accessed directly by users.
+
 ## Test the Help
 
 ```{r test-help}
@@ -369,14 +416,16 @@ load_all()
 
 # Part 5: Add Example Data
 
-Let's include a small example dataset so users (and tests) can try the functions without loading external data.
+Let's include a small example dataset to the package so users (and tests) can try the functions without loading external data.
 
 ```{r data-raw}
 # Create data-raw directory for data preparation scripts
 use_data_raw("example_se")
 ```
 
-This creates `data-raw/example_se.R`. Edit it:
+This creates `data-raw/example_se.R`. Edit it with the raw data code for your project.
+
+For my example, I am generating a small simulated dataset. It's often a good idea to include an example dataset so users can try your code easily, but you can also use existing small datasets if they're a good fit (for example, the `airway` dataset would have been a good choice here).
 
 ```{r example-data-script, class.source = "fold-hide"}
 # data-raw/example_se.R — creates example_se dataset
@@ -429,6 +478,8 @@ example_se <- SummarizedExperiment(
 usethis::use_data(example_se, overwrite = TRUE)
 ```
 
+This script also serves as a record of how the data was generated.
+
 Run the script to create the data:
 
 ```{r run-data-script}
@@ -465,16 +516,29 @@ Add to `R/data-documentation.R`:
 "example_se"
 ```
 
+This tells the user what the dataset is, its source, and any other relevant info. After running `document()`, users can access this info with `?example_se`.
+
 ---
 
 # Part 6: R CMD check
 
-This is the moment of truth! `R CMD check` runs ~50 checks to validate your package.
+Thankfully, R has strong tooling for checking package quality and correctness. The `check()` function runs a battery of tests to ensure your package meets minimal standards. It checks for:
+
+- Missing documentation
+- Undocumented arguments
+- Missing imports
+- Non-ASCII characters
+- Examples that fail to run
+- DESCRIPTION issues
+
+And much more. If it passes, you have a valid package that can be built and installed.
+
 
 ```{r check}
-# Run the full check
 check()
 ```
+
+If there are issues, it will categorize them as ERROR, WARNING, or NOTE. Errors must be fixed before you can build/install the package. Warnings and Notes should be reviewed and fixed if possible, but some may be acceptable for early development. `check` is quite clear about the specific issues, so read the output carefully and address each item.
 
 ## Common Issues and Fixes
 
