@@ -19,9 +19,15 @@ knitr::opts_chunk$set(
 )
 ```
 
-# Learning Objectives
+# Motivation
 
-By the end of this session, you will be able to:
+Many research projects begin as scripts that only make sense to the original author and only run in one working directory. Packaging forces you to turn that private workflow into something installable, documented, and reusable by other people.
+
+This can also personally save you time and sanity in a variety of ways - generic reuseability, minimal editing to apply to new datasets/experiments, preparedness for publication, and not having to remember exactly which script had which bit of code you used in that one analysis 6 months ago.
+
+## Learning Objectives
+
+By the end of this lab, you will be able to:
 
 1. Use `usethis` and `devtools` to scaffold package infrastructure instead of hand-building it
 2. Define a small public API and distinguish exported functions from internal helpers
@@ -30,65 +36,38 @@ By the end of this session, you will be able to:
 5. Publish the package to a Git repository and install it from GitHub
 6. Diagnose and resolve common development issues (namespacing, missing Imports, R CMD check warnings)
 
-**Course Learning Outcomes (CLOs):** CLO 1, 4, 6
-
-## Motivation
-
-Many research projects begin as scripts that only make sense to the original author and only run in one working directory. Packaging forces you to turn that private workflow into something installable, documented, and reusable by other people.
-
-That matters for scientific software because package boundaries make assumptions visible. A small public API, explicit dependencies, and generated documentation save time for your future self, reduce onboarding time for collaborators, and make it far easier to test or extend the code without breaking everything around it.
-
-## Evaluation Checklist
-
-Before you introduce a packaging tool or workflow, ask:
-
-- Does it solve infrastructure that should not be custom work?
-- Does it make the package contract clearer for users and collaborators?
-- Does it reduce hidden state, manual steps, or copy-paste setup?
-- Does it align with standard R package workflows that others already know?
-- Will it make clean installs, testing, and maintenance easier six months from now?
-- Are you using it to support a clear API, or just generating files without design intent?
-
-## Scientific Use Case
-
-You inherit a 700-line exploratory RNA-seq script from a graduate student who is graduating next month. The code "works on their laptop," but a collaborator now wants to install it from GitHub, read help pages, and call only two functions from another project. What has to change first: the science, or the software boundaries?
-
 ---
 
-# Why Package Your Code?
+# Taking the Next Step
 
-## From Script to Application
-
-In Lecture 3, we created an "analysis core" — a set of functions in a script. But scripts have limitations:
+In Lecture 4, we created an "analysis core" — a set of functions in a script. But scripts have limitations:
 
 | Script | Package |
 |--------|---------|
 | `source("path/to/file.R")` | `library(ADS8192)` |
 | Paths break when you move files | Installed; works anywhere |
-| Dependency conflicts | Explicit dependency management |
-| No help documentation | `?run_pca` works |
+| No formal dependency management | Explicit dependency management |
+| No formal help documentation | `?run_pca` works |
 | Hard to share | `install_github("you/ADS8192")` |
-| No tests | Automated testing with testthat |
+| No tests to ensure correctness | Automated testing simple to implement |
 
-**A package is the fundamental unit of shareable, reproducible code in R.**
+An R package is barely more complicated than a script, but it provides many benefits even if you're the only one who will ever use it. It can be a little intimating at first, but once you build a package once, it becomes a natural way to organize code.
 
----
+## Package Development Tools
 
-## Why Reuse Package Tooling?
+Fortunately, there are a number of R packages that provide scaffolding and convenience functions to make package development easier:
 
-The package files in this lecture are not an invitation to manually recreate package infrastructure forever. In production work:
-
-- `usethis` gives you consistent scaffolding faster than hand-editing every file
+- `usethis` quickly generates package infrastructure (DESCRIPTION, NAMESPACE, R/ directory, README, data-raw/, etc) and automates common tasks like adding dependencies, creating documentation stubs, and setting up Github
 - `devtools` standardizes the edit-document-test-check loop
-- `roxygen2` keeps documentation close to the code it describes
+- `roxygen2` parses specially formatted comments to generate documentation automatically
 
-Reinventing any of those layers is usually wasted effort. The design work that still belongs to you is deciding what the package should expose, what it should hide, and how users should move through the API.
+We'll use all of these tools to help build our package.
 
 # Pre-Lab Checklist
 
 Before we begin, ensure you have:
 
-- [ ] Your `analysis_core.R` script from Lecture 3 with analysis functions
+- [ ] Your `analysis_core.R` script from Lecture 4 with analysis functions
 - [ ] Git installed and configured (`git config --global user.name "Your Name"`)
 - [ ] A GitHub account
 
@@ -97,30 +76,10 @@ Before we begin, ensure you have:
 install.packages(c("devtools", "usethis", "roxygen2", "testthat"))
 ```
 
----
-
-# Part 1: Define the Package API
-
-Before writing code, let's define the **user story** and **public API**.
-
-## User Story
-
-> As a bioinformatics researcher, I want to quickly run PCA on a SummarizedExperiment and create publication-ready visualizations, so that I can explore batch effects and sample groupings in my RNA-seq data.
-
-## Public API (Exported Functions)
-
-| Function | Exported? | Reason |
-|----------|-----------|--------|
-| `top_variable_features()` | Yes | Users may want to filter separately |
-| `run_pca()` | Yes | Core analysis function |
-| `pca_variance_explained()` | Yes | Useful standalone |
-| `plot_pca()` | Yes | Core visualization |
-
-> **Exercise A:** Are there any functions you might add later that should be **internal** (not exported)? What distinguishes an exported function from an internal helper?
 
 ---
 
-# Part 2: Create the Package Skeleton
+# Part 1: Create the Package Skeleton
 
 ## Step 1: Create the Package
 
@@ -195,7 +154,7 @@ use_mit_license()
 
 ---
 
-# Part 3: The DESCRIPTION File
+# Part 2: The DESCRIPTION File
 
 The `DESCRIPTION` file is the heart of your package metadata. Open it and edit:
 
@@ -250,7 +209,7 @@ Suggests:
 
 ---
 
-# Part 4: Move Functions to R/
+# Part 3: Move Functions to R/
 
 ## Package Structure for Code
 
@@ -350,7 +309,7 @@ Note the key additions:
 
 ---
 
-# Part 5: Generate Documentation
+# Part 4: Generate Documentation
 
 ## Run roxygen2
 
@@ -390,7 +349,7 @@ load_all()
 
 ---
 
-# Part 6: Add Example Data
+# Part 5: Add Example Data
 
 Let's include a small example dataset so users (and tests) can try the functions without loading external data.
 
@@ -490,7 +449,7 @@ Add to `R/data-documentation.R`:
 
 ---
 
-# Part 7: R CMD check
+# Part 6: R CMD check
 
 This is the moment of truth! `R CMD check` runs ~50 checks to validate your package.
 
@@ -538,7 +497,7 @@ Package suggested but not available: 'foo'
 
 ---
 
-# Part 8: Push to GitHub and Test Install
+# Part 7: Push to GitHub and Test Install
 
 ## Commit and Push
 
@@ -573,7 +532,7 @@ plot_pca(result, color_by = "treatment")
 
 ---
 
-# Part 9: Add a README
+# Part 8: Add a README
 
 ```{r readme}
 use_readme_rmd()
@@ -648,7 +607,7 @@ Today we:
 Before moving on, make sure you can explain:
 
 - Why is `usethis` worth reusing instead of hand-writing package scaffolding?
-- Which of your current functions are true user-facing API, and which should become internal helpers?
+- Which of your current functions are important for a user to be able to access, and which (if any) could become internal helpers?
 - If a collaborator only reads the README and function help, what package design choices will make the code feel coherent instead of script-like?
 
 ---

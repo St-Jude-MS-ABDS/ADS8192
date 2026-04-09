@@ -22,21 +22,21 @@ navbar:
         href: articles/getting-started.html
       - text: Project Selection Guide
         href: articles/project-selection.html
-      - text: 'HW1 Rubric'
+      - text: 'Homework 1 Rubric'
         href: articles/HW1_Rubric.html
       - text: '---'
       - text: Lectures
-      - text: 'Lecture 04: Data Structures & Bioconductor'
+      - text: 'Lecture 04: Data Structures & R Ecosystems'
         href: articles/Lecture04_Data_Structures_Bioconductor.html
-      - text: 'Lecture 05: Package Dev (devtools)'
+      - text: 'Lecture 05: R Package Development (devtools)'
         href: articles/Lecture05_Package_Development_devtools.html
-      - text: 'Lecture 06: Package Dev (pkgdown, testthat)'
+      - text: 'Lecture 06: R Package Documentation & Testing (pkgdown, testthat)'
         href: articles/Lecture06_Package_Development_pkgdown_testthat.html
-      - text: 'Lecture 07: Shiny Reactivity'
+      - text: 'Lecture 07: Shiny Application Development'
         href: articles/Lecture07_Shiny_Reactivity.html
-      - text: 'Lecture 08: Shiny Packaging & Deployment'
+      - text: 'Lecture 08: Shiny Application Packaging & Deployment'
         href: articles/Lecture08_Shiny_Packaging_Deployment.html
-      - text: 'Lecture 09: CLI Design (Rapp)'
+      - text: 'Lecture 09: CLI Design & Development(Rapp)'
         href: articles/Lecture09_CLI_Design_Rapp.html
       - text: 'Lecture 10: CLI Packaging & Installation'
         href: articles/Lecture10_CLI_Packaging_Installation.html
