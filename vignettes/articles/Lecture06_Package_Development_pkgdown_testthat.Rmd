@@ -19,7 +19,13 @@ knitr::opts_chunk$set(
 )
 ```
 
-# Learning Objectives
+# Motivation
+
+Scientific software is rarely finished when the first version works. It changes when data sets grow, parameters are tuned, bugs are fixed, and collaborators ask for new outputs. Testing, documentation, and CI are the tools that keep those changes from quietly breaking results.
+
+These practices save time because they turn vague trust into concrete checks. Clear tests protect user-facing behavior, documentation lowers the cost of reuse, and CI catches hidden environment problems before a user (potentially you) discovers them the hard way.
+
+## Learning Objectives
 
 By the end of this session, you will be able to:
 
@@ -29,29 +35,6 @@ By the end of this session, you will be able to:
 4. Distinguish public behavior that should be tested from implementation details that should stay flexible
 5. Explain why tests and CI are essential for maintainability, refactoring safety, and hidden-assumption detection
 
-**Course Learning Outcomes (CLOs):** CLO 1, 4, 6
-
-## Motivation
-
-Scientific software is rarely finished when the first version works. It changes when data sets grow, parameters are tuned, bugs are fixed, and collaborators ask for new outputs. Testing, documentation, and CI are the tools that keep those changes from quietly breaking results.
-
-These practices save time because they turn vague trust into concrete checks. Clear tests protect user-facing behavior, documentation lowers the cost of reuse, and CI catches hidden environment problems before a reviewer, collaborator, or student discovers them the hard way.
-
-## Evaluation Checklist
-
-Before you add a test, docs, or CI layer, ask:
-
-- What public behavior or scientific assumption am I protecting?
-- Would this failure matter to a user, reviewer, or downstream interface?
-- Am I testing a stable contract, or overfitting to an internal implementation detail?
-- Will the check run in a clean environment with only declared dependencies?
-- Does this tool reduce maintenance risk more than a custom workflow would?
-- If the code changes, will these checks catch regressions that matter?
-
-## Scientific Use Case
-
-A collaborator speeds up `top_variable_features()` right before a manuscript deadline. The function still runs, but it now changes the output shape in a subtle way and breaks a figure script two files downstream. What should your tests and CI have protected?
-
 ---
 
 # The Feature Ritual
@@ -60,12 +43,12 @@ From this point forward, every feature we add follows this ritual:
 
 ```
 ┌─────────────┐    ┌───────────┐    ┌────────┐    ┌─────────┐    ┌────────┐
-│ Implement   │ → │ Document  │ → │ Test   │ → │ Check   │ → │ Commit │
+│ Implement   │ →  │ Document  │ →  │ Test   │ →  │ Check   │ →  │ Commit │
 └─────────────┘    └───────────┘    └────────┘    └─────────┘    └────────┘
 ```
 
 1. **Implement** — Write or modify code
-2. **Document** — Add/update roxygen2 docs and README
+2. **Document** — Add/update roxygen2 docs and README, run `devtools::document()`
 3. **Test** — Add/update testthat tests
 4. **Check** — Run `devtools::check()`
 5. **Commit** — Push to GitHub
@@ -86,25 +69,44 @@ Consider this scenario:
 2. A month later, you optimize `top_variable_features()` for speed
 3. You accidentally change the output format
 4. `run_pca()` now silently returns wrong results
-5. You don't notice until a reviewer questions your paper's figures
+5. You don't notice until you've submitted a paper using these improper results
+6. You cry a bit 
 
-**Tests prevent this.** They're automated checks that verify your code still works after changes.
+**Tests prevent this.** They're automated checks that verify your code still works in the way you intended after changes.
 
 ## What Should Tests Protect?
 
 In scientific software, the highest-value tests usually protect:
 
 - **Public contracts**: returned classes, column names, file outputs, and error messages that users rely on
-- **Scientific assumptions**: dimensionality, valid parameter ranges, and meaningful edge cases
-- **Cross-interface behavior**: the Shiny app and CLI should remain thin wrappers over the same tested core
+- **Assumptions**: dimensionality, valid parameter ranges, and meaningful edge cases
+- **Cross-interface behavior**: 
 
 Avoid overfitting tests to incidental implementation details such as temporary variable names or the exact internal sequence of helper calls. Good tests make refactoring safer; brittle tests make refactoring harder.
 
+## A Note on Pointless Testing
+
+Much like the American education system, pointless tests are a real detriment to proper code maintenance and software robustness.
+
+Tests should be meaningful. 
+
+Before you add a test, ask:
+
+- What public behavior or assumption am I protecting?
+- Would this failure matter to a user or downstream interface?
+- Will the check run in a clean environment with only declared dependencies?
+- If the code changes, will these checks catch regressions that matter?
+
+---
+
 ## Setting Up testthat
+
+Setting up test scaffolding for your package is super simple.
 
 ```{r setup-testthat}
 library(devtools)
 library(usethis)
+library(testthat)
 
 # Initialize testthat infrastructure
 use_testthat()
@@ -205,6 +207,8 @@ test()
 test_file("tests/testthat/test-data.R")
 
 # In RStudio: Ctrl+Shift+T
+
+# devtools::check() will also run all tests in a package by default
 ```
 
 Expected output:
@@ -221,6 +225,9 @@ Expected output:
 ---
 
 # Common testthat Expectations
+
+[testthat]() includes many ways to check for expected results from specific scenarios.
+Some of the most common ones include:
 
 ```{r expectations-ref, eval=FALSE, class.source="fold-hide"}
 # Common testthat expect_*() functions — reference

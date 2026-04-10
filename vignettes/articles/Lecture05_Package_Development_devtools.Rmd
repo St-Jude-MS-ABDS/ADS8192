@@ -63,6 +63,9 @@ Fortunately, there are a number of R packages that provide scaffolding and conve
 
 We'll use all of these tools to help build our package.
 
+Note that these tools are **not required** for package development, you could create all the files from scratch yourself.
+These tools just make this process quicker and easier, particularly once you've used them once or twice.
+
 # Pre-Lab Checklist
 
 Before we begin, ensure you have:
@@ -289,7 +292,7 @@ At times, you may run into conflicts between packages (e.g. `dplyr::filter()` vs
 
 ### Complete Example: R/data.R
 
-```{r data-r}
+```{r data-r-full}
 # R/data.R
 
 #' Select top variable features
@@ -337,7 +340,7 @@ AI is *very* good at writing documentation, so there is no modern excuse for poo
 
 Roxygen2 parses specially formatted comments (starting with `#'`) to generate help files and the NAMESPACE. The format is simple but powerful. Here's an example for our `top_variable_features()` function:
 
-```{r data-r}
+```{r data-r-doc}
 #' Select top variable features
 #'
 #' @param se A SummarizedExperiment object
