@@ -1,6 +1,42 @@
 # Lecture 7: Lab - Shiny (R) - Reactivity and App Design
 
-## Learning Objectives
+## Motivation
+
+The most time-consuming component of computational biology,
+bioinformatics, and general data science is rarely the analysis. The
+interpretation of results is the killer. Often, you may be handed data
+or a project that you are just not very familiar with, it could be a new
+field, biology that you just don’t know much about, or a complicated
+experiment that requires expert knowledge to derive trustworthy
+conclusions.
+
+In such cases, you often need to work with other scientists and experts
+to interpret analysis results in a robust and expedient manner. Getting
+people to look through your analysis results can be an unexpected
+challenge - digging through tables is tedious and boring. Everybody is
+trying to avoid death by Excel.
+
+You know what’s not boring? A pretty picture. In science, a solid figure
+is truly worth 10000 words. Effective data visualization is a skill unto
+itself, beyond the scope of what we’ll cover here. But even if you
+create beautiful, useful figures, your collaborators and colleagues will
+always want tweaks or the ability to look at things themselves. That’s a
+good thing!
+
+It gets more eyeballs on the data, empowers bench scientists to make
+real insights and construct a scientific narrative more easily, and will
+save you time if you provide such avenues rather than re-generating the
+same figure in 20 different shades of purple yourself.
+
+Interactive scientific applications have become a common way to
+distribute analysis results, and it is becoming more common for them to
+be published alongside articles. The ability to quickly develop these
+applications is a sought after skill.
+
+So we continue onwards in our pursuit of scientific figure aesthetic
+perfection.
+
+### Learning Objectives
 
 By the end of this session, you will be able to:
 
@@ -13,21 +49,7 @@ By the end of this session, you will be able to:
 4.  Apply input validation and basic UI/UX principles (clarity,
     feedback, consistency) to a scientific app
 
-**Course Learning Outcomes (CLOs):** CLO 1, 4, 5, 6
-
-### Motivation
-
-Interactive scientific software is valuable because many users explore
-data by changing parameters, comparing metadata fields, and looking for
-patterns before they are ready to write a script. A reactive app can
-make that exploration fast and accessible without changing the
-underlying science.
-
-This lecture matters because a well-designed Shiny app saves time only
-when it remains a thin layer over shared analysis logic. If reactivity
-is used carefully, you avoid duplicated computation, keep the interface
-responsive, and let improvements in the package core benefit every
-user-facing layer at once.
+------------------------------------------------------------------------
 
 ### Evaluation Checklist
 
@@ -52,7 +74,7 @@ belongs in the app, and what must remain in the core?
 
 ------------------------------------------------------------------------
 
-## UI/UX Principles
+## UI/UX Design Principles
 
 ### Warm-up Discussion: Worst UI Ever
 
@@ -123,15 +145,10 @@ sidebarPanel(
 
 ## Why Shiny?
 
-### From Functions to Interactions
+After Lecture06, we now have an R package with solid functionality, good
+documentation, and decent test coverage.
 
-We have a powerful analysis core:
-
-``` r
-library(ADS8192)
-result <- run_pca(se, n_top = 500)
-plot_pca(result, color_by = "treatment")
-```
+People are free to download and use said package from Github.
 
 But this requires:
 
@@ -139,42 +156,21 @@ But this requires:
 - Manual iteration to explore different parameters
 - No visual feedback during exploration
 
-**Shiny** lets us wrap these functions in an interactive web interface:
+**Shiny** lets us wrap our package’s functionality in an interactive web
+interface, enabling:
 
 - Point-and-click exploration
 - Immediate visual feedback
-- Accessible to non-programmers
+- Accessibility to non-programmers - just go to a link in the browser
 
-### Key Principle: No Code Duplication
-
-    ┌─────────────────────────────────────────────────────┐
-    │                 Package Core                        │
-    │  run_pca() → plot_pca() → save_pca_results()        │
-    └─────────────────────────────────────────────────────┘
-            ↑                   ↑                   ↑
-            │                   │                   │
-       ┌────┴────┐         ┌────┴────┐         ┌────┴────┐
-       │ R API   │         │ Shiny   │         │ CLI     │
-       │ (users) │         │ (web)   │         │(scripts)│
-       └─────────┘         └─────────┘         └─────────┘
-
-The Shiny app calls the same
+Importantly, our Shiny app can call the same
 [`run_pca()`](https://st-jude-ms-abds.github.io/ADS8192/reference/run_pca.md)
 and
 [`plot_pca()`](https://st-jude-ms-abds.github.io/ADS8192/reference/plot_pca.md)
-functions — it doesn’t reimplement the analysis.
+functions — there is no need to reimplement functionality, just wire up
+an interface to control the input parameters and display outputs.
 
 ------------------------------------------------------------------------
-
-### Design Principle: Reactivity Is a Cache Boundary
-
-Reactive expressions are useful because they let you say, “recompute
-this result only when the relevant inputs change.” That is an
-abstraction and caching boundary, not a new place to re-implement PCA.
-If
-[`run_pca()`](https://st-jude-ms-abds.github.io/ADS8192/reference/run_pca.md)
-changes, the app should benefit automatically because it still delegates
-to the same core function.
 
 ## Part 1: Shiny Basics
 
@@ -308,7 +304,17 @@ components will cover all your needs.
 
 ------------------------------------------------------------------------
 
-### The Reactive Graph
+### The First Wall: Reactivity
+
+At the core of `shiny` is the concept of “reactivity”.
+
+Reactive expressions are useful because they let you say, “recompute
+this result only when the relevant inputs change.” That is an
+abstraction and caching boundary, not a new place to re-implement PCA.
+If
+[`run_pca()`](https://st-jude-ms-abds.github.io/ADS8192/reference/run_pca.md)
+changes, the app should benefit automatically because it still delegates
+to the same core function.
 
 Shiny uses **reactivity** to automatically update outputs when inputs
 change:
@@ -327,7 +333,7 @@ When a source changes, Shiny automatically reruns all dependent code.
 
 ------------------------------------------------------------------------
 
-## Part 2: Building the PCA Explorer
+## Part 2: Building an Application
 
 ### Step 1: Minimal Working App
 
@@ -862,7 +868,7 @@ sessionInfo()
     ## loaded via a namespace (and not attached):
     ##  [1] digest_0.6.39     desc_1.4.3        R6_2.6.1          fastmap_1.2.0    
     ##  [5] xfun_0.57         cachem_1.1.0      knitr_1.51        htmltools_0.5.9  
-    ##  [9] rmarkdown_2.31    lifecycle_1.0.5   cli_3.6.5         sass_0.4.10      
+    ##  [9] rmarkdown_2.31    lifecycle_1.0.5   cli_3.6.6         sass_0.4.10      
     ## [13] pkgdown_2.2.0     textshaping_1.0.5 jquerylib_0.1.4   systemfonts_1.3.2
     ## [17] compiler_4.5.3    tools_4.5.3       ragg_1.5.2        bslib_0.10.0     
     ## [21] evaluate_1.0.5    yaml_2.3.12       otel_0.2.0        jsonlite_2.0.0   

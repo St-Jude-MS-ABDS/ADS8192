@@ -45,7 +45,7 @@
     <li><a class="dropdown-item" href="../articles/Lecture06_Package_Development_pkgdown_testthat.html">Lecture 06: R Package Documentation &amp; Testing (pkgdown, testthat)</a></li>
     <li><a class="dropdown-item" href="../articles/Lecture07_Shiny_Reactivity.html">Lecture 07: Shiny Application Development</a></li>
     <li><a class="dropdown-item" href="../articles/Lecture08_Shiny_Packaging_Deployment.html">Lecture 08: Shiny Application Packaging &amp; Deployment</a></li>
-    <li><a class="dropdown-item" href="../articles/Lecture09_CLI_Design_Rapp.html">Lecture 09: CLI Design &amp; Development(Rapp)</a></li>
+    <li><a class="dropdown-item" href="../articles/Lecture09_CLI_Design_Rapp.html">Lecture 09: CLI Design &amp; Development (Rapp)</a></li>
     <li><a class="dropdown-item" href="../articles/Lecture10_CLI_Packaging_Installation.html">Lecture 10: CLI Packaging &amp; Installation</a></li>
     <li><a class="dropdown-item" href="../articles/Lecture11_Review_QA.html">Lecture 11: Review &amp; Q/A</a></li>
   </ul>
@@ -179,6 +179,10 @@ loop</li>
 generate documentation automatically</li>
 </ul>
 <p>We’ll use all of these tools to help build our package.</p>
+<p>Note that these tools are <strong>not required</strong> for package
+development, you could create all the files from scratch yourself. These
+tools just make this process quicker and easier, particularly once
+you’ve used them once or twice.</p>
 </div>
 </div>
 <div class="section level2">
@@ -483,10 +487,68 @@ examples</li>
 <div class="section level2">
 <h2 id="part-4-generate-documentation">Part 4: Generate Documentation<a class="anchor" aria-label="anchor" href="#part-4-generate-documentation"></a>
 </h2>
+<p>We’ll talk more deeply about documentation in the next lecture, but
+for now, writing very basic docstrings for our functions while they’re
+fresh is quick and easy.</p>
+<p>AI is <em>very</em> good at writing documentation, so there is no
+modern excuse for poorly documented software.</p>
+<div class="section level3">
+<h3 id="docstrings-with-roxygen2">Docstrings with Roxygen2<a class="anchor" aria-label="anchor" href="#docstrings-with-roxygen2"></a>
+</h3>
+<p>Roxygen2 parses specially formatted comments (starting with
+<code>#'</code>) to generate help files and the NAMESPACE. The format is
+simple but powerful. Here’s an example for our
+<code><a href="../reference/top_variable_features.html">top_variable_features()</a></code> function:</p>
+<div class="sourceCode" id="cb16"><pre class="downlit sourceCode r">
+<code class="sourceCode R"><span><span class="co">#' Select top variable features</span></span>
+<span><span class="co">#'</span></span>
+<span><span class="co">#' @param se A SummarizedExperiment object</span></span>
+<span><span class="co">#' @param n Number of top variable features to select (default: 500)</span></span>
+<span><span class="co">#' @param assay_name Name of assay to use (default: "counts")</span></span>
+<span><span class="co">#'</span></span>
+<span><span class="co">#' @return A SummarizedExperiment subset to the top n variable features</span></span>
+<span><span class="co">#'</span></span>
+<span><span class="co">#' @importFrom SummarizedExperiment assay</span></span>
+<span><span class="co">#' @export</span></span>
+<span><span class="co">#'</span></span>
+<span><span class="co">#' @examples</span></span>
+<span><span class="co">#' # Assuming 'se' is a SummarizedExperiment</span></span>
+<span><span class="co">#' library(airway)</span></span>
+<span><span class="co">#' data(airway)</span></span>
+<span><span class="co">#'</span></span>
+<span><span class="co">#' airway_top &lt;- top_variable_features(airway, n = 500)</span></span>
+<span><span class="va">top_variable_features</span> <span class="op">&lt;-</span> <span class="kw">function</span><span class="op">(</span><span class="va">se</span>, <span class="va">n</span> <span class="op">=</span> <span class="fl">500</span>, <span class="va">assay_name</span> <span class="op">=</span> <span class="st">"counts"</span><span class="op">)</span> <span class="op">{</span></span>
+<span>    <span class="va">mat</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/pkg/SummarizedExperiment/man/SummarizedExperiment-class.html" class="external-link">assay</a></span><span class="op">(</span><span class="va">se</span>, <span class="va">assay_name</span><span class="op">)</span></span>
+<span>    <span class="va">vars</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/base/apply.html" class="external-link">apply</a></span><span class="op">(</span><span class="va">mat</span>, <span class="fl">1</span>, <span class="va">var</span><span class="op">)</span></span>
+<span>    <span class="va">top_idx</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/base/order.html" class="external-link">order</a></span><span class="op">(</span><span class="va">vars</span>, decreasing <span class="op">=</span> <span class="cn">TRUE</span><span class="op">)</span><span class="op">[</span><span class="fu"><a href="https://rdrr.io/r/base/seq.html" class="external-link">seq_len</a></span><span class="op">(</span><span class="fu"><a href="https://rdrr.io/r/base/Extremes.html" class="external-link">min</a></span><span class="op">(</span><span class="va">n</span>, <span class="fu"><a href="https://rdrr.io/r/base/length.html" class="external-link">length</a></span><span class="op">(</span><span class="va">vars</span><span class="op">)</span><span class="op">)</span><span class="op">)</span><span class="op">]</span></span>
+<span>    <span class="va">se</span><span class="op">[</span><span class="va">top_idx</span>, <span class="op">]</span></span>
+<span><span class="op">}</span></span></code></pre></div>
+<p>Note the key additions:</p>
+<ul>
+<li>The block starts with a title line.</li>
+<li>
+<code>#' @param</code> — Documents each parameter, indicating
+expected types and defaults</li>
+<li>
+<code>#' @return</code> — Documents the return value, i.e. what the
+user gets back when they call the function</li>
+<li>
+<code>#' @importFrom</code> — Specifies functions to import from
+other packages for use in the function</li>
+<li>
+<code>#' @export</code> — Makes the function available to users of
+the package - not all functions have to be exported</li>
+<li>
+<code>#' @examples</code> — Provides standalone runnable
+examples</li>
+</ul>
+<p>We’ll talk about long-form documentation and best practices for
+docstrings in the next lab, but this is a good start.</p>
+</div>
 <div class="section level3">
 <h3 id="run-roxygen2">Run roxygen2<a class="anchor" aria-label="anchor" href="#run-roxygen2"></a>
 </h3>
-<div class="sourceCode" id="cb16"><pre class="downlit sourceCode r">
+<div class="sourceCode" id="cb17"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="kw"><a href="https://rdrr.io/r/base/library.html" class="external-link">library</a></span><span class="op">(</span><span class="va"><a href="https://devtools.r-lib.org/" class="external-link">devtools</a></span><span class="op">)</span></span>
 <span></span>
 <span><span class="co"># Generate documentation and NAMESPACE</span></span>
@@ -506,11 +568,16 @@ documented function</li>
 <span><span class="fu">export</span><span class="op">(</span><span class="va">plot_pca</span><span class="op">)</span></span>
 <span><span class="fu">export</span><span class="op">(</span><span class="va">run_pca</span><span class="op">)</span></span>
 <span><span class="fu">export</span><span class="op">(</span><span class="va">top_variable_features</span><span class="op">)</span></span></code></pre>
+<p>This file is what controls which functions are available to users
+when they load the package. Only functions listed here can be accessed
+with <code><a href="https://github.com/St-Jude-MS-ABDS/ADS8192" class="external-link">library(ADS8192)</a></code>. Internal helper functions that are
+not exported will not be listed here and cannot be accessed directly by
+users.</p>
 </div>
 <div class="section level3">
 <h3 id="test-the-help">Test the Help<a class="anchor" aria-label="anchor" href="#test-the-help"></a>
 </h3>
-<div class="sourceCode" id="cb18"><pre class="downlit sourceCode r">
+<div class="sourceCode" id="cb19"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="co"># Load the package in development mode</span></span>
 <span><span class="fu">load_all</span><span class="op">(</span><span class="op">)</span></span>
 <span></span>
@@ -523,13 +590,19 @@ documented function</li>
 <div class="section level2">
 <h2 id="part-5-add-example-data">Part 5: Add Example Data<a class="anchor" aria-label="anchor" href="#part-5-add-example-data"></a>
 </h2>
-<p>Let’s include a small example dataset so users (and tests) can try
-the functions without loading external data.</p>
-<div class="sourceCode" id="cb19"><pre class="downlit sourceCode r">
+<p>Let’s include a small example dataset to the package so users (and
+tests) can try the functions without loading external data.</p>
+<div class="sourceCode" id="cb20"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="co"># Create data-raw directory for data preparation scripts</span></span>
 <span><span class="fu">use_data_raw</span><span class="op">(</span><span class="st">"example_se"</span><span class="op">)</span></span></code></pre></div>
-<p>This creates <code>data-raw/example_se.R</code>. Edit it:</p>
-<div class="sourceCode" id="cb20"><pre class="downlit sourceCode r">
+<p>This creates <code>data-raw/example_se.R</code>. Edit it with the raw
+data code for your project.</p>
+<p>For my example, I am generating a small simulated dataset. It’s often
+a good idea to include an example dataset so users can try your code
+easily, but you can also use existing small datasets if they’re a good
+fit (for example, the <code>airway</code> dataset would have been a good
+choice here).</p>
+<div class="sourceCode" id="cb21"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="co"># data-raw/example_se.R — creates example_se dataset</span></span>
 <span></span>
 <span><span class="co"># Create a small example SummarizedExperiment</span></span>
@@ -578,14 +651,16 @@ the functions without loading external data.</p>
 <span></span>
 <span><span class="co"># Save to data/</span></span>
 <span><span class="fu">usethis</span><span class="fu">::</span><span class="fu">use_data</span><span class="op">(</span><span class="va">example_se</span>, overwrite <span class="op">=</span> <span class="cn">TRUE</span><span class="op">)</span></span></code></pre></div>
+<p>This script also serves as a record of how the data was
+generated.</p>
 <p>Run the script to create the data:</p>
-<div class="sourceCode" id="cb21"><pre class="downlit sourceCode r">
+<div class="sourceCode" id="cb22"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="kw"><a href="https://rdrr.io/r/base/source.html" class="external-link">source</a></span><span class="op">(</span><span class="st">"data-raw/example_se.R"</span><span class="op">)</span></span></code></pre></div>
 <p>Now document the data:</p>
-<div class="sourceCode" id="cb22"><pre class="downlit sourceCode r">
+<div class="sourceCode" id="cb23"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="fu">use_r</span><span class="op">(</span><span class="st">"data-documentation"</span><span class="op">)</span></span></code></pre></div>
 <p>Add to <code>R/data-documentation.R</code>:</p>
-<div class="sourceCode" id="cb23"><pre class="downlit sourceCode r">
+<div class="sourceCode" id="cb24"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="co">#' Example SummarizedExperiment for testing</span></span>
 <span><span class="co">#'</span></span>
 <span><span class="co">#' A small SummarizedExperiment with 100 genes and 8 samples.</span></span>
@@ -605,16 +680,39 @@ the functions without loading external data.</p>
 <span><span class="co">#' example_se</span></span>
 <span><span class="co">#' colData(example_se)</span></span>
 <span><span class="st">"example_se"</span></span></code></pre></div>
+<p>This tells the user what the dataset is, its source, and any other
+relevant info. After running <code>document()</code>, users can access
+this info with <code>?example_se</code>.</p>
 <hr>
 </div>
 <div class="section level2">
 <h2 id="part-6-r-cmd-check">Part 6: R CMD check<a class="anchor" aria-label="anchor" href="#part-6-r-cmd-check"></a>
 </h2>
-<p>This is the moment of truth! <code>R CMD check</code> runs ~50 checks
-to validate your package.</p>
-<div class="sourceCode" id="cb24"><pre class="downlit sourceCode r">
-<code class="sourceCode R"><span><span class="co"># Run the full check</span></span>
-<span><span class="fu">check</span><span class="op">(</span><span class="op">)</span></span></code></pre></div>
+<p>Thankfully, R has strong tooling for checking package quality and
+correctness. The <code>check()</code> function runs a battery of tests
+to ensure your package meets minimal standards. It checks for:</p>
+<ul>
+<li>Missing documentation</li>
+<li>Undocumented arguments</li>
+<li>Missing imports</li>
+<li>Non-ASCII characters</li>
+<li>Examples that fail to run</li>
+<li>DESCRIPTION issues</li>
+</ul>
+<p>And much more. If it passes, you have a valid package that can be
+built and installed.</p>
+<div class="sourceCode" id="cb25"><pre class="downlit sourceCode r">
+<code class="sourceCode R"><span><span class="fu">check</span><span class="op">(</span><span class="op">)</span></span></code></pre></div>
+<p>If there are issues, it will categorize them as ERROR, WARNING, or
+NOTE. Errors must be fixed before you can build/install the package.
+Warnings and Notes should be reviewed and fixed if possible, but some
+may be acceptable for early development. <code>check</code> is quite
+clear about the specific issues, so read the output carefully and
+address each item. A clean <code>check</code> is pretty much pure
+bliss.</p>
+<p>It’s okay if you have some warnings/notes at this stage, but try to
+fix all errors. If you have errors that you don’t understand, feel free
+to ask for help.</p>
 <div class="section level3">
 <h3 id="common-issues-and-fixes">Common Issues and Fixes<a class="anchor" aria-label="anchor" href="#common-issues-and-fixes"></a>
 </h3>
@@ -646,11 +744,6 @@ em-dashes) with ASCII equivalents.</p>
 <pre><code>Package suggested but not available: 'foo'</code></pre>
 <p><strong>Fix:</strong> Wrap example code in <code>\dontrun{}</code> or
 add the package to Suggests.</p>
-<blockquote>
-<p><strong>Exercise C:</strong> Run <code>check()</code> on your
-package. Categorize each WARNING and NOTE as either “must fix” or
-“acceptable for now.”</p>
-</blockquote>
 <hr>
 </div>
 </div>
@@ -658,10 +751,12 @@ package. Categorize each WARNING and NOTE as either “must fix” or
 <div class="section level2">
 <h2 id="part-7-push-to-github-and-test-install">Part 7: Push to GitHub and Test Install<a class="anchor" aria-label="anchor" href="#part-7-push-to-github-and-test-install"></a>
 </h2>
+<p>Now that you’ve hopefully got a useable package, it’s time to start
+tracking the code properly.</p>
 <div class="section level3">
 <h3 id="commit-and-push">Commit and Push<a class="anchor" aria-label="anchor" href="#commit-and-push"></a>
 </h3>
-<div class="sourceCode" id="cb29"><pre class="downlit sourceCode r">
+<div class="sourceCode" id="cb30"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="co"># Stage all files</span></span>
 <span><span class="co"># git add -A</span></span>
 <span></span>
@@ -670,17 +765,19 @@ package. Categorize each WARNING and NOTE as either “must fix” or
 <span></span>
 <span><span class="co"># Push</span></span>
 <span><span class="co"># git push</span></span></code></pre></div>
-<p>In RStudio, use the Git pane (Ctrl+Alt+M to commit).</p>
+<p>There is also an easy to use <a href="https://desktop.github.com/" class="external-link">Desktop App</a> if you prefer a GUI
+for Git.</p>
 </div>
 <div class="section level3">
 <h3 id="test-installation">Test Installation<a class="anchor" aria-label="anchor" href="#test-installation"></a>
 </h3>
-<p>Open a <strong>fresh R session</strong> (important!) and try:</p>
-<div class="sourceCode" id="cb30"><pre class="downlit sourceCode r">
+<p>Now we can try installing the package as an end-user would. Open a
+<strong>fresh R session</strong> and try:</p>
+<div class="sourceCode" id="cb31"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="co"># Install from GitHub</span></span>
 <span><span class="co"># remotes::install_github("your-username/ADS8192")</span></span>
 <span></span>
-<span><span class="co"># Load and test</span></span>
+<span><span class="co"># Load and test your package, here's what mine looks like:</span></span>
 <span><span class="kw"><a href="https://rdrr.io/r/base/library.html" class="external-link">library</a></span><span class="op">(</span><span class="va"><a href="https://github.com/St-Jude-MS-ABDS/ADS8192" class="external-link">ADS8192</a></span><span class="op">)</span></span>
 <span><span class="fu"><a href="https://rdrr.io/r/utils/data.html" class="external-link">data</a></span><span class="op">(</span><span class="va">example_se</span><span class="op">)</span></span>
 <span></span>
@@ -692,45 +789,61 @@ package. Categorize each WARNING and NOTE as either “must fix” or
 <div class="section level2">
 <h2 id="part-8-add-a-readme">Part 8: Add a README<a class="anchor" aria-label="anchor" href="#part-8-add-a-readme"></a>
 </h2>
-<div class="sourceCode" id="cb31"><pre class="downlit sourceCode r">
+<p>The README is the first thing users see when they visit your GitHub
+repo. It should provide a clear overview of what the package does, how
+to install it, and a quick example of how to use it.</p>
+<p>Repos with sucky READMEs are less likely to be used. Writing good
+documentation often reveals flaws or rough edges in the software design,
+and it can be an effective way to step back and think about the user
+experience of your package.</p>
+<p>You can be a flat out savant with code, but if your documentation is
+bad, no one will use it. Conversely, even a mediocre package can be
+widely used if it has clear, easy to follow documentation (…looking at
+you again, <code>Seurat</code>).</p>
+<p>We can use Rmd to create a README with rich formatting and examples.
+<code>usethis</code> has a convenient function to set this up:</p>
+<div class="sourceCode" id="cb32"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="fu">use_readme_rmd</span><span class="op">(</span><span class="op">)</span></span></code></pre></div>
-<p>Edit <code>README.Rmd</code>:</p>
-<div class="sourceCode" id="cb32"><pre class="sourceCode markdown"><code class="sourceCode markdown"><span id="cb32-1"><a href="#cb32-1" tabindex="-1"></a><span class="co">---</span></span>
-<span id="cb32-2"><a href="#cb32-2" tabindex="-1"></a><span class="an">output:</span><span class="co"> github_document</span></span>
-<span id="cb32-3"><a href="#cb32-3" tabindex="-1"></a><span class="co">---</span></span>
-<span id="cb32-4"><a href="#cb32-4" tabindex="-1"></a></span>
-<span id="cb32-5"><a href="#cb32-5" tabindex="-1"></a><span class="fu"># ADS8192</span></span>
-<span id="cb32-6"><a href="#cb32-6" tabindex="-1"></a></span>
-<span id="cb32-7"><a href="#cb32-7" tabindex="-1"></a><span class="co">&lt;!-- badges: start --&gt;</span></span>
-<span id="cb32-8"><a href="#cb32-8" tabindex="-1"></a><span class="co">&lt;!-- badges: end --&gt;</span></span>
-<span id="cb32-9"><a href="#cb32-9" tabindex="-1"></a></span>
-<span id="cb32-10"><a href="#cb32-10" tabindex="-1"></a>ADS8192 provides tools for performing PCA on SummarizedExperiment objects.</span>
-<span id="cb32-11"><a href="#cb32-11" tabindex="-1"></a></span>
-<span id="cb32-12"><a href="#cb32-12" tabindex="-1"></a><span class="fu">## Installation</span></span>
-<span id="cb32-13"><a href="#cb32-13" tabindex="-1"></a></span>
-<span id="cb32-14"><a href="#cb32-14" tabindex="-1"></a><span class="in">```r</span></span>
-<span id="cb32-15"><a href="#cb32-15" tabindex="-1"></a><span class="co"># Install from GitHub</span></span>
-<span id="cb32-16"><a href="#cb32-16" tabindex="-1"></a>remotes<span class="sc">::</span><span class="fu">install_github</span>(<span class="st">"your-username/ADS8192"</span>)</span>
-<span id="cb32-17"><a href="#cb32-17" tabindex="-1"></a><span class="in">```</span></span>
-<span id="cb32-18"><a href="#cb32-18" tabindex="-1"></a></span>
-<span id="cb32-19"><a href="#cb32-19" tabindex="-1"></a><span class="fu">## Quick Start</span></span>
-<span id="cb32-20"><a href="#cb32-20" tabindex="-1"></a></span>
-<span id="cb32-21"><a href="#cb32-21" tabindex="-1"></a><span class="in">```r</span></span>
-<span id="cb32-22"><a href="#cb32-22" tabindex="-1"></a><span class="fu">library</span>(ADS8192)</span>
-<span id="cb32-23"><a href="#cb32-23" tabindex="-1"></a><span class="fu">library</span>(airway)</span>
-<span id="cb32-24"><a href="#cb32-24" tabindex="-1"></a></span>
-<span id="cb32-25"><a href="#cb32-25" tabindex="-1"></a><span class="co"># Load example data</span></span>
-<span id="cb32-26"><a href="#cb32-26" tabindex="-1"></a><span class="fu">data</span>(airway)</span>
-<span id="cb32-27"><a href="#cb32-27" tabindex="-1"></a></span>
-<span id="cb32-28"><a href="#cb32-28" tabindex="-1"></a><span class="co"># Run PCA</span></span>
-<span id="cb32-29"><a href="#cb32-29" tabindex="-1"></a>result <span class="ot">&lt;-</span> <span class="fu">run_pca</span>(airway, <span class="at">n_top =</span> <span class="dv">500</span>)</span>
-<span id="cb32-30"><a href="#cb32-30" tabindex="-1"></a></span>
-<span id="cb32-31"><a href="#cb32-31" tabindex="-1"></a><span class="co"># Plot</span></span>
-<span id="cb32-32"><a href="#cb32-32" tabindex="-1"></a><span class="fu">plot_pca</span>(result, <span class="at">color_by =</span> <span class="st">"dex"</span>)</span>
-<span id="cb32-33"><a href="#cb32-33" tabindex="-1"></a><span class="in">```</span></span></code></pre></div>
+<p>Then we can edit <code>README.Rmd</code> to add installation
+instructions, usage examples, and any other relevant info. Here’s a
+simple example:</p>
+<div class="sourceCode" id="cb33"><pre class="sourceCode markdown"><code class="sourceCode markdown"><span id="cb33-1"><a href="#cb33-1" tabindex="-1"></a><span class="co">---</span></span>
+<span id="cb33-2"><a href="#cb33-2" tabindex="-1"></a><span class="an">output:</span><span class="co"> github_document</span></span>
+<span id="cb33-3"><a href="#cb33-3" tabindex="-1"></a><span class="co">---</span></span>
+<span id="cb33-4"><a href="#cb33-4" tabindex="-1"></a></span>
+<span id="cb33-5"><a href="#cb33-5" tabindex="-1"></a><span class="fu"># ADS8192</span></span>
+<span id="cb33-6"><a href="#cb33-6" tabindex="-1"></a></span>
+<span id="cb33-7"><a href="#cb33-7" tabindex="-1"></a></span>
+<span id="cb33-8"><a href="#cb33-8" tabindex="-1"></a>ADS8192 provides tools for performing PCA on SummarizedExperiment objects.</span>
+<span id="cb33-9"><a href="#cb33-9" tabindex="-1"></a></span>
+<span id="cb33-10"><a href="#cb33-10" tabindex="-1"></a><span class="fu">## Installation</span></span>
+<span id="cb33-11"><a href="#cb33-11" tabindex="-1"></a></span>
+<span id="cb33-12"><a href="#cb33-12" tabindex="-1"></a><span class="in">```r</span></span>
+<span id="cb33-13"><a href="#cb33-13" tabindex="-1"></a><span class="co"># Install from GitHub</span></span>
+<span id="cb33-14"><a href="#cb33-14" tabindex="-1"></a>remotes<span class="sc">::</span><span class="fu">install_github</span>(<span class="st">"your-username/ADS8192"</span>)</span>
+<span id="cb33-15"><a href="#cb33-15" tabindex="-1"></a><span class="in">```</span></span>
+<span id="cb33-16"><a href="#cb33-16" tabindex="-1"></a></span>
+<span id="cb33-17"><a href="#cb33-17" tabindex="-1"></a><span class="fu">## Quick Start</span></span>
+<span id="cb33-18"><a href="#cb33-18" tabindex="-1"></a></span>
+<span id="cb33-19"><a href="#cb33-19" tabindex="-1"></a><span class="in">```r</span></span>
+<span id="cb33-20"><a href="#cb33-20" tabindex="-1"></a><span class="fu">library</span>(ADS8192)</span>
+<span id="cb33-21"><a href="#cb33-21" tabindex="-1"></a><span class="fu">library</span>(airway)</span>
+<span id="cb33-22"><a href="#cb33-22" tabindex="-1"></a></span>
+<span id="cb33-23"><a href="#cb33-23" tabindex="-1"></a><span class="co"># Load example data</span></span>
+<span id="cb33-24"><a href="#cb33-24" tabindex="-1"></a><span class="fu">data</span>(airway)</span>
+<span id="cb33-25"><a href="#cb33-25" tabindex="-1"></a></span>
+<span id="cb33-26"><a href="#cb33-26" tabindex="-1"></a><span class="co"># Run PCA</span></span>
+<span id="cb33-27"><a href="#cb33-27" tabindex="-1"></a>result <span class="ot">&lt;-</span> <span class="fu">run_pca</span>(airway, <span class="at">n_top =</span> <span class="dv">500</span>)</span>
+<span id="cb33-28"><a href="#cb33-28" tabindex="-1"></a></span>
+<span id="cb33-29"><a href="#cb33-29" tabindex="-1"></a><span class="co"># Plot</span></span>
+<span id="cb33-30"><a href="#cb33-30" tabindex="-1"></a><span class="fu">plot_pca</span>(result, <span class="at">color_by =</span> <span class="st">"dex"</span>)</span>
+<span id="cb33-31"><a href="#cb33-31" tabindex="-1"></a><span class="in">```</span></span></code></pre></div>
 <p>Then build the README:</p>
-<div class="sourceCode" id="cb33"><pre class="downlit sourceCode r">
+<div class="sourceCode" id="cb34"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="fu">build_readme</span><span class="op">(</span><span class="op">)</span></span></code></pre></div>
+<p>This will generate a <code>README.md</code> file that is rendered
+from the Rmd. When you push this to GitHub, it will be displayed on the
+repo homepage.</p>
 <hr>
 </div>
 <div class="section level2">
@@ -748,28 +861,8 @@ package. Categorize each WARNING and NOTE as either “must fix” or
 <li>Ran <code>devtools::check()</code> and fixed issues</li>
 <li>Published to GitHub and tested installation</li>
 </ol>
-<div class="section level3">
-<h3 id="package-milestone">Package Milestone<a class="anchor" aria-label="anchor" href="#package-milestone"></a>
-</h3>
-<p>✅ A valid GitHub-hosted R package that installs successfully and
-exposes the analysis core as documented exported functions.</p>
+<p>We did a lot, give yourself a little pat on the back.</p>
 <hr>
-</div>
-<div class="section level3">
-<h3 id="debrief-reflection">Debrief &amp; Reflection<a class="anchor" aria-label="anchor" href="#debrief-reflection"></a>
-</h3>
-<p>Before moving on, make sure you can explain:</p>
-<ul>
-<li>Why is <code>usethis</code> worth reusing instead of hand-writing
-package scaffolding?</li>
-<li>Which of your current functions are important for a user to be able
-to access, and which (if any) could become internal helpers?</li>
-<li>If a collaborator only reads the README and function help, what
-package design choices will make the code feel coherent instead of
-script-like?</li>
-</ul>
-<hr>
-</div>
 </div>
 <div class="section level2">
 <h2 id="after-class-tasks">After-Class Tasks<a class="anchor" aria-label="anchor" href="#after-class-tasks"></a>
@@ -778,38 +871,29 @@ script-like?</li>
 <h3 id="reading">Reading<a class="anchor" aria-label="anchor" href="#reading"></a>
 </h3>
 <ul>
-<li>Skim the Bioconductor Contributions book sections on package
-structure</li>
-<li>R Packages book: <a href="https://r-pkgs.org" class="external-link uri">https://r-pkgs.org</a> (chapters 1-7)</li>
+<li>Skim the <a href="https://contributions.bioconductor.org/" class="external-link">Bioconductor
+Contributions book</a>
+</li>
+<li>See the <a href="https://r-pkgs.org" class="external-link">R Packages book</a> for more
+in-depth details of package development</li>
 </ul>
 </div>
 <div class="section level3">
 <h3 id="micro-task-1-package-level-documentation">Micro-task 1: Package-Level Documentation<a class="anchor" aria-label="anchor" href="#micro-task-1-package-level-documentation"></a>
 </h3>
 <p>Add a package-level documentation file:</p>
-<div class="sourceCode" id="cb34"><pre class="downlit sourceCode r">
+<div class="sourceCode" id="cb35"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="fu">use_package_doc</span><span class="op">(</span><span class="op">)</span></span></code></pre></div>
-<p>Edit <code>R/ADS8192-package.R</code> to describe the package purpose
-and main functions.</p>
-</div>
-<div class="section level3">
-<h3 id="micro-task-2-fresh-install-test">Micro-task 2: Fresh Install Test<a class="anchor" aria-label="anchor" href="#micro-task-2-fresh-install-test"></a>
-</h3>
-<p>From a fresh R session (restart R first!):</p>
-<ol style="list-style-type: decimal">
-<li>Install your package:
-<code>remotes::install_github("you/ADS8192")</code>
-</li>
-<li>Run the README example</li>
-<li>Fix any issues</li>
-</ol>
+<p>Edit the resulting file to describe the package purpose and main
+functions.</p>
 <hr>
 </div>
 </div>
 <div class="section level2">
-<h2 id="quick-reference">Quick Reference<a class="anchor" aria-label="anchor" href="#quick-reference"></a>
+<h2 id="cheatsheet">Cheatsheet<a class="anchor" aria-label="anchor" href="#cheatsheet"></a>
 </h2>
-<div class="sourceCode" id="cb35"><pre class="downlit sourceCode r">
+<p>Always nice to have a handy reference lying around.</p>
+<div class="sourceCode" id="cb36"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="co"># Package development quick reference</span></span>
 <span><span class="kw"><a href="https://rdrr.io/r/base/library.html" class="external-link">library</a></span><span class="op">(</span><span class="va"><a href="https://devtools.r-lib.org/" class="external-link">devtools</a></span><span class="op">)</span></span>
 <span><span class="kw"><a href="https://rdrr.io/r/base/library.html" class="external-link">library</a></span><span class="op">(</span><span class="va"><a href="https://usethis.r-lib.org" class="external-link">usethis</a></span><span class="op">)</span></span>
@@ -824,8 +908,8 @@ and main functions.</p>
 <span><span class="fu">use_readme_rmd</span><span class="op">(</span><span class="op">)</span></span>
 <span></span>
 <span><span class="co"># Add dependencies</span></span>
-<span><span class="fu">use_package</span><span class="op">(</span><span class="st">"ggplot2"</span><span class="op">)</span>              <span class="co"># Imports</span></span>
-<span><span class="fu">use_package</span><span class="op">(</span><span class="st">"testthat"</span>, <span class="st">"Suggests"</span><span class="op">)</span> <span class="co"># Suggests</span></span>
+<span><span class="fu">use_package</span><span class="op">(</span><span class="st">"ggplot2"</span><span class="op">)</span>              <span class="co"># to Imports</span></span>
+<span><span class="fu">use_package</span><span class="op">(</span><span class="st">"testthat"</span>, <span class="st">"Suggests"</span><span class="op">)</span> <span class="co"># to Suggests</span></span>
 <span></span>
 <span><span class="co"># Create files</span></span>
 <span><span class="fu">use_r</span><span class="op">(</span><span class="st">"filename"</span><span class="op">)</span>                   <span class="co"># R code</span></span>
@@ -846,7 +930,7 @@ and main functions.</p>
 <div class="section level2">
 <h2 id="session-info">Session Info<a class="anchor" aria-label="anchor" href="#session-info"></a>
 </h2>
-<div class="sourceCode" id="cb36"><pre class="downlit sourceCode r">
+<div class="sourceCode" id="cb37"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="fu"><a href="https://rdrr.io/r/utils/sessionInfo.html" class="external-link">sessionInfo</a></span><span class="op">(</span><span class="op">)</span></span></code></pre></div>
 <pre><code><span><span class="co">## R version 4.5.3 (2026-03-11)</span></span>
 <span><span class="co">## Platform: x86_64-pc-linux-gnu</span></span>
@@ -871,7 +955,7 @@ and main functions.</p>
 <span><span class="co">## loaded via a namespace (and not attached):</span></span>
 <span><span class="co">##  [1] digest_0.6.39     desc_1.4.3        R6_2.6.1          fastmap_1.2.0    </span></span>
 <span><span class="co">##  [5] xfun_0.57         cachem_1.1.0      knitr_1.51        htmltools_0.5.9  </span></span>
-<span><span class="co">##  [9] rmarkdown_2.31    lifecycle_1.0.5   cli_3.6.5         sass_0.4.10      </span></span>
+<span><span class="co">##  [9] rmarkdown_2.31    lifecycle_1.0.5   cli_3.6.6         sass_0.4.10      </span></span>
 <span><span class="co">## [13] pkgdown_2.2.0     textshaping_1.0.5 jquerylib_0.1.4   systemfonts_1.3.2</span></span>
 <span><span class="co">## [17] compiler_4.5.3    tools_4.5.3       ragg_1.5.2        bslib_0.10.0     </span></span>
 <span><span class="co">## [21] evaluate_1.0.5    yaml_2.3.12       otel_0.2.0        jsonlite_2.0.0   </span></span>

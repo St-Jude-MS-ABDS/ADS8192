@@ -1,6 +1,18 @@
 # Lecture 6: Lab – R Package Development (pkgdown, testthat)
 
-## Learning Objectives
+## Motivation
+
+Scientific software is rarely finished when the first version works. It
+changes when data sets grow, parameters are tuned, bugs are fixed, and
+collaborators ask for new outputs. Testing, documentation, and CI are
+the tools that keep those changes from quietly breaking results.
+
+These practices save time because they turn vague trust into concrete
+checks. Clear tests protect user-facing behavior, documentation lowers
+the cost of reuse, and CI catches hidden environment problems before a
+user (potentially you) discovers them the hard way.
+
+### Learning Objectives
 
 By the end of this session, you will be able to:
 
@@ -14,43 +26,6 @@ By the end of this session, you will be able to:
 5.  Explain why tests and CI are essential for maintainability,
     refactoring safety, and hidden-assumption detection
 
-**Course Learning Outcomes (CLOs):** CLO 1, 4, 6
-
-### Motivation
-
-Scientific software is rarely finished when the first version works. It
-changes when data sets grow, parameters are tuned, bugs are fixed, and
-collaborators ask for new outputs. Testing, documentation, and CI are
-the tools that keep those changes from quietly breaking results.
-
-These practices save time because they turn vague trust into concrete
-checks. Clear tests protect user-facing behavior, documentation lowers
-the cost of reuse, and CI catches hidden environment problems before a
-reviewer, collaborator, or student discovers them the hard way.
-
-### Evaluation Checklist
-
-Before you add a test, docs, or CI layer, ask:
-
-- What public behavior or scientific assumption am I protecting?
-- Would this failure matter to a user, reviewer, or downstream
-  interface?
-- Am I testing a stable contract, or overfitting to an internal
-  implementation detail?
-- Will the check run in a clean environment with only declared
-  dependencies?
-- Does this tool reduce maintenance risk more than a custom workflow
-  would?
-- If the code changes, will these checks catch regressions that matter?
-
-### Scientific Use Case
-
-A collaborator speeds up
-[`top_variable_features()`](https://st-jude-ms-abds.github.io/ADS8192/reference/top_variable_features.md)
-right before a manuscript deadline. The function still runs, but it now
-changes the output shape in a subtle way and breaks a figure script two
-files downstream. What should your tests and CI have protected?
-
 ------------------------------------------------------------------------
 
 ## The Feature Ritual
@@ -58,11 +33,12 @@ files downstream. What should your tests and CI have protected?
 From this point forward, every feature we add follows this ritual:
 
     ┌─────────────┐    ┌───────────┐    ┌────────┐    ┌─────────┐    ┌────────┐
-    │ Implement   │ → │ Document  │ → │ Test   │ → │ Check   │ → │ Commit │
+    │ Implement   │ →  │ Document  │ →  │ Test   │ →  │ Check   │ →  │ Commit │
     └─────────────┘    └───────────┘    └────────┘    └─────────┘    └────────┘
 
 1.  **Implement** — Write or modify code
-2.  **Document** — Add/update roxygen2 docs and README
+2.  **Document** — Add/update roxygen2 docs and README, run
+    `devtools::document()`
 3.  **Test** — Add/update testthat tests
 4.  **Check** — Run `devtools::check()`
 5.  **Commit** — Push to GitHub
@@ -89,10 +65,12 @@ Consider this scenario:
 3.  You accidentally change the output format
 4.  [`run_pca()`](https://st-jude-ms-abds.github.io/ADS8192/reference/run_pca.md)
     now silently returns wrong results
-5.  You don’t notice until a reviewer questions your paper’s figures
+5.  You don’t notice until you’ve submitted a paper using these improper
+    results
+6.  You cry a bit
 
 **Tests prevent this.** They’re automated checks that verify your code
-still works after changes.
+still works in the way you intended after changes.
 
 ### What Should Tests Protect?
 
@@ -100,21 +78,40 @@ In scientific software, the highest-value tests usually protect:
 
 - **Public contracts**: returned classes, column names, file outputs,
   and error messages that users rely on
-- **Scientific assumptions**: dimensionality, valid parameter ranges,
-  and meaningful edge cases
-- **Cross-interface behavior**: the Shiny app and CLI should remain thin
-  wrappers over the same tested core
+- **Assumptions**: dimensionality, valid parameter ranges, and
+  meaningful edge cases
+- **Cross-interface behavior**:
 
 Avoid overfitting tests to incidental implementation details such as
 temporary variable names or the exact internal sequence of helper calls.
 Good tests make refactoring safer; brittle tests make refactoring
 harder.
 
+### A Note on Pointless Testing
+
+Much like the American education system, pointless tests are a real
+detriment to proper code maintenance and software robustness.
+
+Tests should be meaningful.
+
+Before you add a test, ask:
+
+- What public behavior or assumption am I protecting?
+- Would this failure matter to a user or downstream interface?
+- Will the check run in a clean environment with only declared
+  dependencies?
+- If the code changes, will these checks catch regressions that matter?
+
+------------------------------------------------------------------------
+
 ### Setting Up testthat
+
+Setting up test scaffolding for your package is super simple.
 
 ``` r
 library(devtools)
 library(usethis)
+library(testthat)
 
 # Initialize testthat infrastructure
 use_testthat()
@@ -205,6 +202,8 @@ test_that("description of what we're testing", {
 
 ### Running Tests
 
+Actually running the tests is also simple.
+
 ``` r
 # Run all tests
 test()
@@ -213,6 +212,8 @@ test()
 test_file("tests/testthat/test-data.R")
 
 # In RStudio: Ctrl+Shift+T
+
+# devtools::check() will also run all tests in a package by default
 ```
 
 Expected output:
@@ -226,7 +227,11 @@ Expected output:
 
 ------------------------------------------------------------------------
 
-## Common testthat Expectations
+### Common testthat Expectations
+
+[testthat](https://st-jude-ms-abds.github.io/ADS8192/articles/) includes
+many ways to check for expected results from specific scenarios. Some of
+the most common ones include:
 
 ``` r
 # Common testthat expect_*() functions — reference
@@ -268,12 +273,37 @@ expect_snapshot(x)  # For complex output comparisons
 
 ------------------------------------------------------------------------
 
-### Exercise A: Test-First Development
+### Test-Driven Development (TDD)
 
-Let’s practice **test-driven development (TDD)**: write the test before
-fixing the bug.
+**Test-driven development (TDD)** is a development process where you
+write tests before writing the code that implements the functionality.
+The cycle is:
 
-#### The Bug
+1.  Write one or more tests that define a desired functionality (these
+    tests will fail because the functionality doesn’t exist yet)
+2.  Write the minimum amount of code needed to make the tests pass
+3.  Refactor the code while ensuring the tests still pass
+
+This process helps ensure that your code is testable, that you only
+write code that is necessary to meet the requirements, and that you have
+a safety net of tests to catch regressions as you refactor.
+
+This can be especially helpful in scientific software, where the
+“requirements” are often defined by the expected behavior of the
+analysis rather than a strict specification. By writing tests first, you
+can clarify your assumptions and ensure that your code meets the
+intended behavior from the start.
+
+TDD can feel a bit unnatural at first, but it can be a powerful approach
+to writing reliable and elegant code that actually does what you need it
+to do.
+
+As a bonus, AI agents are *very* good at writing code to meet test
+specifications as it has a ground truth to work towards. This can make
+TDD a great way to leverage AI assistance effectively while minimizing
+how much handholding is required.
+
+#### An Example
 
 Currently,
 [`run_pca()`](https://st-jude-ms-abds.github.io/ADS8192/reference/run_pca.md)
@@ -816,7 +846,7 @@ sessionInfo()
     ## loaded via a namespace (and not attached):
     ##  [1] digest_0.6.39     desc_1.4.3        R6_2.6.1          fastmap_1.2.0    
     ##  [5] xfun_0.57         cachem_1.1.0      knitr_1.51        htmltools_0.5.9  
-    ##  [9] rmarkdown_2.31    lifecycle_1.0.5   cli_3.6.5         sass_0.4.10      
+    ##  [9] rmarkdown_2.31    lifecycle_1.0.5   cli_3.6.6         sass_0.4.10      
     ## [13] pkgdown_2.2.0     textshaping_1.0.5 jquerylib_0.1.4   systemfonts_1.3.2
     ## [17] compiler_4.5.3    tools_4.5.3       ragg_1.5.2        bslib_0.10.0     
     ## [21] evaluate_1.0.5    yaml_2.3.12       otel_0.2.0        jsonlite_2.0.0   

@@ -45,7 +45,7 @@
     <li><a class="dropdown-item" href="../articles/Lecture06_Package_Development_pkgdown_testthat.html">Lecture 06: R Package Documentation &amp; Testing (pkgdown, testthat)</a></li>
     <li><a class="dropdown-item" href="../articles/Lecture07_Shiny_Reactivity.html">Lecture 07: Shiny Application Development</a></li>
     <li><a class="dropdown-item" href="../articles/Lecture08_Shiny_Packaging_Deployment.html">Lecture 08: Shiny Application Packaging &amp; Deployment</a></li>
-    <li><a class="dropdown-item" href="../articles/Lecture09_CLI_Design_Rapp.html">Lecture 09: CLI Design &amp; Development(Rapp)</a></li>
+    <li><a class="dropdown-item" href="../articles/Lecture09_CLI_Design_Rapp.html">Lecture 09: CLI Design &amp; Development (Rapp)</a></li>
     <li><a class="dropdown-item" href="../articles/Lecture10_CLI_Packaging_Installation.html">Lecture 10: CLI Packaging &amp; Installation</a></li>
     <li><a class="dropdown-item" href="../articles/Lecture11_Review_QA.html">Lecture 11: Review &amp; Q/A</a></li>
   </ul>
@@ -82,8 +82,19 @@ Andrews</h4>
     
     
 <div class="section level2">
-<h2 id="learning-objectives">Learning Objectives<a class="anchor" aria-label="anchor" href="#learning-objectives"></a>
+<h2 id="motivation">Motivation<a class="anchor" aria-label="anchor" href="#motivation"></a>
 </h2>
+<p>Scientific software is rarely finished when the first version works.
+It changes when data sets grow, parameters are tuned, bugs are fixed,
+and collaborators ask for new outputs. Testing, documentation, and CI
+are the tools that keep those changes from quietly breaking results.</p>
+<p>These practices save time because they turn vague trust into concrete
+checks. Clear tests protect user-facing behavior, documentation lowers
+the cost of reuse, and CI catches hidden environment problems before a
+user (potentially you) discovers them the hard way.</p>
+<div class="section level3">
+<h3 id="learning-objectives">Learning Objectives<a class="anchor" aria-label="anchor" href="#learning-objectives"></a>
+</h3>
 <p>By the end of this session, you will be able to:</p>
 <ol style="list-style-type: decimal">
 <li>Add pkgdown functionality to the package and build a local
@@ -96,44 +107,6 @@ implementation details that should stay flexible</li>
 <li>Explain why tests and CI are essential for maintainability,
 refactoring safety, and hidden-assumption detection</li>
 </ol>
-<p><strong>Course Learning Outcomes (CLOs):</strong> CLO 1, 4, 6</p>
-<div class="section level3">
-<h3 id="motivation">Motivation<a class="anchor" aria-label="anchor" href="#motivation"></a>
-</h3>
-<p>Scientific software is rarely finished when the first version works.
-It changes when data sets grow, parameters are tuned, bugs are fixed,
-and collaborators ask for new outputs. Testing, documentation, and CI
-are the tools that keep those changes from quietly breaking results.</p>
-<p>These practices save time because they turn vague trust into concrete
-checks. Clear tests protect user-facing behavior, documentation lowers
-the cost of reuse, and CI catches hidden environment problems before a
-reviewer, collaborator, or student discovers them the hard way.</p>
-</div>
-<div class="section level3">
-<h3 id="evaluation-checklist">Evaluation Checklist<a class="anchor" aria-label="anchor" href="#evaluation-checklist"></a>
-</h3>
-<p>Before you add a test, docs, or CI layer, ask:</p>
-<ul>
-<li>What public behavior or scientific assumption am I protecting?</li>
-<li>Would this failure matter to a user, reviewer, or downstream
-interface?</li>
-<li>Am I testing a stable contract, or overfitting to an internal
-implementation detail?</li>
-<li>Will the check run in a clean environment with only declared
-dependencies?</li>
-<li>Does this tool reduce maintenance risk more than a custom workflow
-would?</li>
-<li>If the code changes, will these checks catch regressions that
-matter?</li>
-</ul>
-</div>
-<div class="section level3">
-<h3 id="scientific-use-case">Scientific Use Case<a class="anchor" aria-label="anchor" href="#scientific-use-case"></a>
-</h3>
-<p>A collaborator speeds up <code><a href="../reference/top_variable_features.html">top_variable_features()</a></code> right
-before a manuscript deadline. The function still runs, but it now
-changes the output shape in a subtle way and breaks a figure script two
-files downstream. What should your tests and CI have protected?</p>
 <hr>
 </div>
 </div>
@@ -143,13 +116,15 @@ files downstream. What should your tests and CI have protected?</p>
 <p>From this point forward, every feature we add follows this
 ritual:</p>
 <pre><code>┌─────────────┐    ┌───────────┐    ┌────────┐    ┌─────────┐    ┌────────┐
-│ Implement   │ → │ Document  │ → │ Test   │ → │ Check   │ → │ Commit │
+│ Implement   │ →  │ Document  │ →  │ Test   │ →  │ Check   │ →  │ Commit │
 └─────────────┘    └───────────┘    └────────┘    └─────────┘    └────────┘</code></pre>
 <ol style="list-style-type: decimal">
 <li>
 <strong>Implement</strong> — Write or modify code</li>
 <li>
-<strong>Document</strong> — Add/update roxygen2 docs and README</li>
+<strong>Document</strong> — Add/update roxygen2 docs and README, run
+<code>devtools::document()</code>
+</li>
 <li>
 <strong>Test</strong> — Add/update testthat tests</li>
 <li>
@@ -179,11 +154,12 @@ speed</li>
 <li>You accidentally change the output format</li>
 <li>
 <code><a href="../reference/run_pca.html">run_pca()</a></code> now silently returns wrong results</li>
-<li>You don’t notice until a reviewer questions your paper’s
-figures</li>
+<li>You don’t notice until you’ve submitted a paper using these improper
+results</li>
+<li>You cry a bit</li>
 </ol>
 <p><strong>Tests prevent this.</strong> They’re automated checks that
-verify your code still works after changes.</p>
+verify your code still works in the way you intended after changes.</p>
 </div>
 <div class="section level3">
 <h3 id="what-should-tests-protect">What Should Tests Protect?<a class="anchor" aria-label="anchor" href="#what-should-tests-protect"></a>
@@ -194,11 +170,10 @@ verify your code still works after changes.</p>
 <strong>Public contracts</strong>: returned classes, column names,
 file outputs, and error messages that users rely on</li>
 <li>
-<strong>Scientific assumptions</strong>: dimensionality, valid
-parameter ranges, and meaningful edge cases</li>
+<strong>Assumptions</strong>: dimensionality, valid parameter
+ranges, and meaningful edge cases</li>
 <li>
-<strong>Cross-interface behavior</strong>: the Shiny app and CLI
-should remain thin wrappers over the same tested core</li>
+<strong>Cross-interface behavior</strong>:</li>
 </ul>
 <p>Avoid overfitting tests to incidental implementation details such as
 temporary variable names or the exact internal sequence of helper calls.
@@ -206,11 +181,30 @@ Good tests make refactoring safer; brittle tests make refactoring
 harder.</p>
 </div>
 <div class="section level3">
+<h3 id="a-note-on-pointless-testing">A Note on Pointless Testing<a class="anchor" aria-label="anchor" href="#a-note-on-pointless-testing"></a>
+</h3>
+<p>Much like the American education system, pointless tests are a real
+detriment to proper code maintenance and software robustness.</p>
+<p>Tests should be meaningful.</p>
+<p>Before you add a test, ask:</p>
+<ul>
+<li>What public behavior or assumption am I protecting?</li>
+<li>Would this failure matter to a user or downstream interface?</li>
+<li>Will the check run in a clean environment with only declared
+dependencies?</li>
+<li>If the code changes, will these checks catch regressions that
+matter?</li>
+</ul>
+<hr>
+</div>
+<div class="section level3">
 <h3 id="setting-up-testthat">Setting Up testthat<a class="anchor" aria-label="anchor" href="#setting-up-testthat"></a>
 </h3>
+<p>Setting up test scaffolding for your package is super simple.</p>
 <div class="sourceCode" id="cb2"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="kw"><a href="https://rdrr.io/r/base/library.html" class="external-link">library</a></span><span class="op">(</span><span class="va"><a href="https://devtools.r-lib.org/" class="external-link">devtools</a></span><span class="op">)</span></span>
 <span><span class="kw"><a href="https://rdrr.io/r/base/library.html" class="external-link">library</a></span><span class="op">(</span><span class="va"><a href="https://usethis.r-lib.org" class="external-link">usethis</a></span><span class="op">)</span></span>
+<span><span class="kw"><a href="https://rdrr.io/r/base/library.html" class="external-link">library</a></span><span class="op">(</span><span class="va"><a href="https://testthat.r-lib.org" class="external-link">testthat</a></span><span class="op">)</span></span>
 <span></span>
 <span><span class="co"># Initialize testthat infrastructure</span></span>
 <span><span class="fu">use_testthat</span><span class="op">(</span><span class="op">)</span></span></code></pre></div>
@@ -291,6 +285,7 @@ harder.</p>
 <div class="section level3">
 <h3 id="running-tests">Running Tests<a class="anchor" aria-label="anchor" href="#running-tests"></a>
 </h3>
+<p>Actually running the tests is also simple.</p>
 <div class="sourceCode" id="cb8"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="co"># Run all tests</span></span>
 <span><span class="fu">test</span><span class="op">(</span><span class="op">)</span></span>
@@ -298,7 +293,9 @@ harder.</p>
 <span><span class="co"># Run a specific test file</span></span>
 <span><span class="fu"><a href="https://testthat.r-lib.org/reference/test_file.html" class="external-link">test_file</a></span><span class="op">(</span><span class="st">"tests/testthat/test-data.R"</span><span class="op">)</span></span>
 <span></span>
-<span><span class="co"># In RStudio: Ctrl+Shift+T</span></span></code></pre></div>
+<span><span class="co"># In RStudio: Ctrl+Shift+T</span></span>
+<span></span>
+<span><span class="co"># devtools::check() will also run all tests in a package by default</span></span></code></pre></div>
 <p>Expected output:</p>
 <pre><code>ℹ Testing ADS8192
 ✔ | F W S  OK | Context
@@ -308,10 +305,12 @@ harder.</p>
 [ FAIL 0 | WARN 0 | SKIP 0 | PASS 4 ]</code></pre>
 <hr>
 </div>
-</div>
-<div class="section level2">
-<h2 id="common-testthat-expectations">Common testthat Expectations<a class="anchor" aria-label="anchor" href="#common-testthat-expectations"></a>
-</h2>
+<div class="section level3">
+<h3 id="common-testthat-expectations">Common testthat Expectations<a class="anchor" aria-label="anchor" href="#common-testthat-expectations"></a>
+</h3>
+<p><a href="">testthat</a> includes many ways to check for expected
+results from specific scenarios. Some of the most common ones
+include:</p>
 <div class="sourceCode" id="cb10"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="co"># Common testthat expect_*() functions — reference</span></span>
 <span></span>
@@ -349,13 +348,36 @@ harder.</p>
 <span><span class="fu"><a href="https://testthat.r-lib.org/reference/expect_output.html" class="external-link">expect_output</a></span><span class="op">(</span><span class="fu"><a href="https://rdrr.io/r/base/print.html" class="external-link">print</a></span><span class="op">(</span><span class="va">x</span><span class="op">)</span>, <span class="st">"pattern"</span><span class="op">)</span></span>
 <span><span class="fu"><a href="https://testthat.r-lib.org/reference/expect_snapshot.html" class="external-link">expect_snapshot</a></span><span class="op">(</span><span class="va">x</span><span class="op">)</span>  <span class="co"># For complex output comparisons</span></span></code></pre></div>
 <hr>
+</div>
 <div class="section level3">
-<h3 id="exercise-a-test-first-development">Exercise A: Test-First Development<a class="anchor" aria-label="anchor" href="#exercise-a-test-first-development"></a>
+<h3 id="test-driven-development-tdd">Test-Driven Development (TDD)<a class="anchor" aria-label="anchor" href="#test-driven-development-tdd"></a>
 </h3>
-<p>Let’s practice <strong>test-driven development (TDD)</strong>: write
-the test before fixing the bug.</p>
+<p><strong>Test-driven development (TDD)</strong> is a development
+process where you write tests before writing the code that implements
+the functionality. The cycle is:</p>
+<ol style="list-style-type: decimal">
+<li>Write one or more tests that define a desired functionality (these
+tests will fail because the functionality doesn’t exist yet)</li>
+<li>Write the minimum amount of code needed to make the tests pass</li>
+<li>Refactor the code while ensuring the tests still pass</li>
+</ol>
+<p>This process helps ensure that your code is testable, that you only
+write code that is necessary to meet the requirements, and that you have
+a safety net of tests to catch regressions as you refactor.</p>
+<p>This can be especially helpful in scientific software, where the
+“requirements” are often defined by the expected behavior of the
+analysis rather than a strict specification. By writing tests first, you
+can clarify your assumptions and ensure that your code meets the
+intended behavior from the start.</p>
+<p>TDD can feel a bit unnatural at first, but it can be a powerful
+approach to writing reliable and elegant code that actually does what
+you need it to do.</p>
+<p>As a bonus, AI agents are <em>very</em> good at writing code to meet
+test specifications as it has a ground truth to work towards. This can
+make TDD a great way to leverage AI assistance effectively while
+minimizing how much handholding is required.</p>
 <div class="section level4">
-<h4 id="the-bug">The Bug<a class="anchor" aria-label="anchor" href="#the-bug"></a>
+<h4 id="an-example">An Example<a class="anchor" aria-label="anchor" href="#an-example"></a>
 </h4>
 <p>Currently, <code><a href="../reference/run_pca.html">run_pca()</a></code> doesn’t validate that
 <code>n_top</code> is a positive integer. Let’s fix that.</p>
@@ -891,7 +913,7 @@ edge cases (what happens with n_top &gt; nrow?)</p>
 <span><span class="co">## loaded via a namespace (and not attached):</span></span>
 <span><span class="co">##  [1] digest_0.6.39     desc_1.4.3        R6_2.6.1          fastmap_1.2.0    </span></span>
 <span><span class="co">##  [5] xfun_0.57         cachem_1.1.0      knitr_1.51        htmltools_0.5.9  </span></span>
-<span><span class="co">##  [9] rmarkdown_2.31    lifecycle_1.0.5   cli_3.6.5         sass_0.4.10      </span></span>
+<span><span class="co">##  [9] rmarkdown_2.31    lifecycle_1.0.5   cli_3.6.6         sass_0.4.10      </span></span>
 <span><span class="co">## [13] pkgdown_2.2.0     textshaping_1.0.5 jquerylib_0.1.4   systemfonts_1.3.2</span></span>
 <span><span class="co">## [17] compiler_4.5.3    tools_4.5.3       ragg_1.5.2        bslib_0.10.0     </span></span>
 <span><span class="co">## [21] evaluate_1.0.5    yaml_2.3.12       otel_0.2.0        jsonlite_2.0.0   </span></span>

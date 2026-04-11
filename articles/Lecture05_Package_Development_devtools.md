@@ -64,6 +64,11 @@ and convenience functions to make package development easier:
 
 We’ll use all of these tools to help build our package.
 
+Note that these tools are **not required** for package development, you
+could create all the files from scratch yourself. These tools just make
+this process quicker and easier, particularly once you’ve used them once
+or twice.
+
 ## Pre-Lab Checklist
 
 Before we begin, ensure you have:
@@ -366,6 +371,63 @@ Note the key additions:
 
 ## Part 4: Generate Documentation
 
+We’ll talk more deeply about documentation in the next lecture, but for
+now, writing very basic docstrings for our functions while they’re fresh
+is quick and easy.
+
+AI is *very* good at writing documentation, so there is no modern excuse
+for poorly documented software.
+
+### Docstrings with Roxygen2
+
+Roxygen2 parses specially formatted comments (starting with `#'`) to
+generate help files and the NAMESPACE. The format is simple but
+powerful. Here’s an example for our
+[`top_variable_features()`](https://st-jude-ms-abds.github.io/ADS8192/reference/top_variable_features.md)
+function:
+
+``` r
+#' Select top variable features
+#'
+#' @param se A SummarizedExperiment object
+#' @param n Number of top variable features to select (default: 500)
+#' @param assay_name Name of assay to use (default: "counts")
+#'
+#' @return A SummarizedExperiment subset to the top n variable features
+#'
+#' @importFrom SummarizedExperiment assay
+#' @export
+#'
+#' @examples
+#' # Assuming 'se' is a SummarizedExperiment
+#' library(airway)
+#' data(airway)
+#'
+#' airway_top <- top_variable_features(airway, n = 500)
+top_variable_features <- function(se, n = 500, assay_name = "counts") {
+    mat <- assay(se, assay_name)
+    vars <- apply(mat, 1, var)
+    top_idx <- order(vars, decreasing = TRUE)[seq_len(min(n, length(vars)))]
+    se[top_idx, ]
+}
+```
+
+Note the key additions:
+
+- The block starts with a title line.
+- `#' @param` — Documents each parameter, indicating expected types and
+  defaults
+- `#' @return` — Documents the return value, i.e. what the user gets
+  back when they call the function
+- `#' @importFrom` — Specifies functions to import from other packages
+  for use in the function
+- `#' @export` — Makes the function available to users of the package -
+  not all functions have to be exported
+- `#' @examples` — Provides standalone runnable examples
+
+We’ll talk about long-form documentation and best practices for
+docstrings in the next lab, but this is a good start.
+
 ### Run roxygen2
 
 ``` r
@@ -390,6 +452,12 @@ Check your `NAMESPACE` file:
     export(run_pca)
     export(top_variable_features)
 
+This file is what controls which functions are available to users when
+they load the package. Only functions listed here can be accessed with
+[`library(ADS8192)`](https://github.com/St-Jude-MS-ABDS/ADS8192).
+Internal helper functions that are not exported will not be listed here
+and cannot be accessed directly by users.
+
 ### Test the Help
 
 ``` r
@@ -405,15 +473,22 @@ load_all()
 
 ## Part 5: Add Example Data
 
-Let’s include a small example dataset so users (and tests) can try the
-functions without loading external data.
+Let’s include a small example dataset to the package so users (and
+tests) can try the functions without loading external data.
 
 ``` r
 # Create data-raw directory for data preparation scripts
 use_data_raw("example_se")
 ```
 
-This creates `data-raw/example_se.R`. Edit it:
+This creates `data-raw/example_se.R`. Edit it with the raw data code for
+your project.
+
+For my example, I am generating a small simulated dataset. It’s often a
+good idea to include an example dataset so users can try your code
+easily, but you can also use existing small datasets if they’re a good
+fit (for example, the `airway` dataset would have been a good choice
+here).
 
 ``` r
 # data-raw/example_se.R — creates example_se dataset
@@ -466,6 +541,8 @@ example_se <- SummarizedExperiment(
 usethis::use_data(example_se, overwrite = TRUE)
 ```
 
+This script also serves as a record of how the data was generated.
+
 Run the script to create the data:
 
 ``` r
@@ -502,17 +579,42 @@ Add to `R/data-documentation.R`:
 "example_se"
 ```
 
+This tells the user what the dataset is, its source, and any other
+relevant info. After running `document()`, users can access this info
+with `?example_se`.
+
 ------------------------------------------------------------------------
 
 ## Part 6: R CMD check
 
-This is the moment of truth! `R CMD check` runs ~50 checks to validate
-your package.
+Thankfully, R has strong tooling for checking package quality and
+correctness. The `check()` function runs a battery of tests to ensure
+your package meets minimal standards. It checks for:
+
+- Missing documentation
+- Undocumented arguments
+- Missing imports
+- Non-ASCII characters
+- Examples that fail to run
+- DESCRIPTION issues
+
+And much more. If it passes, you have a valid package that can be built
+and installed.
 
 ``` r
-# Run the full check
 check()
 ```
+
+If there are issues, it will categorize them as ERROR, WARNING, or NOTE.
+Errors must be fixed before you can build/install the package. Warnings
+and Notes should be reviewed and fixed if possible, but some may be
+acceptable for early development. `check` is quite clear about the
+specific issues, so read the output carefully and address each item. A
+clean `check` is pretty much pure bliss.
+
+It’s okay if you have some warnings/notes at this stage, but try to fix
+all errors. If you have errors that you don’t understand, feel free to
+ask for help.
 
 ### Common Issues and Fixes
 
@@ -543,12 +645,12 @@ equivalents.
 **Fix:** Wrap example code in `\dontrun{}` or add the package to
 Suggests.
 
-> **Exercise C:** Run `check()` on your package. Categorize each WARNING
-> and NOTE as either “must fix” or “acceptable for now.”
-
 ------------------------------------------------------------------------
 
 ## Part 7: Push to GitHub and Test Install
+
+Now that you’ve hopefully got a useable package, it’s time to start
+tracking the code properly.
 
 ### Commit and Push
 
@@ -563,17 +665,19 @@ Suggests.
 # git push
 ```
 
-In RStudio, use the Git pane (Ctrl+Alt+M to commit).
+There is also an easy to use [Desktop App](https://desktop.github.com/)
+if you prefer a GUI for Git.
 
 ### Test Installation
 
-Open a **fresh R session** (important!) and try:
+Now we can try installing the package as an end-user would. Open a
+**fresh R session** and try:
 
 ``` r
 # Install from GitHub
 # remotes::install_github("your-username/ADS8192")
 
-# Load and test
+# Load and test your package, here's what mine looks like:
 library(ADS8192)
 data(example_se)
 
@@ -585,11 +689,29 @@ plot_pca(result, color_by = "treatment")
 
 ## Part 8: Add a README
 
+The README is the first thing users see when they visit your GitHub
+repo. It should provide a clear overview of what the package does, how
+to install it, and a quick example of how to use it.
+
+Repos with sucky READMEs are less likely to be used. Writing good
+documentation often reveals flaws or rough edges in the software design,
+and it can be an effective way to step back and think about the user
+experience of your package.
+
+You can be a flat out savant with code, but if your documentation is
+bad, no one will use it. Conversely, even a mediocre package can be
+widely used if it has clear, easy to follow documentation (…looking at
+you again, `Seurat`).
+
+We can use Rmd to create a README with rich formatting and examples.
+`usethis` has a convenient function to set this up:
+
 ``` r
 use_readme_rmd()
 ```
 
-Edit `README.Rmd`:
+Then we can edit `README.Rmd` to add installation instructions, usage
+examples, and any other relevant info. Here’s a simple example:
 
 ```` markdown
 ---
@@ -598,8 +720,6 @@ output: github_document
 
 # ADS8192
 
-<!-- badges: start -->
-<!-- badges: end -->
 
 ADS8192 provides tools for performing PCA on SummarizedExperiment objects.
 
@@ -633,6 +753,9 @@ Then build the README:
 build_readme()
 ```
 
+This will generate a `README.md` file that is rendered from the Rmd.
+When you push this to GitHub, it will be displayed on the repo homepage.
+
 ------------------------------------------------------------------------
 
 ## Summary
@@ -647,24 +770,7 @@ Today we:
 6.  Ran `devtools::check()` and fixed issues
 7.  Published to GitHub and tested installation
 
-### Package Milestone
-
-✅ A valid GitHub-hosted R package that installs successfully and
-exposes the analysis core as documented exported functions.
-
-------------------------------------------------------------------------
-
-### Debrief & Reflection
-
-Before moving on, make sure you can explain:
-
-- Why is `usethis` worth reusing instead of hand-writing package
-  scaffolding?
-- Which of your current functions are important for a user to be able to
-  access, and which (if any) could become internal helpers?
-- If a collaborator only reads the README and function help, what
-  package design choices will make the code feel coherent instead of
-  script-like?
+We did a lot, give yourself a little pat on the back.
 
 ------------------------------------------------------------------------
 
@@ -672,8 +778,10 @@ Before moving on, make sure you can explain:
 
 ### Reading
 
-- Skim the Bioconductor Contributions book sections on package structure
-- R Packages book: <https://r-pkgs.org> (chapters 1-7)
+- Skim the [Bioconductor Contributions
+  book](https://contributions.bioconductor.org/)
+- See the [R Packages book](https://r-pkgs.org) for more in-depth
+  details of package development
 
 ### Micro-task 1: Package-Level Documentation
 
@@ -683,20 +791,14 @@ Add a package-level documentation file:
 use_package_doc()
 ```
 
-Edit `R/ADS8192-package.R` to describe the package purpose and main
+Edit the resulting file to describe the package purpose and main
 functions.
-
-### Micro-task 2: Fresh Install Test
-
-From a fresh R session (restart R first!):
-
-1.  Install your package: `remotes::install_github("you/ADS8192")`
-2.  Run the README example
-3.  Fix any issues
 
 ------------------------------------------------------------------------
 
-## Quick Reference
+## Cheatsheet
+
+Always nice to have a handy reference lying around.
 
 ``` r
 # Package development quick reference
@@ -713,8 +815,8 @@ use_mit_license()
 use_readme_rmd()
 
 # Add dependencies
-use_package("ggplot2")              # Imports
-use_package("testthat", "Suggests") # Suggests
+use_package("ggplot2")              # to Imports
+use_package("testthat", "Suggests") # to Suggests
 
 # Create files
 use_r("filename")                   # R code
@@ -763,7 +865,7 @@ sessionInfo()
     ## loaded via a namespace (and not attached):
     ##  [1] digest_0.6.39     desc_1.4.3        R6_2.6.1          fastmap_1.2.0    
     ##  [5] xfun_0.57         cachem_1.1.0      knitr_1.51        htmltools_0.5.9  
-    ##  [9] rmarkdown_2.31    lifecycle_1.0.5   cli_3.6.5         sass_0.4.10      
+    ##  [9] rmarkdown_2.31    lifecycle_1.0.5   cli_3.6.6         sass_0.4.10      
     ## [13] pkgdown_2.2.0     textshaping_1.0.5 jquerylib_0.1.4   systemfonts_1.3.2
     ## [17] compiler_4.5.3    tools_4.5.3       ragg_1.5.2        bslib_0.10.0     
     ## [21] evaluate_1.0.5    yaml_2.3.12       otel_0.2.0        jsonlite_2.0.0   
