@@ -58,7 +58,22 @@ scientists who want point-and-click exploration, developers who want
 composable functions, and bioinformatics cores who want scriptable CLI
 tools — all benefit from the same tested core.
 
-### Fundamental Unit Objectives
+### Paradigms & Themes Covered
+
+| Theme                                   | Key Tools / Concepts                                                                                                             |
+|-----------------------------------------|----------------------------------------------------------------------------------------------------------------------------------|
+| Separation of concerns & layered design | Core analysis functions → thin presentation layers: R API (developers), Shiny (end-users/scientists), CLI (pipelines/automation) |
+| Robust data modeling                    | `SummarizedExperiment`, `SingleCellExperiment`, S4 classes                                                                       |
+| R package development                   | `devtools`, `usethis`, `roxygen2`, `DESCRIPTION`, `NAMESPACE`                                                                    |
+| Automated testing                       | `testthat` (edition 3), happy-path + error-case coverage                                                                         |
+| Documentation & publishing              | `roxygen2`, `pkgdown`, vignettes, README-driven onboarding                                                                       |
+| User experience & input validation      | Informative errors (`rlang`/[`stop()`](https://rdrr.io/r/base/stop.html)), Shiny validation, CLI `--help`                        |
+| Interactive applications                | `shiny`, `bslib`, `DT`, reactive programming                                                                                     |
+| CLI design                              | `Rapp` (argument parsing, subcommands, launcher installation)                                                                    |
+| Visualization                           | `ggplot2`, `ComplexHeatmap`                                                                                                      |
+| Reproducibility & collaboration         | Git/GitHub, GitHub Actions CI/CD, `data-raw/` scripts, tagged releases                                                           |
+
+### Unit Objectives
 
 After completing Unit 1, students will be able to:
 
@@ -66,6 +81,8 @@ After completing Unit 1, students will be able to:
   robust data containers (`SummarizedExperiment` /
   `SingleCellExperiment`) and return well-defined types — making them
   easy to reason about, test, and reuse.
+- **Build simple S4 classes** and determine when rolling their own class
+  is worth the effort.
 - **Separate analysis logic from presentation logic.** Core computation
   lives in exported R functions; Shiny, CLI, and scripting layers are
   thin wrappers that delegate to the core. This prevents copy-paste
@@ -94,21 +111,6 @@ After completing Unit 1, students will be able to:
   (`data-raw/` scripts), and tagged releases make the work shareable and
   auditable.
 
-### Paradigms & Themes
-
-| Theme                                   | Key Tools / Concepts                                                                                                             |
-|-----------------------------------------|----------------------------------------------------------------------------------------------------------------------------------|
-| Separation of concerns & layered design | Core analysis functions → thin presentation layers: R API (developers), Shiny (end-users/scientists), CLI (pipelines/automation) |
-| Robust data modeling                    | `SummarizedExperiment`, `SingleCellExperiment`, S4 classes                                                                       |
-| R package development                   | `devtools`, `usethis`, `roxygen2`, `DESCRIPTION`, `NAMESPACE`                                                                    |
-| Automated testing                       | `testthat` (edition 3), happy-path + error-case coverage                                                                         |
-| Documentation & publishing              | `roxygen2`, `pkgdown`, vignettes, README-driven onboarding                                                                       |
-| User experience & input validation      | Informative errors (`rlang`/[`stop()`](https://rdrr.io/r/base/stop.html)), Shiny validation, CLI `--help`                        |
-| Interactive applications                | `shiny`, `bslib`, `DT`, reactive programming                                                                                     |
-| CLI design                              | `Rapp` (argument parsing, subcommands, launcher installation)                                                                    |
-| Visualization                           | `ggplot2`, `ComplexHeatmap`                                                                                                      |
-| Reproducibility & collaboration         | Git/GitHub, GitHub Actions CI/CD, `data-raw/` scripts, tagged releases                                                           |
-
 ## Lectures
 
 All lectures are available as pkgdown articles on the [course
@@ -117,7 +119,7 @@ live in `vignettes/articles/`.
 
 | \#  | Topic                                   | What Students Learn                                                                                                                                               |
 |-----|-----------------------------------------|-------------------------------------------------------------------------------------------------------------------------------------------------------------------|
-| 04  | Data Structures & Bioconductor          | Build an S4 class from scratch; translating raw code to composable functions                                                                                      |
+| 04  | Data Structures & R Ecosystems          | Build an S4 class from scratch; differences in CRAN/Bioconductor; guts of a `SummarizedExperiments`; translating raw code to composable functions                 |
 | 05  | Package Development (devtools)          | Turn functions into a valid R package; `DESCRIPTION`, `NAMESPACE`, `roxygen2` exports/imports, `devtools::check()`                                                |
 | 06  | Package Development (pkgdown, testthat) | Write `testthat` tests (happy path + error cases); build and deploy a `pkgdown` documentation site                                                                |
 | 07  | Shiny Reactivity                        | Understand the reactive graph; build a UI with `bslib`; connect inputs → reactive expressions → outputs                                                           |
@@ -133,51 +135,28 @@ micro-tasks.
 ## Assessments
 
 - **Homework 1** (25 pts): Build a complete R package implementing one
-  of 12 small computational analyses with all three interfaces. See the
-  [HW1
-  Rubric](https://st-jude-ms-abds.github.io/ADS8192/articles/HW1_Rubric.html)
-  and [Project Selection
-  Guide](https://st-jude-ms-abds.github.io/ADS8192/articles/project-selection.html).
+  of [12 small computational
+  analyses](https://st-jude-ms-abds.github.io/ADS8192/articles/project-selection.html)
+  with all three interfaces. As we progress through the lectures/labs,
+  we’ll build out the reference implementation for one of these projects
+  (PCA Explorer) in this repository. Students will follow the same
+  design and structure to build their own package, but with their chosen
+  analysis and dataset.
+  - See the [HW1
+    Rubric](https://st-jude-ms-abds.github.io/ADS8192/articles/HW1_Rubric.html)
+    for full info.
 - **Quiz** (10 pts, at the end of the week): A 20 question quiz covering
   theory, design rationale, and conceptual understanding. Open book,
   take as many times as you need on your own time, no pressure.
-
-### Homework 1
-
-Homework 1 is the capstone deliverable for Unit 1 and will be what
-students work on during labs.
-
-Each student selects a project (or proposes a custom one) and delivers a
-public GitHub repository containing an R package with:
-
-| Category                         | Points | Key Requirements                                                                                                                         |
-|----------------------------------|--------|------------------------------------------------------------------------------------------------------------------------------------------|
-| Package Structure & Installation | 4      | Valid `DESCRIPTION`, `NAMESPACE`, installs from GitHub, bundled example data                                                             |
-| Core Analysis Functions          | 5      | Analysis, summary, and plotting functions operating on common data structures                                                            |
-| Testing                          | 4      | ≥ 8 `testthat` expectations, happy-path + error-case coverage                                                                            |
-| Documentation                    | 4      | `roxygen2` help pages, README, deployed `pkgdown` site                                                                                   |
-| Shiny App                        | 4      | [`run_app()`](https://st-jude-ms-abds.github.io/ADS8192/reference/run_app.md) calls core functions reactively; deployed on Posit Connect |
-| Command-Line Interface           | 4      | `Rapp` entry point in `exec/`, `--help`, TSV output files                                                                                |
-| **Total**                        | **25** |                                                                                                                                          |
-
-Projects span bulk RNA-seq (`SummarizedExperiment`) and single-cell
-RNA-seq (`SingleCellExperiment`) analyses — PCA, UMAP, differential
-expression, clustering, QC, normalization, heatmaps, gene set scoring,
-correlation networks, and more. All use real Bioconductor datasets.
-
-As we progress through the lectures, we’ll build out the reference
-implementation for one of these projects (PCA Explorer) in this
-repository. Students will follow the same design and structure to build
-their own package, but with their chosen analysis and dataset.
 
 ## Reference Implementation (This Package)
 
 This repository **is** the reference implementation (Project 0: PCA
 Explorer) serving as an example of what will be built during the labs.
 Students cannot choose this project but use it as a structural guide. It
-demonstrates the full layered architecture — core analysis functions
-with R API, Shiny, and CLI presentation layers — for a basic R package
-providing PCA and associated visualizations.
+demonstrates the full layered architecture (core analysis functions with
+R API, Shiny, and CLI) for a basic R package providing PCA and
+associated visualizations.
 
 ### Installation
 
