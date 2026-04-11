@@ -199,6 +199,8 @@ test_that("description of what we're testing", {
 
 ## Running Tests
 
+Actually running the tests is also simple.
+
 ```{r run-tests}
 # Run all tests
 test()
@@ -224,7 +226,7 @@ Expected output:
 
 ---
 
-# Common testthat Expectations
+## Common testthat Expectations
 
 [testthat]() includes many ways to check for expected results from specific scenarios.
 Some of the most common ones include:
@@ -269,11 +271,23 @@ expect_snapshot(x)  # For complex output comparisons
 
 ---
 
-## Exercise A: Test-First Development
+## Test-Driven Development (TDD)
 
-Let's practice **test-driven development (TDD)**: write the test before fixing the bug.
+**Test-driven development (TDD)** is a development process where you write tests before writing the code that implements the functionality. The cycle is:
 
-### The Bug
+1. Write one or more tests that define a desired functionality (these tests will fail because the functionality doesn't exist yet)
+2. Write the minimum amount of code needed to make the tests pass
+3. Refactor the code while ensuring the tests still pass
+
+This process helps ensure that your code is testable, that you only write code that is necessary to meet the requirements, and that you have a safety net of tests to catch regressions as you refactor.
+
+This can be especially helpful in scientific software, where the "requirements" are often defined by the expected behavior of the analysis rather than a strict specification. By writing tests first, you can clarify your assumptions and ensure that your code meets the intended behavior from the start.
+
+TDD can feel a bit unnatural at first, but it can be a powerful approach to writing reliable and elegant code that actually does what you need it to do.
+
+As a bonus, AI agents are *very* good at writing code to meet test specifications as it has a ground truth to work towards. This can make TDD a great way to leverage AI assistance effectively while minimizing how much handholding is required.
+
+### An Example
 
 Currently, `run_pca()` doesn't validate that `n_top` is a positive integer. Let's fix that.
 
