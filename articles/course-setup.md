@@ -2,13 +2,12 @@
 
 ## Overview
 
-This guide installs **every** R package you may need for ADS 8192 — the
+This guide installs the R packages you may need for ADS 8192 — the
 shared development stack, the course reference package, and the
-dataset/analysis packages for all 13 homework projects. Running the code
+dataset/analysis packages for all 12 homework projects. Running the code
 block below once on a fresh R installation will get you fully set up.
 
-> **Tip:** If you have already installed some of these packages,
-> re-running
+> If you have already installed some of these packages, re-running
 > [`install.packages()`](https://rdrr.io/r/utils/install.packages.html)
 > or
 > [`BiocManager::install()`](https://bioconductor.github.io/BiocManager/reference/install.html)
@@ -107,6 +106,53 @@ The ADS8192 reference package can be installed directly from GitHub:
 ``` r
 remotes::install_github("St-Jude-MS-ABDS/ADS8192")
 ```
+
+## Set Up Github Access
+
+To enable version control and easy sharing, we’ll be using Git and
+Github for the homework project. You should already have a Github
+account. Login to [Github](https://github.com/) from the browser, and
+then run the following to add a personal access token (PAT) for R to use
+when pushing code from your local machine to Github:
+
+``` r
+usethis::create_github_token()
+```
+
+This will open the browser to the token generation page with proper
+settings already chosen. Add a use case for the token, e.g. “ADS8192”
+and click “Generate Token”.
+
+Copy the resulting token to your clipboard, then run the following to
+add it to your local Git configuration:
+
+``` r
+gitcreds::gitcreds_set()
+```
+
+If you don’t have Git credentials set up, it will prompt your for your
+PAT. Paste it in and hit enter. If you already have credentials set up,
+it will ask if you want to overwrite them. Choose “Yes” to update your
+credentials with the new PAT.
+
+You can test that your PAT is working by running the following code,
+which should return your Git config info Github username:
+
+``` r
+usethis::git_sitrep()
+```
+
+Which for me includes:
+
+    ── GitHub user 
+    • Default GitHub host: "https://github.com"
+    • Personal access token for "https://github.com": <discovered>
+    • GitHub user: "j-andrews7"
+    • Token scopes: "gist", "repo", "user", and "workflow"
+    • Email(s): "jared.andrews07@gmail.com (primary)" and "jared.andrews@stjude.org"
+
+Among other info. After that, you should be set for the rest of the
+unit.
 
 ## Session Info
 

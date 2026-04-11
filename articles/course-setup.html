@@ -84,16 +84,15 @@ Andrews</h4>
 <div class="section level2">
 <h2 id="overview">Overview<a class="anchor" aria-label="anchor" href="#overview"></a>
 </h2>
-<p>This guide installs <strong>every</strong> R package you may need for
-ADS 8192 — the shared development stack, the course reference package,
-and the dataset/analysis packages for all 13 homework projects. Running
-the code block below once on a fresh R installation will get you fully
-set up.</p>
+<p>This guide installs the R packages you may need for ADS 8192 — the
+shared development stack, the course reference package, and the
+dataset/analysis packages for all 12 homework projects. Running the code
+block below once on a fresh R installation will get you fully set
+up.</p>
 <blockquote>
-<p><strong>Tip:</strong> If you have already installed some of these
-packages, re-running <code><a href="https://rdrr.io/r/utils/install.packages.html" class="external-link">install.packages()</a></code> or
-<code><a href="https://bioconductor.github.io/BiocManager/reference/install.html" class="external-link">BiocManager::install()</a></code> will simply skip packages that are
-already up to date.</p>
+<p>If you have already installed some of these packages, re-running
+<code><a href="https://rdrr.io/r/utils/install.packages.html" class="external-link">install.packages()</a></code> or <code><a href="https://bioconductor.github.io/BiocManager/reference/install.html" class="external-link">BiocManager::install()</a></code>
+will simply skip packages that are already up to date.</p>
 </blockquote>
 </div>
 <div class="section level2">
@@ -199,9 +198,44 @@ GitHub:</p>
 <code class="sourceCode R"><span><span class="fu">remotes</span><span class="fu">::</span><span class="fu">install_github</span><span class="op">(</span><span class="st">"St-Jude-MS-ABDS/ADS8192"</span><span class="op">)</span></span></code></pre></div>
 </div>
 <div class="section level2">
+<h2 id="set-up-github-access">Set Up Github Access<a class="anchor" aria-label="anchor" href="#set-up-github-access"></a>
+</h2>
+<p>To enable version control and easy sharing, we’ll be using Git and
+Github for the homework project. You should already have a Github
+account. Login to <a href="https://github.com/" class="external-link">Github</a> from the
+browser, and then run the following to add a personal access token (PAT)
+for R to use when pushing code from your local machine to Github:</p>
+<div class="sourceCode" id="cb4"><pre class="downlit sourceCode r">
+<code class="sourceCode R"><span><span class="fu">usethis</span><span class="fu">::</span><span class="fu">create_github_token</span><span class="op">(</span><span class="op">)</span></span></code></pre></div>
+<p>This will open the browser to the token generation page with proper
+settings already chosen. Add a use case for the token, e.g. “ADS8192”
+and click “Generate Token”.</p>
+<p>Copy the resulting token to your clipboard, then run the following to
+add it to your local Git configuration:</p>
+<div class="sourceCode" id="cb5"><pre class="downlit sourceCode r">
+<code class="sourceCode R"><span><span class="fu">gitcreds</span><span class="fu">::</span><span class="fu">gitcreds_set</span><span class="op">(</span><span class="op">)</span></span></code></pre></div>
+<p>If you don’t have Git credentials set up, it will prompt your for
+your PAT. Paste it in and hit enter. If you already have credentials set
+up, it will ask if you want to overwrite them. Choose “Yes” to update
+your credentials with the new PAT.</p>
+<p>You can test that your PAT is working by running the following code,
+which should return your Git config info Github username:</p>
+<div class="sourceCode" id="cb6"><pre class="downlit sourceCode r">
+<code class="sourceCode R"><span><span class="fu">usethis</span><span class="fu">::</span><span class="fu">git_sitrep</span><span class="op">(</span><span class="op">)</span></span></code></pre></div>
+<p>Which for me includes:</p>
+<pre><code>── GitHub user 
+• Default GitHub host: "https://github.com"
+• Personal access token for "https://github.com": &lt;discovered&gt;
+• GitHub user: "j-andrews7"
+• Token scopes: "gist", "repo", "user", and "workflow"
+• Email(s): "jared.andrews07@gmail.com (primary)" and "jared.andrews@stjude.org"</code></pre>
+<p>Among other info. After that, you should be set for the rest of the
+unit.</p>
+</div>
+<div class="section level2">
 <h2 id="session-info">Session Info<a class="anchor" aria-label="anchor" href="#session-info"></a>
 </h2>
-<div class="sourceCode" id="cb4"><pre class="downlit sourceCode r">
+<div class="sourceCode" id="cb8"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="fu"><a href="https://rdrr.io/r/utils/sessionInfo.html" class="external-link">sessionInfo</a></span><span class="op">(</span><span class="op">)</span></span></code></pre></div>
 </div>
   </main><aside class="col-md-3"><nav id="toc" aria-label="Table of contents"><h2>On this page</h2>

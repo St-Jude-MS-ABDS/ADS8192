@@ -156,6 +156,8 @@ use_github()
 
 ### Step 4: Add a License
 
+More on this in the next section.
+
 ``` r
 # MIT License is a good default for open source
 use_mit_license()
@@ -197,12 +199,13 @@ documentation, which allows for nicer formatting in help files.
 
 ### Software Licensing
 
-Software can be published under various licenses. The MIT License is a
-permissive open-source license that allows others to use, modify, and
-distribute your code with minimal restrictions. By choosing the MIT
-License, you are allowing others to freely use your code while also
-disclaiming any warranties or liabilities. This is a common choice for
-academic software projects that aim to maximize reuse and collaboration.
+Software can be published under various licenses. The [MIT
+License](https://opensource.org/license/mit) is a permissive open-source
+license that allows others to use, modify, and distribute your code with
+minimal restrictions. By choosing the MIT License, you are allowing
+others to freely use your code while also disclaiming any warranties or
+liabilities. This is a common choice for academic software projects that
+aim to maximize reuse and collaboration.
 
 This is not the only license, but if you want people to be able to use
 your code without worrying about legal issues, the MIT License is a good
