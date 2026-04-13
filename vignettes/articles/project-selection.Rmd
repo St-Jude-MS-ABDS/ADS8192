@@ -61,6 +61,7 @@ See the [grading rubric](https://st-jude-ms-abds.github.io/ADS8192/articles/HW1_
 | **CLI outputs** | The TSV files your CLI subcommand must produce |
 | **Shiny inputs** | What the user should be able to change interactively |
 
+If you see function calls you aren't familiar with in the raw code blocks, looking them on in R is your friend, e.g. `?prcomcp`.
 
 ---
 
@@ -441,10 +442,11 @@ list.files(output_dir)
 
 ## Project 2: Sample Similarity & Clustering
 
-**Rationale:** Before formal analysis, you must check whether samples group by
+Before formal analysis, you often must check whether samples group by
 the expected biological variable (treatment, genotype) rather than technical
 artifacts (batch, patient). A sample-by-sample correlation heatmap with
-hierarchical clustering is a common diagnostic.
+hierarchical clustering is a common diagnostic and can also be used to display
+sample groupings with additional metadata annotations.
 
 ### Dataset: Macrophage Stimulation (Human bulk RNA-seq)
 
@@ -630,17 +632,17 @@ list.files(output_dir)
 
 ## Project 3: Differential Expression with DESeq2
 
-**Rationale:** The central question in most gene expression experiments: which
-genes change between conditions? [DESeq2](https://bioconductor.org/packages/devel/bioc/vignettes/DESeq2/inst/doc/DESeq2.html) is a common package for
-differential expression analysis of count data — it models the mean-variance
+One of the most bog standard 'omics analyses is differential expression analysis.
+[DESeq2](https://bioconductor.org/packages/devel/bioc/vignettes/DESeq2/inst/doc/DESeq2.html) is a common package for
+differential analysis of count data (RNA-seq or otherwise) — it models the mean-variance
 relationship with a negative binomial distribution, shares information across
-genes to stabilize fold-change estimates, and provides log2 fold-change
-shrinkage for reliable ranking. Volcano and MA plots of differential expression
-results are bog-standard visualizations for RNA-seq data.
+features to stabilize fold-change estimates, and provides log2 fold-change
+shrinkage for reliable ranking. Volcano and MA plots of differential 
+results are tried and true visualizations for count-based data.
 
 ### Dataset: Tissue-Resident Regulatory T Cells (Mouse bulk RNA-seq)
 
-The `tissueTreg` Bioconductor companion package provides htseq count data from
+The `tissueTreg` package provides htseq count data from
 [Delacher et al. (2017)](https://pubmed.ncbi.nlm.nih.gov/28783152/), profiling regulatory T cells (Tregs) isolated from four
 mouse tissues — fat, liver, lymph node, and skin — alongside conventional T
 cells (Tconv) from lymph nodes. This 5-group design lets students choose their
@@ -1632,15 +1634,18 @@ usethis::use_data(example_se, overwrite = TRUE)
 - Summarize the network: total edge count, mean degree, modularity score,
   hub genes above a connectivity threshold
 - Visualize the network as a correlation heatmap with gene clustering, or as
-  a force-directed layout colored by module
-- Export correlations, network summary, hub gene lists, and module
-  assignments to TSV files
+  a force-directed layout colored by module, with top hub genes labeled by
+  gene symbol
+- Export correlations, network summary, per-node statistics (degree,
+  betweenness, module for all genes), hub gene lists, module assignments,
+  and per-module summaries to TSV files
 
 **Key parameters:** `n_top`, `cor_method` (pearson/spearman), `cor_threshold`,
 `community_method` (louvain/walktrap)
 
 **CLI outputs:** `gene_correlations.tsv`, `network_summary.tsv`,
-`hub_genes.tsv`, `module_assignments.tsv`
+`hub_genes.tsv`, `module_assignments.tsv`, `node_stats.tsv`,
+`module_summary.tsv`
 
 **Shiny inputs:** Correlation threshold slider, method dropdown, n_top slider,
 hub gene table, heatmap redraws on threshold change
@@ -1668,11 +1673,19 @@ assay(rse, "counts") <- transform_counts(rse)
 vars <- apply(assay(rse, "counts"), 1, var)
 keep_genes <- names(sort(vars, decreasing = TRUE))[1:500]
 
-# Subset to 200 samples
-set.seed(42)
+# Subset to 200 random samples
+set.seed(42) # Needed for network layout reproducibility
 keep_samples <- sample(ncol(rse), min(200, ncol(rse)))
 se <- rse[keep_genes, keep_samples]
 mat <- log2(assay(se, "counts") + 1)
+
+# --- Remap row identifiers to gene symbols ---
+# rowData(rse)$gene_name holds HGNC symbols; fall back to Ensembl ID on NA
+gene_symbols <- rowData(se)$gene_name
+gene_symbols[is.na(gene_symbols) | gene_symbols == ""] <- rownames(se)[
+    is.na(gene_symbols) | gene_symbols == ""
+]
+rownames(mat) <- make.unique(gene_symbols)  # resolve rare duplicates
 
 # --- Pairwise Pearson correlation ---
 cor_mat <- cor(t(mat), method = "pearson")
@@ -1712,9 +1725,10 @@ print(net_summary)
 
 # Hub genes: top 20 by degree
 hub_df <- data.frame(
-    gene       = names(deg),
-    degree     = deg,
-    betweenness = betw
+    gene        = names(deg),
+    degree      = deg,
+    betweenness = betw,
+    module      = paste0("M", modules[names(deg)])
 )
 hub_df <- hub_df[order(hub_df$degree, decreasing = TRUE), ]
 hub_genes <- head(hub_df, 20)
@@ -1725,16 +1739,69 @@ ht <- Heatmap(cor_mat, name = "Pearson r",
               column_title = "Gene-Gene Correlation (top 500 genes)")
 draw(ht)
 
+# --- Force-directed network graph (hub-focused subgraph) ---
+# Subset to top 80 hub genes to keep layout readable
+hub_names <- head(hub_df$gene, 80)
+g_sub <- induced_subgraph(g, vids = hub_names)
+
+# Module membership and degree for the subgraph
+V(g_sub)$module   <- as.character(modules[V(g_sub)$name])
+V(g_sub)$degree   <- degree(g_sub)
+V(g_sub)$is_top20 <- V(g_sub)$name %in% hub_genes$gene
+
+# Layout 
+layout_fr <- layout_with_fr(g_sub)
+
+# Build a ggplot-friendly data frame from the igraph layout
+node_df <- data.frame(
+    gene        = V(g_sub)$name,   # gene symbol (or Ensembl fallback)
+    x           = layout_fr[, 1],
+    y           = layout_fr[, 2],
+    degree      = V(g_sub)$degree,
+    module      = paste0("M", V(g_sub)$module),
+    is_hub      = V(g_sub)$is_top20,
+    stringsAsFactors = FALSE
+)
+
+edge_list <- as_edgelist(g_sub)
+edge_df <- data.frame(
+    x    = layout_fr[match(edge_list[, 1], V(g_sub)$name), 1],
+    y    = layout_fr[match(edge_list[, 1], V(g_sub)$name), 2],
+    xend = layout_fr[match(edge_list[, 2], V(g_sub)$name), 1],
+    yend = layout_fr[match(edge_list[, 2], V(g_sub)$name), 2]
+)
+
+p_net <- ggplot() +
+    geom_segment(data = edge_df,
+                 aes(x = x, y = y, xend = xend, yend = yend),
+                 color = "grey75", linewidth = 0.25, alpha = 0.5) +
+    geom_point(data = node_df,
+               aes(x = x, y = y, size = degree, color = module),
+               alpha = 0.85) +
+    geom_label(data = subset(node_df, is_hub),
+               aes(x = x, y = y, label = gene),
+               size = 2.5, label.padding = unit(0.15, "lines"),
+               label.size = 0.2, alpha = 0.85) +
+    scale_size_continuous(range = c(2, 8), name = "Degree") +
+    scale_color_brewer(palette = "Set2", name = "Module") +
+    theme_void() +
+    labs(title = "Hub Gene Co-expression Network",
+         subtitle = paste0("Top 80 genes by degree | cor threshold = ",
+                           cor_threshold,
+                           " | Louvain modules = ", max(modules)))
+print(p_net)
+
 # --- Export ---
 output_dir <- file.path(tempdir(), "network_output")
 dir.create(output_dir, recursive = TRUE, showWarnings = FALSE)
 
 # Write top correlations (flattened, filtered to |r| >= threshold)
+# rownames are gene symbols after the remap above
 upper_idx <- which(upper.tri(cor_mat) & abs(cor_mat) >= cor_threshold,
                    arr.ind = TRUE)
 cor_edges <- data.frame(
-    gene1 = rownames(cor_mat)[upper_idx[, 1]],
-    gene2 = colnames(cor_mat)[upper_idx[, 2]],
+    gene1       = rownames(cor_mat)[upper_idx[, 1]],
+    gene2       = colnames(cor_mat)[upper_idx[, 2]],
     correlation = cor_mat[upper_idx]
 )
 write.table(cor_edges, file.path(output_dir, "gene_correlations.tsv"),
@@ -1744,6 +1811,32 @@ write.table(net_summary, file.path(output_dir, "network_summary.tsv"),
 write.table(hub_genes, file.path(output_dir, "hub_genes.tsv"),
             sep = "\t", row.names = FALSE, quote = FALSE)
 write.table(module_assignments, file.path(output_dir, "module_assignments.tsv"),
+            sep = "\t", row.names = FALSE, quote = FALSE)
+
+# All-node statistics (degree + betweenness + module for every gene)
+node_stats <- data.frame(
+    gene        = names(deg),
+    degree      = deg,
+    betweenness = betw,
+    module      = paste0("M", modules[names(deg)])
+)
+node_stats <- node_stats[order(node_stats$degree, decreasing = TRUE), ]
+write.table(node_stats, file.path(output_dir, "node_stats.tsv"),
+            sep = "\t", row.names = FALSE, quote = FALSE)
+
+# Per-module summary: size, mean degree, mean betweenness
+mod_summary <- do.call(rbind, lapply(unique(node_stats$module), function(m) {
+    sub <- node_stats[node_stats$module == m, ]
+    data.frame(
+        module          = m,
+        n_genes         = nrow(sub),
+        mean_degree     = round(mean(sub$degree), 2),
+        mean_betweenness = round(mean(sub$betweenness), 2),
+        top_hub         = sub$gene[which.max(sub$degree)]
+    )
+}))
+mod_summary <- mod_summary[order(mod_summary$n_genes, decreasing = TRUE), ]
+write.table(mod_summary, file.path(output_dir, "module_summary.tsv"),
             sep = "\t", row.names = FALSE, quote = FALSE)
 
 list.files(output_dir)
