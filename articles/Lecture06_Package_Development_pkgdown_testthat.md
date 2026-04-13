@@ -52,8 +52,6 @@ this workflow sustainable.
 
 ### Why Test?
 
-> “Tests are essential for maintainability and safe refactoring.”
-
 Consider this scenario:
 
 1.  You write
@@ -80,7 +78,8 @@ In scientific software, the highest-value tests usually protect:
   and error messages that users rely on
 - **Assumptions**: dimensionality, valid parameter ranges, and
   meaningful edge cases
-- **Cross-interface behavior**:
+- **Cross-interface behavior**: multiple interfaces to the same core
+  logic should produce consistent results
 
 Avoid overfitting tests to incidental implementation details such as
 temporary variable names or the exact internal sequence of helper calls.

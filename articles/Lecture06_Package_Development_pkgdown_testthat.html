@@ -143,9 +143,6 @@ this workflow sustainable.</p>
 <div class="section level3">
 <h3 id="why-test">Why Test?<a class="anchor" aria-label="anchor" href="#why-test"></a>
 </h3>
-<blockquote>
-<p>“Tests are essential for maintainability and safe refactoring.”</p>
-</blockquote>
 <p>Consider this scenario:</p>
 <ol style="list-style-type: decimal">
 <li>You write <code><a href="../reference/run_pca.html">run_pca()</a></code> and it works</li>
@@ -173,7 +170,8 @@ file outputs, and error messages that users rely on</li>
 <strong>Assumptions</strong>: dimensionality, valid parameter
 ranges, and meaningful edge cases</li>
 <li>
-<strong>Cross-interface behavior</strong>:</li>
+<strong>Cross-interface behavior</strong>: multiple interfaces to
+the same core logic should produce consistent results</li>
 </ul>
 <p>Avoid overfitting tests to incidental implementation details such as
 temporary variable names or the exact internal sequence of helper calls.

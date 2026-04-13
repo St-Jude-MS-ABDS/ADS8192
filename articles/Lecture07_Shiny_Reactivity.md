@@ -56,8 +56,7 @@ Before adding an interactive interface, ask:
 - Who is the audience, and what task is easier interactively than at the
   console?
 - Which computations are expensive enough to deserve reactive caching?
-- What inputs need validation at the interface boundary?
-- Does the app call the same core functions as the other interfaces?
+- Can the app call the same core functions as the other interfaces?
 - Will the UI help users reason about the science, or just expose every
   possible knob?
 - Would a thin interface around existing package functions be enough?
@@ -74,8 +73,10 @@ belongs in the app, and what must remain in the core?
 
 ## Why Shiny?
 
-After Lecture06, we now have an R package with solid functionality, good
-documentation, and decent test coverage.
+After
+[Lecture06](https://st-jude-ms-abds.github.io/ADS8192/articles/Lecture06_Package_Development_pkgdown_testthat.html),
+we now have an R package with solid functionality, good documentation,
+and decent test coverage.
 
 People are free to download and use said package from Github.
 
