@@ -2096,8 +2096,6 @@ list.files(output_dir)
 
 ## Project 11: Batch Effect Assessment
 
-TODO: Fix variance
-
 Batch effects (systematic technical variation from processing
 date, lane, or operator) can muddy biological signal. Quantifying how much
 variance each PC attributes to batch (via linear regression R²) is a common diagnostic
@@ -2121,6 +2119,17 @@ library(scRNAseq)
 library(SingleCellExperiment)
 
 sce <- GrunPancreasData()
+
+# Drop zero-count genes and genes with NA counts (e.g., ERCC spike-ins)
+sce <- sce[rowSums(counts(sce), na.rm = TRUE) > 0 &
+           rowSums(is.na(counts(sce))) == 0, ]
+
+counts_mat <- counts(sce)
+cell_type <- colData(sce)$sample  # "sample" column holds cell type labels
+
+# Remove cells with NA cell type or zero total counts
+keep <- !is.na(cell_type) & colSums(counts_mat) > 0
+sce <- sce[, keep]
 example_sce <- sce
 
 assays(example_sce) <- list(counts = counts(example_sce))
@@ -2167,15 +2176,16 @@ library(patchwork)
 # --- Load data ---
 sce <- GrunPancreasData()
 
-# Drop zero-count genes
-sce <- sce[rowSums(counts(sce)) > 0, ]
+# Drop zero-count genes and genes with NA counts (e.g., ERCC spike-ins)
+sce <- sce[rowSums(counts(sce), na.rm = TRUE) > 0 &
+           rowSums(is.na(counts(sce))) == 0, ]
 
 counts_mat <- counts(sce)
 batch <- colData(sce)$donor
 cell_type <- colData(sce)$sample  # "sample" column holds cell type labels
 
-# Remove cells with NA cell type
-keep <- !is.na(cell_type)
+# Remove cells with NA cell type or zero total counts
+keep <- !is.na(cell_type) & colSums(counts_mat) > 0
 counts_mat <- counts_mat[, keep]
 batch     <- batch[keep]
 cell_type <- cell_type[keep]
@@ -2187,8 +2197,11 @@ mat <- counts_mat[top_idx, ]
 
 # Log-normalize
 lib_sizes <- colSums(counts_mat)
-lib_sizes <- lib_sizes[keep]
 mat_norm <- log2(t(t(mat) / lib_sizes * 1e6) + 1)
+
+# Remove zero- or NA-variance genes (would cause division by zero in scale.)
+gene_vars_norm <- apply(mat_norm, 1, var)
+mat_norm <- mat_norm[is.finite(gene_vars_norm) & gene_vars_norm > 0, ]
 
 # --- PCA (before correction) ---
 pca_before <- prcomp(t(as.matrix(mat_norm)), scale. = TRUE, center = TRUE)
@@ -2258,13 +2271,13 @@ list.files(output_dir)
 
 ## Project 12: Marker Gene Identification
 
-TODO: Fix - top_markers and mean_exp merge.
-
 After clustering samples in scRNA-seq data, identifying the genes that
 best distinguish each cluster from the others. 
 One-vs-rest testing produces ranked marker lists that help you assign a cell type or state to each cluster (e.g. T cells, monocytes, B cells, etc). 
 This task often requires manual review, expert knowledge, and some literature searching to validate the markers against known biology.
 The dot plot (size = detection rate, color = mean expression) is a common way to summarize marker expression patterns across clusters or cell types.
+
+This code takes a few minutes to run, single cell analysis is computationally expensive.
 
 ### Dataset: Baron Mouse Pancreas (Mouse scRNA-seq)
 
@@ -2272,8 +2285,7 @@ The [Baron et al. (2016) mouse pancreatic islet dataset](https://pubmed.ncbi.nlm
 across 9 clearly defined cell types: alpha, beta, delta, gamma (PP),
 acinar, ductal, stellate (activated and quiescent), immune, and Schwann cells.
 Each cell type has well-known marker genes (e.g., *Ins1*/*Ins2* for beta cells,
-*Gcg* for alpha cells), enabling students to validate their markers against
-published biology. 
+*Gcg* for alpha cells), enabling a sanity check for what's returned. 
 
 Note: this is the **mouse** version — Project 4 uses the
 human dataset from the same study, so code cannot be directly shared.
@@ -2400,21 +2412,21 @@ marker_summary <- data.frame(
 )
 
 # --- Dot plot ---
-top_markers$cell_type <- factor(top_markers$cell_type)
-top_markers$gene <- factor(top_markers$gene,
-                           levels = rev(unique(top_markers$gene)))
+# gene ordering: use the unique marker genes in their natural ranking order
+gene_levels <- unique(as.character(top_markers$gene))
+ct_levels   <- as.character(cell_types)
 
-# Compute mean expression for dot color
-mean_expr <- sapply(unique(top_markers$gene), function(g) {
-    sapply(unique(top_markers$cell_type), function(ct) {
-        idx <- cell_type == ct
-        mean(mat_norm[g, idx])
-    })
-})
-mean_expr_df <- as.data.frame(as.table(mean_expr))
-colnames(mean_expr_df) <- c("cell_type", "gene", "mean_expr")
+# Pull every (gene x cell_type) row from all_markers for the selected genes
+# detect_target here is the detection rate of that gene *within* that cell type
+plot_df <- all_markers[all_markers$gene %in% gene_levels, ]
 
-plot_df <- merge(top_markers, mean_expr_df, by = c("cell_type", "gene"))
+# Add mean expression per (gene, cell_type) combination
+plot_df$mean_expr <- mapply(function(g, ct) {
+    mean(as.numeric(mat_norm[g, cell_type == ct]))
+}, plot_df$gene, plot_df$cell_type)
+
+plot_df$gene      <- factor(plot_df$gene,      levels = rev(gene_levels))
+plot_df$cell_type <- factor(plot_df$cell_type, levels = ct_levels)
 
 p <- ggplot(plot_df, aes(x = cell_type, y = gene,
                           size = detect_target, color = mean_expr)) +
