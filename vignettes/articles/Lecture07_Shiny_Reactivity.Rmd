@@ -44,8 +44,7 @@ By the end of this session, you will be able to:
 
 1. Build a reactive Shiny app that calls package functions rather than duplicating logic
 2. Use reactive expressions to cache expensive computations and manage reactivity
-3. Treat reactivity as an abstraction boundary rather than a second implementation of the analysis
-4. Apply input validation and basic UI/UX principles (clarity, feedback, consistency) to a scientific app
+3. Apply input validation and basic UI/UX principles (clarity, feedback, consistency) to a scientific app
 
 ---
 
@@ -63,75 +62,6 @@ Before adding an interactive interface, ask:
 ## Scientific Use Case
 
 A wet-lab collaborator wants to explore how PCA changes when they switch from 500 to 2000 highly variable genes and color points by treatment, batch, or donor. They do not want to read R code, but they do need the same computation your package already exposes programmatically. What belongs in the app, and what must remain in the core?
-
----
-
-# UI/UX Design Principles
-
-## Warm-up Discussion: Worst UI Ever
-
-Think of a time you used a confusing interface. What made it bad?
-
-Common problems:
-
-- No feedback when something is loading
-- Cryptic error messages
-- Too many options visible at once
-- Inconsistent styling
-- No explanation of what things do
-
-## Practical Improvements
-
-### 1. Loading Indicators
-
-```{r with-spinner}
-library(shinycssloaders)
-
-# Wrap outputs in withSpinner()
-mainPanel(
-    withSpinner(plotOutput("pca_plot"))
-)
-```
-
-### 2. Help Text
-
-```{r help-text}
-numericInput(
-    "n_top",
-    "Top variable genes:",
-    value = 500, min = 50, max = 5000
-),
-helpText("Higher values include more genes but take longer to compute.")
-```
-
-### 3. Tooltips
-
-```{r tooltips}
-library(bslib)
-
-numericInput(
-    "n_top",
-    tooltip(
-        span("Top variable genes", icon("question-circle")),
-        "PCA will be computed using only the N most variable genes."
-    ),
-    value = 500
-)
-```
-
-### 4. Clear Section Headers
-
-```{r section-headers}
-sidebarPanel(
-    h4(icon("cogs"), "Analysis Settings"),
-    # ... inputs
-
-    hr(),
-
-    h4(icon("palette"), "Visualization"),
-    # ... more inputs
-)
-```
 
 ---
 
@@ -163,12 +93,13 @@ Importantly, our Shiny app can call the same `run_pca()` and `plot_pca()` functi
 ## Installation
 
 ```{r install-shiny}
-install.packages(c("shiny", "bslib", "DT", "plotly", "shinycssloaders"))
+install.packages(c("shiny", "bslib", "DT", "plotly"))
 
 library(shiny)
 library(bslib)
 library(ADS8192)
 library(airway)
+library(plotly)
 ```
 
 ## Minimal Shiny App Structure
@@ -626,11 +557,9 @@ When validation fails, Shiny displays a helpful message instead of an error.
 
 ---
 
-# Shiny Modules
+# Shiny Modules (They Exist)
 
-## What Are Modules?
-
-As Shiny apps grow, it becomes difficult to keep `ui` and `server` organized in a single file. **Shiny modules** let you encapsulate a UI/server pair into a reusable, namespaced unit — similar to how R functions encapsulate logic.
+As Shiny apps grow, it becomes difficult to keep `ui` and `server` organized in a single file. [**Shiny modules**](https://mastering-shiny.org/scaling-modules.html) let you encapsulate a UI/server pair into a reusable, namespaced unit — similar to how R functions encapsulate logic.
 
 A module has two parts:
 1. A **UI function** that wraps UI elements in a namespace
@@ -638,69 +567,23 @@ A module has two parts:
 
 The namespace prevents input/output ID collisions between modules or between a module and the main app.
 
+Most notably, once a module is defined, you can call it multiple times in the same app with different IDs to create multiple independent instances of that functionality.
+This could be used to easily view/compare multiple datasets, decouple different analysis steps, or build a library of reusable components.
+
+We won't be covering their usage in depth, but they are worth knowing about as a tool for organizing larger applications.
+
 ## When to Use Modules
 
 Consider using modules when:
 
 - The same UI+server pattern appears multiple times in the app (e.g., a plot panel with controls)
-- Your server function is getting very long (> ~200 lines) and has distinct logical sections
+- Your server function is getting very long (several 100 or 1000 lines) and has distinct logical sections
 - You want to separate development of a sub-feature from the main app
 - You're building a reusable component for multiple apps
 
-For small apps like the PCA explorer in this course, modules are **optional** — the app is compact enough to manage without them. But understanding modules prepares you for larger apps.
+For small apps like the PCA explorer in this course, modules are overkill - the app is small enough to manage without them. But modules are good to know about for more complex large applications. 
 
-## How Modules Work
-
-The key mechanism is `NS(id)` (namespace), which prefixes all IDs with the module ID so they don't conflict.
-
-```{r module-example, eval=FALSE}
-# --- Module UI ---
-# NS(id) wraps all input/output IDs in a namespace
-pcaPlotUI <- function(id) {
-    ns <- NS(id)
-    tagList(
-        selectInput(ns("color_by"), "Color by:", choices = NULL),
-        plotOutput(ns("pca_plot"))
-    )
-}
-
-# --- Module Server ---
-# moduleServer handles the ns() scoping automatically
-pcaPlotServer <- function(id, pca_result, metadata_cols) {
-    moduleServer(id, function(input, output, session) {
-        # Update choices from reactive input
-        observe({
-            updateSelectInput(session, "color_by", choices = metadata_cols())
-        })
-
-        output$pca_plot <- renderPlot({
-            req(pca_result(), input$color_by)
-            plot_pca(pca_result(), color_by = input$color_by)
-        })
-    })
-}
-
-# --- Using the Module in the Main App ---
-ui <- fluidPage(
-    pcaPlotUI("main_plot"),   # Instantiate the module UI
-    pcaPlotUI("compare_plot") # A second instance — no ID conflicts!
-)
-
-server <- function(input, output, session) {
-    pca_result <- reactive({ run_pca(airway, n_top = 500) })
-    cols <- reactive({ colnames(SummarizedExperiment::colData(airway)) })
-
-    pcaPlotServer("main_plot",   pca_result, cols)
-    pcaPlotServer("compare_plot", pca_result, cols)
-}
-```
-
-## Key Points
-
-- `NS(id)` creates the namespace function — call it once at the top of the UI function
-- Inside `moduleServer()`, you use `input$color_by` directly (no `ns()` needed) because the namespace is handled automatically
-- Pass reactive expressions (not their values) into server modules so the module stays reactive
-- Modules are just functions — test them like functions
+In fact, this app is small enough that it could be easily made into a module, thereby allowing the same PCA code/visualizations to be used in a larger application without having to re-implement that functionality.
 
 ## Further Reading
 
@@ -719,7 +602,7 @@ Today we:
 
 ## Package Milestone
 
-✅ A functional Shiny PCA explorer that uses the package's core functions and is structured for later packaging.
+A functional Shiny app that uses the package's core functions and is structured for later packaging.
 
 ---
 
@@ -728,8 +611,7 @@ Today we:
 Before moving on, make sure you can answer:
 
 - Which app computations should be cached reactively, and which should stay as direct rendering code?
-- How does Shiny help you avoid reinventing a custom web interface while still keeping the scientific logic reusable?
-- Which user-facing validations belong in the app because they protect the interface boundary?
+- Which user-facing validations belong in the app?
 
 ---
 
@@ -737,8 +619,7 @@ Before moving on, make sure you can answer:
 
 ## Reading
 
-- Mastering Shiny: Chapters 1-4 (Basic UI/Server), Chapter 8 (Reactivity)
-- https://mastering-shiny.org/
+- [Mastering Shiny](https://mastering-shiny.org/): Chapters 1-4 (Basic UI/Server), Chapter 8 (Reactivity)
 
 ## Micro-task 1: Add Features
 
