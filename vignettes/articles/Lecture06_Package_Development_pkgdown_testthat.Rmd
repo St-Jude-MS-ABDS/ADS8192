@@ -137,7 +137,7 @@ use_test("pca")
 
 This creates `tests/testthat/test-pca.R`. Edit it:
 
-```{r test-pca}
+```{r test-pca-first}
 # tests/testthat/test-pca.R
 
 test_that("top_variable_features returns correct subset size", {
@@ -338,7 +338,7 @@ Below are examples of a covering a few more bases for inspiration.
 <details>
 <summary>Click to expand more test examples</summary>
 
-```{r test-pca}
+```{r test-pca-more}
 # tests/testthat/test-pca.R
 
 test_that("run_pca returns correct structure", {
@@ -545,12 +545,20 @@ So take your time to show off what your package can do.
 use_vignette("getting-started", title = "Getting Started with ADS8192")
 ```
 
-This creates `vignettes/getting-started.Rmd`. Edit it to include a tutorial:
+This creates `vignettes/getting-started.Rmd`.
+This is an [Rmarkdown](https://rmarkdown.rstudio.com/) file, so you can write in markdown and include code chunks that will be rendered when the vignette is built.
+
+[markdown](https://docs.github.com/en/get-started/writing-on-github/getting-started-with-writing-and-formatting-on-github/basic-writing-and-formatting-syntax) is a simple markup language that allows you to easily format text, create lists, add hyperlinks, etc. Rmarkdown extends this by allowing you to include executable R code chunks that can generate output and figures directly in the document.
+
+See a handy [cheatsheet for Rmarkdown](https://github.com/rstudio/cheatsheets/raw/main/rmarkdown-2.0.pdf) if you'd like to learn more about it.
+
+Now we can edit this file to include a tutorial:
 
 ````markdown
 ---
 title: "Getting Started with ADS8192"
 output: rmarkdown::html_vignette
+author: "Jared Andrews"
 vignette: >
   %\VignetteIndexEntry{Getting Started with ADS8192}
   %\VignetteEngine{knitr::rmarkdown}

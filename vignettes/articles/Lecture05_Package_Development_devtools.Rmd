@@ -60,6 +60,7 @@ Fortunately, there are a number of R packages that provide scaffolding and conve
 - `usethis` quickly generates package infrastructure (DESCRIPTION, NAMESPACE, R/ directory, README, data-raw/, etc) and automates common tasks like adding dependencies, creating documentation stubs, and setting up Github
 - `devtools` standardizes the edit-document-test-check loop
 - `roxygen2` parses specially formatted comments to generate documentation automatically
+- `testthat` provides a framework for writing automated tests to ensure your code works as expected and to prevent regressions
 
 We'll use all of these tools to help build our package.
 
@@ -78,7 +79,6 @@ Before we begin, ensure you have:
 # Install development tools if needed
 install.packages(c("devtools", "usethis", "roxygen2", "testthat"))
 ```
-
 
 ---
 
