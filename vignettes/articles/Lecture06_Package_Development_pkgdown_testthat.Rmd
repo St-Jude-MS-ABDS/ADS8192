@@ -61,8 +61,6 @@ Today, we add the testing and documentation infrastructure that makes this workf
 
 ## Why Test?
 
-> "Tests are essential for maintainability and safe refactoring."
-
 Consider this scenario:
 
 1. You write `run_pca()` and it works
@@ -80,7 +78,7 @@ In scientific software, the highest-value tests usually protect:
 
 - **Public contracts**: returned classes, column names, file outputs, and error messages that users rely on
 - **Assumptions**: dimensionality, valid parameter ranges, and meaningful edge cases
-- **Cross-interface behavior**: 
+- **Cross-interface behavior**: multiple interfaces to the same core logic should produce consistent results
 
 Avoid overfitting tests to incidental implementation details such as temporary variable names or the exact internal sequence of helper calls. Good tests make refactoring safer; brittle tests make refactoring harder.
 
