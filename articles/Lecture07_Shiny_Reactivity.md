@@ -273,10 +273,7 @@ Let’s build a PCA explorer step by step. First, a minimal version:
 ``` r
 library(shiny)
 library(ADS8192)
-library(airway)
-
-# Pre-load data
-data(airway)
+data(example_se)
 
 ui <- fluidPage(
     theme = bslib::bs_theme(bootswatch = "flatly"),
@@ -297,11 +294,10 @@ ui <- fluidPage(
             selectInput(
                 "color_by",
                 "Color by:",
-                choices = c("dex", "cell")
+                choices = c("treatment", "batch")
             )
         ),
         mainPanel(
-            h4("PCA Plot"),
             plotOutput("pca_plot", height = "500px")
         )
     )
@@ -310,7 +306,7 @@ ui <- fluidPage(
 server <- function(input, output, session) {
     output$pca_plot <- renderPlot({
         # Run PCA with user-selected parameters
-        result <- run_pca(airway, n_top = input$n_top)
+        result <- run_pca(example_se, n_top = input$n_top)
 
         # Create plot
         plot_pca(result, color_by = input$color_by)
@@ -320,23 +316,40 @@ server <- function(input, output, session) {
 shinyApp(ui, server)
 ```
 
-**Save this as `app.R` and run it!**
+Save this as `app.R` and run it. You should see a simple app where you
+can adjust the number of top variable genes and the coloring of the PCA
+plot.
 
 ### Step 2: Adding Reactive Expressions
 
-The above app has a problem: every time you change `color_by`, it
-re-runs the entire PCA! That’s wasteful — PCA only depends on `n_top`.
+There is a problem with the above app - take a close look at the
+`server` function, can you spot any unintended behavior?
 
-**Solution: Use
-[`reactive()`](https://rdrr.io/pkg/shiny/man/reactive.html) to cache
-expensive computations:**
+Hint
+
+What would happen if you change the `color_by` input?
+
+Answer
+
+Every time you change `color_by`, it re-runs the entire PCA! That’s
+wasteful — PCA only depends on `n_top`, not on how we color the points.
+
+A solution
+
+While re-running the PCA is quick in this instance, it could be very
+slow with larger datasets or more complex analyses. We can use
+[`reactive()`](https://rdrr.io/pkg/shiny/man/reactive.html) to cache the
+PCA result and only recompute it when `n_top` changes.
+
+Use [`reactive()`](https://rdrr.io/pkg/shiny/man/reactive.html) to cache
+expensive computations:
 
 ``` r
 server <- function(input, output, session) {
 
     # Reactive expression: only reruns when n_top changes
     pca_result <- reactive({
-        run_pca(airway, n_top = input$n_top)
+        run_pca(example_se, n_top = input$n_top)
     })
 
     output$pca_plot <- renderPlot({
@@ -363,7 +376,21 @@ Now the reactive graph looks like:
 
 ### Step 3: More Controls
 
-Let’s add more user controls:
+Shiny has tons of [different types of
+inputs](https://mastering-shiny.org/basic-ui.html#inputs) (checkboxes,
+dropdowns, sliders, file uploads, color pickers, etc) that you can use
+to control your app.
+
+The type of input to use will depend on the parameter you’re trying to
+control and the user experience you want to create.
+
+Having to type “TRUE” to indicate a boolean is probaby a bad idea when
+checkboxes exist. Proper input choice can help prevent invalid input and
+make the app more intuitive.
+
+Below I add a few more inputs to the app to control various inputs.
+
+App with more controls
 
 ``` r
 # Full PCA Explorer app — Step 3 (UI + server with tabs, reactive caching, and multiple outputs)
@@ -433,7 +460,7 @@ server <- function(input, output, session) {
     # Cached PCA result
     pca_result <- reactive({
         run_pca(
-            airway,
+            example_se,
             n_top = input$n_top,
             log_transform = input$log_transform,
             scale = input$scale
@@ -489,69 +516,175 @@ shinyApp(ui, server)
 
 ## Part 3: Debugging Reactivity
 
-### Common Issue: Plot Not Updating
+Shiny can be tricky to debug because of its reactive nature. When
+something doesn’t update as expected or an error is thrown, it can be
+hard to figure out why.
 
-**Symptom:** You change an input but the plot doesn’t update.
+It can require careful tracing of inputs, reactive expressions, current
+values, and outputs to identify where the disconnect is. More than
+likely, your first real frustration in Shiny will stem from reactivity
+issues.
 
-**Diagnosis:**
+### `message()`
 
-1.  Is the input wired correctly? Check `input$name` matches the input
-    ID
-2.  Is the reactive graph connected? Use `reactlog` to visualize:
+The simplest way to debug is to sprinkle
+[`message()`](https://rdrr.io/r/base/message.html) calls throughout your
+server code to print out the current values of inputs and intermediate
+variables. This can help you see when certain code is running and what
+the current state is.
+
+Using [`message()`](https://rdrr.io/r/base/message.html) is often enough
+to identify root causes of many issues, but sometimes you have to dig
+deeper, particularly when the reactive graph is complex and involves
+multiple layers.
+
+### `browser()` and `reactlog`
+
+The [`browser()`](https://rdrr.io/r/base/browser.html) function creates
+an interactive breakpoint in R code. When Shiny hits that line, it will
+pause and give you a console to inspect variables and the current state
+of the app.
+
+Generally, you’ll be doing this inside a *reactive* context, i.e. inside
+a [`reactive()`](https://rdrr.io/pkg/shiny/man/reactive.html) or
+[`renderPlot()`](https://rdrr.io/pkg/shiny/man/renderPlot.html), which
+means you can inspect the current values of inputs and any intermediate
+variables to see why something isn’t updating as expected.
 
 ``` r
-# Enable reactlog
-options(shiny.reactlog = TRUE)
-
-# Run your app, then press Ctrl+F3 to see the reactive graph
-```
-
-3.  Is there an error being silently swallowed?
-
-### Exercise: Debug This App
-
-``` r
-# BROKEN APP - Find the bug!
 ui <- fluidPage(
-    selectInput("color", "Color:", choices = c("dex", "cell")),
-    plotOutput("plot")
+    titlePanel("PCA Explorer"),
+    sidebarLayout(
+        sidebarPanel(
+            numericInput("n_top", "Top variable genes:", value = 500, min = 50, max = 5000),
+            selectInput("color_by", "Color by:", choices = c("treatment", "batch"))
+        ),
+        mainPanel(
+            plotOutput("pca_plot")
+        )
+    )
 )
 
 server <- function(input, output, session) {
-    se <- airway::airway  # Load data
+    pca_result <- reactive({
+        browser() # App will pause here when this reactive expression runs
+        run_pca(example_se, n_top = input$n_top)
+    })
 
-    result <- run_pca(se)  # BUG: Not reactive!
-
-    output$plot <- renderPlot({
-        plot_pca(result, color_by = input$color)
+    output$pca_plot <- renderPlot({
+        plot_pca(pca_result(), color_by = input$color_by)
     })
 }
+
+shinyApp(ui, server)
 ```
 
-**What’s wrong?**
+When the app pauses at
+[`browser()`](https://rdrr.io/r/base/browser.html), you can type
+variable names in the console to inspect them (e.g. `input$n_top`,
+`pca_result()`), call `n` to execute the next line, or `c` to continue
+until the breakpoint is hit again. Remove the
+[`browser()`](https://rdrr.io/r/base/browser.html) call once you are
+done debugging.
 
-`result` is computed once when the app starts, but it’s not a reactive
-expression. Changes to any input won’t affect it.
-
-**Fix:**
+The `reactlog` package provides a way to visualize the reactive graph of
+a Shiny app. This can help identify where things are not updating as
+expected.
 
 ``` r
+library(reactlog)
+
+ui <- fluidPage(
+    titlePanel("PCA Explorer"),
+    sidebarLayout(
+        sidebarPanel(
+            numericInput("n_top", "Top variable genes:", value = 500, min = 50, max = 5000),
+            selectInput("color_by", "Color by:", choices = c("treatment", "batch"))
+        ),
+        mainPanel(
+            plotOutput("pca_plot")
+        )
+    )
+)
+
 server <- function(input, output, session) {
-    result <- reactive({
-        run_pca(airway)
+    pca_result <- reactive({
+        run_pca(example_se, n_top = input$n_top)
     })
 
-    output$plot <- renderPlot({
-        plot_pca(result(), color_by = input$color)  # Note: result() with parentheses!
+    output$pca_plot <- renderPlot({
+        plot_pca(pca_result(), color_by = input$color_by)
     })
 }
+
+# Enable logging BEFORE launching the app
+reactlog_enable()
+
+shinyApp(ui, server)
+
+# After interacting with the app, view the reactive graph
+reactlogShow()
 ```
+
+The graph shows every reactive source, conductor, and endpoint, and
+highlights which dependencies triggered a recomputation. Nodes that are
+grayed out were not invalidated; highlighted nodes were re-executed.
+This makes it easy to spot cases where a reactive expression is running
+more often than expected — or not running when it should.
+
+This graph can get very large and complex for larger apps, but it can be
+useful for tricky reactivity issues, especially when you can extract a
+minimal reproducible example that isolates the problem.
+
+Turn off `reactlog` with
+[`reactlog_disable()`](https://rstudio.github.io/reactlog/reference/setReactLog.html)
+once you are done debugging.
+
+Troubleshooting Shiny apps is somewhere between an art and voodoo, but
+you get better at it with practice and experience, much like art (and
+presumably voodoo). Read more about debugging Shiny apps
+[here](https://mastering-shiny.org/action-workflow.html#debugging).
+
+### A Note on Getting Help
+
+There are three groups of people in the world. Those who feel questions
+can be stupid, those that think there are no stupid questions, and
+rarely, those who think there are no stupid questions but there sure are
+stupid ways to ask them.
+
+I am a member of the third camp.
+
+Asking good questions is a skill that can be learned and is essential
+both for getting and giving effective help. When asking for help (from
+humans or our more immediately available AI resources), **context** is
+key. Neither computers nor people can read your mind, so you need to
+provide enough information for them to understand the problem, reproduce
+it, and solve it (as that’s what they’ll have to do to answer your
+question if they don’t already know it).
+
+At minimum, you should provide: - A clear description of the problem and
+what you expected to happen - A minimal reproducible example (standalone
+code + data, AKA a
+“[reprex](https://mastering-shiny.org/action-workflow.html#reprex-basics)”)
+that demonstrates the issue - Any error messages or unexpected outputs
+you received - Any approaches you’ve already tried (and their
+outputs/issues)
+
+Those you’re asking for help shouldn’t have to ask you for those things
+(though they may ask you to run ancillary commands to gather additional
+info). If they do, you’re already starting off on the wrong foot.
+Providing them shows that you’ve put in some effort and done your best
+to solve the problem yourself. Help them help you.
+
+Stack Overflow grew a reputation for being brutal to beginners, but it
+was really just brutal to those who asked questions in bad ways. AI has
+effectively killed that site and feedback, but you will get much faster,
+accurate, and cheaper help if you frame your requests to AI agents (or
+local experts) appropriately.
 
 ------------------------------------------------------------------------
 
 ## Part 4: Input Validation
-
-### The Problem
 
 What happens if a user:
 
@@ -563,21 +696,28 @@ Without validation, you get ugly errors or crashes.
 
 ### Using `validate()` and `need()`
 
+There are relatively simple ways to block invalid input and provide
+helpful feedback to users. The
+[`validate()`](https://rdrr.io/pkg/shiny/man/validate.html) function
+lets you check conditions and display messages when they are not met.
+You can use it inside any reactive context (reactive expressions, render
+functions) to ensure that inputs are valid before proceeding.
+
 ``` r
 server <- function(input, output, session) {
     pca_result <- reactive({
         # Validate inputs before computing
         validate(
             need(input$n_top >= 10, "Please select at least 10 genes"),
-            need(input$n_top <= nrow(airway), "Cannot select more genes than available")
+            need(input$n_top <= nrow(example_se), "Cannot select more genes than available")
         )
 
-        run_pca(airway, n_top = input$n_top)
+        run_pca(example_se, n_top = input$n_top)
     })
 
     output$pca_plot <- renderPlot({
         # Validate PC selection
-        n_samples <- ncol(airway)
+        n_samples <- ncol(example_se)
         validate(
             need(input$pc_x <= n_samples, paste("PC X must be ≤", n_samples)),
             need(input$pc_y <= n_samples, paste("PC Y must be ≤", n_samples)),
@@ -596,8 +736,7 @@ server <- function(input, output, session) {
 When validation fails, Shiny displays a helpful message instead of an
 error.
 
-> **Exercise B:** Add validation to prevent `point_size` from being zero
-> or negative.
+This keeps the user from breaking stuff.
 
 ------------------------------------------------------------------------
 
@@ -622,7 +761,7 @@ instances of that functionality. This could be used to easily
 view/compare multiple datasets, decouple different analysis steps, or
 build a library of reusable components.
 
-We won’t be covering their usage in depth, but they are worth knowing
+We don’t cover their implementation here, but they are worth knowing
 about as a tool for organizing larger applications.
 
 ### When to Use Modules
@@ -636,9 +775,9 @@ Consider using modules when:
 - You want to separate development of a sub-feature from the main app
 - You’re building a reusable component for multiple apps
 
-For small apps like the PCA explorer in this course, modules are
-overkill - the app is small enough to manage without them. But modules
-are good to know about for more complex large applications.
+For small apps like the PCA explorer, modules are overkill - the app is
+small enough to manage without them. But modules are good to know about
+for more complex large applications.
 
 In fact, this app is small enough that it could be easily made into a
 module, thereby allowing the same PCA code/visualizations to be used in
