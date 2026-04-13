@@ -1,6 +1,8 @@
 # ADS 8192 — Developing Scientific Applications
 
 <!-- badges: start -->
+[![R-CMD-check](https://github.com/St-Jude-MS-ABDS/ADS8192/actions/workflows/R-CMD-check.yaml/badge.svg)](https://github.com/St-Jude-MS-ABDS/ADS8192/actions/workflows/R-CMD-check.yaml)
+[![pkgdown](https://github.com/St-Jude-MS-ABDS/ADS8192/actions/workflows/pkgdown.yaml/badge.svg)](https://github.com/St-Jude-MS-ABDS/ADS8192/actions/workflows/pkgdown.yaml)
 <!-- badges: end -->
 
 Course materials and reference implementation for **ADS 8192: Developing Scientific Applications — Unit 1**. This R package serves as both the source of all Unit 1 lecture content and the living reference implementation that students follow as they build their own packages.
