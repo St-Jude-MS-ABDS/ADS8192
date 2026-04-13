@@ -43,8 +43,11 @@ navbar:
       - text: 'Lecture 11: Review & Q/A'
         href: articles/Lecture11_Review_QA.html
 reference:
+- title: Example Data
+  desc: Load an example simulated SummarizedExperiment object
+  contents: example_se
 - title: Data Handling
-  desc: Create and manipulate SummarizedExperiment objects
+  desc: Manipulate SummarizedExperiment objects
   contents:
   - top_variable_features
 - title: PCA Analysis
