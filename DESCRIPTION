@@ -53,7 +53,8 @@ Suggests:
     SingleCellExperiment,
     AnnotationDbi,
     org.Mm.eg.db,
-    matrixStats
+    matrixStats,
+    reactlog
 Config/testthat/edition: 3
 VignetteBuilder: knitr
 URL: https://github.com/St-Jude-MS-ABDS/ADS8192, https://st-jude-ms-abds.github.io/ADS8192/
