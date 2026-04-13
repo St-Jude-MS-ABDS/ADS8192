@@ -1212,69 +1212,36 @@ up- or down-regulated. Per-sample gene set scores reduce genes composing a pathw
 number per sample, enabling group comparisons. This project combines expression
 data with external pathway knowledge from MSigDB.
 
-### Dataset: TCGA BRCA (Human bulk RNA-seq) + MSigDB Hallmark Gene Sets
+### Dataset: Airway (Human bulk RNA-seq) + MSigDB Hallmark Gene Sets
 
-The `curatedTCGAData` package provides access to The Cancer Genome Atlas data.
-The BRCA (breast cancer) cohort includes RNA-seq expression data from ~1,200
-patients with rich clinical annotations (ER/PR/HER2 status, PAM50 subtype,
-stage). Immune and proliferation-related gene sets from MSigDB clearly
-distinguish molecular subtypes — making pathway-level scoring biologically
-compelling. We subset to a manageable number of samples for the example data.
+The `airway` Bioconductor package provides RNA-seq count data from
+[Himes et al. (2014)](https://pubmed.ncbi.nlm.nih.gov/24926665/), profiling four human airway smooth muscle cell lines
+treated with dexamethasone (a glucocorticoid) versus untreated controls (8
+samples total). Dexamethasone activates inflammatory and stress-response
+pathways that are well-represented in MSigDB Hallmark gene sets — making this
+a compact, self-contained dataset for demonstrating pathway-level scoring
+without requiring large data downloads.
 
 <details>
 <summary>Data preparation code</summary>
 
-```{r p7-data, eval=FALSE}
+```{r p6-data, eval=FALSE}
 ## data-raw/example_se.R
-BiocManager::install(c("curatedTCGAData", "TCGAutils"))
-install.packages("msigdbr")
-library(curatedTCGAData)
-library(TCGAutils)
+library(airway)
 library(SummarizedExperiment)
 
-# Download BRCA RNA-seq data
-brca <- curatedTCGAData("BRCA", "RNASeq2*", version = "2.0.1",
-                         dry.run = FALSE)
-rse <- experiments(brca)[[1]]
-
-# Subset to 200 samples for package size
-set.seed(42)
-keep_samples <- sample(ncol(rse), 200)
-rse <- rse[, keep_samples]
-
-# Subset to top 5000 variable genes
-vars <- apply(assay(rse), 1, var, na.rm = TRUE)
-keep_genes <- names(sort(vars, decreasing = TRUE))[1:5000]
-rse <- rse[keep_genes, ]
-
-# Get clinical data
-clin <- colData(brca)
-clin <- clin[colnames(rse), ]
+data(airway)
 
 example_se <- SummarizedExperiment(
-  assays = list(exprs = assay(rse)),
+  assays  = list(counts = assay(airway, "counts")),
   colData = DataFrame(
-    sample_id   = colnames(rse),
-    er_status   = clin$pathologic_stage,
-    pam50       = clin$subtype_PAM50.mRNA
+    sample_id  = colnames(airway),
+    dex        = colData(airway)$dex,
+    cell       = colData(airway)$cell
   )
 )
 
-# Bundle a small set of hallmark gene sets
-library(msigdbr)
-hallmarks <- msigdbr(species = "Homo sapiens", collection = "H")
-example_gene_sets <- split(hallmarks$gene_symbol, hallmarks$gs_name)
-# Keep 10 immune/proliferation-relevant sets
-keep_sets <- c(
-  "HALLMARK_IL2_STAT5_SIGNALING", "HALLMARK_INFLAMMATORY_RESPONSE",
-  "HALLMARK_INTERFERON_GAMMA_RESPONSE", "HALLMARK_ALLOGRAFT_REJECTION",
-  "HALLMARK_MYC_TARGETS_V1", "HALLMARK_E2F_TARGETS",
-  "HALLMARK_TNFA_SIGNALING_VIA_NFKB", "HALLMARK_APOPTOSIS",
-  "HALLMARK_P53_PATHWAY", "HALLMARK_COMPLEMENT"
-)
-example_gene_sets <- example_gene_sets[keep_sets]
-
-usethis::use_data(example_se, example_gene_sets, overwrite = TRUE)
+usethis::use_data(example_se, overwrite = TRUE)
 ```
 
 </details>
@@ -1304,50 +1271,45 @@ rank_based, or both), `group_column`
 `gene_contributions.tsv`
 
 **Shiny inputs:** Select built-in sets or upload GMT, score method dropdown,
-grouping variable dropdown (ER status, PAM50 subtype), gene set selector,
+grouping variable dropdown (dex treatment, cell line), gene set selector,
 boxplot ↔ violin toggle
 
-**Dependencies:** `SummarizedExperiment`, `curatedTCGAData` (data only),
+**Dependencies:** `SummarizedExperiment`, `airway` (data only),
 `msigdbr` (gene sets)
 
 <details>
 <summary>Raw analysis code</summary>
 
-```{r p7-raw, eval=FALSE}
+```{r p6-raw, eval=FALSE}
+library(airway)
 library(SummarizedExperiment)
-library(curatedTCGAData)
-library(TCGAutils)
 library(msigdbr)
 library(ggplot2)
 
-# --- Load TCGA BRCA data ---
-brca <- curatedTCGAData("BRCA", "RNASeq2*", version = "2.0.1",
-                         dry.run = FALSE)
-rse <- experiments(brca)[[1]]
+# --- Load airway data ---
+data(airway)
 
-# Subset to 200 samples + top 5000 variable genes
-set.seed(42)
-keep_samples <- sample(ncol(rse), 200)
-rse <- rse[, keep_samples]
-vars <- apply(assay(rse), 1, var, na.rm = TRUE)
-keep_genes <- names(sort(vars, decreasing = TRUE))[1:5000]
-rse <- rse[keep_genes, ]
+# log2-CPM normalize counts for scoring
+counts_mat <- assay(airway, "counts")
+lib_sizes   <- colSums(counts_mat)
+mat         <- log2(t(t(counts_mat) / lib_sizes * 1e6) + 1)
+dex         <- colData(airway)$dex  # "trt" or "untrt"
 
-# Get clinical metadata
-clin <- colData(brca)
-pam50 <- clin[colnames(rse), "PAM50.mRNA"]
-
-se <- SummarizedExperiment(
-    assays  = list(exprs = assay(rse)),
-    colData = DataFrame(sample_id = colnames(rse), pam50 = pam50)
-)
+# Convert Ensembl IDs to gene symbols for MSigDB overlap
+library(org.Hs.eg.db)
+library(AnnotationDbi)
+symbols <- mapIds(org.Hs.eg.db, keys = rownames(mat),
+                  column = "SYMBOL", keytype = "ENSEMBL",
+                  multiVals = "first")
+keep <- !is.na(symbols)
+mat  <- mat[keep, ]
+rownames(mat) <- symbols[keep]
 
 # --- Get MSigDB Hallmark gene sets ---
 hallmarks <- msigdbr(species = "Homo sapiens", collection = "H")
 gene_sets <- split(hallmarks$gene_symbol, hallmarks$gs_name)
 
 # --- Compute per-sample gene set scores ---
-mat <- assay(se, "exprs")
 mat_z <- t(scale(t(mat)))  # z-score each gene across samples
 
 # Method 1: mean z-score
@@ -1357,7 +1319,7 @@ scores_meanz <- lapply(names(gene_sets), function(gs_name) {
     per_sample <- colMeans(mat_z[genes_in_set, , drop = FALSE], na.rm = TRUE)
     data.frame(sample_id = colnames(mat), gene_set = gs_name,
                score = per_sample, method = "mean_z",
-               pam50 = as.character(pam50))
+               dex = as.character(dex))
 })
 
 # Method 2: rank-based (ssGSEA-like)
@@ -1372,7 +1334,7 @@ scores_rank <- lapply(names(gene_sets), function(gs_name) {
     per_sample <- colMeans(ranks[in_set, , drop = FALSE]) / n
     data.frame(sample_id = colnames(mat), gene_set = gs_name,
                score = per_sample, method = "rank_based",
-               pam50 = as.character(pam50))
+               dex = as.character(dex))
 })
 
 scores_df <- do.call(rbind, c(scores_meanz, scores_rank))
@@ -1382,22 +1344,31 @@ selected_set <- names(gene_sets)[1]
 contrib_genes <- intersect(gene_sets[[selected_set]], rownames(mat_z))
 gene_contrib <- as.data.frame(t(mat_z[contrib_genes, , drop = FALSE]))
 gene_contrib$sample_id <- colnames(mat)
-gene_contrib$pam50 <- as.character(pam50)
+gene_contrib$dex <- as.character(dex)
 
 # --- Group summary ---
-summary_df <- aggregate(score ~ gene_set + pam50, data = scores_df,
+summary_df <- aggregate(score ~ gene_set + dex, data = scores_df,
                         FUN = function(x) c(mean = mean(x), sd = sd(x)))
 summary_df <- do.call(data.frame, summary_df)
-colnames(summary_df) <- c("gene_set", "pam50", "mean_score", "sd_score")
+colnames(summary_df) <- c("gene_set", "dex", "mean_score", "sd_score")
 
-# --- Boxplot ---
-p <- ggplot(scores_df, aes(x = pam50, y = score, fill = pam50)) +
-    geom_boxplot(outlier.size = 0.5) +
-    facet_wrap(~ gene_set, scales = "free_y") +
-    theme_bw(base_size = 6) +
-    theme(axis.text.x = element_text(angle = 45, hjust = 1)) +
-    labs(x = "PAM50 Subtype", y = "Gene Set Score (mean z)",
-         title = "Hallmark Gene Set Scores by PAM50 Subtype")
+# --- Horizontal grouped bar chart (mean ± SE per treatment group, faceted by method) ---
+method_labels <- c(mean_z = "Mean Z-Score", rank_based = "Rank-Based (ssGSEA-like)")
+
+p <- ggplot(scores_df, aes(x = gene_set, y = score, fill = dex)) +
+    stat_summary(fun = mean, geom = "bar",
+                 position = position_dodge(1.0), width = 0.6) +
+    stat_summary(fun.data = mean_se, geom = "errorbar",
+                 position = position_dodge(1.0), width = 0.2) +
+    scale_fill_manual(values = c(trt = "#E64B35", untrt = "#4DBBD5"),
+                      labels = c(trt = "Treated", untrt = "Untreated")) +
+    facet_wrap(~ method, scales = "free_x", labeller = labeller(method = method_labels)) +
+    coord_flip() +
+    theme_bw(base_size = 9) +
+    theme(legend.position = "top") +
+    labs(x = "Gene Set", y = "Mean Gene Set Score",
+         fill = "Dexamethasone",
+         title = "Hallmark Gene Set Scores by Dexamethasone Treatment")
 print(p)
 
 # --- Export ---
