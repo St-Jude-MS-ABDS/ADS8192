@@ -82,7 +82,10 @@ bioc_pkgs <- c(
   "TCGAutils",
   "TENxPBMCData",
   # Data access infrastructure
-  "ExperimentHub"
+  "ExperimentHub",
+  "AnnotationDbi",
+  "org.Hs.eg.db",
+  "org.Mm.eg.db"
 )
 
 BiocManager::install(bioc_pkgs, version = "3.22")
