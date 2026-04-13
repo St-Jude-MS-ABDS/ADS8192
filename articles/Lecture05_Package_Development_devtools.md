@@ -61,6 +61,8 @@ and convenience functions to make package development easier:
 - `devtools` standardizes the edit-document-test-check loop
 - `roxygen2` parses specially formatted comments to generate
   documentation automatically
+- `testthat` provides a framework for writing automated tests to ensure
+  your code works as expected and to prevent regressions
 
 We’ll use all of these tools to help build our package.
 
@@ -501,8 +503,8 @@ library(SummarizedExperiment)
 
 set.seed(42)
 
-# 100 genes, 8 samples
-n_genes <- 100
+# 10000 genes, 8 samples
+n_genes <- 10000
 n_samples <- 8
 
 # Simulate counts (negative binomial-ish)
@@ -514,9 +516,9 @@ counts <- matrix(
 rownames(counts) <- paste0("gene", seq_len(n_genes))
 colnames(counts) <- paste0("sample", seq_len(n_samples))
 
-# Add some structure: first 20 genes differ by treatment
+# Add some structure: first 200 genes differ by treatment
 treatment <- rep(c("control", "treated"), each = 4)
-counts[1:20, treatment == "treated"] <- counts[1:20, treatment == "treated"] * 2
+counts[1:200, treatment == "treated"] <- counts[1:200, treatment == "treated"] * 2
 
 # Sample metadata
 sample_data <- data.frame(
@@ -563,8 +565,8 @@ Add to `R/data-documentation.R`:
 ``` r
 #' Example SummarizedExperiment for testing
 #'
-#' A small SummarizedExperiment with 100 genes and 8 samples.
-#' Includes a treatment effect in the first 20 genes.
+#' A small SummarizedExperiment with 10000 genes and 8 samples.
+#' Includes a treatment effect in the first 200 genes.
 #'
 #' @format A SummarizedExperiment with:
 #' \describe{
@@ -576,6 +578,7 @@ Add to `R/data-documentation.R`:
 #' @source Simulated data for teaching purposes
 #'
 #' @examples
+#' library(SummarizedExperiment)
 #' data(example_se)
 #' example_se
 #' colData(example_se)
@@ -584,7 +587,8 @@ Add to `R/data-documentation.R`:
 
 This tells the user what the dataset is, its source, and any other
 relevant info. After running `document()`, users can access this info
-with `?example_se`.
+with
+[`?example_se`](https://st-jude-ms-abds.github.io/ADS8192/reference/example_se.md).
 
 ------------------------------------------------------------------------
 

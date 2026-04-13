@@ -1,119 +1,117 @@
-# Getting Started with ADS 8192
+# Getting Started with ADS8192
 
-## Overview
+## Introduction
 
-**ADS 8192: Developing Scientific Applications** teaches graduate
-students to build scientific software in R using established software
-engineering principles — separation of concerns, DRY (Don’t Repeat
-Yourself), composability, and layered architecture. This package
-provides the reference implementation: a set of PCA analysis functions
-for SummarizedExperiment objects, a Shiny interactive explorer, and a
-command-line interface.
+ADS8192 makes it easy to run PCA on count data stored in
+SummarizedExperiment objects.
 
-## Installation
-
-``` r
-# Install Bioconductor dependencies first
-if (!require("BiocManager", quietly = TRUE))
-    install.packages("BiocManager")
-BiocManager::install(c("SummarizedExperiment", "airway"))
-
-# Install the course package
-remotes::install_github("St-Jude-MS-ABDS/ADS8192")
-```
-
-## Quick Start
+## Quick Example
 
 ``` r
 library(ADS8192)
-library(airway)
 
-# Load the airway dataset (RNA-seq, dexamethasone treatment vs. control)
-data("airway", package = "airway")
-airway
+# Load example data
+data(example_se)
+example_se
+#> class: SummarizedExperiment 
+#> dim: 10000 8 
+#> metadata(0):
+#> assays(1): counts
+#> rownames(10000): gene1 gene2 ... gene9999 gene10000
+#> rowData names(2): gene_id gene_symbol
+#> colnames(8): sample1 sample2 ... sample7 sample8
+#> colData names(3): sample_id treatment batch
+
+# Run PCA
+result <- run_pca(example_se, n_top = 50)
+
+# Plot
+plot_pca(result, color_by = "treatment")
 ```
 
-### Run PCA
+![](getting-started_files/figure-html/example-1.png)
+
+## Using Real Data
 
 ``` r
+library(airway)
+#> Loading required package: SummarizedExperiment
+#> Loading required package: MatrixGenerics
+#> Loading required package: matrixStats
+#> 
+#> Attaching package: 'MatrixGenerics'
+#> The following objects are masked from 'package:matrixStats':
+#> 
+#>     colAlls, colAnyNAs, colAnys, colAvgsPerRowSet, colCollapse,
+#>     colCounts, colCummaxs, colCummins, colCumprods, colCumsums,
+#>     colDiffs, colIQRDiffs, colIQRs, colLogSumExps, colMadDiffs,
+#>     colMads, colMaxs, colMeans2, colMedians, colMins, colOrderStats,
+#>     colProds, colQuantiles, colRanges, colRanks, colSdDiffs, colSds,
+#>     colSums2, colTabulates, colVarDiffs, colVars, colWeightedMads,
+#>     colWeightedMeans, colWeightedMedians, colWeightedSds,
+#>     colWeightedVars, rowAlls, rowAnyNAs, rowAnys, rowAvgsPerColSet,
+#>     rowCollapse, rowCounts, rowCummaxs, rowCummins, rowCumprods,
+#>     rowCumsums, rowDiffs, rowIQRDiffs, rowIQRs, rowLogSumExps,
+#>     rowMadDiffs, rowMads, rowMaxs, rowMeans2, rowMedians, rowMins,
+#>     rowOrderStats, rowProds, rowQuantiles, rowRanges, rowRanks,
+#>     rowSdDiffs, rowSds, rowSums2, rowTabulates, rowVarDiffs, rowVars,
+#>     rowWeightedMads, rowWeightedMeans, rowWeightedMedians,
+#>     rowWeightedSds, rowWeightedVars
+#> Loading required package: GenomicRanges
+#> Loading required package: stats4
+#> Loading required package: BiocGenerics
+#> Loading required package: generics
+#> 
+#> Attaching package: 'generics'
+#> The following objects are masked from 'package:base':
+#> 
+#>     as.difftime, as.factor, as.ordered, intersect, is.element, setdiff,
+#>     setequal, union
+#> 
+#> Attaching package: 'BiocGenerics'
+#> The following objects are masked from 'package:stats':
+#> 
+#>     IQR, mad, sd, var, xtabs
+#> The following objects are masked from 'package:base':
+#> 
+#>     anyDuplicated, aperm, append, as.data.frame, basename, cbind,
+#>     colnames, dirname, do.call, duplicated, eval, evalq, Filter, Find,
+#>     get, grep, grepl, is.unsorted, lapply, Map, mapply, match, mget,
+#>     order, paste, pmax, pmax.int, pmin, pmin.int, Position, rank,
+#>     rbind, Reduce, rownames, sapply, saveRDS, table, tapply, unique,
+#>     unsplit, which.max, which.min
+#> Loading required package: S4Vectors
+#> 
+#> Attaching package: 'S4Vectors'
+#> The following object is masked from 'package:utils':
+#> 
+#>     findMatches
+#> The following objects are masked from 'package:base':
+#> 
+#>     expand.grid, I, unname
+#> Loading required package: IRanges
+#> Loading required package: Seqinfo
+#> Loading required package: Biobase
+#> Welcome to Bioconductor
+#> 
+#>     Vignettes contain introductory material; view with
+#>     'browseVignettes()'. To cite Bioconductor, see
+#>     'citation("Biobase")', and for packages 'citation("pkgname")'.
+#> 
+#> Attaching package: 'Biobase'
+#> The following object is masked from 'package:MatrixGenerics':
+#> 
+#>     rowMedians
+#> The following objects are masked from 'package:matrixStats':
+#> 
+#>     anyMissing, rowMedians
+data(airway)
+
+# Run PCA on airway data
 result <- run_pca(airway, n_top = 500)
 
-# View the PCA scores merged with sample metadata
-head(result$scores)
-```
-
-### Visualize
-
-``` r
-plot_pca(result, color_by = "dex")
-```
-
-``` r
+# Visualize treatment effect
 plot_pca(result, color_by = "dex", shape_by = "cell")
 ```
 
-### Check Variance Explained
-
-``` r
-pca_variance_explained(result)
-```
-
-## Architecture: Separation of Concerns
-
-The package is organized around a principle that shows up in virtually
-every well-engineered codebase: **separate *what* you compute from *how*
-users access it**. The analysis logic lives in small, testable,
-composable R functions (the core layer). Presentation layers — an R API,
-a Shiny app, and a CLI — are thin wrappers that delegate to those same
-core functions.
-
-                 Core Analysis Functions
-      run_pca() → plot_pca() → save_pca_results()
-            ↑            ↑            ↑
-       ┌────┴────┐  ┌────┴────┐  ┌───┴─────┐
-       │ R API   │  │ Shiny   │  │  CLI    │
-       │ (users) │  │ (web)   │  │(scripts)│
-       └─────────┘  └─────────┘  └─────────┘
-
-Because every interface calls the **same core functions**, you get
-several properties for free:
-
-- **DRY (Don’t Repeat Yourself)** — fix a bug or add a feature once, and
-  every interface benefits immediately.
-- **Testability** — core functions are pure R with well-defined inputs
-  and outputs, so unit tests cover the real computation regardless of
-  how it’s invoked.
-- **Composability** — each function does one thing, so users (and other
-  packages) can recombine them in ways you didn’t anticipate.
-
-This layered design is why the package — and the course lectures — are
-structured the way they are: we build the core functions first (Lecture
-03), package and test them (Lectures 05–06), then add presentation
-layers one at a time (Shiny in 07–08, CLI in 09–10).
-
-### R API
-
-``` r
-library(ADS8192)
-library(airway)
-data("airway", package = "airway")
-result <- run_pca(airway, n_top = 500)
-plot_pca(result, color_by = "dex")
-```
-
-### Shiny App
-
-``` r
-ADS8192::run_app()
-```
-
-### CLI (via Rapp)
-
-``` bash
-ADS8192 pca --counts counts.tsv --meta samples.tsv --output results/
-```
-
-## Course Lectures
-
-The package includes all lecture materials as pkgdown articles. See the
-“Course Materials” dropdown in the navigation bar.
+![](getting-started_files/figure-html/airway-1.png)

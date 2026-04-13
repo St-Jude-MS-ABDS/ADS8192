@@ -2,8 +2,8 @@
 
 ### Getting Started
 
-- [Getting Started with ADS
-  8192](https://st-jude-ms-abds.github.io/ADS8192/articles/getting-started.md):
+- [Getting Started with
+  ADS8192](https://st-jude-ms-abds.github.io/ADS8192/articles/getting-started.md):
 - [Course
   Setup](https://st-jude-ms-abds.github.io/ADS8192/articles/course-setup.md):
 

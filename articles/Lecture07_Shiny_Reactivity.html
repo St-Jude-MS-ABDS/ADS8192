@@ -121,8 +121,6 @@ perfection.</p>
 duplicating logic</li>
 <li>Use reactive expressions to cache expensive computations and manage
 reactivity</li>
-<li>Treat reactivity as an abstraction boundary rather than a second
-implementation of the analysis</li>
 <li>Apply input validation and basic UI/UX principles (clarity,
 feedback, consistency) to a scientific app</li>
 </ol>
@@ -158,78 +156,6 @@ What belongs in the app, and what must remain in the core?</p>
 </div>
 </div>
 <div class="section level2">
-<h2 id="uiux-design-principles">UI/UX Design Principles<a class="anchor" aria-label="anchor" href="#uiux-design-principles"></a>
-</h2>
-<div class="section level3">
-<h3 id="warm-up-discussion-worst-ui-ever">Warm-up Discussion: Worst UI Ever<a class="anchor" aria-label="anchor" href="#warm-up-discussion-worst-ui-ever"></a>
-</h3>
-<p>Think of a time you used a confusing interface. What made it bad?</p>
-<p>Common problems:</p>
-<ul>
-<li>No feedback when something is loading</li>
-<li>Cryptic error messages</li>
-<li>Too many options visible at once</li>
-<li>Inconsistent styling</li>
-<li>No explanation of what things do</li>
-</ul>
-</div>
-<div class="section level3">
-<h3 id="practical-improvements">Practical Improvements<a class="anchor" aria-label="anchor" href="#practical-improvements"></a>
-</h3>
-<div class="section level4">
-<h4 id="loading-indicators">1. Loading Indicators<a class="anchor" aria-label="anchor" href="#loading-indicators"></a>
-</h4>
-<div class="sourceCode" id="cb1"><pre class="downlit sourceCode r">
-<code class="sourceCode R"><span><span class="kw"><a href="https://rdrr.io/r/base/library.html" class="external-link">library</a></span><span class="op">(</span><span class="va"><a href="https://github.com/daattali/shinycssloaders" class="external-link">shinycssloaders</a></span><span class="op">)</span></span>
-<span></span>
-<span><span class="co"># Wrap outputs in withSpinner()</span></span>
-<span><span class="fu"><a href="https://rdrr.io/pkg/shiny/man/sidebarLayout.html" class="external-link">mainPanel</a></span><span class="op">(</span></span>
-<span>    <span class="fu">withSpinner</span><span class="op">(</span><span class="fu"><a href="https://rdrr.io/pkg/shiny/man/plotOutput.html" class="external-link">plotOutput</a></span><span class="op">(</span><span class="st">"pca_plot"</span><span class="op">)</span><span class="op">)</span></span>
-<span><span class="op">)</span></span></code></pre></div>
-</div>
-<div class="section level4">
-<h4 id="help-text">2. Help Text<a class="anchor" aria-label="anchor" href="#help-text"></a>
-</h4>
-<div class="sourceCode" id="cb2"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb2-1"><a href="#cb2-1" tabindex="-1"></a><span class="fu">numericInput</span>(</span>
-<span id="cb2-2"><a href="#cb2-2" tabindex="-1"></a>    <span class="st">"n_top"</span>,</span>
-<span id="cb2-3"><a href="#cb2-3" tabindex="-1"></a>    <span class="st">"Top variable genes:"</span>,</span>
-<span id="cb2-4"><a href="#cb2-4" tabindex="-1"></a>    <span class="at">value =</span> <span class="dv">500</span>, <span class="at">min =</span> <span class="dv">50</span>, <span class="at">max =</span> <span class="dv">5000</span></span>
-<span id="cb2-5"><a href="#cb2-5" tabindex="-1"></a>),</span>
-<span id="cb2-6"><a href="#cb2-6" tabindex="-1"></a><span class="fu">helpText</span>(<span class="st">"Higher values include more genes but take longer to compute."</span>)</span></code></pre></div>
-</div>
-<div class="section level4">
-<h4 id="tooltips">3. Tooltips<a class="anchor" aria-label="anchor" href="#tooltips"></a>
-</h4>
-<div class="sourceCode" id="cb3"><pre class="downlit sourceCode r">
-<code class="sourceCode R"><span><span class="kw"><a href="https://rdrr.io/r/base/library.html" class="external-link">library</a></span><span class="op">(</span><span class="va"><a href="https://rstudio.github.io/bslib/" class="external-link">bslib</a></span><span class="op">)</span></span>
-<span></span>
-<span><span class="fu"><a href="https://rdrr.io/pkg/shiny/man/numericInput.html" class="external-link">numericInput</a></span><span class="op">(</span></span>
-<span>    <span class="st">"n_top"</span>,</span>
-<span>    <span class="fu"><a href="https://rstudio.github.io/bslib/reference/tooltip.html" class="external-link">tooltip</a></span><span class="op">(</span></span>
-<span>        <span class="fu"><a href="https://rstudio.github.io/htmltools/reference/builder.html" class="external-link">span</a></span><span class="op">(</span><span class="st">"Top variable genes"</span>, <span class="fu"><a href="https://rdrr.io/pkg/shiny/man/icon.html" class="external-link">icon</a></span><span class="op">(</span><span class="st">"question-circle"</span><span class="op">)</span><span class="op">)</span>,</span>
-<span>        <span class="st">"PCA will be computed using only the N most variable genes."</span></span>
-<span>    <span class="op">)</span>,</span>
-<span>    value <span class="op">=</span> <span class="fl">500</span></span>
-<span><span class="op">)</span></span></code></pre></div>
-</div>
-<div class="section level4">
-<h4 id="clear-section-headers">4. Clear Section Headers<a class="anchor" aria-label="anchor" href="#clear-section-headers"></a>
-</h4>
-<div class="sourceCode" id="cb4"><pre class="downlit sourceCode r">
-<code class="sourceCode R"><span><span class="fu"><a href="https://rdrr.io/pkg/shiny/man/sidebarLayout.html" class="external-link">sidebarPanel</a></span><span class="op">(</span></span>
-<span>    <span class="fu"><a href="https://rstudio.github.io/htmltools/reference/builder.html" class="external-link">h4</a></span><span class="op">(</span><span class="fu"><a href="https://rdrr.io/pkg/shiny/man/icon.html" class="external-link">icon</a></span><span class="op">(</span><span class="st">"cogs"</span><span class="op">)</span>, <span class="st">"Analysis Settings"</span><span class="op">)</span>,</span>
-<span>    <span class="co"># ... inputs</span></span>
-<span></span>
-<span>    <span class="fu"><a href="https://rstudio.github.io/htmltools/reference/builder.html" class="external-link">hr</a></span><span class="op">(</span><span class="op">)</span>,</span>
-<span></span>
-<span>    <span class="fu"><a href="https://rstudio.github.io/htmltools/reference/builder.html" class="external-link">h4</a></span><span class="op">(</span><span class="fu"><a href="https://rdrr.io/pkg/shiny/man/icon.html" class="external-link">icon</a></span><span class="op">(</span><span class="st">"palette"</span><span class="op">)</span>, <span class="st">"Visualization"</span><span class="op">)</span>,</span>
-<span>    <span class="co"># ... more inputs</span></span>
-<span><span class="op">)</span></span></code></pre></div>
-<hr>
-</div>
-</div>
-</div>
-<div class="section level2">
 <h2 id="why-shiny">Why Shiny?<a class="anchor" aria-label="anchor" href="#why-shiny"></a>
 </h2>
 <p>After Lecture06, we now have an R package with solid functionality,
@@ -261,19 +187,20 @@ and display outputs.</p>
 <div class="section level3">
 <h3 id="installation">Installation<a class="anchor" aria-label="anchor" href="#installation"></a>
 </h3>
-<div class="sourceCode" id="cb5"><pre class="downlit sourceCode r">
-<code class="sourceCode R"><span><span class="fu"><a href="https://rdrr.io/r/utils/install.packages.html" class="external-link">install.packages</a></span><span class="op">(</span><span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="st">"shiny"</span>, <span class="st">"bslib"</span>, <span class="st">"DT"</span>, <span class="st">"plotly"</span>, <span class="st">"shinycssloaders"</span><span class="op">)</span><span class="op">)</span></span>
+<div class="sourceCode" id="cb1"><pre class="downlit sourceCode r">
+<code class="sourceCode R"><span><span class="fu"><a href="https://rdrr.io/r/utils/install.packages.html" class="external-link">install.packages</a></span><span class="op">(</span><span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="st">"shiny"</span>, <span class="st">"bslib"</span>, <span class="st">"DT"</span>, <span class="st">"plotly"</span><span class="op">)</span><span class="op">)</span></span>
 <span></span>
 <span><span class="kw"><a href="https://rdrr.io/r/base/library.html" class="external-link">library</a></span><span class="op">(</span><span class="va"><a href="https://shiny.posit.co/" class="external-link">shiny</a></span><span class="op">)</span></span>
 <span><span class="kw"><a href="https://rdrr.io/r/base/library.html" class="external-link">library</a></span><span class="op">(</span><span class="va"><a href="https://rstudio.github.io/bslib/" class="external-link">bslib</a></span><span class="op">)</span></span>
 <span><span class="kw"><a href="https://rdrr.io/r/base/library.html" class="external-link">library</a></span><span class="op">(</span><span class="va"><a href="https://github.com/St-Jude-MS-ABDS/ADS8192" class="external-link">ADS8192</a></span><span class="op">)</span></span>
-<span><span class="kw"><a href="https://rdrr.io/r/base/library.html" class="external-link">library</a></span><span class="op">(</span><span class="va">airway</span><span class="op">)</span></span></code></pre></div>
+<span><span class="kw"><a href="https://rdrr.io/r/base/library.html" class="external-link">library</a></span><span class="op">(</span><span class="va">airway</span><span class="op">)</span></span>
+<span><span class="kw"><a href="https://rdrr.io/r/base/library.html" class="external-link">library</a></span><span class="op">(</span><span class="va"><a href="https://plotly-r.com" class="external-link">plotly</a></span><span class="op">)</span></span></code></pre></div>
 </div>
 <div class="section level3">
 <h3 id="minimal-shiny-app-structure">Minimal Shiny App Structure<a class="anchor" aria-label="anchor" href="#minimal-shiny-app-structure"></a>
 </h3>
 <p>Every Shiny app has two parts:</p>
-<div class="sourceCode" id="cb6"><pre class="downlit sourceCode r">
+<div class="sourceCode" id="cb2"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="co"># UI: What the user sees</span></span>
 <span><span class="va">ui</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/pkg/shiny/man/fluidPage.html" class="external-link">fluidPage</a></span><span class="op">(</span></span>
 <span>    <span class="fu"><a href="https://rdrr.io/pkg/shiny/man/titlePanel.html" class="external-link">titlePanel</a></span><span class="op">(</span><span class="st">"Hello Shiny!"</span><span class="op">)</span>,</span>
@@ -309,7 +236,7 @@ the most common patterns:</p>
 </h4>
 <p>The classic layout (shown above) — a sidebar for controls and a main
 area for outputs:</p>
-<div class="sourceCode" id="cb7"><pre class="downlit sourceCode r">
+<div class="sourceCode" id="cb3"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="co"># Classic: sidebar + main panel</span></span>
 <span><span class="va">ui</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/pkg/shiny/man/fluidPage.html" class="external-link">fluidPage</a></span><span class="op">(</span></span>
 <span>    <span class="fu"><a href="https://rdrr.io/pkg/shiny/man/titlePanel.html" class="external-link">titlePanel</a></span><span class="op">(</span><span class="st">"My App"</span><span class="op">)</span>,</span>
@@ -330,7 +257,7 @@ area for outputs:</p>
 <code>navbarPage</code> — Multi-page Navigation<a class="anchor" aria-label="anchor" href="#navbarpage-multi-page-navigation"></a>
 </h4>
 <p>For apps with multiple distinct sections:</p>
-<div class="sourceCode" id="cb8"><pre class="downlit sourceCode r">
+<div class="sourceCode" id="cb4"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="co"># Multi-page app with a navigation bar</span></span>
 <span><span class="va">ui</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/pkg/shiny/man/navbarPage.html" class="external-link">navbarPage</a></span><span class="op">(</span></span>
 <span>    title <span class="op">=</span> <span class="st">"My App"</span>,</span>
@@ -345,7 +272,7 @@ area for outputs:</p>
 </h4>
 <p>The modern alternative to <code>sidebarLayout</code>, using Bootstrap
 5 components:</p>
-<div class="sourceCode" id="cb9"><pre class="downlit sourceCode r">
+<div class="sourceCode" id="cb5"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="kw"><a href="https://rdrr.io/r/base/library.html" class="external-link">library</a></span><span class="op">(</span><span class="va"><a href="https://rstudio.github.io/bslib/" class="external-link">bslib</a></span><span class="op">)</span></span>
 <span></span>
 <span><span class="co"># Modern equivalent of sidebarLayout</span></span>
@@ -429,7 +356,7 @@ code.</p>
 </h3>
 <p>Let’s build a PCA explorer step by step. First, a minimal
 version:</p>
-<div class="sourceCode" id="cb11"><pre class="downlit sourceCode r">
+<div class="sourceCode" id="cb7"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="kw"><a href="https://rdrr.io/r/base/library.html" class="external-link">library</a></span><span class="op">(</span><span class="va"><a href="https://shiny.posit.co/" class="external-link">shiny</a></span><span class="op">)</span></span>
 <span><span class="kw"><a href="https://rdrr.io/r/base/library.html" class="external-link">library</a></span><span class="op">(</span><span class="va"><a href="https://github.com/St-Jude-MS-ABDS/ADS8192" class="external-link">ADS8192</a></span><span class="op">)</span></span>
 <span><span class="kw"><a href="https://rdrr.io/r/base/library.html" class="external-link">library</a></span><span class="op">(</span><span class="va">airway</span><span class="op">)</span></span>
@@ -487,7 +414,7 @@ version:</p>
 only depends on <code>n_top</code>.</p>
 <p><strong>Solution: Use <code><a href="https://rdrr.io/pkg/shiny/man/reactive.html" class="external-link">reactive()</a></code> to cache expensive
 computations:</strong></p>
-<div class="sourceCode" id="cb12"><pre class="downlit sourceCode r">
+<div class="sourceCode" id="cb8"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="va">server</span> <span class="op">&lt;-</span> <span class="kw">function</span><span class="op">(</span><span class="va">input</span>, <span class="va">output</span>, <span class="va">session</span><span class="op">)</span> <span class="op">{</span></span>
 <span></span>
 <span>    <span class="co"># Reactive expression: only reruns when n_top changes</span></span>
@@ -521,7 +448,7 @@ Verify that changing shape doesn’t re-run PCA.</p>
 <h3 id="step-3-more-controls">Step 3: More Controls<a class="anchor" aria-label="anchor" href="#step-3-more-controls"></a>
 </h3>
 <p>Let’s add more user controls:</p>
-<div class="sourceCode" id="cb14"><pre class="downlit sourceCode r">
+<div class="sourceCode" id="cb10"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="co"># Full PCA Explorer app — Step 3 (UI + server with tabs, reactive caching, and multiple outputs)</span></span>
 <span><span class="va">ui</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/pkg/shiny/man/fluidPage.html" class="external-link">fluidPage</a></span><span class="op">(</span></span>
 <span>    theme <span class="op">=</span> <span class="fu">bslib</span><span class="fu">::</span><span class="fu"><a href="https://rstudio.github.io/bslib/reference/bs_theme.html" class="external-link">bs_theme</a></span><span class="op">(</span>bootswatch <span class="op">=</span> <span class="st">"flatly"</span><span class="op">)</span>,</span>
@@ -657,7 +584,7 @@ the input ID</li>
 <li>Is the reactive graph connected? Use <code>reactlog</code> to
 visualize:</li>
 </ol>
-<div class="sourceCode" id="cb15"><pre class="downlit sourceCode r">
+<div class="sourceCode" id="cb11"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="co"># Enable reactlog</span></span>
 <span><span class="fu"><a href="https://rdrr.io/r/base/options.html" class="external-link">options</a></span><span class="op">(</span>shiny.reactlog <span class="op">=</span> <span class="cn">TRUE</span><span class="op">)</span></span>
 <span></span>
@@ -669,7 +596,7 @@ visualize:</li>
 <div class="section level3">
 <h3 id="exercise-debug-this-app">Exercise: Debug This App<a class="anchor" aria-label="anchor" href="#exercise-debug-this-app"></a>
 </h3>
-<div class="sourceCode" id="cb16"><pre class="downlit sourceCode r">
+<div class="sourceCode" id="cb12"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="co"># BROKEN APP - Find the bug!</span></span>
 <span><span class="va">ui</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/pkg/shiny/man/fluidPage.html" class="external-link">fluidPage</a></span><span class="op">(</span></span>
 <span>    <span class="fu"><a href="https://rdrr.io/pkg/shiny/man/selectInput.html" class="external-link">selectInput</a></span><span class="op">(</span><span class="st">"color"</span>, <span class="st">"Color:"</span>, choices <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="st">"dex"</span>, <span class="st">"cell"</span><span class="op">)</span><span class="op">)</span>,</span>
@@ -689,7 +616,7 @@ visualize:</li>
 <p><code>result</code> is computed once when the app starts, but it’s
 not a reactive expression. Changes to any input won’t affect it.</p>
 <p><strong>Fix:</strong></p>
-<div class="sourceCode" id="cb17"><pre class="downlit sourceCode r">
+<div class="sourceCode" id="cb13"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="va">server</span> <span class="op">&lt;-</span> <span class="kw">function</span><span class="op">(</span><span class="va">input</span>, <span class="va">output</span>, <span class="va">session</span><span class="op">)</span> <span class="op">{</span></span>
 <span>    <span class="va">result</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/pkg/shiny/man/reactive.html" class="external-link">reactive</a></span><span class="op">(</span><span class="op">{</span></span>
 <span>        <span class="fu"><a href="../reference/run_pca.html">run_pca</a></span><span class="op">(</span><span class="va">airway</span><span class="op">)</span></span>
@@ -719,7 +646,7 @@ not a reactive expression. Changes to any input won’t affect it.</p>
 <div class="section level3">
 <h3 id="using-validate-and-need">Using <code>validate()</code> and <code>need()</code><a class="anchor" aria-label="anchor" href="#using-validate-and-need"></a>
 </h3>
-<div class="sourceCode" id="cb18"><pre class="downlit sourceCode r">
+<div class="sourceCode" id="cb14"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="va">server</span> <span class="op">&lt;-</span> <span class="kw">function</span><span class="op">(</span><span class="va">input</span>, <span class="va">output</span>, <span class="va">session</span><span class="op">)</span> <span class="op">{</span></span>
 <span>    <span class="va">pca_result</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/pkg/shiny/man/reactive.html" class="external-link">reactive</a></span><span class="op">(</span><span class="op">{</span></span>
 <span>        <span class="co"># Validate inputs before computing</span></span>
@@ -757,21 +684,25 @@ error.</p>
 </div>
 </div>
 <div class="section level2">
-<h2 id="shiny-modules">Shiny Modules<a class="anchor" aria-label="anchor" href="#shiny-modules"></a>
+<h2 id="shiny-modules-they-exist">Shiny Modules (They Exist)<a class="anchor" aria-label="anchor" href="#shiny-modules-they-exist"></a>
 </h2>
-<div class="section level3">
-<h3 id="what-are-modules">What Are Modules?<a class="anchor" aria-label="anchor" href="#what-are-modules"></a>
-</h3>
 <p>As Shiny apps grow, it becomes difficult to keep <code>ui</code> and
-<code>server</code> organized in a single file. <strong>Shiny
-modules</strong> let you encapsulate a UI/server pair into a reusable,
-namespaced unit — similar to how R functions encapsulate logic.</p>
+<code>server</code> organized in a single file. <a href="https://mastering-shiny.org/scaling-modules.html" class="external-link"><strong>Shiny
+modules</strong></a> let you encapsulate a UI/server pair into a
+reusable, namespaced unit — similar to how R functions encapsulate
+logic.</p>
 <p>A module has two parts: 1. A <strong>UI function</strong> that wraps
 UI elements in a namespace 2. A <strong>server function</strong> that
 contains the reactive logic for those elements</p>
 <p>The namespace prevents input/output ID collisions between modules or
 between a module and the main app.</p>
-</div>
+<p>Most notably, once a module is defined, you can call it multiple
+times in the same app with different IDs to create multiple independent
+instances of that functionality. This could be used to easily
+view/compare multiple datasets, decouple different analysis steps, or
+build a library of reusable components.</p>
+<p>We won’t be covering their usage in depth, but they are worth knowing
+about as a tool for organizing larger applications.</p>
 <div class="section level3">
 <h3 id="when-to-use-modules">When to Use Modules<a class="anchor" aria-label="anchor" href="#when-to-use-modules"></a>
 </h3>
@@ -779,76 +710,19 @@ between a module and the main app.</p>
 <ul>
 <li>The same UI+server pattern appears multiple times in the app (e.g.,
 a plot panel with controls)</li>
-<li>Your server function is getting very long (&gt; ~200 lines) and has
-distinct logical sections</li>
+<li>Your server function is getting very long (several 100 or 1000
+lines) and has distinct logical sections</li>
 <li>You want to separate development of a sub-feature from the main
 app</li>
 <li>You’re building a reusable component for multiple apps</li>
 </ul>
 <p>For small apps like the PCA explorer in this course, modules are
-<strong>optional</strong> — the app is compact enough to manage without
-them. But understanding modules prepares you for larger apps.</p>
-</div>
-<div class="section level3">
-<h3 id="how-modules-work">How Modules Work<a class="anchor" aria-label="anchor" href="#how-modules-work"></a>
-</h3>
-<p>The key mechanism is <code>NS(id)</code> (namespace), which prefixes
-all IDs with the module ID so they don’t conflict.</p>
-<div class="sourceCode" id="cb19"><pre class="downlit sourceCode r">
-<code class="sourceCode R"><span><span class="co"># --- Module UI ---</span></span>
-<span><span class="co"># NS(id) wraps all input/output IDs in a namespace</span></span>
-<span><span class="va">pcaPlotUI</span> <span class="op">&lt;-</span> <span class="kw">function</span><span class="op">(</span><span class="va">id</span><span class="op">)</span> <span class="op">{</span></span>
-<span>    <span class="va">ns</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/pkg/shiny/man/NS.html" class="external-link">NS</a></span><span class="op">(</span><span class="va">id</span><span class="op">)</span></span>
-<span>    <span class="fu"><a href="https://rstudio.github.io/htmltools/reference/tagList.html" class="external-link">tagList</a></span><span class="op">(</span></span>
-<span>        <span class="fu"><a href="https://rdrr.io/pkg/shiny/man/selectInput.html" class="external-link">selectInput</a></span><span class="op">(</span><span class="fu">ns</span><span class="op">(</span><span class="st">"color_by"</span><span class="op">)</span>, <span class="st">"Color by:"</span>, choices <span class="op">=</span> <span class="cn">NULL</span><span class="op">)</span>,</span>
-<span>        <span class="fu"><a href="https://rdrr.io/pkg/shiny/man/plotOutput.html" class="external-link">plotOutput</a></span><span class="op">(</span><span class="fu">ns</span><span class="op">(</span><span class="st">"pca_plot"</span><span class="op">)</span><span class="op">)</span></span>
-<span>    <span class="op">)</span></span>
-<span><span class="op">}</span></span>
-<span></span>
-<span><span class="co"># --- Module Server ---</span></span>
-<span><span class="co"># moduleServer handles the ns() scoping automatically</span></span>
-<span><span class="va">pcaPlotServer</span> <span class="op">&lt;-</span> <span class="kw">function</span><span class="op">(</span><span class="va">id</span>, <span class="va">pca_result</span>, <span class="va">metadata_cols</span><span class="op">)</span> <span class="op">{</span></span>
-<span>    <span class="fu"><a href="https://rdrr.io/pkg/shiny/man/moduleServer.html" class="external-link">moduleServer</a></span><span class="op">(</span><span class="va">id</span>, <span class="kw">function</span><span class="op">(</span><span class="va">input</span>, <span class="va">output</span>, <span class="va">session</span><span class="op">)</span> <span class="op">{</span></span>
-<span>        <span class="co"># Update choices from reactive input</span></span>
-<span>        <span class="fu"><a href="https://rdrr.io/pkg/shiny/man/observe.html" class="external-link">observe</a></span><span class="op">(</span><span class="op">{</span></span>
-<span>            <span class="fu"><a href="https://rdrr.io/pkg/shiny/man/updateSelectInput.html" class="external-link">updateSelectInput</a></span><span class="op">(</span><span class="va">session</span>, <span class="st">"color_by"</span>, choices <span class="op">=</span> <span class="fu">metadata_cols</span><span class="op">(</span><span class="op">)</span><span class="op">)</span></span>
-<span>        <span class="op">}</span><span class="op">)</span></span>
-<span></span>
-<span>        <span class="va">output</span><span class="op">$</span><span class="va">pca_plot</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/pkg/shiny/man/renderPlot.html" class="external-link">renderPlot</a></span><span class="op">(</span><span class="op">{</span></span>
-<span>            <span class="fu"><a href="https://rdrr.io/pkg/shiny/man/req.html" class="external-link">req</a></span><span class="op">(</span><span class="fu">pca_result</span><span class="op">(</span><span class="op">)</span>, <span class="va">input</span><span class="op">$</span><span class="va">color_by</span><span class="op">)</span></span>
-<span>            <span class="fu"><a href="../reference/plot_pca.html">plot_pca</a></span><span class="op">(</span><span class="fu">pca_result</span><span class="op">(</span><span class="op">)</span>, color_by <span class="op">=</span> <span class="va">input</span><span class="op">$</span><span class="va">color_by</span><span class="op">)</span></span>
-<span>        <span class="op">}</span><span class="op">)</span></span>
-<span>    <span class="op">}</span><span class="op">)</span></span>
-<span><span class="op">}</span></span>
-<span></span>
-<span><span class="co"># --- Using the Module in the Main App ---</span></span>
-<span><span class="va">ui</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/pkg/shiny/man/fluidPage.html" class="external-link">fluidPage</a></span><span class="op">(</span></span>
-<span>    <span class="fu">pcaPlotUI</span><span class="op">(</span><span class="st">"main_plot"</span><span class="op">)</span>,   <span class="co"># Instantiate the module UI</span></span>
-<span>    <span class="fu">pcaPlotUI</span><span class="op">(</span><span class="st">"compare_plot"</span><span class="op">)</span> <span class="co"># A second instance — no ID conflicts!</span></span>
-<span><span class="op">)</span></span>
-<span></span>
-<span><span class="va">server</span> <span class="op">&lt;-</span> <span class="kw">function</span><span class="op">(</span><span class="va">input</span>, <span class="va">output</span>, <span class="va">session</span><span class="op">)</span> <span class="op">{</span></span>
-<span>    <span class="va">pca_result</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/pkg/shiny/man/reactive.html" class="external-link">reactive</a></span><span class="op">(</span><span class="op">{</span> <span class="fu"><a href="../reference/run_pca.html">run_pca</a></span><span class="op">(</span><span class="va">airway</span>, n_top <span class="op">=</span> <span class="fl">500</span><span class="op">)</span> <span class="op">}</span><span class="op">)</span></span>
-<span>    <span class="va">cols</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/pkg/shiny/man/reactive.html" class="external-link">reactive</a></span><span class="op">(</span><span class="op">{</span> <span class="fu"><a href="https://rdrr.io/r/base/colnames.html" class="external-link">colnames</a></span><span class="op">(</span><span class="fu">SummarizedExperiment</span><span class="fu">::</span><span class="fu"><a href="https://rdrr.io/pkg/SummarizedExperiment/man/SummarizedExperiment-class.html" class="external-link">colData</a></span><span class="op">(</span><span class="va">airway</span><span class="op">)</span><span class="op">)</span> <span class="op">}</span><span class="op">)</span></span>
-<span></span>
-<span>    <span class="fu">pcaPlotServer</span><span class="op">(</span><span class="st">"main_plot"</span>,   <span class="va">pca_result</span>, <span class="va">cols</span><span class="op">)</span></span>
-<span>    <span class="fu">pcaPlotServer</span><span class="op">(</span><span class="st">"compare_plot"</span>, <span class="va">pca_result</span>, <span class="va">cols</span><span class="op">)</span></span>
-<span><span class="op">}</span></span></code></pre></div>
-</div>
-<div class="section level3">
-<h3 id="key-points">Key Points<a class="anchor" aria-label="anchor" href="#key-points"></a>
-</h3>
-<ul>
-<li>
-<code>NS(id)</code> creates the namespace function — call it once at
-the top of the UI function</li>
-<li>Inside <code><a href="https://rdrr.io/pkg/shiny/man/moduleServer.html" class="external-link">moduleServer()</a></code>, you use
-<code>input$color_by</code> directly (no <code>ns()</code> needed)
-because the namespace is handled automatically</li>
-<li>Pass reactive expressions (not their values) into server modules so
-the module stays reactive</li>
-<li>Modules are just functions — test them like functions</li>
-</ul>
+overkill - the app is small enough to manage without them. But modules
+are good to know about for more complex large applications.</p>
+<p>In fact, this app is small enough that it could be easily made into a
+module, thereby allowing the same PCA code/visualizations to be used in
+a larger application without having to re-implement that
+functionality.</p>
 </div>
 <div class="section level3">
 <h3 id="further-reading">Further Reading<a class="anchor" aria-label="anchor" href="#further-reading"></a>
@@ -874,8 +748,8 @@ testing, and advanced patterns.</p>
 <div class="section level3">
 <h3 id="package-milestone">Package Milestone<a class="anchor" aria-label="anchor" href="#package-milestone"></a>
 </h3>
-<p>✅ A functional Shiny PCA explorer that uses the package’s core
-functions and is structured for later packaging.</p>
+<p>A functional Shiny app that uses the package’s core functions and is
+structured for later packaging.</p>
 <hr>
 </div>
 <div class="section level3">
@@ -885,10 +759,7 @@ functions and is structured for later packaging.</p>
 <ul>
 <li>Which app computations should be cached reactively, and which should
 stay as direct rendering code?</li>
-<li>How does Shiny help you avoid reinventing a custom web interface
-while still keeping the scientific logic reusable?</li>
-<li>Which user-facing validations belong in the app because they protect
-the interface boundary?</li>
+<li>Which user-facing validations belong in the app?</li>
 </ul>
 <hr>
 </div>
@@ -900,9 +771,9 @@ the interface boundary?</li>
 <h3 id="reading">Reading<a class="anchor" aria-label="anchor" href="#reading"></a>
 </h3>
 <ul>
-<li>Mastering Shiny: Chapters 1-4 (Basic UI/Server), Chapter 8
-(Reactivity)</li>
-<li><a href="https://mastering-shiny.org/" class="external-link uri">https://mastering-shiny.org/</a></li>
+<li>
+<a href="https://mastering-shiny.org/" class="external-link">Mastering Shiny</a>: Chapters
+1-4 (Basic UI/Server), Chapter 8 (Reactivity)</li>
 </ul>
 </div>
 <div class="section level3">
@@ -911,7 +782,7 @@ the interface boundary?</li>
 <p>Add one additional visualization output (e.g., a loadings plot or
 sample distance heatmap) and one download handler to export the current
 plot or data.</p>
-<div class="sourceCode" id="cb20"><pre class="downlit sourceCode r">
+<div class="sourceCode" id="cb15"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="co"># Add to UI</span></span>
 <span><span class="fu"><a href="https://rdrr.io/pkg/shiny/man/downloadButton.html" class="external-link">downloadButton</a></span><span class="op">(</span><span class="st">"download_plot"</span>, <span class="st">"Download Plot"</span><span class="op">)</span></span>
 <span></span>
@@ -938,7 +809,7 @@ rely on objects in the global environment.</p>
 <div class="section level2">
 <h2 id="session-info">Session Info<a class="anchor" aria-label="anchor" href="#session-info"></a>
 </h2>
-<div class="sourceCode" id="cb21"><pre class="downlit sourceCode r">
+<div class="sourceCode" id="cb16"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="fu"><a href="https://rdrr.io/r/utils/sessionInfo.html" class="external-link">sessionInfo</a></span><span class="op">(</span><span class="op">)</span></span></code></pre></div>
 <pre><code><span><span class="co">## R version 4.5.3 (2026-03-11)</span></span>
 <span><span class="co">## Platform: x86_64-pc-linux-gnu</span></span>

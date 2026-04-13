@@ -221,11 +221,11 @@ matter?</li>
 <h3 id="writing-your-first-test">Writing Your First Test<a class="anchor" aria-label="anchor" href="#writing-your-first-test"></a>
 </h3>
 <div class="sourceCode" id="cb5"><pre class="downlit sourceCode r">
-<code class="sourceCode R"><span><span class="co"># Create a test file for data functions</span></span>
-<span><span class="fu">use_test</span><span class="op">(</span><span class="st">"data"</span><span class="op">)</span></span></code></pre></div>
-<p>This creates <code>tests/testthat/test-data.R</code>. Edit it:</p>
+<code class="sourceCode R"><span><span class="co"># Create a test file for pca functions</span></span>
+<span><span class="fu">use_test</span><span class="op">(</span><span class="st">"pca"</span><span class="op">)</span></span></code></pre></div>
+<p>This creates <code>tests/testthat/test-pca.R</code>. Edit it:</p>
 <div class="sourceCode" id="cb6"><pre class="downlit sourceCode r">
-<code class="sourceCode R"><span><span class="co"># tests/testthat/test-data.R</span></span>
+<code class="sourceCode R"><span><span class="co"># tests/testthat/test-pca.R</span></span>
 <span></span>
 <span><span class="fu"><a href="https://testthat.r-lib.org/reference/test_that.html" class="external-link">test_that</a></span><span class="op">(</span><span class="st">"top_variable_features returns correct subset size"</span>, <span class="op">{</span></span>
 <span>    <span class="fu"><a href="https://rdrr.io/r/utils/data.html" class="external-link">data</a></span><span class="op">(</span><span class="va">example_se</span>, package <span class="op">=</span> <span class="st">"ADS8192"</span><span class="op">)</span></span>
@@ -291,7 +291,7 @@ matter?</li>
 <span><span class="fu">test</span><span class="op">(</span><span class="op">)</span></span>
 <span></span>
 <span><span class="co"># Run a specific test file</span></span>
-<span><span class="fu"><a href="https://testthat.r-lib.org/reference/test_file.html" class="external-link">test_file</a></span><span class="op">(</span><span class="st">"tests/testthat/test-data.R"</span><span class="op">)</span></span>
+<span><span class="fu"><a href="https://testthat.r-lib.org/reference/test_file.html" class="external-link">test_file</a></span><span class="op">(</span><span class="st">"tests/testthat/test-pca.R"</span><span class="op">)</span></span>
 <span></span>
 <span><span class="co"># In RStudio: Ctrl+Shift+T</span></span>
 <span></span>
@@ -299,7 +299,7 @@ matter?</li>
 <p>Expected output:</p>
 <pre><code>ℹ Testing ADS8192
 ✔ | F W S  OK | Context
-✔ |         4 | data
+✔ |         4 | pca
 
 ══ Results ═════════════════════════════════════════════════════════════════
 [ FAIL 0 | WARN 0 | SKIP 0 | PASS 4 ]</code></pre>
@@ -422,11 +422,13 @@ minimizing how much handholding is required.</p>
 </div>
 </div>
 <div class="section level3">
-<h3 id="write-tests-for-pca-functions">Write Tests for PCA Functions<a class="anchor" aria-label="anchor" href="#write-tests-for-pca-functions"></a>
+<h3 id="writing-a-few-more-tests">Writing a Few More Tests<a class="anchor" aria-label="anchor" href="#writing-a-few-more-tests"></a>
 </h3>
-<div class="sourceCode" id="cb15"><pre class="downlit sourceCode r">
-<code class="sourceCode R"><span><span class="fu">use_test</span><span class="op">(</span><span class="st">"pca"</span><span class="op">)</span></span></code></pre></div>
-<div class="sourceCode" id="cb16"><pre class="downlit sourceCode r">
+<p>Below are examples of a covering a few more bases for
+inspiration.</p>
+<details><summary>
+Click to expand more test examples
+</summary><div class="sourceCode" id="cb15"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="co"># tests/testthat/test-pca.R</span></span>
 <span></span>
 <span><span class="fu"><a href="https://testthat.r-lib.org/reference/test_that.html" class="external-link">test_that</a></span><span class="op">(</span><span class="st">"run_pca returns correct structure"</span>, <span class="op">{</span></span>
@@ -473,144 +475,241 @@ minimizing how much handholding is required.</p>
 <span>    <span class="co"># Should be sorted descending (PC1 explains most)</span></span>
 <span>    <span class="fu"><a href="https://testthat.r-lib.org/reference/logical-expectations.html" class="external-link">expect_true</a></span><span class="op">(</span><span class="va">var_df</span><span class="op">$</span><span class="va">variance_percent</span><span class="op">[</span><span class="fl">1</span><span class="op">]</span> <span class="op">&gt;=</span> <span class="va">var_df</span><span class="op">$</span><span class="va">variance_percent</span><span class="op">[</span><span class="fl">2</span><span class="op">]</span><span class="op">)</span></span>
 <span><span class="op">}</span><span class="op">)</span></span></code></pre></div>
-<hr>
+</details><hr>
 </div>
 </div>
 <div class="section level2">
 <h2 id="part-2-documentation-website-with-pkgdown">Part 2: Documentation Website with pkgdown<a class="anchor" aria-label="anchor" href="#part-2-documentation-website-with-pkgdown"></a>
 </h2>
-<div class="section level3">
-<h3 id="why-pkgdown">Why pkgdown?<a class="anchor" aria-label="anchor" href="#why-pkgdown"></a>
-</h3>
-<p>pkgdown converts your package documentation into a beautiful
-website:</p>
+<p><a href="https://pkgdown.r-lib.org/" class="external-link">pkgdown</a> converts your
+package documentation into a nicely formatted, automatically-generated
+website that provides:</p>
 <ul>
-<li>Auto-generated from your roxygen2 docs and README</li>
-<li>Hosts vignettes (long-form articles)</li>
+<li>A landing page showing your README content</li>
+<li>Rendered vignettes/articles</li>
 <li>Function reference with nice formatting</li>
 <li>Search functionality</li>
 <li>Can deploy automatically via GitHub Pages</li>
 </ul>
-</div>
 <div class="section level3">
 <h3 id="setting-up-pkgdown">Setting Up pkgdown<a class="anchor" aria-label="anchor" href="#setting-up-pkgdown"></a>
 </h3>
-<div class="sourceCode" id="cb17"><pre class="downlit sourceCode r">
+<p><a href="https://pkgdown.r-lib.org/" class="external-link">pkgdown</a> is easy to setup. We
+want to host our pkgdown site on GitHub Pages, which is free and
+integrates well with GitHub Actions for automatic deployment.</p>
+<p>To do so, we’re going to take a little shortcut provided by
+<code>usethis</code>, the <a href="https://usethis.r-lib.org/reference/use_pkgdown_github_pages.html" class="external-link">use_pkgdown_github_pages()</a>
+function.</p>
+<div class="sourceCode" id="cb16"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="co"># Add pkgdown infrastructure</span></span>
-<span><span class="fu">use_pkgdown</span><span class="op">(</span><span class="op">)</span></span></code></pre></div>
-<p>This creates:</p>
+<span><span class="fu">use_pkgdown_github_pages</span><span class="op">(</span><span class="op">)</span></span></code></pre></div>
+<p>This will:</p>
 <ul>
-<li>
-<code>_pkgdown.yml</code> — Configuration file</li>
-<li>Updates <code>.Rbuildignore</code> to ignore the site files</li>
+<li>Create <code>_pkgdown.yml</code> — Configuration file for
+pkgdown</li>
+<li>Update <code>.Rbuildignore</code> to ignore the site files</li>
+<li>Add <code>pkgdown</code> to Suggests in DESCRIPTION</li>
+<li>Configure GitHub Pages to serve from the <code>gh-pages</code>
+branch</li>
+<li>Add a <a href="https://docs.github.com/en/actions" class="external-link">GitHub
+Actions</a> workflow for building and deploying the site (we’ll cover
+this in the CI section)</li>
+<li>Add the pkgdown site URL to the DESCRIPTION file, the pkgdown YAML,
+and to the Github repo (in the sidebar).</li>
 </ul>
 </div>
 <div class="section level3">
 <h3 id="build-the-site-locally">Build the Site Locally<a class="anchor" aria-label="anchor" href="#build-the-site-locally"></a>
 </h3>
-<div class="sourceCode" id="cb18"><pre class="downlit sourceCode r">
+<div class="sourceCode" id="cb17"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="co"># Build the documentation site</span></span>
 <span><span class="fu">pkgdown</span><span class="fu">::</span><span class="fu"><a href="https://pkgdown.r-lib.org/reference/build_site.html" class="external-link">build_site</a></span><span class="op">(</span><span class="op">)</span></span></code></pre></div>
 <p>This creates a <code>docs/</code> directory with the website. Open
-<code>docs/index.html</code> in a browser to preview.</p>
+<code>docs/index.html</code> in a browser to preview - it should just
+show your README content for now.</p>
+<p>Git will ignore the <code>docs/</code> directory because of the
+.Rbuildignore entry, so you can build and test locally without worrying
+about committing these files.</p>
 </div>
 <div class="section level3">
 <h3 id="customize-the-site">Customize the Site<a class="anchor" aria-label="anchor" href="#customize-the-site"></a>
 </h3>
-<p>Edit <code>_pkgdown.yml</code>:</p>
-<div class="sourceCode" id="cb19"><pre class="sourceCode yaml"><code class="sourceCode yaml"><span id="cb19-1"><a href="#cb19-1" tabindex="-1"></a><span class="fu">url</span><span class="kw">:</span><span class="at"> https://your-username.github.io/ADS8192/</span></span>
-<span id="cb19-2"><a href="#cb19-2" tabindex="-1"></a></span>
-<span id="cb19-3"><a href="#cb19-3" tabindex="-1"></a><span class="fu">template</span><span class="kw">:</span></span>
-<span id="cb19-4"><a href="#cb19-4" tabindex="-1"></a><span class="at">  </span><span class="fu">bootstrap</span><span class="kw">:</span><span class="at"> </span><span class="dv">5</span></span>
-<span id="cb19-5"><a href="#cb19-5" tabindex="-1"></a><span class="at">  </span><span class="fu">bootswatch</span><span class="kw">:</span><span class="at"> flatly</span></span>
-<span id="cb19-6"><a href="#cb19-6" tabindex="-1"></a></span>
-<span id="cb19-7"><a href="#cb19-7" tabindex="-1"></a><span class="fu">navbar</span><span class="kw">:</span></span>
-<span id="cb19-8"><a href="#cb19-8" tabindex="-1"></a><span class="at">  </span><span class="fu">structure</span><span class="kw">:</span></span>
-<span id="cb19-9"><a href="#cb19-9" tabindex="-1"></a><span class="at">    </span><span class="fu">left</span><span class="kw">:</span><span class="at">  </span><span class="kw">[</span><span class="at">intro</span><span class="kw">,</span><span class="at"> reference</span><span class="kw">,</span><span class="at"> articles</span><span class="kw">]</span></span>
-<span id="cb19-10"><a href="#cb19-10" tabindex="-1"></a><span class="at">    </span><span class="fu">right</span><span class="kw">:</span><span class="at"> </span><span class="kw">[</span><span class="at">search</span><span class="kw">,</span><span class="at"> github</span><span class="kw">]</span></span>
-<span id="cb19-11"><a href="#cb19-11" tabindex="-1"></a></span>
-<span id="cb19-12"><a href="#cb19-12" tabindex="-1"></a><span class="fu">reference</span><span class="kw">:</span></span>
-<span id="cb19-13"><a href="#cb19-13" tabindex="-1"></a><span class="at">  </span><span class="kw">-</span><span class="at"> </span><span class="fu">title</span><span class="kw">:</span><span class="at"> </span><span class="st">"Data Handling"</span></span>
-<span id="cb19-14"><a href="#cb19-14" tabindex="-1"></a><span class="at">    </span><span class="fu">desc</span><span class="kw">:</span><span class="at"> </span><span class="st">"Create and manipulate SummarizedExperiment objects"</span></span>
-<span id="cb19-15"><a href="#cb19-15" tabindex="-1"></a><span class="at">    </span><span class="fu">contents</span><span class="kw">:</span></span>
-<span id="cb19-16"><a href="#cb19-16" tabindex="-1"></a><span class="at">      </span><span class="kw">-</span><span class="at"> top_variable_features</span></span>
-<span id="cb19-17"><a href="#cb19-17" tabindex="-1"></a></span>
-<span id="cb19-18"><a href="#cb19-18" tabindex="-1"></a><span class="at">  </span><span class="kw">-</span><span class="at"> </span><span class="fu">title</span><span class="kw">:</span><span class="at"> </span><span class="st">"PCA Analysis"</span></span>
-<span id="cb19-19"><a href="#cb19-19" tabindex="-1"></a><span class="at">    </span><span class="fu">desc</span><span class="kw">:</span><span class="at"> </span><span class="st">"Run and analyze PCA"</span></span>
-<span id="cb19-20"><a href="#cb19-20" tabindex="-1"></a><span class="at">    </span><span class="fu">contents</span><span class="kw">:</span></span>
-<span id="cb19-21"><a href="#cb19-21" tabindex="-1"></a><span class="at">      </span><span class="kw">-</span><span class="at"> run_pca</span></span>
-<span id="cb19-22"><a href="#cb19-22" tabindex="-1"></a><span class="at">      </span><span class="kw">-</span><span class="at"> pca_variance_explained</span></span>
-<span id="cb19-23"><a href="#cb19-23" tabindex="-1"></a></span>
-<span id="cb19-24"><a href="#cb19-24" tabindex="-1"></a><span class="at">  </span><span class="kw">-</span><span class="at"> </span><span class="fu">title</span><span class="kw">:</span><span class="at"> </span><span class="st">"Visualization"</span></span>
-<span id="cb19-25"><a href="#cb19-25" tabindex="-1"></a><span class="at">    </span><span class="fu">desc</span><span class="kw">:</span><span class="at"> </span><span class="st">"Create plots"</span></span>
-<span id="cb19-26"><a href="#cb19-26" tabindex="-1"></a><span class="at">    </span><span class="fu">contents</span><span class="kw">:</span></span>
-<span id="cb19-27"><a href="#cb19-27" tabindex="-1"></a><span class="at">      </span><span class="kw">-</span><span class="at"> plot_pca</span></span>
-<span id="cb19-28"><a href="#cb19-28" tabindex="-1"></a></span>
-<span id="cb19-29"><a href="#cb19-29" tabindex="-1"></a><span class="fu">articles</span><span class="kw">:</span></span>
-<span id="cb19-30"><a href="#cb19-30" tabindex="-1"></a><span class="at">  </span><span class="kw">-</span><span class="at"> </span><span class="fu">title</span><span class="kw">:</span><span class="at"> </span><span class="st">"Getting Started"</span></span>
-<span id="cb19-31"><a href="#cb19-31" tabindex="-1"></a><span class="at">    </span><span class="fu">contents</span><span class="kw">:</span></span>
-<span id="cb19-32"><a href="#cb19-32" tabindex="-1"></a><span class="at">      </span><span class="kw">-</span><span class="at"> getting-started</span></span></code></pre></div>
+<p>To <a href="https://pkgdown.r-lib.org/articles/customise.html" class="external-link">customise your
+site</a>, you can edit <code>_pkgdown.yml</code> as you’d like. Theming,
+navbar structure, content organization and more can be customized
+here.</p>
+<p>For example, if you had several functions all related to data
+handling, you could group them together in the reference section. Or the
+same for plotting functions.</p>
+<p>For example, this entire unit is just a series of articles hosted on
+a pkgdown site, and I use the config to group them together under a
+“Course Materials” dropdown in the navbar:</p>
+<details><summary>
+Click to see the full _pkgdown.yml
+</summary><div class="sourceCode" id="cb18"><pre class="sourceCode yaml"><code class="sourceCode yaml"><span id="cb18-1"><a href="#cb18-1" tabindex="-1"></a><span class="fu">url</span><span class="kw">:</span><span class="at"> https://st-jude-ms-abds.github.io/ADS8192/</span></span>
+<span id="cb18-2"><a href="#cb18-2" tabindex="-1"></a><span class="fu">template</span><span class="kw">:</span></span>
+<span id="cb18-3"><a href="#cb18-3" tabindex="-1"></a><span class="at">  </span><span class="fu">bootstrap</span><span class="kw">:</span><span class="at"> </span><span class="dv">5</span></span>
+<span id="cb18-4"><a href="#cb18-4" tabindex="-1"></a><span class="at">  </span><span class="fu">bootswatch</span><span class="kw">:</span><span class="at"> flatly</span></span>
+<span id="cb18-5"><a href="#cb18-5" tabindex="-1"></a><span class="at">  </span><span class="fu">light-switch</span><span class="kw">:</span><span class="at"> </span><span class="ch">true</span></span>
+<span id="cb18-6"><a href="#cb18-6" tabindex="-1"></a><span class="fu">navbar</span><span class="kw">:</span></span>
+<span id="cb18-7"><a href="#cb18-7" tabindex="-1"></a><span class="at">  </span><span class="fu">structure</span><span class="kw">:</span></span>
+<span id="cb18-8"><a href="#cb18-8" tabindex="-1"></a><span class="at">    </span><span class="fu">left</span><span class="kw">:</span></span>
+<span id="cb18-9"><a href="#cb18-9" tabindex="-1"></a><span class="at">    </span><span class="kw">-</span><span class="at"> intro</span></span>
+<span id="cb18-10"><a href="#cb18-10" tabindex="-1"></a><span class="at">    </span><span class="kw">-</span><span class="at"> reference</span></span>
+<span id="cb18-11"><a href="#cb18-11" tabindex="-1"></a><span class="at">    </span><span class="kw">-</span><span class="at"> articles</span></span>
+<span id="cb18-12"><a href="#cb18-12" tabindex="-1"></a><span class="at">    </span><span class="fu">right</span><span class="kw">:</span></span>
+<span id="cb18-13"><a href="#cb18-13" tabindex="-1"></a><span class="at">    </span><span class="kw">-</span><span class="at"> search</span></span>
+<span id="cb18-14"><a href="#cb18-14" tabindex="-1"></a><span class="at">    </span><span class="kw">-</span><span class="at"> github</span></span>
+<span id="cb18-15"><a href="#cb18-15" tabindex="-1"></a><span class="at">  </span><span class="fu">components</span><span class="kw">:</span></span>
+<span id="cb18-16"><a href="#cb18-16" tabindex="-1"></a><span class="at">    </span><span class="fu">articles</span><span class="kw">:</span></span>
+<span id="cb18-17"><a href="#cb18-17" tabindex="-1"></a><span class="at">      </span><span class="fu">text</span><span class="kw">:</span><span class="at"> Course Materials</span></span>
+<span id="cb18-18"><a href="#cb18-18" tabindex="-1"></a><span class="at">      </span><span class="fu">menu</span><span class="kw">:</span></span>
+<span id="cb18-19"><a href="#cb18-19" tabindex="-1"></a><span class="at">      </span><span class="kw">-</span><span class="at"> </span><span class="fu">text</span><span class="kw">:</span><span class="at"> Course Setup</span></span>
+<span id="cb18-20"><a href="#cb18-20" tabindex="-1"></a><span class="at">        </span><span class="fu">href</span><span class="kw">:</span><span class="at"> articles/course-setup.html</span></span>
+<span id="cb18-21"><a href="#cb18-21" tabindex="-1"></a><span class="at">      </span><span class="kw">-</span><span class="at"> </span><span class="fu">text</span><span class="kw">:</span><span class="at"> Getting Started</span></span>
+<span id="cb18-22"><a href="#cb18-22" tabindex="-1"></a><span class="at">        </span><span class="fu">href</span><span class="kw">:</span><span class="at"> articles/getting-started.html</span></span>
+<span id="cb18-23"><a href="#cb18-23" tabindex="-1"></a><span class="at">      </span><span class="kw">-</span><span class="at"> </span><span class="fu">text</span><span class="kw">:</span><span class="at"> Project Selection Guide</span></span>
+<span id="cb18-24"><a href="#cb18-24" tabindex="-1"></a><span class="at">        </span><span class="fu">href</span><span class="kw">:</span><span class="at"> articles/project-selection.html</span></span>
+<span id="cb18-25"><a href="#cb18-25" tabindex="-1"></a><span class="at">      </span><span class="kw">-</span><span class="at"> </span><span class="fu">text</span><span class="kw">:</span><span class="at"> </span><span class="st">'Homework 1 Rubric'</span></span>
+<span id="cb18-26"><a href="#cb18-26" tabindex="-1"></a><span class="at">        </span><span class="fu">href</span><span class="kw">:</span><span class="at"> articles/HW1_Rubric.html</span></span>
+<span id="cb18-27"><a href="#cb18-27" tabindex="-1"></a><span class="at">      </span><span class="kw">-</span><span class="at"> </span><span class="fu">text</span><span class="kw">:</span><span class="at"> </span><span class="st">'---'</span></span>
+<span id="cb18-28"><a href="#cb18-28" tabindex="-1"></a><span class="at">      </span><span class="kw">-</span><span class="at"> </span><span class="fu">text</span><span class="kw">:</span><span class="at"> Lectures</span></span>
+<span id="cb18-29"><a href="#cb18-29" tabindex="-1"></a><span class="at">      </span><span class="kw">-</span><span class="at"> </span><span class="fu">text</span><span class="kw">:</span><span class="at"> </span><span class="st">'Lecture 04: Data Structures &amp; R Ecosystems'</span></span>
+<span id="cb18-30"><a href="#cb18-30" tabindex="-1"></a><span class="at">        </span><span class="fu">href</span><span class="kw">:</span><span class="at"> articles/Lecture04_Data_Structures_Bioconductor.html</span></span>
+<span id="cb18-31"><a href="#cb18-31" tabindex="-1"></a><span class="at">      </span><span class="kw">-</span><span class="at"> </span><span class="fu">text</span><span class="kw">:</span><span class="at"> </span><span class="st">'Lecture 05: R Package Development (devtools)'</span></span>
+<span id="cb18-32"><a href="#cb18-32" tabindex="-1"></a><span class="at">        </span><span class="fu">href</span><span class="kw">:</span><span class="at"> articles/Lecture05_Package_Development_devtools.html</span></span>
+<span id="cb18-33"><a href="#cb18-33" tabindex="-1"></a><span class="at">      </span><span class="kw">-</span><span class="at"> </span><span class="fu">text</span><span class="kw">:</span><span class="at"> </span><span class="st">'Lecture 06: R Package Documentation &amp; Testing (pkgdown, testthat)'</span></span>
+<span id="cb18-34"><a href="#cb18-34" tabindex="-1"></a><span class="at">        </span><span class="fu">href</span><span class="kw">:</span><span class="at"> articles/Lecture06_Package_Development_pkgdown_testthat.html</span></span>
+<span id="cb18-35"><a href="#cb18-35" tabindex="-1"></a><span class="at">      </span><span class="kw">-</span><span class="at"> </span><span class="fu">text</span><span class="kw">:</span><span class="at"> </span><span class="st">'Lecture 07: Shiny Application Development'</span></span>
+<span id="cb18-36"><a href="#cb18-36" tabindex="-1"></a><span class="at">        </span><span class="fu">href</span><span class="kw">:</span><span class="at"> articles/Lecture07_Shiny_Reactivity.html</span></span>
+<span id="cb18-37"><a href="#cb18-37" tabindex="-1"></a><span class="at">      </span><span class="kw">-</span><span class="at"> </span><span class="fu">text</span><span class="kw">:</span><span class="at"> </span><span class="st">'Lecture 08: Shiny Application Packaging &amp; Deployment'</span></span>
+<span id="cb18-38"><a href="#cb18-38" tabindex="-1"></a><span class="at">        </span><span class="fu">href</span><span class="kw">:</span><span class="at"> articles/Lecture08_Shiny_Packaging_Deployment.html</span></span>
+<span id="cb18-39"><a href="#cb18-39" tabindex="-1"></a><span class="at">      </span><span class="kw">-</span><span class="at"> </span><span class="fu">text</span><span class="kw">:</span><span class="at"> </span><span class="st">'Lecture 09: CLI Design &amp; Development (Rapp)'</span></span>
+<span id="cb18-40"><a href="#cb18-40" tabindex="-1"></a><span class="at">        </span><span class="fu">href</span><span class="kw">:</span><span class="at"> articles/Lecture09_CLI_Design_Rapp.html</span></span>
+<span id="cb18-41"><a href="#cb18-41" tabindex="-1"></a><span class="at">      </span><span class="kw">-</span><span class="at"> </span><span class="fu">text</span><span class="kw">:</span><span class="at"> </span><span class="st">'Lecture 10: CLI Packaging &amp; Installation'</span></span>
+<span id="cb18-42"><a href="#cb18-42" tabindex="-1"></a><span class="at">        </span><span class="fu">href</span><span class="kw">:</span><span class="at"> articles/Lecture10_CLI_Packaging_Installation.html</span></span>
+<span id="cb18-43"><a href="#cb18-43" tabindex="-1"></a><span class="at">      </span><span class="kw">-</span><span class="at"> </span><span class="fu">text</span><span class="kw">:</span><span class="at"> </span><span class="st">'Lecture 11: Review &amp; Q/A'</span></span>
+<span id="cb18-44"><a href="#cb18-44" tabindex="-1"></a><span class="at">        </span><span class="fu">href</span><span class="kw">:</span><span class="at"> articles/Lecture11_Review_QA.html</span></span>
+<span id="cb18-45"><a href="#cb18-45" tabindex="-1"></a><span class="fu">reference</span><span class="kw">:</span></span>
+<span id="cb18-46"><a href="#cb18-46" tabindex="-1"></a><span class="kw">-</span><span class="at"> </span><span class="fu">title</span><span class="kw">:</span><span class="at"> Data Handling</span></span>
+<span id="cb18-47"><a href="#cb18-47" tabindex="-1"></a><span class="at">  </span><span class="fu">desc</span><span class="kw">:</span><span class="at"> Create and manipulate SummarizedExperiment objects</span></span>
+<span id="cb18-48"><a href="#cb18-48" tabindex="-1"></a><span class="at">  </span><span class="fu">contents</span><span class="kw">:</span></span>
+<span id="cb18-49"><a href="#cb18-49" tabindex="-1"></a><span class="at">  </span><span class="kw">-</span><span class="at"> top_variable_features</span></span>
+<span id="cb18-50"><a href="#cb18-50" tabindex="-1"></a><span class="kw">-</span><span class="at"> </span><span class="fu">title</span><span class="kw">:</span><span class="at"> PCA Analysis</span></span>
+<span id="cb18-51"><a href="#cb18-51" tabindex="-1"></a><span class="at">  </span><span class="fu">desc</span><span class="kw">:</span><span class="at"> Run and analyze PCA</span></span>
+<span id="cb18-52"><a href="#cb18-52" tabindex="-1"></a><span class="at">  </span><span class="fu">contents</span><span class="kw">:</span></span>
+<span id="cb18-53"><a href="#cb18-53" tabindex="-1"></a><span class="at">  </span><span class="kw">-</span><span class="at"> run_pca</span></span>
+<span id="cb18-54"><a href="#cb18-54" tabindex="-1"></a><span class="at">  </span><span class="kw">-</span><span class="at"> pca_variance_explained</span></span>
+<span id="cb18-55"><a href="#cb18-55" tabindex="-1"></a><span class="kw">-</span><span class="at"> </span><span class="fu">title</span><span class="kw">:</span><span class="at"> Visualization</span></span>
+<span id="cb18-56"><a href="#cb18-56" tabindex="-1"></a><span class="at">  </span><span class="fu">desc</span><span class="kw">:</span><span class="at"> Create plots</span></span>
+<span id="cb18-57"><a href="#cb18-57" tabindex="-1"></a><span class="at">  </span><span class="fu">contents</span><span class="kw">:</span></span>
+<span id="cb18-58"><a href="#cb18-58" tabindex="-1"></a><span class="at">  </span><span class="kw">-</span><span class="at"> plot_pca</span></span>
+<span id="cb18-59"><a href="#cb18-59" tabindex="-1"></a><span class="at">  </span><span class="kw">-</span><span class="at"> plot_variance_explained</span></span>
+<span id="cb18-60"><a href="#cb18-60" tabindex="-1"></a><span class="kw">-</span><span class="at"> </span><span class="fu">title</span><span class="kw">:</span><span class="at"> Export</span></span>
+<span id="cb18-61"><a href="#cb18-61" tabindex="-1"></a><span class="at">  </span><span class="fu">desc</span><span class="kw">:</span><span class="at"> Save results to files</span></span>
+<span id="cb18-62"><a href="#cb18-62" tabindex="-1"></a><span class="at">  </span><span class="fu">contents</span><span class="kw">:</span><span class="at"> save_pca_results</span></span>
+<span id="cb18-63"><a href="#cb18-63" tabindex="-1"></a><span class="kw">-</span><span class="at"> </span><span class="fu">title</span><span class="kw">:</span><span class="at"> Interactive App</span></span>
+<span id="cb18-64"><a href="#cb18-64" tabindex="-1"></a><span class="at">  </span><span class="fu">desc</span><span class="kw">:</span><span class="at"> Shiny web application</span></span>
+<span id="cb18-65"><a href="#cb18-65" tabindex="-1"></a><span class="at">  </span><span class="fu">contents</span><span class="kw">:</span><span class="at"> run_app</span></span>
+<span id="cb18-66"><a href="#cb18-66" tabindex="-1"></a><span class="fu">articles</span><span class="kw">:</span></span>
+<span id="cb18-67"><a href="#cb18-67" tabindex="-1"></a><span class="kw">-</span><span class="at"> </span><span class="fu">title</span><span class="kw">:</span><span class="at"> Getting Started</span></span>
+<span id="cb18-68"><a href="#cb18-68" tabindex="-1"></a><span class="at">  </span><span class="fu">navbar</span><span class="kw">:</span><span class="at"> </span><span class="ch">~</span></span>
+<span id="cb18-69"><a href="#cb18-69" tabindex="-1"></a><span class="at">  </span><span class="fu">contents</span><span class="kw">:</span></span>
+<span id="cb18-70"><a href="#cb18-70" tabindex="-1"></a><span class="at">  </span><span class="kw">-</span><span class="at"> </span><span class="st">"`getting-started`"</span></span>
+<span id="cb18-71"><a href="#cb18-71" tabindex="-1"></a><span class="at">  </span><span class="kw">-</span><span class="at"> </span><span class="st">"`articles/course-setup`"</span></span>
+<span id="cb18-72"><a href="#cb18-72" tabindex="-1"></a><span class="kw">-</span><span class="at"> </span><span class="fu">title</span><span class="kw">:</span><span class="at"> Assessments</span></span>
+<span id="cb18-73"><a href="#cb18-73" tabindex="-1"></a><span class="at">  </span><span class="fu">navbar</span><span class="kw">:</span><span class="at"> </span><span class="ch">~</span></span>
+<span id="cb18-74"><a href="#cb18-74" tabindex="-1"></a><span class="at">  </span><span class="fu">contents</span><span class="kw">:</span></span>
+<span id="cb18-75"><a href="#cb18-75" tabindex="-1"></a><span class="at">  </span><span class="kw">-</span><span class="at"> </span><span class="st">"`articles/project-selection`"</span></span>
+<span id="cb18-76"><a href="#cb18-76" tabindex="-1"></a><span class="at">  </span><span class="kw">-</span><span class="at"> </span><span class="st">"`articles/HW1_Rubric`"</span></span>
+<span id="cb18-77"><a href="#cb18-77" tabindex="-1"></a><span class="kw">-</span><span class="at"> </span><span class="fu">title</span><span class="kw">:</span><span class="at"> Lectures</span></span>
+<span id="cb18-78"><a href="#cb18-78" tabindex="-1"></a><span class="at">  </span><span class="fu">navbar</span><span class="kw">:</span><span class="at"> </span><span class="ch">~</span></span>
+<span id="cb18-79"><a href="#cb18-79" tabindex="-1"></a><span class="at">  </span><span class="fu">contents</span><span class="kw">:</span></span>
+<span id="cb18-80"><a href="#cb18-80" tabindex="-1"></a><span class="at">  </span><span class="kw">-</span><span class="at"> </span><span class="st">"`articles/Lecture04_Data_Structures_Bioconductor`"</span></span>
+<span id="cb18-81"><a href="#cb18-81" tabindex="-1"></a><span class="at">  </span><span class="kw">-</span><span class="at"> </span><span class="st">"`articles/Lecture05_Package_Development_devtools`"</span></span>
+<span id="cb18-82"><a href="#cb18-82" tabindex="-1"></a><span class="at">  </span><span class="kw">-</span><span class="at"> </span><span class="st">"`articles/Lecture06_Package_Development_pkgdown_testthat`"</span></span>
+<span id="cb18-83"><a href="#cb18-83" tabindex="-1"></a><span class="at">  </span><span class="kw">-</span><span class="at"> </span><span class="st">"`articles/Lecture07_Shiny_Reactivity`"</span></span>
+<span id="cb18-84"><a href="#cb18-84" tabindex="-1"></a><span class="at">  </span><span class="kw">-</span><span class="at"> </span><span class="st">"`articles/Lecture08_Shiny_Packaging_Deployment`"</span></span>
+<span id="cb18-85"><a href="#cb18-85" tabindex="-1"></a><span class="at">  </span><span class="kw">-</span><span class="at"> </span><span class="st">"`articles/Lecture09_CLI_Design_Rapp`"</span></span>
+<span id="cb18-86"><a href="#cb18-86" tabindex="-1"></a><span class="at">  </span><span class="kw">-</span><span class="at"> </span><span class="st">"`articles/Lecture10_CLI_Packaging_Installation`"</span></span>
+<span id="cb18-87"><a href="#cb18-87" tabindex="-1"></a><span class="at">  </span><span class="kw">-</span><span class="at"> </span><span class="st">"`articles/Lecture11_Review_QA`"</span></span></code></pre></div>
+</details>
 </div>
 <div class="section level3">
-<h3 id="create-a-getting-started-article">Create a “Getting Started” Article<a class="anchor" aria-label="anchor" href="#create-a-getting-started-article"></a>
+<h3 id="creating-a-getting-started-article">Creating a “Getting Started” Article<a class="anchor" aria-label="anchor" href="#creating-a-getting-started-article"></a>
 </h3>
-<div class="sourceCode" id="cb20"><pre class="downlit sourceCode r">
+<p><a href="https://r-pkgs.org/vignettes.html" class="external-link">Vignettes</a> are
+long-form articles that can include code, text, and figures. They’re
+great for tutorials and detailed explanations. They allow you to provide
+rationale, context, and examples that go beyond what function
+documentation can cover.</p>
+<p>Nobody will use your package if they don’t understand what it offers
+and how to use it. So take your time to show off what your package can
+do.</p>
+<div class="sourceCode" id="cb19"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="fu">use_vignette</span><span class="op">(</span><span class="st">"getting-started"</span>, title <span class="op">=</span> <span class="st">"Getting Started with ADS8192"</span><span class="op">)</span></span></code></pre></div>
-<p>This creates <code>vignettes/getting-started.Rmd</code>. Edit it to
-include a tutorial:</p>
-<div class="sourceCode" id="cb21"><pre class="sourceCode markdown"><code class="sourceCode markdown"><span id="cb21-1"><a href="#cb21-1" tabindex="-1"></a><span class="co">---</span></span>
-<span id="cb21-2"><a href="#cb21-2" tabindex="-1"></a><span class="an">title:</span><span class="co"> "Getting Started with ADS8192"</span></span>
-<span id="cb21-3"><a href="#cb21-3" tabindex="-1"></a><span class="an">output:</span><span class="co"> rmarkdown::html_vignette</span></span>
-<span id="cb21-4"><a href="#cb21-4" tabindex="-1"></a><span class="an">vignette:</span><span class="co"> &gt;</span></span>
-<span id="cb21-5"><a href="#cb21-5" tabindex="-1"></a><span class="co">  %\VignetteIndexEntry{Getting Started with ADS8192}</span></span>
-<span id="cb21-6"><a href="#cb21-6" tabindex="-1"></a><span class="co">  %\VignetteEngine{knitr::rmarkdown}</span></span>
-<span id="cb21-7"><a href="#cb21-7" tabindex="-1"></a><span class="co">  %\VignetteEncoding{UTF-8}</span></span>
-<span id="cb21-8"><a href="#cb21-8" tabindex="-1"></a><span class="co">---</span></span>
-<span id="cb21-9"><a href="#cb21-9" tabindex="-1"></a></span>
-<span id="cb21-10"><a href="#cb21-10" tabindex="-1"></a><span class="in">```{r setup, include=FALSE}</span></span>
-<span id="cb21-11"><a href="#cb21-11" tabindex="-1"></a><span class="in">knitr::opts_chunk$set(</span></span>
-<span id="cb21-12"><a href="#cb21-12" tabindex="-1"></a><span class="in">  collapse = TRUE,</span></span>
-<span id="cb21-13"><a href="#cb21-13" tabindex="-1"></a><span class="in">  comment = "#&gt;"</span></span>
-<span id="cb21-14"><a href="#cb21-14" tabindex="-1"></a><span class="in">)</span></span>
-<span id="cb21-15"><a href="#cb21-15" tabindex="-1"></a><span class="in">```</span></span>
-<span id="cb21-16"><a href="#cb21-16" tabindex="-1"></a></span>
-<span id="cb21-17"><a href="#cb21-17" tabindex="-1"></a><span class="fu">## Introduction</span></span>
-<span id="cb21-18"><a href="#cb21-18" tabindex="-1"></a></span>
-<span id="cb21-19"><a href="#cb21-19" tabindex="-1"></a>ADS8192 makes it easy to run PCA on RNA-seq data stored in SummarizedExperiment objects.</span>
-<span id="cb21-20"><a href="#cb21-20" tabindex="-1"></a></span>
-<span id="cb21-21"><a href="#cb21-21" tabindex="-1"></a><span class="fu">## Quick Example</span></span>
-<span id="cb21-22"><a href="#cb21-22" tabindex="-1"></a></span>
-<span id="cb21-23"><a href="#cb21-23" tabindex="-1"></a><span class="in">```{r example}</span></span>
-<span id="cb21-24"><a href="#cb21-24" tabindex="-1"></a><span class="in">library(ADS8192)</span></span>
-<span id="cb21-25"><a href="#cb21-25" tabindex="-1"></a></span>
-<span id="cb21-26"><a href="#cb21-26" tabindex="-1"></a><span class="in"># Load example data</span></span>
-<span id="cb21-27"><a href="#cb21-27" tabindex="-1"></a><span class="in">data(example_se)</span></span>
-<span id="cb21-28"><a href="#cb21-28" tabindex="-1"></a><span class="in">example_se</span></span>
-<span id="cb21-29"><a href="#cb21-29" tabindex="-1"></a></span>
-<span id="cb21-30"><a href="#cb21-30" tabindex="-1"></a><span class="in"># Run PCA</span></span>
-<span id="cb21-31"><a href="#cb21-31" tabindex="-1"></a><span class="in">result &lt;- run_pca(example_se, n_top = 50)</span></span>
-<span id="cb21-32"><a href="#cb21-32" tabindex="-1"></a></span>
-<span id="cb21-33"><a href="#cb21-33" tabindex="-1"></a><span class="in"># Plot</span></span>
-<span id="cb21-34"><a href="#cb21-34" tabindex="-1"></a><span class="in">plot_pca(result, color_by = "treatment")</span></span>
-<span id="cb21-35"><a href="#cb21-35" tabindex="-1"></a><span class="in">```</span></span>
-<span id="cb21-36"><a href="#cb21-36" tabindex="-1"></a></span>
-<span id="cb21-37"><a href="#cb21-37" tabindex="-1"></a><span class="fu">## Using Real Data</span></span>
-<span id="cb21-38"><a href="#cb21-38" tabindex="-1"></a></span>
-<span id="cb21-39"><a href="#cb21-39" tabindex="-1"></a><span class="in">```{r airway}</span></span>
-<span id="cb21-40"><a href="#cb21-40" tabindex="-1"></a><span class="in">library(airway)</span></span>
-<span id="cb21-41"><a href="#cb21-41" tabindex="-1"></a><span class="in">data(airway)</span></span>
-<span id="cb21-42"><a href="#cb21-42" tabindex="-1"></a></span>
-<span id="cb21-43"><a href="#cb21-43" tabindex="-1"></a><span class="in"># Run PCA on airway data</span></span>
-<span id="cb21-44"><a href="#cb21-44" tabindex="-1"></a><span class="in">result &lt;- run_pca(airway, n_top = 500)</span></span>
-<span id="cb21-45"><a href="#cb21-45" tabindex="-1"></a></span>
-<span id="cb21-46"><a href="#cb21-46" tabindex="-1"></a><span class="in"># Visualize treatment effect</span></span>
-<span id="cb21-47"><a href="#cb21-47" tabindex="-1"></a><span class="in">plot_pca(result, color_by = "dex", shape_by = "cell")</span></span>
-<span id="cb21-48"><a href="#cb21-48" tabindex="-1"></a><span class="in">```</span></span></code></pre></div>
-<blockquote>
-<p><strong>Exercise B:</strong> Ensure every argument of your exported
-functions is documented. Check by building the pkgdown site and clicking
-through each function’s reference page.</p>
-</blockquote>
+<p>This creates <code>vignettes/getting-started.Rmd</code>. This is an
+<a href="https://rmarkdown.rstudio.com/" class="external-link">Rmarkdown</a> file, so you can
+write in markdown and include code chunks that will be rendered when the
+vignette is built.</p>
+<p><a href="https://docs.github.com/en/get-started/writing-on-github/getting-started-with-writing-and-formatting-on-github/basic-writing-and-formatting-syntax" class="external-link">markdown</a>
+is a simple markup language that allows you to easily format text,
+create lists, add hyperlinks, etc. Rmarkdown extends this by allowing
+you to include executable R code chunks that can generate output and
+figures directly in the document.</p>
+<p>See a handy <a href="https://github.com/rstudio/cheatsheets/raw/main/rmarkdown-2.0.pdf" class="external-link">cheatsheet
+for Rmarkdown</a> if you’d like to learn more about it.</p>
+<p>Now we can edit this file to include a tutorial:</p>
+<div class="sourceCode" id="cb20"><pre class="sourceCode markdown"><code class="sourceCode markdown"><span id="cb20-1"><a href="#cb20-1" tabindex="-1"></a><span class="co">---</span></span>
+<span id="cb20-2"><a href="#cb20-2" tabindex="-1"></a><span class="an">title:</span><span class="co"> "Getting Started with ADS8192"</span></span>
+<span id="cb20-3"><a href="#cb20-3" tabindex="-1"></a><span class="an">output:</span><span class="co"> rmarkdown::html_vignette</span></span>
+<span id="cb20-4"><a href="#cb20-4" tabindex="-1"></a><span class="an">author:</span><span class="co"> "Jared Andrews"</span></span>
+<span id="cb20-5"><a href="#cb20-5" tabindex="-1"></a><span class="an">vignette:</span><span class="co"> &gt;</span></span>
+<span id="cb20-6"><a href="#cb20-6" tabindex="-1"></a><span class="co">  %\VignetteIndexEntry{Getting Started with ADS8192}</span></span>
+<span id="cb20-7"><a href="#cb20-7" tabindex="-1"></a><span class="co">  %\VignetteEngine{knitr::rmarkdown}</span></span>
+<span id="cb20-8"><a href="#cb20-8" tabindex="-1"></a><span class="co">  %\VignetteEncoding{UTF-8}</span></span>
+<span id="cb20-9"><a href="#cb20-9" tabindex="-1"></a><span class="co">---</span></span>
+<span id="cb20-10"><a href="#cb20-10" tabindex="-1"></a></span>
+<span id="cb20-11"><a href="#cb20-11" tabindex="-1"></a><span class="in">```{r setup, include=FALSE}</span></span>
+<span id="cb20-12"><a href="#cb20-12" tabindex="-1"></a><span class="in">knitr::opts_chunk$set(</span></span>
+<span id="cb20-13"><a href="#cb20-13" tabindex="-1"></a><span class="in">  collapse = TRUE,</span></span>
+<span id="cb20-14"><a href="#cb20-14" tabindex="-1"></a><span class="in">  comment = "#&gt;"</span></span>
+<span id="cb20-15"><a href="#cb20-15" tabindex="-1"></a><span class="in">)</span></span>
+<span id="cb20-16"><a href="#cb20-16" tabindex="-1"></a><span class="in">```</span></span>
+<span id="cb20-17"><a href="#cb20-17" tabindex="-1"></a></span>
+<span id="cb20-18"><a href="#cb20-18" tabindex="-1"></a><span class="fu">## Introduction</span></span>
+<span id="cb20-19"><a href="#cb20-19" tabindex="-1"></a></span>
+<span id="cb20-20"><a href="#cb20-20" tabindex="-1"></a>ADS8192 makes it easy to run PCA on RNA-seq data stored in SummarizedExperiment objects.</span>
+<span id="cb20-21"><a href="#cb20-21" tabindex="-1"></a></span>
+<span id="cb20-22"><a href="#cb20-22" tabindex="-1"></a><span class="fu">## Quick Example</span></span>
+<span id="cb20-23"><a href="#cb20-23" tabindex="-1"></a></span>
+<span id="cb20-24"><a href="#cb20-24" tabindex="-1"></a><span class="in">```{r example}</span></span>
+<span id="cb20-25"><a href="#cb20-25" tabindex="-1"></a><span class="in">library(ADS8192)</span></span>
+<span id="cb20-26"><a href="#cb20-26" tabindex="-1"></a></span>
+<span id="cb20-27"><a href="#cb20-27" tabindex="-1"></a><span class="in"># Load example data</span></span>
+<span id="cb20-28"><a href="#cb20-28" tabindex="-1"></a><span class="in">data(example_se)</span></span>
+<span id="cb20-29"><a href="#cb20-29" tabindex="-1"></a><span class="in">example_se</span></span>
+<span id="cb20-30"><a href="#cb20-30" tabindex="-1"></a></span>
+<span id="cb20-31"><a href="#cb20-31" tabindex="-1"></a><span class="in"># Run PCA</span></span>
+<span id="cb20-32"><a href="#cb20-32" tabindex="-1"></a><span class="in">result &lt;- run_pca(example_se, n_top = 50)</span></span>
+<span id="cb20-33"><a href="#cb20-33" tabindex="-1"></a></span>
+<span id="cb20-34"><a href="#cb20-34" tabindex="-1"></a><span class="in"># Plot</span></span>
+<span id="cb20-35"><a href="#cb20-35" tabindex="-1"></a><span class="in">plot_pca(result, color_by = "treatment")</span></span>
+<span id="cb20-36"><a href="#cb20-36" tabindex="-1"></a><span class="in">```</span></span>
+<span id="cb20-37"><a href="#cb20-37" tabindex="-1"></a></span>
+<span id="cb20-38"><a href="#cb20-38" tabindex="-1"></a><span class="fu">## Using Real Data</span></span>
+<span id="cb20-39"><a href="#cb20-39" tabindex="-1"></a></span>
+<span id="cb20-40"><a href="#cb20-40" tabindex="-1"></a><span class="in">```{r airway}</span></span>
+<span id="cb20-41"><a href="#cb20-41" tabindex="-1"></a><span class="in">library(airway)</span></span>
+<span id="cb20-42"><a href="#cb20-42" tabindex="-1"></a><span class="in">data(airway)</span></span>
+<span id="cb20-43"><a href="#cb20-43" tabindex="-1"></a></span>
+<span id="cb20-44"><a href="#cb20-44" tabindex="-1"></a><span class="in"># Run PCA on airway data</span></span>
+<span id="cb20-45"><a href="#cb20-45" tabindex="-1"></a><span class="in">result &lt;- run_pca(airway, n_top = 500)</span></span>
+<span id="cb20-46"><a href="#cb20-46" tabindex="-1"></a></span>
+<span id="cb20-47"><a href="#cb20-47" tabindex="-1"></a><span class="in"># Visualize treatment effect</span></span>
+<span id="cb20-48"><a href="#cb20-48" tabindex="-1"></a><span class="in">plot_pca(result, color_by = "dex", shape_by = "cell")</span></span>
+<span id="cb20-49"><a href="#cb20-49" tabindex="-1"></a><span class="in">```</span></span></code></pre></div>
+<p>Your vignette should probably be a bit more expansive than this.</p>
 <hr>
 </div>
 </div>
@@ -620,90 +719,134 @@ through each function’s reference page.</p>
 <div class="section level3">
 <h3 id="what-is-ci">What is CI?<a class="anchor" aria-label="anchor" href="#what-is-ci"></a>
 </h3>
-<p><strong>Continuous Integration (CI)</strong> automatically runs tests
-and checks whenever you push code. This ensures:</p>
+<p><strong>Continuous Integration (CI)</strong> automatically runs some
+set of actions at specific times (like when you open a pull request,
+push a commit, etc). These actions can span lots of things, but common
+cases include running tests, building/compiling releases, checking code
+validity, running linter/formatting tools, and more.</p>
+<p>For us, CI ensures:</p>
 <ul>
 <li>Tests pass on multiple platforms (Linux, Mac, Windows)</li>
-<li>R CMD check passes</li>
-<li>The pkgdown site builds successfully</li>
+<li>R CMD check passes on multiple platforms and/or R versions</li>
+<li>The pkgdown site builds and deploys successfully</li>
 </ul>
+<p>This isn’t just an R thing. CI is a standard practice in software
+development that helps catch issues early and maintain high code
+quality.</p>
 </div>
 <div class="section level3">
 <h3 id="set-up-github-actions">Set Up GitHub Actions<a class="anchor" aria-label="anchor" href="#set-up-github-actions"></a>
 </h3>
-<div class="sourceCode" id="cb22"><pre class="downlit sourceCode r">
+<p>CI is simple to set up with <a href="https://docs.github.com/en/actions" class="external-link">GitHub Actions</a>.
+Technically, we’ve already set up an actions workflow with
+<code>use_pkgdown_github_pages()</code>, so you should already have a
+<code>.github/workflows/pkgdown.yaml</code> file in your repo.</p>
+<p>There are other useful pre-built workflows for R packages that you
+can use with a single command to run <code>check</code> on multiple
+platforms/R versions every time the code is changed.</p>
+<div class="sourceCode" id="cb21"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="co"># R CMD check on push/PR</span></span>
 <span><span class="fu">use_github_action</span><span class="op">(</span><span class="st">"check-standard"</span><span class="op">)</span></span></code></pre></div>
 <p>This creates <code>.github/workflows/R-CMD-check.yaml</code>:</p>
-<div class="sourceCode" id="cb23"><pre class="sourceCode yaml"><code class="sourceCode yaml"><span id="cb23-1"><a href="#cb23-1" tabindex="-1"></a><span class="fu">on</span><span class="kw">:</span></span>
-<span id="cb23-2"><a href="#cb23-2" tabindex="-1"></a><span class="at">  </span><span class="fu">push</span><span class="kw">:</span></span>
-<span id="cb23-3"><a href="#cb23-3" tabindex="-1"></a><span class="at">    </span><span class="fu">branches</span><span class="kw">:</span><span class="at"> </span><span class="kw">[</span><span class="at">main</span><span class="kw">,</span><span class="at"> master</span><span class="kw">]</span></span>
-<span id="cb23-4"><a href="#cb23-4" tabindex="-1"></a><span class="at">  </span><span class="fu">pull_request</span><span class="kw">:</span></span>
-<span id="cb23-5"><a href="#cb23-5" tabindex="-1"></a><span class="at">    </span><span class="fu">branches</span><span class="kw">:</span><span class="at"> </span><span class="kw">[</span><span class="at">main</span><span class="kw">,</span><span class="at"> master</span><span class="kw">]</span></span>
-<span id="cb23-6"><a href="#cb23-6" tabindex="-1"></a></span>
-<span id="cb23-7"><a href="#cb23-7" tabindex="-1"></a><span class="fu">name</span><span class="kw">:</span><span class="at"> R-CMD-check</span></span>
-<span id="cb23-8"><a href="#cb23-8" tabindex="-1"></a></span>
-<span id="cb23-9"><a href="#cb23-9" tabindex="-1"></a><span class="fu">jobs</span><span class="kw">:</span></span>
-<span id="cb23-10"><a href="#cb23-10" tabindex="-1"></a><span class="at">  </span><span class="fu">R-CMD-check</span><span class="kw">:</span></span>
-<span id="cb23-11"><a href="#cb23-11" tabindex="-1"></a><span class="at">    </span><span class="fu">runs-on</span><span class="kw">:</span><span class="at"> ${{ matrix.config.os }}</span></span>
-<span id="cb23-12"><a href="#cb23-12" tabindex="-1"></a><span class="at">    </span><span class="fu">name</span><span class="kw">:</span><span class="at"> ${{ matrix.config.os }} (${{ matrix.config.r }})</span></span>
-<span id="cb23-13"><a href="#cb23-13" tabindex="-1"></a><span class="at">    </span><span class="fu">strategy</span><span class="kw">:</span></span>
-<span id="cb23-14"><a href="#cb23-14" tabindex="-1"></a><span class="at">      </span><span class="fu">matrix</span><span class="kw">:</span></span>
-<span id="cb23-15"><a href="#cb23-15" tabindex="-1"></a><span class="at">        </span><span class="fu">config</span><span class="kw">:</span></span>
-<span id="cb23-16"><a href="#cb23-16" tabindex="-1"></a><span class="at">          </span><span class="kw">-</span><span class="at"> </span><span class="kw">{</span><span class="fu">os</span><span class="kw">:</span><span class="at"> macos-latest</span><span class="kw">,</span><span class="at">   </span><span class="fu">r</span><span class="kw">:</span><span class="at"> </span><span class="st">'release'</span><span class="kw">}</span></span>
-<span id="cb23-17"><a href="#cb23-17" tabindex="-1"></a><span class="at">          </span><span class="kw">-</span><span class="at"> </span><span class="kw">{</span><span class="fu">os</span><span class="kw">:</span><span class="at"> windows-latest</span><span class="kw">,</span><span class="at"> </span><span class="fu">r</span><span class="kw">:</span><span class="at"> </span><span class="st">'release'</span><span class="kw">}</span></span>
-<span id="cb23-18"><a href="#cb23-18" tabindex="-1"></a><span class="at">          </span><span class="kw">-</span><span class="at"> </span><span class="kw">{</span><span class="fu">os</span><span class="kw">:</span><span class="at"> ubuntu-latest</span><span class="kw">,</span><span class="at">  </span><span class="fu">r</span><span class="kw">:</span><span class="at"> </span><span class="st">'release'</span><span class="kw">}</span></span></code></pre></div>
-</div>
-<div class="section level3">
-<h3 id="add-pkgdown-deployment">Add pkgdown Deployment<a class="anchor" aria-label="anchor" href="#add-pkgdown-deployment"></a>
-</h3>
-<div class="sourceCode" id="cb24"><pre class="downlit sourceCode r">
-<code class="sourceCode R"><span><span class="co"># Auto-deploy pkgdown site to GitHub Pages</span></span>
-<span><span class="fu">use_github_action</span><span class="op">(</span><span class="st">"pkgdown"</span><span class="op">)</span></span></code></pre></div>
-<p>This creates <code>.github/workflows/pkgdown.yaml</code> that:</p>
-<ol style="list-style-type: decimal">
-<li>Builds the pkgdown site</li>
-<li>Deploys to the <code>gh-pages</code> branch</li>
-<li>GitHub Pages serves it at
-<code>https://username.github.io/ADS8192/</code>
-</li>
-</ol>
-</div>
-<div class="section level3">
-<h3 id="configure-github-pages">Configure GitHub Pages<a class="anchor" aria-label="anchor" href="#configure-github-pages"></a>
-</h3>
-<p>After pushing, go to your GitHub repo:</p>
-<ol style="list-style-type: decimal">
-<li>Settings → Pages</li>
-<li>Source: Deploy from a branch</li>
-<li>Branch: <code>gh-pages</code> / <code>root</code>
-</li>
-<li>Save</li>
-</ol>
-</div>
-<div class="section level3">
-<h3 id="push-and-verify">Push and Verify<a class="anchor" aria-label="anchor" href="#push-and-verify"></a>
-</h3>
-<div class="sourceCode" id="cb25"><pre class="downlit sourceCode r">
-<code class="sourceCode R"><span><span class="co"># Commit all changes</span></span>
-<span><span class="co"># git add -A</span></span>
-<span><span class="co"># git commit -m "Add tests, pkgdown, and CI"</span></span>
-<span><span class="co"># git push</span></span></code></pre></div>
-<p>Go to your GitHub repo → Actions tab to watch the workflows run.</p>
-<hr>
+<div class="sourceCode" id="cb22"><pre class="sourceCode yaml"><code class="sourceCode yaml"><span id="cb22-1"><a href="#cb22-1" tabindex="-1"></a><span class="fu">on</span><span class="kw">:</span></span>
+<span id="cb22-2"><a href="#cb22-2" tabindex="-1"></a><span class="at">  </span><span class="fu">push</span><span class="kw">:</span></span>
+<span id="cb22-3"><a href="#cb22-3" tabindex="-1"></a><span class="at">    </span><span class="fu">branches</span><span class="kw">:</span><span class="at"> </span><span class="kw">[</span><span class="at">main</span><span class="kw">,</span><span class="at"> master</span><span class="kw">]</span></span>
+<span id="cb22-4"><a href="#cb22-4" tabindex="-1"></a><span class="at">  </span><span class="fu">pull_request</span><span class="kw">:</span></span>
+<span id="cb22-5"><a href="#cb22-5" tabindex="-1"></a><span class="at">    </span><span class="fu">branches</span><span class="kw">:</span><span class="at"> </span><span class="kw">[</span><span class="at">main</span><span class="kw">,</span><span class="at"> master</span><span class="kw">]</span></span>
+<span id="cb22-6"><a href="#cb22-6" tabindex="-1"></a></span>
+<span id="cb22-7"><a href="#cb22-7" tabindex="-1"></a><span class="fu">name</span><span class="kw">:</span><span class="at"> R-CMD-check</span></span>
+<span id="cb22-8"><a href="#cb22-8" tabindex="-1"></a></span>
+<span id="cb22-9"><a href="#cb22-9" tabindex="-1"></a><span class="fu">jobs</span><span class="kw">:</span></span>
+<span id="cb22-10"><a href="#cb22-10" tabindex="-1"></a><span class="at">  </span><span class="fu">R-CMD-check</span><span class="kw">:</span></span>
+<span id="cb22-11"><a href="#cb22-11" tabindex="-1"></a><span class="at">    </span><span class="fu">runs-on</span><span class="kw">:</span><span class="at"> ${{ matrix.config.os }}</span></span>
+<span id="cb22-12"><a href="#cb22-12" tabindex="-1"></a></span>
+<span id="cb22-13"><a href="#cb22-13" tabindex="-1"></a><span class="at">    </span><span class="fu">name</span><span class="kw">:</span><span class="at"> ${{ matrix.config.os }} (${{ matrix.config.r }})</span></span>
+<span id="cb22-14"><a href="#cb22-14" tabindex="-1"></a></span>
+<span id="cb22-15"><a href="#cb22-15" tabindex="-1"></a><span class="at">    </span><span class="fu">strategy</span><span class="kw">:</span></span>
+<span id="cb22-16"><a href="#cb22-16" tabindex="-1"></a><span class="at">      </span><span class="fu">fail-fast</span><span class="kw">:</span><span class="at"> </span><span class="ch">false</span></span>
+<span id="cb22-17"><a href="#cb22-17" tabindex="-1"></a><span class="at">      </span><span class="fu">matrix</span><span class="kw">:</span></span>
+<span id="cb22-18"><a href="#cb22-18" tabindex="-1"></a><span class="at">        </span><span class="fu">config</span><span class="kw">:</span></span>
+<span id="cb22-19"><a href="#cb22-19" tabindex="-1"></a><span class="at">          </span><span class="kw">-</span><span class="at"> </span><span class="kw">{</span><span class="fu">os</span><span class="kw">:</span><span class="at"> macos-latest</span><span class="kw">,</span><span class="at">   </span><span class="fu">r</span><span class="kw">:</span><span class="at"> </span><span class="st">'release'</span><span class="kw">}</span></span>
+<span id="cb22-20"><a href="#cb22-20" tabindex="-1"></a><span class="at">          </span><span class="kw">-</span><span class="at"> </span><span class="kw">{</span><span class="fu">os</span><span class="kw">:</span><span class="at"> windows-latest</span><span class="kw">,</span><span class="at"> </span><span class="fu">r</span><span class="kw">:</span><span class="at"> </span><span class="st">'release'</span><span class="kw">}</span></span>
+<span id="cb22-21"><a href="#cb22-21" tabindex="-1"></a><span class="at">          </span><span class="kw">-</span><span class="at"> </span><span class="kw">{</span><span class="fu">os</span><span class="kw">:</span><span class="at"> ubuntu-latest</span><span class="kw">,</span><span class="at">  </span><span class="fu">r</span><span class="kw">:</span><span class="at"> </span><span class="st">'release'</span><span class="kw">}</span></span>
+<span id="cb22-22"><a href="#cb22-22" tabindex="-1"></a></span>
+<span id="cb22-23"><a href="#cb22-23" tabindex="-1"></a><span class="at">    </span><span class="fu">env</span><span class="kw">:</span></span>
+<span id="cb22-24"><a href="#cb22-24" tabindex="-1"></a><span class="at">      </span><span class="fu">GITHUB_PAT</span><span class="kw">:</span><span class="at"> ${{ secrets.GITHUB_TOKEN }}</span></span>
+<span id="cb22-25"><a href="#cb22-25" tabindex="-1"></a><span class="at">      </span><span class="fu">R_KEEP_PKG_SOURCE</span><span class="kw">:</span><span class="at"> </span><span class="ch">yes</span></span>
+<span id="cb22-26"><a href="#cb22-26" tabindex="-1"></a></span>
+<span id="cb22-27"><a href="#cb22-27" tabindex="-1"></a><span class="at">    </span><span class="fu">steps</span><span class="kw">:</span></span>
+<span id="cb22-28"><a href="#cb22-28" tabindex="-1"></a><span class="at">      </span><span class="kw">-</span><span class="at"> </span><span class="fu">uses</span><span class="kw">:</span><span class="at"> actions/checkout@v4</span></span>
+<span id="cb22-29"><a href="#cb22-29" tabindex="-1"></a></span>
+<span id="cb22-30"><a href="#cb22-30" tabindex="-1"></a><span class="at">      </span><span class="kw">-</span><span class="at"> </span><span class="fu">uses</span><span class="kw">:</span><span class="at"> r-lib/actions/setup-pandoc@v2</span></span>
+<span id="cb22-31"><a href="#cb22-31" tabindex="-1"></a></span>
+<span id="cb22-32"><a href="#cb22-32" tabindex="-1"></a><span class="at">      </span><span class="kw">-</span><span class="at"> </span><span class="fu">uses</span><span class="kw">:</span><span class="at"> r-lib/actions/setup-r@v2</span></span>
+<span id="cb22-33"><a href="#cb22-33" tabindex="-1"></a><span class="at">        </span><span class="fu">with</span><span class="kw">:</span></span>
+<span id="cb22-34"><a href="#cb22-34" tabindex="-1"></a><span class="at">          </span><span class="fu">r-version</span><span class="kw">:</span><span class="at"> ${{ matrix.config.r }}</span></span>
+<span id="cb22-35"><a href="#cb22-35" tabindex="-1"></a><span class="at">          </span><span class="fu">http-user-agent</span><span class="kw">:</span><span class="at"> ${{ matrix.config.http-user-agent }}</span></span>
+<span id="cb22-36"><a href="#cb22-36" tabindex="-1"></a><span class="at">          </span><span class="fu">use-public-rspm</span><span class="kw">:</span><span class="at"> </span><span class="ch">true</span></span>
+<span id="cb22-37"><a href="#cb22-37" tabindex="-1"></a></span>
+<span id="cb22-38"><a href="#cb22-38" tabindex="-1"></a><span class="at">      </span><span class="kw">-</span><span class="at"> </span><span class="fu">uses</span><span class="kw">:</span><span class="at"> r-lib/actions/setup-r-dependencies@v2</span></span>
+<span id="cb22-39"><a href="#cb22-39" tabindex="-1"></a><span class="at">        </span><span class="fu">with</span><span class="kw">:</span></span>
+<span id="cb22-40"><a href="#cb22-40" tabindex="-1"></a><span class="at">          </span><span class="fu">extra-packages</span><span class="kw">:</span><span class="at"> any::rcmdcheck</span></span>
+<span id="cb22-41"><a href="#cb22-41" tabindex="-1"></a><span class="at">          </span><span class="fu">needs</span><span class="kw">:</span><span class="at"> check</span></span>
+<span id="cb22-42"><a href="#cb22-42" tabindex="-1"></a></span>
+<span id="cb22-43"><a href="#cb22-43" tabindex="-1"></a><span class="at">      </span><span class="kw">-</span><span class="at"> </span><span class="fu">uses</span><span class="kw">:</span><span class="at"> r-lib/actions/check-r-package@v2</span></span>
+<span id="cb22-44"><a href="#cb22-44" tabindex="-1"></a><span class="at">        </span><span class="fu">with</span><span class="kw">:</span></span>
+<span id="cb22-45"><a href="#cb22-45" tabindex="-1"></a><span class="at">          </span><span class="fu">upload-snapshots</span><span class="kw">:</span><span class="at"> </span><span class="ch">true</span></span>
+<span id="cb22-46"><a href="#cb22-46" tabindex="-1"></a><span class="at">          </span><span class="fu">build_args</span><span class="kw">:</span><span class="at"> </span><span class="st">'c("--no-manual","--compact-vignettes=gs+qpdf")'</span></span></code></pre></div>
+<p>This file is pretty simple. “on” specifies the events that trigger
+the workflow (push or PR to main/master, you could add other branches if
+wanted). “jobs” defines the tasks to run, and “strategy” sets up a
+matrix of OS and R version combinations to test against. “env” sets
+environment variables, and “steps” lists the individual steps to
+execute, such as checking out the code, setting up R and pandoc,
+installing dependencies, and running R CMD check.</p>
+<p>There are a whole host of pre-built general and language-task
+specific actions/workflows for R packages that you can find in the <a href="https://usethis.r-lib.org/reference/use_github_action.html" class="external-link">usethis
+documentation</a> and the <a href="https://github.com/marketplace?type=actions" class="external-link">GitHub Actions
+Marketplace</a>.</p>
+<p>CI is powerful and easy to set up. You can do some very complex
+things with it, but it doesn’t have to be complex to be extremely
+useful.</p>
 </div>
 <div class="section level3">
 <h3 id="adding-badges">Adding Badges<a class="anchor" aria-label="anchor" href="#adding-badges"></a>
 </h3>
-<p>Show off your CI status on your README:</p>
-<div class="sourceCode" id="cb26"><pre class="downlit sourceCode r">
+<p>You may have noticed badges on Github repos that show the result of
+CI workflows or link to package repositories, etc. These are a nice way
+to show off the health of your package and provide quick links to
+important resources.</p>
+<p>Let’s add those to our repo as well:</p>
+<div class="sourceCode" id="cb23"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="fu">use_github_actions_badge</span><span class="op">(</span><span class="st">"R-CMD-check"</span><span class="op">)</span></span>
 <span><span class="fu">use_github_actions_badge</span><span class="op">(</span><span class="st">"pkgdown"</span><span class="op">)</span></span></code></pre></div>
 <p>This adds to your README:</p>
-<div class="sourceCode" id="cb27"><pre class="sourceCode markdown"><code class="sourceCode markdown"><span id="cb27-1"><a href="#cb27-1" tabindex="-1"></a><span class="co">&lt;!-- badges: start --&gt;</span></span>
-<span id="cb27-2"><a href="#cb27-2" tabindex="-1"></a><span class="co">[</span><span class="al">![R-CMD-check](https://github.com/user/ADS8192/actions/workflows/R-CMD-check.yaml/badge.svg)</span><span class="co">](https://github.com/user/ADS8192/actions/workflows/R-CMD-check.yaml)</span></span>
-<span id="cb27-3"><a href="#cb27-3" tabindex="-1"></a><span class="co">[</span><span class="al">![pkgdown](https://github.com/user/ADS8192/actions/workflows/pkgdown.yaml/badge.svg)</span><span class="co">](https://github.com/user/ADS8192/actions/workflows/pkgdown.yaml)</span></span>
-<span id="cb27-4"><a href="#cb27-4" tabindex="-1"></a><span class="co">&lt;!-- badges: end --&gt;</span></span></code></pre></div>
+<div class="sourceCode" id="cb24"><pre class="sourceCode markdown"><code class="sourceCode markdown"><span id="cb24-1"><a href="#cb24-1" tabindex="-1"></a><span class="co">&lt;!-- badges: start --&gt;</span></span>
+<span id="cb24-2"><a href="#cb24-2" tabindex="-1"></a><span class="co">[</span><span class="al">![R-CMD-check](https://github.com/user/ADS8192/actions/workflows/R-CMD-check.yaml/badge.svg)</span><span class="co">](https://github.com/user/ADS8192/actions/workflows/R-CMD-check.yaml)</span></span>
+<span id="cb24-3"><a href="#cb24-3" tabindex="-1"></a><span class="co">[</span><span class="al">![pkgdown](https://github.com/user/ADS8192/actions/workflows/pkgdown.yaml/badge.svg)</span><span class="co">](https://github.com/user/ADS8192/actions/workflows/pkgdown.yaml)</span></span>
+<span id="cb24-4"><a href="#cb24-4" tabindex="-1"></a><span class="co">&lt;!-- badges: end --&gt;</span></span></code></pre></div>
+<p>These badges will show green if the workflow is passing and red if
+it’s failing, providing a quick visual indicator of your package’s
+health.</p>
+<p>It lets potential users know that you both have a valid package and a
+documentation site, which is always a good look.</p>
+</div>
+<div class="section level3">
+<h3 id="push-and-verify">Push and Verify<a class="anchor" aria-label="anchor" href="#push-and-verify"></a>
+</h3>
+<p>After adding all of this, go ahead and push your changes to
+Github:</p>
+<div class="sourceCode" id="cb25"><pre class="downlit sourceCode r">
+<code class="sourceCode R"><span><span class="co"># Commit all changes</span></span>
+<span><span class="co"># git add .</span></span>
+<span><span class="co"># git commit -m "Add tests, pkgdown, and CI"</span></span>
+<span><span class="co"># git push</span></span></code></pre></div>
+<p>Go to your GitHub repo → Actions tab to watch the workflows run. They
+provide logs in real-time, and if they fail, you can see which step
+failed and the error messages to help you debug. You’ll also get an
+email if a workflow fails, which can be helpful to catch issues on
+previously “stable” repos when something changes in the environment
+(like a new R version or a dependency update).</p>
 <hr>
 </div>
 </div>
@@ -714,17 +857,20 @@ and checks whenever you push code. This ensures:</p>
 <div class="section level3">
 <h3 id="feature-add-save_pca_results-function">Feature: Add <code>save_pca_results()</code> Function<a class="anchor" aria-label="anchor" href="#feature-add-save_pca_results-function"></a>
 </h3>
+<p>I want to add a function that just dumps all the PCA results to files
+so I can use them in other contexts, share them easily, maybe use them
+in a publication, etc.</p>
 <div class="section level4">
 <h4 id="step-1-implement">Step 1: Implement<a class="anchor" aria-label="anchor" href="#step-1-implement"></a>
 </h4>
-<div class="sourceCode" id="cb28"><pre class="downlit sourceCode r">
+<div class="sourceCode" id="cb26"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="fu">use_r</span><span class="op">(</span><span class="st">"export"</span><span class="op">)</span></span></code></pre></div>
-<div class="sourceCode" id="cb29"><pre class="downlit sourceCode r">
+<div class="sourceCode" id="cb27"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="co"># R/export.R — save_pca_results() function</span></span>
 <span></span>
 <span><span class="co">#' Save PCA results to files</span></span>
 <span><span class="co">#'</span></span>
-<span><span class="co">#' @param pca_result Output from run_pca()</span></span>
+<span><span class="co">#' @param pca_result Output from `run_pca()`</span></span>
 <span><span class="co">#' @param output_dir Directory to save files</span></span>
 <span><span class="co">#' @param prefix Prefix for filenames (default: "pca")</span></span>
 <span><span class="co">#'</span></span>
@@ -771,15 +917,15 @@ and checks whenever you push code. This ensures:</p>
 <div class="section level4">
 <h4 id="step-2-document">Step 2: Document<a class="anchor" aria-label="anchor" href="#step-2-document"></a>
 </h4>
-<div class="sourceCode" id="cb30"><pre class="downlit sourceCode r">
+<div class="sourceCode" id="cb28"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="fu">document</span><span class="op">(</span><span class="op">)</span>  <span class="co"># Generate Rd file</span></span></code></pre></div>
 </div>
 <div class="section level4">
 <h4 id="step-3-test">Step 3: Test<a class="anchor" aria-label="anchor" href="#step-3-test"></a>
 </h4>
-<div class="sourceCode" id="cb31"><pre class="downlit sourceCode r">
+<div class="sourceCode" id="cb29"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="fu">use_test</span><span class="op">(</span><span class="st">"export"</span><span class="op">)</span></span></code></pre></div>
-<div class="sourceCode" id="cb32"><pre class="downlit sourceCode r">
+<div class="sourceCode" id="cb30"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="co"># tests/testthat/test-export.R</span></span>
 <span></span>
 <span><span class="fu"><a href="https://testthat.r-lib.org/reference/test_that.html" class="external-link">test_that</a></span><span class="op">(</span><span class="st">"save_pca_results creates files"</span>, <span class="op">{</span></span>
@@ -812,16 +958,29 @@ and checks whenever you push code. This ensures:</p>
 <div class="section level4">
 <h4 id="step-4-check">Step 4: Check<a class="anchor" aria-label="anchor" href="#step-4-check"></a>
 </h4>
-<div class="sourceCode" id="cb33"><pre class="downlit sourceCode r">
+<div class="sourceCode" id="cb31"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="fu">check</span><span class="op">(</span><span class="op">)</span>  <span class="co"># Should pass with 0 errors, 0 warnings</span></span></code></pre></div>
 </div>
 <div class="section level4">
 <h4 id="step-5-commit">Step 5: Commit<a class="anchor" aria-label="anchor" href="#step-5-commit"></a>
 </h4>
-<div class="sourceCode" id="cb34"><pre class="downlit sourceCode r">
-<code class="sourceCode R"><span><span class="co"># git add -A</span></span>
+<div class="sourceCode" id="cb32"><pre class="downlit sourceCode r">
+<code class="sourceCode R"><span><span class="co"># git add .</span></span>
 <span><span class="co"># git commit -m "Add save_pca_results() for exporting PCA outputs"</span></span>
 <span><span class="co"># git push</span></span></code></pre></div>
+<p>Once our actions run, we should see the new function on our pkgdown
+site, and we should have a new passing test in our CI workflow.</p>
+<p>This is the power of the feature ritual. It ensures that every change
+we make is well-documented, tested, and integrated into our package in a
+way that maintains quality and reliability.</p>
+<p>This process is particularly important in scientific software, where
+silent failures can be dreadful. By following this ritual, we can have
+confidence that our package continues to work as intended even as we add
+new features and make improvements over time. As a codebase grows, this
+discipline will save you from many headaches and allow others to
+contribute more easily as well.</p>
+<p>It can feel like extra work in the moment, but it saves you time and
+stress in the long run.</p>
 <hr>
 </div>
 </div>
@@ -840,8 +999,18 @@ and checks whenever you push code. This ensures:</p>
 <div class="section level3">
 <h3 id="package-milestone">Package Milestone<a class="anchor" aria-label="anchor" href="#package-milestone"></a>
 </h3>
-<p>✅ Package has tests and CI, and a pkgdown site can be built (and
-optionally deployed) from GitHub.</p>
+<p>Package has tests and CI, and a pkgdown site built directly from
+GitHub.</p>
+<p>At this point, people could indepedently find, understand, and
+actually use your package. This is a point that many projects never hit,
+but it’s also the point at which software becomes a real product.</p>
+<p>This is especially true in science, where community usage and
+contribution is essential for software to have an impact on a field. If
+many people are already regularly using your software, then you will
+have a much easier time both maintaining it (as you’ll have power users
+capable of understanding and contributing to the codebase) and
+publishing it (as its usefulness has already been demonstrated by the
+user base).</p>
 <hr>
 </div>
 <div class="section level3">
@@ -849,13 +1018,9 @@ optionally deployed) from GitHub.</p>
 </h3>
 <p>Before moving on, make sure you can answer:</p>
 <ul>
-<li>Which parts of your package are true contracts that deserve
-tests?</li>
-<li>Which failures would only appear on a clean machine or another
-platform if CI did not exist?</li>
-<li>How do <code>testthat</code>, <code>pkgdown</code>, and CI let you
-avoid reinventing infrastructure so you can focus on analysis
-quality?</li>
+<li>Which parts of your package deserve tests?</li>
+<li>How do <code>testthat</code>, <code>pkgdown</code>, and CI help you
+be more efficient and build better quality software?</li>
 </ul>
 <hr>
 </div>
@@ -864,31 +1029,17 @@ quality?</li>
 <h2 id="after-class-tasks">After-Class Tasks<a class="anchor" aria-label="anchor" href="#after-class-tasks"></a>
 </h2>
 <div class="section level3">
-<h3 id="micro-task-1-add-tests">Micro-task 1: Add Tests<a class="anchor" aria-label="anchor" href="#micro-task-1-add-tests"></a>
+<h3 id="task-1-add-tests">Task 1: Add Tests<a class="anchor" aria-label="anchor" href="#task-1-add-tests"></a>
 </h3>
-<p>Add at least 5 test expectations across ≥2 test files. Ensure all
-tests pass.</p>
-<p>Ideas: - Test <code><a href="../reference/plot_pca.html">plot_pca()</a></code> returns a ggplot object - Test
-<code><a href="../reference/plot_pca.html">plot_pca()</a></code> with different <code>pcs</code> values - Test
-edge cases (what happens with n_top &gt; nrow?)</p>
-</div>
-<div class="section level3">
-<h3 id="micro-task-2-build-pkgdown">Micro-task 2: Build pkgdown<a class="anchor" aria-label="anchor" href="#micro-task-2-build-pkgdown"></a>
-</h3>
-<p>Build the pkgdown site locally and commit the config changes
-(<code>_pkgdown.yml</code>).</p>
-</div>
-<div class="section level3">
-<h3 id="optional-badges">Optional: Badges<a class="anchor" aria-label="anchor" href="#optional-badges"></a>
-</h3>
-<p>Add R CMD check and pkgdown badges to your README.</p>
+<p>If you haven’t already, add tests to cover the main functionality of
+your package. Ensure all tests pass (locally and in CI).</p>
 <hr>
 </div>
 </div>
 <div class="section level2">
 <h2 id="session-info">Session Info<a class="anchor" aria-label="anchor" href="#session-info"></a>
 </h2>
-<div class="sourceCode" id="cb35"><pre class="downlit sourceCode r">
+<div class="sourceCode" id="cb33"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="fu"><a href="https://rdrr.io/r/utils/sessionInfo.html" class="external-link">sessionInfo</a></span><span class="op">(</span><span class="op">)</span></span></code></pre></div>
 <pre><code><span><span class="co">## R version 4.5.3 (2026-03-11)</span></span>
 <span><span class="co">## Platform: x86_64-pc-linux-gnu</span></span>

@@ -134,14 +134,14 @@ Config/testthat/edition: 3
 ### Writing Your First Test
 
 ``` r
-# Create a test file for data functions
-use_test("data")
+# Create a test file for pca functions
+use_test("pca")
 ```
 
-This creates `tests/testthat/test-data.R`. Edit it:
+This creates `tests/testthat/test-pca.R`. Edit it:
 
 ``` r
-# tests/testthat/test-data.R
+# tests/testthat/test-pca.R
 
 test_that("top_variable_features returns correct subset size", {
     data(example_se, package = "ADS8192")
@@ -209,7 +209,7 @@ Actually running the tests is also simple.
 test()
 
 # Run a specific test file
-test_file("tests/testthat/test-data.R")
+test_file("tests/testthat/test-pca.R")
 
 # In RStudio: Ctrl+Shift+T
 
@@ -220,7 +220,7 @@ Expected output:
 
     ℹ Testing ADS8192
     ✔ | F W S  OK | Context
-    ✔ |         4 | data
+    ✔ |         4 | pca
 
     ══ Results ═════════════════════════════════════════════════════════════════
     [ FAIL 0 | WARN 0 | SKIP 0 | PASS 4 ]
@@ -350,11 +350,11 @@ test()  # All tests should pass now
 
 ------------------------------------------------------------------------
 
-### Write Tests for PCA Functions
+### Writing a Few More Tests
 
-``` r
-use_test("pca")
-```
+Below are examples of a covering a few more bases for inspiration.
+
+Click to expand more test examples
 
 ``` r
 # tests/testthat/test-pca.R
@@ -409,27 +409,43 @@ test_that("pca_variance_explained returns percentages", {
 
 ## Part 2: Documentation Website with pkgdown
 
-### Why pkgdown?
+[pkgdown](https://pkgdown.r-lib.org/) converts your package
+documentation into a nicely formatted, automatically-generated website
+that provides:
 
-pkgdown converts your package documentation into a beautiful website:
-
-- Auto-generated from your roxygen2 docs and README
-- Hosts vignettes (long-form articles)
+- A landing page showing your README content
+- Rendered vignettes/articles
 - Function reference with nice formatting
 - Search functionality
 - Can deploy automatically via GitHub Pages
 
 ### Setting Up pkgdown
 
+[pkgdown](https://pkgdown.r-lib.org/) is easy to setup. We want to host
+our pkgdown site on GitHub Pages, which is free and integrates well with
+GitHub Actions for automatic deployment.
+
+To do so, we’re going to take a little shortcut provided by `usethis`,
+the
+[use_pkgdown_github_pages()](https://usethis.r-lib.org/reference/use_pkgdown_github_pages.html)
+function.
+
 ``` r
 # Add pkgdown infrastructure
-use_pkgdown()
+use_pkgdown_github_pages()
 ```
 
-This creates:
+This will:
 
-- `_pkgdown.yml` — Configuration file
-- Updates `.Rbuildignore` to ignore the site files
+- Create `_pkgdown.yml` — Configuration file for pkgdown
+- Update `.Rbuildignore` to ignore the site files
+- Add `pkgdown` to Suggests in DESCRIPTION
+- Configure GitHub Pages to serve from the `gh-pages` branch
+- Add a [GitHub Actions](https://docs.github.com/en/actions) workflow
+  for building and deploying the site (we’ll cover this in the CI
+  section)
+- Add the pkgdown site URL to the DESCRIPTION file, the pkgdown YAML,
+  and to the Github repo (in the sidebar).
 
 ### Build the Site Locally
 
@@ -439,60 +455,156 @@ pkgdown::build_site()
 ```
 
 This creates a `docs/` directory with the website. Open
-`docs/index.html` in a browser to preview.
+`docs/index.html` in a browser to preview - it should just show your
+README content for now.
+
+Git will ignore the `docs/` directory because of the .Rbuildignore
+entry, so you can build and test locally without worrying about
+committing these files.
 
 ### Customize the Site
 
-Edit `_pkgdown.yml`:
+To [customise your
+site](https://pkgdown.r-lib.org/articles/customise.html), you can edit
+`_pkgdown.yml` as you’d like. Theming, navbar structure, content
+organization and more can be customized here.
+
+For example, if you had several functions all related to data handling,
+you could group them together in the reference section. Or the same for
+plotting functions.
+
+For example, this entire unit is just a series of articles hosted on a
+pkgdown site, and I use the config to group them together under a
+“Course Materials” dropdown in the navbar:
+
+Click to see the full \_pkgdown.yml
 
 ``` yaml
-url: https://your-username.github.io/ADS8192/
-
+url: https://st-jude-ms-abds.github.io/ADS8192/
 template:
   bootstrap: 5
   bootswatch: flatly
-
+  light-switch: true
 navbar:
   structure:
-    left:  [intro, reference, articles]
-    right: [search, github]
-
+    left:
+    - intro
+    - reference
+    - articles
+    right:
+    - search
+    - github
+  components:
+    articles:
+      text: Course Materials
+      menu:
+      - text: Course Setup
+        href: articles/course-setup.html
+      - text: Getting Started
+        href: articles/getting-started.html
+      - text: Project Selection Guide
+        href: articles/project-selection.html
+      - text: 'Homework 1 Rubric'
+        href: articles/HW1_Rubric.html
+      - text: '---'
+      - text: Lectures
+      - text: 'Lecture 04: Data Structures & R Ecosystems'
+        href: articles/Lecture04_Data_Structures_Bioconductor.html
+      - text: 'Lecture 05: R Package Development (devtools)'
+        href: articles/Lecture05_Package_Development_devtools.html
+      - text: 'Lecture 06: R Package Documentation & Testing (pkgdown, testthat)'
+        href: articles/Lecture06_Package_Development_pkgdown_testthat.html
+      - text: 'Lecture 07: Shiny Application Development'
+        href: articles/Lecture07_Shiny_Reactivity.html
+      - text: 'Lecture 08: Shiny Application Packaging & Deployment'
+        href: articles/Lecture08_Shiny_Packaging_Deployment.html
+      - text: 'Lecture 09: CLI Design & Development (Rapp)'
+        href: articles/Lecture09_CLI_Design_Rapp.html
+      - text: 'Lecture 10: CLI Packaging & Installation'
+        href: articles/Lecture10_CLI_Packaging_Installation.html
+      - text: 'Lecture 11: Review & Q/A'
+        href: articles/Lecture11_Review_QA.html
 reference:
-  - title: "Data Handling"
-    desc: "Create and manipulate SummarizedExperiment objects"
-    contents:
-      - top_variable_features
-
-  - title: "PCA Analysis"
-    desc: "Run and analyze PCA"
-    contents:
-      - run_pca
-      - pca_variance_explained
-
-  - title: "Visualization"
-    desc: "Create plots"
-    contents:
-      - plot_pca
-
+- title: Data Handling
+  desc: Create and manipulate SummarizedExperiment objects
+  contents:
+  - top_variable_features
+- title: PCA Analysis
+  desc: Run and analyze PCA
+  contents:
+  - run_pca
+  - pca_variance_explained
+- title: Visualization
+  desc: Create plots
+  contents:
+  - plot_pca
+  - plot_variance_explained
+- title: Export
+  desc: Save results to files
+  contents: save_pca_results
+- title: Interactive App
+  desc: Shiny web application
+  contents: run_app
 articles:
-  - title: "Getting Started"
-    contents:
-      - getting-started
+- title: Getting Started
+  navbar: ~
+  contents:
+  - "`getting-started`"
+  - "`articles/course-setup`"
+- title: Assessments
+  navbar: ~
+  contents:
+  - "`articles/project-selection`"
+  - "`articles/HW1_Rubric`"
+- title: Lectures
+  navbar: ~
+  contents:
+  - "`articles/Lecture04_Data_Structures_Bioconductor`"
+  - "`articles/Lecture05_Package_Development_devtools`"
+  - "`articles/Lecture06_Package_Development_pkgdown_testthat`"
+  - "`articles/Lecture07_Shiny_Reactivity`"
+  - "`articles/Lecture08_Shiny_Packaging_Deployment`"
+  - "`articles/Lecture09_CLI_Design_Rapp`"
+  - "`articles/Lecture10_CLI_Packaging_Installation`"
+  - "`articles/Lecture11_Review_QA`"
 ```
 
-### Create a “Getting Started” Article
+### Creating a “Getting Started” Article
+
+[Vignettes](https://r-pkgs.org/vignettes.html) are long-form articles
+that can include code, text, and figures. They’re great for tutorials
+and detailed explanations. They allow you to provide rationale, context,
+and examples that go beyond what function documentation can cover.
+
+Nobody will use your package if they don’t understand what it offers and
+how to use it. So take your time to show off what your package can do.
 
 ``` r
 use_vignette("getting-started", title = "Getting Started with ADS8192")
 ```
 
-This creates `vignettes/getting-started.Rmd`. Edit it to include a
-tutorial:
+This creates `vignettes/getting-started.Rmd`. This is an
+[Rmarkdown](https://rmarkdown.rstudio.com/) file, so you can write in
+markdown and include code chunks that will be rendered when the vignette
+is built.
+
+[markdown](https://docs.github.com/en/get-started/writing-on-github/getting-started-with-writing-and-formatting-on-github/basic-writing-and-formatting-syntax)
+is a simple markup language that allows you to easily format text,
+create lists, add hyperlinks, etc. Rmarkdown extends this by allowing
+you to include executable R code chunks that can generate output and
+figures directly in the document.
+
+See a handy [cheatsheet for
+Rmarkdown](https://github.com/rstudio/cheatsheets/raw/main/rmarkdown-2.0.pdf)
+if you’d like to learn more about it.
+
+Now we can edit this file to include a tutorial:
 
 ```` markdown
 ---
 title: "Getting Started with ADS8192"
 output: rmarkdown::html_vignette
+author: "Jared Andrews"
 vignette: >
   %\VignetteIndexEntry{Getting Started with ADS8192}
   %\VignetteEngine{knitr::rmarkdown}
@@ -540,9 +652,7 @@ plot_pca(result, color_by = "dex", shape_by = "cell")
 ```
 ````
 
-> **Exercise B:** Ensure every argument of your exported functions is
-> documented. Check by building the pkgdown site and clicking through
-> each function’s reference page.
+Your vignette should probably be a bit more expansive than this.
 
 ------------------------------------------------------------------------
 
@@ -550,14 +660,33 @@ plot_pca(result, color_by = "dex", shape_by = "cell")
 
 ### What is CI?
 
-**Continuous Integration (CI)** automatically runs tests and checks
-whenever you push code. This ensures:
+**Continuous Integration (CI)** automatically runs some set of actions
+at specific times (like when you open a pull request, push a commit,
+etc). These actions can span lots of things, but common cases include
+running tests, building/compiling releases, checking code validity,
+running linter/formatting tools, and more.
+
+For us, CI ensures:
 
 - Tests pass on multiple platforms (Linux, Mac, Windows)
-- R CMD check passes
-- The pkgdown site builds successfully
+- R CMD check passes on multiple platforms and/or R versions
+- The pkgdown site builds and deploys successfully
+
+This isn’t just an R thing. CI is a standard practice in software
+development that helps catch issues early and maintain high code
+quality.
 
 ### Set Up GitHub Actions
+
+CI is simple to set up with [GitHub
+Actions](https://docs.github.com/en/actions). Technically, we’ve already
+set up an actions workflow with `use_pkgdown_github_pages()`, so you
+should already have a `.github/workflows/pkgdown.yaml` file in your
+repo.
+
+There are other useful pre-built workflows for R packages that you can
+use with a single command to run `check` on multiple platforms/R
+versions every time the code is changed.
 
 ``` r
 # R CMD check on push/PR
@@ -578,53 +707,68 @@ name: R-CMD-check
 jobs:
   R-CMD-check:
     runs-on: ${{ matrix.config.os }}
+
     name: ${{ matrix.config.os }} (${{ matrix.config.r }})
+
     strategy:
+      fail-fast: false
       matrix:
         config:
           - {os: macos-latest,   r: 'release'}
           - {os: windows-latest, r: 'release'}
           - {os: ubuntu-latest,  r: 'release'}
+
+    env:
+      GITHUB_PAT: ${{ secrets.GITHUB_TOKEN }}
+      R_KEEP_PKG_SOURCE: yes
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: r-lib/actions/setup-pandoc@v2
+
+      - uses: r-lib/actions/setup-r@v2
+        with:
+          r-version: ${{ matrix.config.r }}
+          http-user-agent: ${{ matrix.config.http-user-agent }}
+          use-public-rspm: true
+
+      - uses: r-lib/actions/setup-r-dependencies@v2
+        with:
+          extra-packages: any::rcmdcheck
+          needs: check
+
+      - uses: r-lib/actions/check-r-package@v2
+        with:
+          upload-snapshots: true
+          build_args: 'c("--no-manual","--compact-vignettes=gs+qpdf")'
 ```
 
-### Add pkgdown Deployment
+This file is pretty simple. “on” specifies the events that trigger the
+workflow (push or PR to main/master, you could add other branches if
+wanted). “jobs” defines the tasks to run, and “strategy” sets up a
+matrix of OS and R version combinations to test against. “env” sets
+environment variables, and “steps” lists the individual steps to
+execute, such as checking out the code, setting up R and pandoc,
+installing dependencies, and running R CMD check.
 
-``` r
-# Auto-deploy pkgdown site to GitHub Pages
-use_github_action("pkgdown")
-```
+There are a whole host of pre-built general and language-task specific
+actions/workflows for R packages that you can find in the [usethis
+documentation](https://usethis.r-lib.org/reference/use_github_action.html)
+and the [GitHub Actions
+Marketplace](https://github.com/marketplace?type=actions).
 
-This creates `.github/workflows/pkgdown.yaml` that:
-
-1.  Builds the pkgdown site
-2.  Deploys to the `gh-pages` branch
-3.  GitHub Pages serves it at `https://username.github.io/ADS8192/`
-
-### Configure GitHub Pages
-
-After pushing, go to your GitHub repo:
-
-1.  Settings → Pages
-2.  Source: Deploy from a branch
-3.  Branch: `gh-pages` / `root`
-4.  Save
-
-### Push and Verify
-
-``` r
-# Commit all changes
-# git add -A
-# git commit -m "Add tests, pkgdown, and CI"
-# git push
-```
-
-Go to your GitHub repo → Actions tab to watch the workflows run.
-
-------------------------------------------------------------------------
+CI is powerful and easy to set up. You can do some very complex things
+with it, but it doesn’t have to be complex to be extremely useful.
 
 ### Adding Badges
 
-Show off your CI status on your README:
+You may have noticed badges on Github repos that show the result of CI
+workflows or link to package repositories, etc. These are a nice way to
+show off the health of your package and provide quick links to important
+resources.
+
+Let’s add those to our repo as well:
 
 ``` r
 use_github_actions_badge("R-CMD-check")
@@ -640,6 +784,30 @@ This adds to your README:
 <!-- badges: end -->
 ```
 
+These badges will show green if the workflow is passing and red if it’s
+failing, providing a quick visual indicator of your package’s health.
+
+It lets potential users know that you both have a valid package and a
+documentation site, which is always a good look.
+
+### Push and Verify
+
+After adding all of this, go ahead and push your changes to Github:
+
+``` r
+# Commit all changes
+# git add .
+# git commit -m "Add tests, pkgdown, and CI"
+# git push
+```
+
+Go to your GitHub repo → Actions tab to watch the workflows run. They
+provide logs in real-time, and if they fail, you can see which step
+failed and the error messages to help you debug. You’ll also get an
+email if a workflow fails, which can be helpful to catch issues on
+previously “stable” repos when something changes in the environment
+(like a new R version or a dependency update).
+
 ------------------------------------------------------------------------
 
 ## Part 4: The Complete Workflow
@@ -647,6 +815,10 @@ This adds to your README:
 Let’s practice the full feature ritual by adding a small feature.
 
 ### Feature: Add `save_pca_results()` Function
+
+I want to add a function that just dumps all the PCA results to files so
+I can use them in other contexts, share them easily, maybe use them in a
+publication, etc.
 
 #### Step 1: Implement
 
@@ -659,7 +831,7 @@ use_r("export")
 
 #' Save PCA results to files
 #'
-#' @param pca_result Output from run_pca()
+#' @param pca_result Output from `run_pca()`
 #' @param output_dir Directory to save files
 #' @param prefix Prefix for filenames (default: "pca")
 #'
@@ -756,10 +928,27 @@ check()  # Should pass with 0 errors, 0 warnings
 #### Step 5: Commit
 
 ``` r
-# git add -A
+# git add .
 # git commit -m "Add save_pca_results() for exporting PCA outputs"
 # git push
 ```
+
+Once our actions run, we should see the new function on our pkgdown
+site, and we should have a new passing test in our CI workflow.
+
+This is the power of the feature ritual. It ensures that every change we
+make is well-documented, tested, and integrated into our package in a
+way that maintains quality and reliability.
+
+This process is particularly important in scientific software, where
+silent failures can be dreadful. By following this ritual, we can have
+confidence that our package continues to work as intended even as we add
+new features and make improvements over time. As a codebase grows, this
+discipline will save you from many headaches and allow others to
+contribute more easily as well.
+
+It can feel like extra work in the moment, but it saves you time and
+stress in the long run.
 
 ------------------------------------------------------------------------
 
@@ -775,8 +964,19 @@ Today we:
 
 ### Package Milestone
 
-✅ Package has tests and CI, and a pkgdown site can be built (and
-optionally deployed) from GitHub.
+Package has tests and CI, and a pkgdown site built directly from GitHub.
+
+At this point, people could indepedently find, understand, and actually
+use your package. This is a point that many projects never hit, but it’s
+also the point at which software becomes a real product.
+
+This is especially true in science, where community usage and
+contribution is essential for software to have an impact on a field. If
+many people are already regularly using your software, then you will
+have a much easier time both maintaining it (as you’ll have power users
+capable of understanding and contributing to the codebase) and
+publishing it (as its usefulness has already been demonstrated by the
+user base).
 
 ------------------------------------------------------------------------
 
@@ -784,36 +984,18 @@ optionally deployed) from GitHub.
 
 Before moving on, make sure you can answer:
 
-- Which parts of your package are true contracts that deserve tests?
-- Which failures would only appear on a clean machine or another
-  platform if CI did not exist?
-- How do `testthat`, `pkgdown`, and CI let you avoid reinventing
-  infrastructure so you can focus on analysis quality?
+- Which parts of your package deserve tests?
+- How do `testthat`, `pkgdown`, and CI help you be more efficient and
+  build better quality software?
 
 ------------------------------------------------------------------------
 
 ## After-Class Tasks
 
-### Micro-task 1: Add Tests
+### Task 1: Add Tests
 
-Add at least 5 test expectations across ≥2 test files. Ensure all tests
-pass.
-
-Ideas: - Test
-[`plot_pca()`](https://st-jude-ms-abds.github.io/ADS8192/reference/plot_pca.md)
-returns a ggplot object - Test
-[`plot_pca()`](https://st-jude-ms-abds.github.io/ADS8192/reference/plot_pca.md)
-with different `pcs` values - Test edge cases (what happens with n_top
-\> nrow?)
-
-### Micro-task 2: Build pkgdown
-
-Build the pkgdown site locally and commit the config changes
-(`_pkgdown.yml`).
-
-### Optional: Badges
-
-Add R CMD check and pkgdown badges to your README.
+If you haven’t already, add tests to cover the main functionality of
+your package. Ensure all tests pass (locally and in CI).
 
 ------------------------------------------------------------------------
 

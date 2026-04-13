@@ -1,8 +1,15 @@
 # Package index
 
+## Example Data
+
+Load an example simulated SummarizedExperiment object
+
+- [`example_se`](https://st-jude-ms-abds.github.io/ADS8192/reference/example_se.md)
+  : Example SummarizedExperiment for testing
+
 ## Data Handling
 
-Create and manipulate SummarizedExperiment objects
+Manipulate SummarizedExperiment objects
 
 - [`top_variable_features()`](https://st-jude-ms-abds.github.io/ADS8192/reference/top_variable_features.md)
   : Select top variable features

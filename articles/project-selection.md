@@ -73,20 +73,57 @@ high-dimensional data. It reduces thousands of features to a few
 principal components that capture the dominant sources of variation for
 the dataset.
 
-### Dataset: Airway (Human bulk RNA-seq)
+### Dataset: Simulated RNA-seq
 
-The `airway` package contains an RNA-seq experiment on human airway
-smooth muscle cell lines treated with dexamethasone (a glucocorticoid).
-8 samples, 4 treated and 4 untreated, with ~64,000 genes.
+The `example_se` dataset contains a simulated RNA-seq experiment with 8
+samples, 4 treated and 4 untreated, with 10,000 genes. The first 200
+genes have a strong treatment effect, while the rest are noise. This
+structure should be clearly visible in the PCA plot, with treated and
+untreated samples separating along PC1.
 
 Data preparation code
 
 ``` r
-BiocManager::install("airway")
-library(airway)
-library(SummarizedExperiment)
+set.seed(42)
 
-data("airway")
+# 10000 genes, 8 samples
+n_genes <- 10000
+n_samples <- 8
+
+# Simulate counts (negative binomial-ish)
+counts <- matrix(
+  rpois(n_genes * n_samples, lambda = 100),
+  nrow = n_genes,
+  ncol = n_samples
+)
+rownames(counts) <- paste0("gene", seq_len(n_genes))
+colnames(counts) <- paste0("sample", seq_len(n_samples))
+
+# Add some structure: first 500 genes differ by treatment
+treatment <- rep(c("control", "treated"), each = 4)
+counts[1:500, treatment == "treated"] <- counts[1:500, treatment == "treated"] * 2
+
+# Sample metadata
+sample_data <- data.frame(
+  sample_id = colnames(counts),
+  treatment = treatment,
+  batch = rep(c("A", "B"), times = 4),
+  row.names = colnames(counts)
+)
+
+# Gene metadata
+gene_data <- data.frame(
+  gene_id = rownames(counts),
+  gene_symbol = paste0("SYM", seq_len(n_genes)),
+  row.names = rownames(counts)
+)
+
+# Create SummarizedExperiment
+example_se <- SummarizedExperiment(
+  assays = list(counts = counts),
+  colData = sample_data,
+  rowData = gene_data
+)
 ```
 
 **Data structure:** `SummarizedExperiment`
@@ -114,13 +151,52 @@ library(SummarizedExperiment)
 library(airway)
 library(ggplot2)
 
-data("airway")
+set.seed(42)
 
-# --- Feature selection: top 500 most variable genes ---
-mat <- assay(airway, "counts")
+# 10000 genes, 8 samples
+n_genes <- 10000
+n_samples <- 8
+
+# Simulate counts (negative binomial-ish)
+counts <- matrix(
+  rpois(n_genes * n_samples, lambda = 100),
+  nrow = n_genes,
+  ncol = n_samples
+)
+rownames(counts) <- paste0("gene", seq_len(n_genes))
+colnames(counts) <- paste0("sample", seq_len(n_samples))
+
+# Add some structure: first 500 genes differ by treatment
+treatment <- rep(c("control", "treated"), each = 4)
+counts[1:500, treatment == "treated"] <- counts[1:500, treatment == "treated"] * 2
+
+# Sample metadata
+sample_data <- data.frame(
+  sample_id = colnames(counts),
+  treatment = treatment,
+  batch = rep(c("A", "B"), times = 4),
+  row.names = colnames(counts)
+)
+
+# Gene metadata
+gene_data <- data.frame(
+  gene_id = rownames(counts),
+  gene_symbol = paste0("SYM", seq_len(n_genes)),
+  row.names = rownames(counts)
+)
+
+# Create SummarizedExperiment
+example_se <- SummarizedExperiment(
+  assays = list(counts = counts),
+  colData = sample_data,
+  rowData = gene_data
+)
+
+# --- Feature selection: top 200 most variable genes ---
+mat <- assay(example_se, "counts")
 vars <- apply(mat, 1, stats::var)
-top_idx <- order(vars, decreasing = TRUE)[seq_len(500)]
-se_top <- airway[top_idx, ]
+top_idx <- order(vars, decreasing = TRUE)[seq_len(200)]
+se_top <- example_se[top_idx, ]
 
 # --- PCA ---
 mat <- assay(se_top, "counts")
@@ -131,7 +207,7 @@ pca_result <- prcomp(mat_t, scale. = TRUE, center = TRUE)
 # Build scores data.frame merged with sample metadata
 scores <- as.data.frame(pca_result$x)
 scores$sample_id <- rownames(scores)
-col_data <- as.data.frame(colData(airway))
+col_data <- as.data.frame(colData(example_se))
 col_data$sample_id <- rownames(col_data)
 scores <- merge(scores, col_data, by = "sample_id")
 scores <- scores[order(scores$sample_id), ]
@@ -149,7 +225,7 @@ var_x <- round(var_df$variance_percent[1], 1)
 var_y <- round(var_df$variance_percent[2], 1)
 
 p_pca <- ggplot(scores, aes(x = .data[["PC1"]], y = .data[["PC2"]])) +
-    geom_point(aes(color = .data[["dex"]]), size = 4) +
+    geom_point(aes(color = .data[["treatment"]]), size = 4) +
     theme_bw(base_size = 14) +
     labs(x = paste0("PC1 (", var_x, "% variance)"),
          y = paste0("PC2 (", var_y, "% variance)"),
@@ -951,9 +1027,11 @@ Data preparation code
 
 ``` r
 ## data-raw/example_sce.R
-BiocManager::install("scRNAseq")
+BiocManager::install(c("scRNAseq", "org.Mm.eg.db", "AnnotationDbi"))
 library(scRNAseq)
 library(SingleCellExperiment)
+library(org.Mm.eg.db)
+library(AnnotationDbi)
 
 sce <- LunSpikeInData()
 example_sce <- sce
@@ -970,6 +1048,11 @@ colData(example_sce) <- DataFrame(
   cell_line = colData(sce)[["cell line"]],
   block     = colData(sce)[["block"]]
 )
+
+# Add gene symbols to rowData via annotation package, needed for mitochondrial gene QC
+gene_ids <- rownames(example_sce)
+gene_symbols <- mapIds(org.Mm.eg.db, keys = gene_ids, column = "SYMBOL", keytype = "ENSEMBL", multiVals = "first")
+rowData(example_sce)$symbol <- gene_symbols
 
 usethis::use_data(example_sce, overwrite = TRUE)
 ```
@@ -1007,9 +1090,16 @@ library(SingleCellExperiment)
 library(scRNAseq)
 library(ggplot2)
 library(patchwork)
+library(AnnotationDbi)
+library(org.Mm.eg.db)
 
 # --- Load data ---
 sce <- LunSpikeInData()
+
+gene_ids <- rownames(sce)
+gene_symbols <- mapIds(org.Mm.eg.db, keys = gene_ids, column = "SYMBOL", keytype = "ENSEMBL", multiVals = "first")
+rowData(sce)$symbol <- gene_symbols
+
 counts_mat <- counts(sce)
 
 # --- Compute per-cell QC metrics ---
@@ -1030,7 +1120,7 @@ shannon <- apply(counts_mat, 2, function(x) {
 
 # Mitochondrial gene percentage
 # In mouse data, mitochondrial genes typically start with "mt-"
-is_mito <- grepl("^mt-", rownames(counts_mat), ignore.case = TRUE)
+is_mito <- grepl("^mt-", rowData(sce)$symbol, ignore.case = TRUE)
 mito_total <- colSums(counts_mat[is_mito, , drop = FALSE])
 mito_pct <- mito_total / lib_size * 100
 
@@ -1119,69 +1209,36 @@ pathway or contributing to a given biological process to a single number
 per sample, enabling group comparisons. This project combines expression
 data with external pathway knowledge from MSigDB.
 
-### Dataset: TCGA BRCA (Human bulk RNA-seq) + MSigDB Hallmark Gene Sets
+### Dataset: Airway (Human bulk RNA-seq) + MSigDB Hallmark Gene Sets
 
-The `curatedTCGAData` package provides access to The Cancer Genome Atlas
-data. The BRCA (breast cancer) cohort includes RNA-seq expression data
-from ~1,200 patients with rich clinical annotations (ER/PR/HER2 status,
-PAM50 subtype, stage). Immune and proliferation-related gene sets from
-MSigDB clearly distinguish molecular subtypes — making pathway-level
-scoring biologically compelling. We subset to a manageable number of
-samples for the example data.
+The `airway` Bioconductor package provides RNA-seq count data from
+[Himes et al. (2014)](https://pubmed.ncbi.nlm.nih.gov/24926665/),
+profiling four human airway smooth muscle cell lines treated with
+dexamethasone (a glucocorticoid) versus untreated controls (8 samples
+total). Dexamethasone activates inflammatory and stress-response
+pathways that are well-represented in MSigDB Hallmark gene sets — making
+this a compact, self-contained dataset for demonstrating pathway-level
+scoring without requiring large data downloads.
 
 Data preparation code
 
 ``` r
 ## data-raw/example_se.R
-BiocManager::install(c("curatedTCGAData", "TCGAutils"))
-install.packages("msigdbr")
-library(curatedTCGAData)
-library(TCGAutils)
+library(airway)
 library(SummarizedExperiment)
 
-# Download BRCA RNA-seq data
-brca <- curatedTCGAData("BRCA", "RNASeq2*", version = "2.0.1",
-                         dry.run = FALSE)
-rse <- experiments(brca)[[1]]
-
-# Subset to 200 samples for package size
-set.seed(42)
-keep_samples <- sample(ncol(rse), 200)
-rse <- rse[, keep_samples]
-
-# Subset to top 5000 variable genes
-vars <- apply(assay(rse), 1, var, na.rm = TRUE)
-keep_genes <- names(sort(vars, decreasing = TRUE))[1:5000]
-rse <- rse[keep_genes, ]
-
-# Get clinical data
-clin <- colData(brca)
-clin <- clin[colnames(rse), ]
+data(airway)
 
 example_se <- SummarizedExperiment(
-  assays = list(exprs = assay(rse)),
+  assays  = list(counts = assay(airway, "counts")),
   colData = DataFrame(
-    sample_id   = colnames(rse),
-    er_status   = clin$pathologic_stage,
-    pam50       = clin$subtype_PAM50.mRNA
+    sample_id  = colnames(airway),
+    dex        = colData(airway)$dex,
+    cell       = colData(airway)$cell
   )
 )
 
-# Bundle a small set of hallmark gene sets
-library(msigdbr)
-hallmarks <- msigdbr(species = "Homo sapiens", collection = "H")
-example_gene_sets <- split(hallmarks$gene_symbol, hallmarks$gs_name)
-# Keep 10 immune/proliferation-relevant sets
-keep_sets <- c(
-  "HALLMARK_IL2_STAT5_SIGNALING", "HALLMARK_INFLAMMATORY_RESPONSE",
-  "HALLMARK_INTERFERON_GAMMA_RESPONSE", "HALLMARK_ALLOGRAFT_REJECTION",
-  "HALLMARK_MYC_TARGETS_V1", "HALLMARK_E2F_TARGETS",
-  "HALLMARK_TNFA_SIGNALING_VIA_NFKB", "HALLMARK_APOPTOSIS",
-  "HALLMARK_P53_PATHWAY", "HALLMARK_COMPLEMENT"
-)
-example_gene_sets <- example_gene_sets[keep_sets]
-
-usethis::use_data(example_se, example_gene_sets, overwrite = TRUE)
+usethis::use_data(example_se, overwrite = TRUE)
 ```
 
 **Data structure:** `SummarizedExperiment`
@@ -1211,49 +1268,44 @@ usethis::use_data(example_se, example_gene_sets, overwrite = TRUE)
 `gene_contributions.tsv`
 
 **Shiny inputs:** Select built-in sets or upload GMT, score method
-dropdown, grouping variable dropdown (ER status, PAM50 subtype), gene
+dropdown, grouping variable dropdown (dex treatment, cell line), gene
 set selector, boxplot ↔︎ violin toggle
 
-**Dependencies:** `SummarizedExperiment`, `curatedTCGAData` (data only),
+**Dependencies:** `SummarizedExperiment`, `airway` (data only),
 `msigdbr` (gene sets)
 
 Raw analysis code
 
 ``` r
+library(airway)
 library(SummarizedExperiment)
-library(curatedTCGAData)
-library(TCGAutils)
 library(msigdbr)
 library(ggplot2)
 
-# --- Load TCGA BRCA data ---
-brca <- curatedTCGAData("BRCA", "RNASeq2*", version = "2.0.1",
-                         dry.run = FALSE)
-rse <- experiments(brca)[[1]]
+# --- Load airway data ---
+data(airway)
 
-# Subset to 200 samples + top 5000 variable genes
-set.seed(42)
-keep_samples <- sample(ncol(rse), 200)
-rse <- rse[, keep_samples]
-vars <- apply(assay(rse), 1, var, na.rm = TRUE)
-keep_genes <- names(sort(vars, decreasing = TRUE))[1:5000]
-rse <- rse[keep_genes, ]
+# log2-CPM normalize counts for scoring
+counts_mat <- assay(airway, "counts")
+lib_sizes   <- colSums(counts_mat)
+mat         <- log2(t(t(counts_mat) / lib_sizes * 1e6) + 1)
+dex         <- colData(airway)$dex  # "trt" or "untrt"
 
-# Get clinical metadata
-clin <- colData(brca)
-pam50 <- clin[colnames(rse), "PAM50.mRNA"]
-
-se <- SummarizedExperiment(
-    assays  = list(exprs = assay(rse)),
-    colData = DataFrame(sample_id = colnames(rse), pam50 = pam50)
-)
+# Convert Ensembl IDs to gene symbols for MSigDB overlap
+library(org.Hs.eg.db)
+library(AnnotationDbi)
+symbols <- mapIds(org.Hs.eg.db, keys = rownames(mat),
+                  column = "SYMBOL", keytype = "ENSEMBL",
+                  multiVals = "first")
+keep <- !is.na(symbols)
+mat  <- mat[keep, ]
+rownames(mat) <- symbols[keep]
 
 # --- Get MSigDB Hallmark gene sets ---
 hallmarks <- msigdbr(species = "Homo sapiens", collection = "H")
 gene_sets <- split(hallmarks$gene_symbol, hallmarks$gs_name)
 
 # --- Compute per-sample gene set scores ---
-mat <- assay(se, "exprs")
 mat_z <- t(scale(t(mat)))  # z-score each gene across samples
 
 # Method 1: mean z-score
@@ -1263,7 +1315,7 @@ scores_meanz <- lapply(names(gene_sets), function(gs_name) {
     per_sample <- colMeans(mat_z[genes_in_set, , drop = FALSE], na.rm = TRUE)
     data.frame(sample_id = colnames(mat), gene_set = gs_name,
                score = per_sample, method = "mean_z",
-               pam50 = as.character(pam50))
+               dex = as.character(dex))
 })
 
 # Method 2: rank-based (ssGSEA-like)
@@ -1278,7 +1330,7 @@ scores_rank <- lapply(names(gene_sets), function(gs_name) {
     per_sample <- colMeans(ranks[in_set, , drop = FALSE]) / n
     data.frame(sample_id = colnames(mat), gene_set = gs_name,
                score = per_sample, method = "rank_based",
-               pam50 = as.character(pam50))
+               dex = as.character(dex))
 })
 
 scores_df <- do.call(rbind, c(scores_meanz, scores_rank))
@@ -1288,22 +1340,31 @@ selected_set <- names(gene_sets)[1]
 contrib_genes <- intersect(gene_sets[[selected_set]], rownames(mat_z))
 gene_contrib <- as.data.frame(t(mat_z[contrib_genes, , drop = FALSE]))
 gene_contrib$sample_id <- colnames(mat)
-gene_contrib$pam50 <- as.character(pam50)
+gene_contrib$dex <- as.character(dex)
 
 # --- Group summary ---
-summary_df <- aggregate(score ~ gene_set + pam50, data = scores_df,
+summary_df <- aggregate(score ~ gene_set + dex, data = scores_df,
                         FUN = function(x) c(mean = mean(x), sd = sd(x)))
 summary_df <- do.call(data.frame, summary_df)
-colnames(summary_df) <- c("gene_set", "pam50", "mean_score", "sd_score")
+colnames(summary_df) <- c("gene_set", "dex", "mean_score", "sd_score")
 
-# --- Boxplot ---
-p <- ggplot(scores_df, aes(x = pam50, y = score, fill = pam50)) +
-    geom_boxplot(outlier.size = 0.5) +
-    facet_wrap(~ gene_set, scales = "free_y") +
-    theme_bw(base_size = 6) +
-    theme(axis.text.x = element_text(angle = 45, hjust = 1)) +
-    labs(x = "PAM50 Subtype", y = "Gene Set Score (mean z)",
-         title = "Hallmark Gene Set Scores by PAM50 Subtype")
+# --- Horizontal grouped bar chart (mean ± SE per treatment group, faceted by method) ---
+method_labels <- c(mean_z = "Mean Z-Score", rank_based = "Rank-Based (ssGSEA-like)")
+
+p <- ggplot(scores_df, aes(x = gene_set, y = score, fill = dex)) +
+    stat_summary(fun = mean, geom = "bar",
+                 position = position_dodge(1.0), width = 0.6) +
+    stat_summary(fun.data = mean_se, geom = "errorbar",
+                 position = position_dodge(1.0), width = 0.2) +
+    scale_fill_manual(values = c(trt = "#E64B35", untrt = "#4DBBD5"),
+                      labels = c(trt = "Treated", untrt = "Untreated")) +
+    facet_wrap(~ method, scales = "free_x", labeller = labeller(method = method_labels)) +
+    coord_flip() +
+    theme_bw(base_size = 9) +
+    theme(legend.position = "top") +
+    labs(x = "Gene Set", y = "Mean Gene Set Score",
+         fill = "Dexamethasone",
+         title = "Hallmark Gene Set Scores by Dexamethasone Treatment")
 print(p)
 
 # --- Export ---
@@ -1682,6 +1743,8 @@ list.files(output_dir)
 
 ## Project 9: Expression Heatmap Builder
 
+TODO: Fix - swap dataset.
+
 The genes-by-samples heatmap is one of the most iconic figures in
 genomics. Building one from scratch — row scaling, hierarchical
 clustering of both axes, sample metadata annotation bars — requires
@@ -1897,13 +1960,14 @@ Raw analysis code
 library(SingleCellExperiment)
 library(TENxPBMCData)
 library(ggplot2)
+library(matrixStats)
 
 # --- Load data ---
 sce <- TENxPBMCData("pbmc3k")
 counts_mat <- counts(sce)
 
 # --- Feature selection: top 2000 most variable genes ---
-gene_vars <- apply(counts_mat, 1, var)
+gene_vars <- rowVars(counts_mat)
 top_idx <- order(gene_vars, decreasing = TRUE)[seq_len(2000)]
 mat <- counts_mat[top_idx, ]
 
@@ -2012,6 +2076,17 @@ library(scRNAseq)
 library(SingleCellExperiment)
 
 sce <- GrunPancreasData()
+
+# Drop zero-count genes and genes with NA counts (e.g., ERCC spike-ins)
+sce <- sce[rowSums(counts(sce), na.rm = TRUE) > 0 &
+           rowSums(is.na(counts(sce))) == 0, ]
+
+counts_mat <- counts(sce)
+cell_type <- colData(sce)$sample  # "sample" column holds cell type labels
+
+# Remove cells with NA cell type or zero total counts
+keep <- !is.na(cell_type) & colSums(counts_mat) > 0
+sce <- sce[, keep]
 example_sce <- sce
 
 assays(example_sce) <- list(counts = counts(example_sce))
@@ -2051,15 +2126,21 @@ Raw analysis code
 library(SingleCellExperiment)
 library(scRNAseq)
 library(ggplot2)
+library(patchwork)
 
 # --- Load data ---
 sce <- GrunPancreasData()
+
+# Drop zero-count genes and genes with NA counts (e.g., ERCC spike-ins)
+sce <- sce[rowSums(counts(sce), na.rm = TRUE) > 0 &
+           rowSums(is.na(counts(sce))) == 0, ]
+
 counts_mat <- counts(sce)
 batch <- colData(sce)$donor
 cell_type <- colData(sce)$sample  # "sample" column holds cell type labels
 
-# Remove cells with NA cell type
-keep <- !is.na(cell_type)
+# Remove cells with NA cell type or zero total counts
+keep <- !is.na(cell_type) & colSums(counts_mat) > 0
 counts_mat <- counts_mat[, keep]
 batch     <- batch[keep]
 cell_type <- cell_type[keep]
@@ -2071,8 +2152,11 @@ mat <- counts_mat[top_idx, ]
 
 # Log-normalize
 lib_sizes <- colSums(counts_mat)
-lib_sizes <- lib_sizes[keep]
 mat_norm <- log2(t(t(mat) / lib_sizes * 1e6) + 1)
+
+# Remove zero- or NA-variance genes (would cause division by zero in scale.)
+gene_vars_norm <- apply(mat_norm, 1, var)
+mat_norm <- mat_norm[is.finite(gene_vars_norm) & gene_vars_norm > 0, ]
 
 # --- PCA (before correction) ---
 pca_before <- prcomp(t(as.matrix(mat_norm)), scale. = TRUE, center = TRUE)
@@ -2118,7 +2202,7 @@ p3 <- ggplot(r2_df, aes(x = PC, y = R2)) +
     labs(x = "Principal Component", y = expression(R^2~"(batch)"),
          title = "Variance Attributable to Batch")
 
-print(p1); print(p2); print(p3)
+(p1 + p2) / p3
 
 # --- Export ---
 output_dir <- file.path(tempdir(), "batch_output")
@@ -2149,6 +2233,9 @@ to validate the markers against known biology. The dot plot (size =
 detection rate, color = mean expression) is a common way to summarize
 marker expression patterns across clusters or cell types.
 
+This code takes a few minutes to run, single cell analysis is
+computationally expensive.
+
 ### Dataset: Baron Mouse Pancreas (Mouse scRNA-seq)
 
 The [Baron et al. (2016) mouse pancreatic islet
@@ -2156,8 +2243,8 @@ dataset](https://pubmed.ncbi.nlm.nih.gov/27667365/) contains ~1,886
 cells across 9 clearly defined cell types: alpha, beta, delta, gamma
 (PP), acinar, ductal, stellate (activated and quiescent), immune, and
 Schwann cells. Each cell type has well-known marker genes (e.g.,
-*Ins1*/*Ins2* for beta cells, *Gcg* for alpha cells), enabling students
-to validate their markers against published biology.
+*Ins1*/*Ins2* for beta cells, *Gcg* for alpha cells), enabling a sanity
+check for what’s returned.
 
 Note: this is the **mouse** version — Project 4 uses the human dataset
 from the same study, so code cannot be directly shared.
@@ -2282,21 +2369,21 @@ marker_summary <- data.frame(
 )
 
 # --- Dot plot ---
-top_markers$cell_type <- factor(top_markers$cell_type)
-top_markers$gene <- factor(top_markers$gene,
-                           levels = rev(unique(top_markers$gene)))
+# gene ordering: use the unique marker genes in their natural ranking order
+gene_levels <- unique(as.character(top_markers$gene))
+ct_levels   <- as.character(cell_types)
 
-# Compute mean expression for dot color
-mean_expr <- sapply(unique(top_markers$gene), function(g) {
-    sapply(unique(top_markers$cell_type), function(ct) {
-        idx <- cell_type == ct
-        mean(mat_norm[g, idx])
-    })
-})
-mean_expr_df <- as.data.frame(as.table(mean_expr))
-colnames(mean_expr_df) <- c("cell_type", "gene", "mean_expr")
+# Pull every (gene x cell_type) row from all_markers for the selected genes
+# detect_target here is the detection rate of that gene *within* that cell type
+plot_df <- all_markers[all_markers$gene %in% gene_levels, ]
 
-plot_df <- merge(top_markers, mean_expr_df, by = c("cell_type", "gene"))
+# Add mean expression per (gene, cell_type) combination
+plot_df$mean_expr <- mapply(function(g, ct) {
+    mean(as.numeric(mat_norm[g, cell_type == ct]))
+}, plot_df$gene, plot_df$cell_type)
+
+plot_df$gene      <- factor(plot_df$gene,      levels = rev(gene_levels))
+plot_df$cell_type <- factor(plot_df$cell_type, levels = ct_levels)
 
 p <- ggplot(plot_df, aes(x = cell_type, y = gene,
                           size = detect_target, color = mean_expr)) +
