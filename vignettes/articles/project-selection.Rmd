@@ -1784,6 +1784,8 @@ list.files(output_dir)
 
 ## Project 9: Expression Heatmap Builder
 
+TODO: Fix - swap dataset.
+
 The genes-by-samples heatmap is one of the most iconic figures
 in genomics. Building one from scratch — row scaling, hierarchical clustering
 of both axes, sample metadata annotation bars — requires integrating several analysis
@@ -2001,13 +2003,14 @@ max_pcs slider, summary table of recommendations
 library(SingleCellExperiment)
 library(TENxPBMCData)
 library(ggplot2)
+library(matrixStats)
 
 # --- Load data ---
 sce <- TENxPBMCData("pbmc3k")
 counts_mat <- counts(sce)
 
 # --- Feature selection: top 2000 most variable genes ---
-gene_vars <- apply(counts_mat, 1, var)
+gene_vars <- rowVars(counts_mat)
 top_idx <- order(gene_vars, decreasing = TRUE)[seq_len(2000)]
 mat <- counts_mat[top_idx, ]
 
@@ -2093,6 +2096,8 @@ list.files(output_dir)
 
 ## Project 11: Batch Effect Assessment
 
+TODO: Fix variance
+
 Batch effects (systematic technical variation from processing
 date, lane, or operator) can muddy biological signal. Quantifying how much
 variance each PC attributes to batch (via linear regression R²) is a common diagnostic
@@ -2157,9 +2162,14 @@ slider, correction toggle, before/after PCA panels, R² bar chart
 library(SingleCellExperiment)
 library(scRNAseq)
 library(ggplot2)
+library(patchwork)
 
 # --- Load data ---
 sce <- GrunPancreasData()
+
+# Drop zero-count genes
+sce <- sce[rowSums(counts(sce)) > 0, ]
+
 counts_mat <- counts(sce)
 batch <- colData(sce)$donor
 cell_type <- colData(sce)$sample  # "sample" column holds cell type labels
@@ -2224,7 +2234,7 @@ p3 <- ggplot(r2_df, aes(x = PC, y = R2)) +
     labs(x = "Principal Component", y = expression(R^2~"(batch)"),
          title = "Variance Attributable to Batch")
 
-print(p1); print(p2); print(p3)
+(p1 + p2) / p3
 
 # --- Export ---
 output_dir <- file.path(tempdir(), "batch_output")
@@ -2247,6 +2257,8 @@ list.files(output_dir)
 ---
 
 ## Project 12: Marker Gene Identification
+
+TODO: Fix - top_markers and mean_exp merge.
 
 After clustering samples in scRNA-seq data, identifying the genes that
 best distinguish each cluster from the others. 
