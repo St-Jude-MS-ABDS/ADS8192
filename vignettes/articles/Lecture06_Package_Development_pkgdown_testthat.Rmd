@@ -131,14 +131,14 @@ Config/testthat/edition: 3
 ## Writing Your First Test
 
 ```{r create-test-file}
-# Create a test file for data functions
-use_test("data")
+# Create a test file for pca functions
+use_test("pca")
 ```
 
-This creates `tests/testthat/test-data.R`. Edit it:
+This creates `tests/testthat/test-pca.R`. Edit it:
 
-```{r test-data}
-# tests/testthat/test-data.R
+```{r test-pca}
+# tests/testthat/test-pca.R
 
 test_that("top_variable_features returns correct subset size", {
     data(example_se, package = "ADS8192")
@@ -206,7 +206,7 @@ Actually running the tests is also simple.
 test()
 
 # Run a specific test file
-test_file("tests/testthat/test-data.R")
+test_file("tests/testthat/test-pca.R")
 
 # In RStudio: Ctrl+Shift+T
 
@@ -218,7 +218,7 @@ Expected output:
 ```
 ℹ Testing ADS8192
 ✔ | F W S  OK | Context
-✔ |         4 | data
+✔ |         4 | pca
 
 ══ Results ═════════════════════════════════════════════════════════════════
 [ FAIL 0 | WARN 0 | SKIP 0 | PASS 4 ]
@@ -331,11 +331,12 @@ test()  # All tests should pass now
 
 ---
 
-## Write Tests for PCA Functions
+## Writing a Few More Tests
 
-```{r use-test-pca}
-use_test("pca")
-```
+Below are examples of a covering a few more bases for inspiration.
+
+<details>
+<summary>Click to expand more test examples</summary>
 
 ```{r test-pca}
 # tests/testthat/test-pca.R
@@ -385,6 +386,7 @@ test_that("pca_variance_explained returns percentages", {
     expect_true(var_df$variance_percent[1] >= var_df$variance_percent[2])
 })
 ```
+</details>
 
 ---
 
@@ -392,10 +394,10 @@ test_that("pca_variance_explained returns percentages", {
 
 ## Why pkgdown?
 
-pkgdown converts your package documentation into a beautiful website:
+pkgdown converts your package documentation into a nicely formatted, automatically-generated website that provides:
 
-- Auto-generated from your roxygen2 docs and README
-- Hosts vignettes (long-form articles)
+- A landing page showing your README content
+- Rendered vignettes/articles
 - Function reference with nice formatting
 - Search functionality
 - Can deploy automatically via GitHub Pages
@@ -460,7 +462,12 @@ articles:
       - getting-started
 ```
 
-## Create a "Getting Started" Article
+## Creating a "Getting Started" Article
+
+Vignettes are long-form articles that can include code, text, and figures. They're great for tutorials and detailed explanations.
+
+Nobody will use your package if they don't understand what it offers and how to use it. 
+So take your time to show off what your package can do.
 
 ```{r use-vignette}
 use_vignette("getting-started", title = "Getting Started with ADS8192")
@@ -519,7 +526,7 @@ plot_pca(result, color_by = "dex", shape_by = "cell")
 ```
 ````
 
-> **Exercise B:** Ensure every argument of your exported functions is documented. Check by building the pkgdown site and clicking through each function's reference page.
+Your vignette should probably be a bit more expansive than this.
 
 ---
 
@@ -635,7 +642,7 @@ use_r("export")
 
 #' Save PCA results to files
 #'
-#' @param pca_result Output from run_pca()
+#' @param pca_result Output from `run_pca()`
 #' @param output_dir Directory to save files
 #' @param prefix Prefix for filenames (default: "pca")
 #'
@@ -751,7 +758,7 @@ Today we:
 
 ## Package Milestone
 
-✅ Package has tests and CI, and a pkgdown site can be built (and optionally deployed) from GitHub.
+Package has tests and CI, and a pkgdown site built directly from GitHub.
 
 ---
 
@@ -760,7 +767,7 @@ Today we:
 Before moving on, make sure you can answer:
 
 - Which parts of your package are true contracts that deserve tests?
-- Which failures would only appear on a clean machine or another platform if CI did not exist?
+- Why does 
 - How do `testthat`, `pkgdown`, and CI let you avoid reinventing infrastructure so you can focus on analysis quality?
 
 ---
@@ -775,10 +782,6 @@ Ideas:
 - Test `plot_pca()` returns a ggplot object
 - Test `plot_pca()` with different `pcs` values
 - Test edge cases (what happens with n_top > nrow?)
-
-## Micro-task 2: Build pkgdown
-
-Build the pkgdown site locally and commit the config changes (`_pkgdown.yml`).
 
 ## Optional: Badges
 
