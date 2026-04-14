@@ -1511,6 +1511,11 @@ example_sce <- sce
 
 assays(example_sce) <- list(counts = counts(example_sce))
 
+# --- Normalize using scuttle (standard Bioconductor scRNA-seq pipeline) ---
+# logNormCounts() computes library-size-based size factors, normalizes,
+# and log2-transforms, storing the result in logcounts(sce)
+example_sce <- logNormCounts(example_sce)
+
 # Note: rownames have a "__chrN" suffix (e.g. "INS__chr11") —
 rownames(example_sce) <- sub("__chr.*$", "", rownames(example_sce))
 
@@ -1526,8 +1531,6 @@ usethis::use_data(example_sce, overwrite = TRUE)
 
 **What users should be able to do:**
 
-- Normalize raw counts using `scuttle::logNormCounts()` — the standard
-  Bioconductor approach (library-size-based size factors + log2 transform)
 - Look up a set of genes by name, with validation against the dataset
   (report which genes were found and which were missing)
 - Compute per-group expression statistics for each queried gene: mean
@@ -1578,12 +1581,13 @@ cell_type <- colData(sce)$label
 # logNormCounts() computes library-size-based size factors, normalizes,
 # and log2-transforms, storing the result in logcounts(sce)
 sce <- logNormCounts(sce)
-mat_norm <- as.matrix(logcounts(sce))
 
 # ============================================================================
 # Everything above is upstream data preparation — belongs in data-raw/.
 # Everything below is core analysis — should be functionized in R/.
 # ============================================================================
+
+mat_norm <- as.matrix(logcounts(sce))
 
 # --- Define query genes (well-known pancreatic markers) ---
 query_genes <- c("INS", "GCG", "SST", "PPY", "PRSS1", "KRT19")
