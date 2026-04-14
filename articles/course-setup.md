@@ -70,7 +70,7 @@ bioc_pkgs <- c(
   "scRNAseq",
   "tximeta",
   "recount3",
-  "curatedTCGAData",
+  "fission",
   "TCGAutils",
   "TENxPBMCData",
   # Data access infrastructure
