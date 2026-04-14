@@ -822,14 +822,14 @@ it becomes a package function.</p>
 <div class="section level3">
 <h3 id="step-1-feature-selection">Step 1: Feature Selection<a class="anchor" aria-label="anchor" href="#step-1-feature-selection"></a>
 </h3>
-<p>The raw script selects the 500 most variable genes by row
+<p>The raw script selects the 200 most variable genes by row
 variance:</p>
 <div class="sourceCode" id="cb17"><pre class="downlit sourceCode r">
-<code class="sourceCode R"><span><span class="co"># --- Feature selection: top 500 most variable genes ---</span></span>
-<span><span class="va">mat</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/pkg/SummarizedExperiment/man/SummarizedExperiment-class.html" class="external-link">assay</a></span><span class="op">(</span><span class="va">airway</span>, <span class="st">"counts"</span><span class="op">)</span></span>
+<code class="sourceCode R"><span><span class="co"># --- Feature selection: top 200 most variable genes ---</span></span>
+<span><span class="va">mat</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/pkg/SummarizedExperiment/man/SummarizedExperiment-class.html" class="external-link">assay</a></span><span class="op">(</span><span class="va">example_se</span>, <span class="st">"counts"</span><span class="op">)</span></span>
 <span><span class="va">vars</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/base/apply.html" class="external-link">apply</a></span><span class="op">(</span><span class="va">mat</span>, <span class="fl">1</span>, <span class="fu">stats</span><span class="fu">::</span><span class="va"><a href="https://rdrr.io/r/stats/cor.html" class="external-link">var</a></span><span class="op">)</span></span>
-<span><span class="va">top_idx</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/base/order.html" class="external-link">order</a></span><span class="op">(</span><span class="va">vars</span>, decreasing <span class="op">=</span> <span class="cn">TRUE</span><span class="op">)</span><span class="op">[</span><span class="fu"><a href="https://rdrr.io/r/base/seq.html" class="external-link">seq_len</a></span><span class="op">(</span><span class="fl">500</span><span class="op">)</span><span class="op">]</span></span>
-<span><span class="va">se_top</span> <span class="op">&lt;-</span> <span class="va">airway</span><span class="op">[</span><span class="va">top_idx</span>, <span class="op">]</span></span></code></pre></div>
+<span><span class="va">top_idx</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/base/order.html" class="external-link">order</a></span><span class="op">(</span><span class="va">vars</span>, decreasing <span class="op">=</span> <span class="cn">TRUE</span><span class="op">)</span><span class="op">[</span><span class="fu"><a href="https://rdrr.io/r/base/seq.html" class="external-link">seq_len</a></span><span class="op">(</span><span class="fl">200</span><span class="op">)</span><span class="op">]</span></span>
+<span><span class="va">se_top</span> <span class="op">&lt;-</span> <span class="va">example_se</span><span class="op">[</span><span class="va">top_idx</span>, <span class="op">]</span></span></code></pre></div>
 <p>This is a natural boundary for a function — it takes a
 <code>SummarizedExperiment</code> and returns a subsetted one. We can
 also make the number of genes (<code>n</code>) and the assay name
@@ -839,19 +839,19 @@ configurable:</p>
 <code class="sourceCode R"><span><span class="co">#' Select top variable features</span></span>
 <span><span class="co">#'</span></span>
 <span><span class="co">#' @param se A SummarizedExperiment object</span></span>
-<span><span class="co">#' @param n Number of top variable features to select (default: 500)</span></span>
+<span><span class="co">#' @param n Number of top variable features to select (default: 200)</span></span>
 <span><span class="co">#' @param assay_name Name of assay to use (default: "counts")</span></span>
 <span><span class="co">#'</span></span>
 <span><span class="co">#' @return A SummarizedExperiment subset to the top n variable features</span></span>
-<span><span class="va">top_variable_features</span> <span class="op">&lt;-</span> <span class="kw">function</span><span class="op">(</span><span class="va">se</span>, <span class="va">n</span> <span class="op">=</span> <span class="fl">500</span>, <span class="va">assay_name</span> <span class="op">=</span> <span class="st">"counts"</span><span class="op">)</span> <span class="op">{</span></span>
+<span><span class="va">top_variable_features</span> <span class="op">&lt;-</span> <span class="kw">function</span><span class="op">(</span><span class="va">se</span>, <span class="va">n</span> <span class="op">=</span> <span class="fl">200</span>, <span class="va">assay_name</span> <span class="op">=</span> <span class="st">"counts"</span><span class="op">)</span> <span class="op">{</span></span>
 <span>    <span class="va">mat</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/pkg/SummarizedExperiment/man/SummarizedExperiment-class.html" class="external-link">assay</a></span><span class="op">(</span><span class="va">se</span>, <span class="va">assay_name</span><span class="op">)</span></span>
 <span>    <span class="va">vars</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/base/apply.html" class="external-link">apply</a></span><span class="op">(</span><span class="va">mat</span>, <span class="fl">1</span>, <span class="fu">stats</span><span class="fu">::</span><span class="va"><a href="https://rdrr.io/r/stats/cor.html" class="external-link">var</a></span><span class="op">)</span></span>
 <span>    <span class="va">top_idx</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/base/order.html" class="external-link">order</a></span><span class="op">(</span><span class="va">vars</span>, decreasing <span class="op">=</span> <span class="cn">TRUE</span><span class="op">)</span><span class="op">[</span><span class="fu"><a href="https://rdrr.io/r/base/seq.html" class="external-link">seq_len</a></span><span class="op">(</span><span class="fu"><a href="https://rdrr.io/r/base/Extremes.html" class="external-link">min</a></span><span class="op">(</span><span class="va">n</span>, <span class="fu"><a href="https://rdrr.io/r/base/length.html" class="external-link">length</a></span><span class="op">(</span><span class="va">vars</span><span class="op">)</span><span class="op">)</span><span class="op">)</span><span class="op">]</span></span>
 <span>    <span class="va">se</span><span class="op">[</span><span class="va">top_idx</span>, <span class="op">]</span></span>
 <span><span class="op">}</span></span></code></pre></div>
 </details><div class="sourceCode" id="cb19"><pre class="downlit sourceCode r">
-<code class="sourceCode R"><span><span class="co"># Get top 500 variable genes</span></span>
-<span><span class="va">se_top</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/top_variable_features.html">top_variable_features</a></span><span class="op">(</span><span class="va">airway</span>, n <span class="op">=</span> <span class="fl">500</span><span class="op">)</span></span>
+<code class="sourceCode R"><span><span class="co"># Get top 200 variable genes</span></span>
+<span><span class="va">se_top</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/top_variable_features.html">top_variable_features</a></span><span class="op">(</span><span class="va">example_se</span>, n <span class="op">=</span> <span class="fl">200</span><span class="op">)</span></span>
 <span><span class="fu"><a href="https://rdrr.io/r/base/dim.html" class="external-link">dim</a></span><span class="op">(</span><span class="va">se_top</span><span class="op">)</span></span></code></pre></div>
 <hr>
 </div>
@@ -870,7 +870,7 @@ transposes, then merges the PC scores back with sample metadata:</p>
 <span><span class="co"># Build scores data.frame merged with sample metadata</span></span>
 <span><span class="va">scores</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/base/as.data.frame.html" class="external-link">as.data.frame</a></span><span class="op">(</span><span class="va">pca_result</span><span class="op">$</span><span class="va">x</span><span class="op">)</span></span>
 <span><span class="va">scores</span><span class="op">$</span><span class="va">sample_id</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/base/colnames.html" class="external-link">rownames</a></span><span class="op">(</span><span class="va">scores</span><span class="op">)</span></span>
-<span><span class="va">col_data</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/base/as.data.frame.html" class="external-link">as.data.frame</a></span><span class="op">(</span><span class="fu"><a href="https://rdrr.io/pkg/SummarizedExperiment/man/SummarizedExperiment-class.html" class="external-link">colData</a></span><span class="op">(</span><span class="va">airway</span><span class="op">)</span><span class="op">)</span></span>
+<span><span class="va">col_data</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/base/as.data.frame.html" class="external-link">as.data.frame</a></span><span class="op">(</span><span class="fu"><a href="https://rdrr.io/pkg/SummarizedExperiment/man/SummarizedExperiment-class.html" class="external-link">colData</a></span><span class="op">(</span><span class="va">example_se</span><span class="op">)</span><span class="op">)</span></span>
 <span><span class="va">col_data</span><span class="op">$</span><span class="va">sample_id</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/base/colnames.html" class="external-link">rownames</a></span><span class="op">(</span><span class="va">col_data</span><span class="op">)</span></span>
 <span><span class="va">scores</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/base/merge.html" class="external-link">merge</a></span><span class="op">(</span><span class="va">scores</span>, <span class="va">col_data</span>, by <span class="op">=</span> <span class="st">"sample_id"</span><span class="op">)</span></span>
 <span><span class="va">scores</span> <span class="op">&lt;-</span> <span class="va">scores</span><span class="op">[</span><span class="fu"><a href="https://rdrr.io/r/base/order.html" class="external-link">order</a></span><span class="op">(</span><span class="va">scores</span><span class="op">$</span><span class="va">sample_id</span><span class="op">)</span>, <span class="op">]</span></span>
@@ -931,7 +931,7 @@ so the user can control the preprocessing:</p>
 <span><span class="op">}</span></span></code></pre></div>
 </details><div class="sourceCode" id="cb22"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="co"># Run PCA on airway data</span></span>
-<span><span class="va">pca_result</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/run_pca.html">run_pca</a></span><span class="op">(</span><span class="va">airway</span>, n_top <span class="op">=</span> <span class="fl">500</span><span class="op">)</span></span>
+<span><span class="va">pca_result</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/run_pca.html">run_pca</a></span><span class="op">(</span><span class="va">example_se</span>, n_top <span class="op">=</span> <span class="fl">200</span><span class="op">)</span></span>
 <span></span>
 <span><span class="co"># Examine the scores</span></span>
 <span><span class="fu"><a href="https://rdrr.io/r/utils/head.html" class="external-link">head</a></span><span class="op">(</span><span class="va">pca_result</span><span class="op">$</span><span class="va">scores</span><span class="op">)</span></span>
@@ -987,7 +987,7 @@ chart:</p>
 <span><span class="va">var_y</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/base/Round.html" class="external-link">round</a></span><span class="op">(</span><span class="va">var_df</span><span class="op">$</span><span class="va">variance_percent</span><span class="op">[</span><span class="fl">2</span><span class="op">]</span>, <span class="fl">1</span><span class="op">)</span></span>
 <span></span>
 <span><span class="va">p_pca</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://ggplot2.tidyverse.org/reference/ggplot.html" class="external-link">ggplot</a></span><span class="op">(</span><span class="va">scores</span>, <span class="fu"><a href="https://ggplot2.tidyverse.org/reference/aes.html" class="external-link">aes</a></span><span class="op">(</span>x <span class="op">=</span> <span class="va">.data</span><span class="op">[[</span><span class="st">"PC1"</span><span class="op">]</span><span class="op">]</span>, y <span class="op">=</span> <span class="va">.data</span><span class="op">[[</span><span class="st">"PC2"</span><span class="op">]</span><span class="op">]</span><span class="op">)</span><span class="op">)</span> <span class="op">+</span></span>
-<span>    <span class="fu"><a href="https://ggplot2.tidyverse.org/reference/geom_point.html" class="external-link">geom_point</a></span><span class="op">(</span><span class="fu"><a href="https://ggplot2.tidyverse.org/reference/aes.html" class="external-link">aes</a></span><span class="op">(</span>color <span class="op">=</span> <span class="va">.data</span><span class="op">[[</span><span class="st">"dex"</span><span class="op">]</span><span class="op">]</span><span class="op">)</span>, size <span class="op">=</span> <span class="fl">4</span><span class="op">)</span> <span class="op">+</span></span>
+<span>    <span class="fu"><a href="https://ggplot2.tidyverse.org/reference/geom_point.html" class="external-link">geom_point</a></span><span class="op">(</span><span class="fu"><a href="https://ggplot2.tidyverse.org/reference/aes.html" class="external-link">aes</a></span><span class="op">(</span>color <span class="op">=</span> <span class="va">.data</span><span class="op">[[</span><span class="st">"treatment"</span><span class="op">]</span><span class="op">]</span><span class="op">)</span>, size <span class="op">=</span> <span class="fl">4</span><span class="op">)</span> <span class="op">+</span></span>
 <span>    <span class="fu"><a href="https://ggplot2.tidyverse.org/reference/ggtheme.html" class="external-link">theme_bw</a></span><span class="op">(</span>base_size <span class="op">=</span> <span class="fl">14</span><span class="op">)</span> <span class="op">+</span></span>
 <span>    <span class="fu"><a href="https://ggplot2.tidyverse.org/reference/labs.html" class="external-link">labs</a></span><span class="op">(</span>x <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/paste.html" class="external-link">paste0</a></span><span class="op">(</span><span class="st">"PC1 ("</span>, <span class="va">var_x</span>, <span class="st">"% variance)"</span><span class="op">)</span>,</span>
 <span>         y <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/paste.html" class="external-link">paste0</a></span><span class="op">(</span><span class="st">"PC2 ("</span>, <span class="va">var_y</span>, <span class="st">"% variance)"</span><span class="op">)</span>,</span>
@@ -1095,10 +1095,10 @@ chart:</p>
 <span><span class="op">}</span></span></code></pre></div>
 </details><div class="sourceCode" id="cb29"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="co"># PCA scatter colored by treatment</span></span>
-<span><span class="fu"><a href="../reference/plot_pca.html">plot_pca</a></span><span class="op">(</span><span class="va">pca_result</span>, color_by <span class="op">=</span> <span class="st">"dex"</span><span class="op">)</span></span></code></pre></div>
+<span><span class="fu"><a href="../reference/plot_pca.html">plot_pca</a></span><span class="op">(</span><span class="va">pca_result</span>, color_by <span class="op">=</span> <span class="st">"treatment"</span><span class="op">)</span></span></code></pre></div>
 <div class="sourceCode" id="cb30"><pre class="downlit sourceCode r">
-<code class="sourceCode R"><span><span class="co"># Color by treatment, shape by cell line</span></span>
-<span><span class="fu"><a href="../reference/plot_pca.html">plot_pca</a></span><span class="op">(</span><span class="va">pca_result</span>, color_by <span class="op">=</span> <span class="st">"dex"</span>, shape_by <span class="op">=</span> <span class="st">"cell"</span><span class="op">)</span></span></code></pre></div>
+<code class="sourceCode R"><span><span class="co"># Color by treatment, shape by batch</span></span>
+<span><span class="fu"><a href="../reference/plot_pca.html">plot_pca</a></span><span class="op">(</span><span class="va">pca_result</span>, color_by <span class="op">=</span> <span class="st">"treatment"</span>, shape_by <span class="op">=</span> <span class="st">"batch"</span><span class="op">)</span></span></code></pre></div>
 <div class="sourceCode" id="cb31"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="co"># Variance explained bar chart</span></span>
 <span><span class="fu"><a href="../reference/plot_variance_explained.html">plot_variance_explained</a></span><span class="op">(</span><span class="va">pca_result</span><span class="op">)</span></span></code></pre></div>
@@ -1187,10 +1187,10 @@ the bridge between the analysis core and the command line:</p>
 produce the same results as the original inline code:</p>
 <div class="sourceCode" id="cb35"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="co"># --- Run the original raw approach ---</span></span>
-<span><span class="va">mat_raw</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/pkg/SummarizedExperiment/man/SummarizedExperiment-class.html" class="external-link">assay</a></span><span class="op">(</span><span class="va">airway</span>, <span class="st">"counts"</span><span class="op">)</span></span>
+<span><span class="va">mat_raw</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/pkg/SummarizedExperiment/man/SummarizedExperiment-class.html" class="external-link">assay</a></span><span class="op">(</span><span class="va">example_se</span>, <span class="st">"counts"</span><span class="op">)</span></span>
 <span><span class="va">vars_raw</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/base/apply.html" class="external-link">apply</a></span><span class="op">(</span><span class="va">mat_raw</span>, <span class="fl">1</span>, <span class="fu">stats</span><span class="fu">::</span><span class="va"><a href="https://rdrr.io/r/stats/cor.html" class="external-link">var</a></span><span class="op">)</span></span>
-<span><span class="va">top_idx_raw</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/base/order.html" class="external-link">order</a></span><span class="op">(</span><span class="va">vars_raw</span>, decreasing <span class="op">=</span> <span class="cn">TRUE</span><span class="op">)</span><span class="op">[</span><span class="fu"><a href="https://rdrr.io/r/base/seq.html" class="external-link">seq_len</a></span><span class="op">(</span><span class="fl">500</span><span class="op">)</span><span class="op">]</span></span>
-<span><span class="va">se_top_raw</span> <span class="op">&lt;-</span> <span class="va">airway</span><span class="op">[</span><span class="va">top_idx_raw</span>, <span class="op">]</span></span>
+<span><span class="va">top_idx_raw</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/base/order.html" class="external-link">order</a></span><span class="op">(</span><span class="va">vars_raw</span>, decreasing <span class="op">=</span> <span class="cn">TRUE</span><span class="op">)</span><span class="op">[</span><span class="fu"><a href="https://rdrr.io/r/base/seq.html" class="external-link">seq_len</a></span><span class="op">(</span><span class="fl">200</span><span class="op">)</span><span class="op">]</span></span>
+<span><span class="va">se_top_raw</span> <span class="op">&lt;-</span> <span class="va">example_se</span><span class="op">[</span><span class="va">top_idx_raw</span>, <span class="op">]</span></span>
 <span></span>
 <span><span class="va">mat_raw</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/pkg/SummarizedExperiment/man/SummarizedExperiment-class.html" class="external-link">assay</a></span><span class="op">(</span><span class="va">se_top_raw</span>, <span class="st">"counts"</span><span class="op">)</span></span>
 <span><span class="va">mat_raw</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/base/Log.html" class="external-link">log2</a></span><span class="op">(</span><span class="va">mat_raw</span> <span class="op">+</span> <span class="fl">1</span><span class="op">)</span></span>
@@ -1198,7 +1198,7 @@ produce the same results as the original inline code:</p>
 <span></span>
 <span><span class="va">scores_raw</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/base/as.data.frame.html" class="external-link">as.data.frame</a></span><span class="op">(</span><span class="va">pca_raw</span><span class="op">$</span><span class="va">x</span><span class="op">)</span></span>
 <span><span class="va">scores_raw</span><span class="op">$</span><span class="va">sample_id</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/base/colnames.html" class="external-link">rownames</a></span><span class="op">(</span><span class="va">scores_raw</span><span class="op">)</span></span>
-<span><span class="va">col_data_raw</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/base/as.data.frame.html" class="external-link">as.data.frame</a></span><span class="op">(</span><span class="fu"><a href="https://rdrr.io/pkg/SummarizedExperiment/man/SummarizedExperiment-class.html" class="external-link">colData</a></span><span class="op">(</span><span class="va">airway</span><span class="op">)</span><span class="op">)</span></span>
+<span><span class="va">col_data_raw</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/base/as.data.frame.html" class="external-link">as.data.frame</a></span><span class="op">(</span><span class="fu"><a href="https://rdrr.io/pkg/SummarizedExperiment/man/SummarizedExperiment-class.html" class="external-link">colData</a></span><span class="op">(</span><span class="va">se_top_raw</span><span class="op">)</span><span class="op">)</span></span>
 <span><span class="va">col_data_raw</span><span class="op">$</span><span class="va">sample_id</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/base/colnames.html" class="external-link">rownames</a></span><span class="op">(</span><span class="va">col_data_raw</span><span class="op">)</span></span>
 <span><span class="va">scores_raw</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/base/merge.html" class="external-link">merge</a></span><span class="op">(</span><span class="va">scores_raw</span>, <span class="va">col_data_raw</span>, by <span class="op">=</span> <span class="st">"sample_id"</span><span class="op">)</span></span>
 <span><span class="va">scores_raw</span> <span class="op">&lt;-</span> <span class="va">scores_raw</span><span class="op">[</span><span class="fu"><a href="https://rdrr.io/r/base/order.html" class="external-link">order</a></span><span class="op">(</span><span class="va">scores_raw</span><span class="op">$</span><span class="va">sample_id</span><span class="op">)</span>, <span class="op">]</span></span>
@@ -1211,7 +1211,7 @@ produce the same results as the original inline code:</p>
 <span><span class="op">)</span></span>
 <span></span>
 <span><span class="co"># --- Run via package functions ---</span></span>
-<span><span class="va">result_pkg</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/run_pca.html">run_pca</a></span><span class="op">(</span><span class="va">airway</span>, n_top <span class="op">=</span> <span class="fl">500</span><span class="op">)</span></span>
+<span><span class="va">result_pkg</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/run_pca.html">run_pca</a></span><span class="op">(</span><span class="va">example_se</span>, n_top <span class="op">=</span> <span class="fl">200</span><span class="op">)</span></span>
 <span><span class="va">var_df_pkg</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/pca_variance_explained.html">pca_variance_explained</a></span><span class="op">(</span><span class="va">result_pkg</span><span class="op">)</span></span>
 <span></span>
 <span><span class="co"># --- Compare ---</span></span>
@@ -1222,38 +1222,6 @@ they’re composable, testable, and ready to be called from an R API, a
 Shiny app, or a CLI.</p>
 <hr>
 </div>
-</div>
-<div class="section level2">
-<h2 id="preparing-example-data-data-raw">Preparing Example Data (<code>data-raw/</code>)<a class="anchor" aria-label="anchor" href="#preparing-example-data-data-raw"></a>
-</h2>
-<p>Every package you build for <a href="HW1_Rubric.html">HW1</a> must
-include a <strong>bundled example dataset</strong> in <code>data/</code>
-that is loadable via <code><a href="https://rdrr.io/r/utils/data.html" class="external-link">data()</a></code>. The dataset should be
-generated by a reproducible script in <code>data-raw/</code>. Here is
-the pattern for our reference package, starting from the full
-<code>airway</code> dataset:</p>
-<div class="sourceCode" id="cb36"><pre class="downlit sourceCode r">
-<code class="sourceCode R"><span><span class="co">## data-raw/example_se.R</span></span>
-<span><span class="kw"><a href="https://rdrr.io/r/base/library.html" class="external-link">library</a></span><span class="op">(</span><span class="va"><a href="https://bioconductor.org/packages/SummarizedExperiment" class="external-link">SummarizedExperiment</a></span><span class="op">)</span></span>
-<span><span class="kw"><a href="https://rdrr.io/r/base/library.html" class="external-link">library</a></span><span class="op">(</span><span class="va">airway</span><span class="op">)</span></span>
-<span></span>
-<span><span class="fu"><a href="https://rdrr.io/r/utils/data.html" class="external-link">data</a></span><span class="op">(</span><span class="st">"airway"</span><span class="op">)</span></span>
-<span></span>
-<span><span class="co"># Transformations, subsetting, etc could go here if I wanted to </span></span>
-<span><span class="co"># alter the dataset in any way.</span></span>
-<span></span>
-<span><span class="va">example_se</span> <span class="op">&lt;-</span> <span class="va">airway</span></span>
-<span></span>
-<span><span class="co"># Save to data/</span></span>
-<span><span class="fu">usethis</span><span class="fu">::</span><span class="fu">use_data</span><span class="op">(</span><span class="va">example_se</span>, overwrite <span class="op">=</span> <span class="cn">TRUE</span><span class="op">)</span></span></code></pre></div>
-<p>After running this script, <code>data/example_se.rda</code> is
-created and users can load it with <code>data("example_se")</code>.</p>
-<blockquote>
-<p><strong>For your project:</strong> Adapt this pattern for your chosen
-dataset. See the <code>data-raw/</code> scripts in each <a href="project-selection.html">project description</a>. Single-cell
-projects will save an <code>example_sce</code> instead.</p>
-</blockquote>
-<hr>
 </div>
 <div class="section level2">
 <h2 id="three-interfaces-one-core">Three Interfaces, One Core<a class="anchor" aria-label="anchor" href="#three-interfaces-one-core"></a>
@@ -1322,7 +1290,7 @@ Consider:</p>
 <div class="section level2">
 <h2 id="session-info">Session Info<a class="anchor" aria-label="anchor" href="#session-info"></a>
 </h2>
-<div class="sourceCode" id="cb37"><pre class="downlit sourceCode r">
+<div class="sourceCode" id="cb36"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="fu"><a href="https://rdrr.io/r/utils/sessionInfo.html" class="external-link">sessionInfo</a></span><span class="op">(</span><span class="op">)</span></span></code></pre></div>
 </div>
   </main><aside class="col-md-3"><nav id="toc" aria-label="Table of contents"><h2>On this page</h2>

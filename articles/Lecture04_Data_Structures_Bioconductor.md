@@ -759,14 +759,14 @@ section and show how it becomes a package function.
 
 ### Step 1: Feature Selection
 
-The raw script selects the 500 most variable genes by row variance:
+The raw script selects the 200 most variable genes by row variance:
 
 ``` r
-# --- Feature selection: top 500 most variable genes ---
-mat <- assay(airway, "counts")
+# --- Feature selection: top 200 most variable genes ---
+mat <- assay(example_se, "counts")
 vars <- apply(mat, 1, stats::var)
-top_idx <- order(vars, decreasing = TRUE)[seq_len(500)]
-se_top <- airway[top_idx, ]
+top_idx <- order(vars, decreasing = TRUE)[seq_len(200)]
+se_top <- example_se[top_idx, ]
 ```
 
 This is a natural boundary for a function — it takes a
@@ -779,11 +779,11 @@ number of genes (`n`) and the assay name configurable:
 #' Select top variable features
 #'
 #' @param se A SummarizedExperiment object
-#' @param n Number of top variable features to select (default: 500)
+#' @param n Number of top variable features to select (default: 200)
 #' @param assay_name Name of assay to use (default: "counts")
 #'
 #' @return A SummarizedExperiment subset to the top n variable features
-top_variable_features <- function(se, n = 500, assay_name = "counts") {
+top_variable_features <- function(se, n = 200, assay_name = "counts") {
     mat <- assay(se, assay_name)
     vars <- apply(mat, 1, stats::var)
     top_idx <- order(vars, decreasing = TRUE)[seq_len(min(n, length(vars)))]
@@ -792,8 +792,8 @@ top_variable_features <- function(se, n = 500, assay_name = "counts") {
 ```
 
 ``` r
-# Get top 500 variable genes
-se_top <- top_variable_features(airway, n = 500)
+# Get top 200 variable genes
+se_top <- top_variable_features(example_se, n = 200)
 dim(se_top)
 ```
 
@@ -814,7 +814,7 @@ pca_result <- prcomp(mat_t, scale. = TRUE, center = TRUE)
 # Build scores data.frame merged with sample metadata
 scores <- as.data.frame(pca_result$x)
 scores$sample_id <- rownames(scores)
-col_data <- as.data.frame(colData(airway))
+col_data <- as.data.frame(colData(example_se))
 col_data$sample_id <- rownames(col_data)
 scores <- merge(scores, col_data, by = "sample_id")
 scores <- scores[order(scores$sample_id), ]
@@ -881,7 +881,7 @@ run_pca <- function(se, assay_name = "counts", n_top = 500,
 
 ``` r
 # Run PCA on airway data
-pca_result <- run_pca(airway, n_top = 500)
+pca_result <- run_pca(example_se, n_top = 200)
 
 # Examine the scores
 head(pca_result$scores)
@@ -947,7 +947,7 @@ var_x <- round(var_df$variance_percent[1], 1)
 var_y <- round(var_df$variance_percent[2], 1)
 
 p_pca <- ggplot(scores, aes(x = .data[["PC1"]], y = .data[["PC2"]])) +
-    geom_point(aes(color = .data[["dex"]]), size = 4) +
+    geom_point(aes(color = .data[["treatment"]]), size = 4) +
     theme_bw(base_size = 14) +
     labs(x = paste0("PC1 (", var_x, "% variance)"),
          y = paste0("PC2 (", var_y, "% variance)"),
@@ -1066,12 +1066,12 @@ plot_variance_explained <- function(pca_result, n_pcs = 8) {
 
 ``` r
 # PCA scatter colored by treatment
-plot_pca(pca_result, color_by = "dex")
+plot_pca(pca_result, color_by = "treatment")
 ```
 
 ``` r
-# Color by treatment, shape by cell line
-plot_pca(pca_result, color_by = "dex", shape_by = "cell")
+# Color by treatment, shape by batch
+plot_pca(pca_result, color_by = "treatment", shape_by = "batch")
 ```
 
 ``` r
@@ -1173,10 +1173,10 @@ produce the same results as the original inline code:
 
 ``` r
 # --- Run the original raw approach ---
-mat_raw <- assay(airway, "counts")
+mat_raw <- assay(example_se, "counts")
 vars_raw <- apply(mat_raw, 1, stats::var)
-top_idx_raw <- order(vars_raw, decreasing = TRUE)[seq_len(500)]
-se_top_raw <- airway[top_idx_raw, ]
+top_idx_raw <- order(vars_raw, decreasing = TRUE)[seq_len(200)]
+se_top_raw <- example_se[top_idx_raw, ]
 
 mat_raw <- assay(se_top_raw, "counts")
 mat_raw <- log2(mat_raw + 1)
@@ -1184,7 +1184,7 @@ pca_raw <- prcomp(t(mat_raw), scale. = TRUE, center = TRUE)
 
 scores_raw <- as.data.frame(pca_raw$x)
 scores_raw$sample_id <- rownames(scores_raw)
-col_data_raw <- as.data.frame(colData(airway))
+col_data_raw <- as.data.frame(colData(se_top_raw))
 col_data_raw$sample_id <- rownames(col_data_raw)
 scores_raw <- merge(scores_raw, col_data_raw, by = "sample_id")
 scores_raw <- scores_raw[order(scores_raw$sample_id), ]
@@ -1197,7 +1197,7 @@ var_df_raw <- data.frame(
 )
 
 # --- Run via package functions ---
-result_pkg <- run_pca(airway, n_top = 500)
+result_pkg <- run_pca(example_se, n_top = 200)
 var_df_pkg <- pca_variance_explained(result_pkg)
 
 # --- Compare ---
@@ -1208,41 +1208,6 @@ all.equal(var_df_raw, var_df_pkg)
 The functions produce identical outputs to the raw script — but they’re
 composable, testable, and ready to be called from an R API, a Shiny app,
 or a CLI.
-
-------------------------------------------------------------------------
-
-## Preparing Example Data (`data-raw/`)
-
-Every package you build for
-[HW1](https://st-jude-ms-abds.github.io/ADS8192/articles/HW1_Rubric.md)
-must include a **bundled example dataset** in `data/` that is loadable
-via [`data()`](https://rdrr.io/r/utils/data.html). The dataset should be
-generated by a reproducible script in `data-raw/`. Here is the pattern
-for our reference package, starting from the full `airway` dataset:
-
-``` r
-## data-raw/example_se.R
-library(SummarizedExperiment)
-library(airway)
-
-data("airway")
-
-# Transformations, subsetting, etc could go here if I wanted to 
-# alter the dataset in any way.
-
-example_se <- airway
-
-# Save to data/
-usethis::use_data(example_se, overwrite = TRUE)
-```
-
-After running this script, `data/example_se.rda` is created and users
-can load it with `data("example_se")`.
-
-> **For your project:** Adapt this pattern for your chosen dataset. See
-> the `data-raw/` scripts in each [project
-> description](https://st-jude-ms-abds.github.io/ADS8192/articles/project-selection.md).
-> Single-cell projects will save an `example_sce` instead.
 
 ------------------------------------------------------------------------
 
