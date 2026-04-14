@@ -127,6 +127,8 @@ example_se <- SummarizedExperiment(
   colData = sample_data,
   rowData = gene_data
 )
+
+usethis::use_data(example_se, overwrite = TRUE)
 ```
 
 </details>
@@ -767,9 +769,10 @@ res_df$gene <- rownames(res_df)
 
 # --- Summary ---
 p_threshold  <- 0.05
+fc_threshold <- 0.5
 res_df$direction <- "ns"
-res_df$direction[res_df$padj < p_threshold & res_df$log2FoldChange >  0] <- "up"
-res_df$direction[res_df$padj < p_threshold & res_df$log2FoldChange <  0] <- "down"
+res_df$direction[res_df$padj < p_threshold & res_df$log2FoldChange >  fc_threshold] <- "up"
+res_df$direction[res_df$padj < p_threshold & res_df$log2FoldChange < -fc_threshold] <- "down"
 
 summary_df <- as.data.frame(table(res_df$direction))
 colnames(summary_df) <- c("direction", "count")
@@ -1532,7 +1535,7 @@ dir.create(output_dir, recursive = TRUE, showWarnings = FALSE)
 
 # Export log2-CPM for a subset of genes (full matrix too large)
 subset_genes <- rownames(mat_log2)[1:min(500, nrow(mat_log2))]
-norm_out <- as.data.frame(mat_log2[subset_genes, ])
+norm_out <- as.data.frame(as.matrix(mat_log2[subset_genes, ]))
 norm_out$gene <- subset_genes
 write.table(norm_out, file.path(output_dir, "normalized_counts.tsv"),
             sep = "\t", row.names = FALSE, quote = FALSE)
