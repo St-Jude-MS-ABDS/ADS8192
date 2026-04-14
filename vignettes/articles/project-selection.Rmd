@@ -199,6 +199,11 @@ example_se <- SummarizedExperiment(
   rowData = gene_data
 )
 
+# ============================================================================
+# Everything above is upstream data preparation — belongs in data-raw/.
+# Everything below is core analysis — should be functionized in R/.
+# ============================================================================
+
 # --- Feature selection: top 200 most variable genes ---
 mat <- assay(example_se, "counts")
 vars <- apply(mat, 1, stats::var)
@@ -279,6 +284,8 @@ parameters (n_neighbors, min_dist) meaningfully changes the result.
 For large datasets, PCA is often used as a pre-reduction step before UMAP to speed up computation and reduce noise. 
 Evaluating the quality of a UMAP embedding is an open question. One common approach is to compute k-nearest-neighbor preservation, which quantifies how well the local neighborhood structure of the original high-dimensional data is preserved in the UMAP embedding.
 
+Examining k-NN preservation *per cell type* (rather than only as a global mean) adds biological interpretability: cell types with low preservation scores may have diffuse or intermixed structure in the original PCA space, suggesting that subclustering or finer resolution analysis could be warranted for those populations.
+
 ### Dataset: Zeisel Brain (Mouse scRNA-seq)
 
 The [Zeisel et al. (2015)](https://pubmed.ncbi.nlm.nih.gov/25700174/) dataset profiles 3,005 cells from the mouse
@@ -321,9 +328,14 @@ usethis::use_data(example_sce, overwrite = TRUE)
 - Compute an embedding quality metric: k-nearest-neighbor preservation
   (what fraction of each cell's k nearest neighbors in the high-dimensional
   PCA space are preserved in UMAP space)
+- Break down k-NN preservation by cell type to identify populations whose
+  local neighborhood structure is poorly captured by the embedding, which
+  may indicate candidates for subclustering
 - Summarize the embedding (parameter values, spread statistics,
-  quality score)
+  global and per-cell-type quality scores)
 - Visualize cells in UMAP space, colored/shaped by metadata columns
+- Visualize per-cell-type k-NN preservation as a violin/box plot to flag
+  populations with low embedding fidelity
 - Export UMAP coordinates, parameter summaries, and quality metrics to
   TSV files
 
@@ -331,13 +343,15 @@ usethis::use_data(example_sce, overwrite = TRUE)
 default 30), `n_neighbors`, `min_dist`, `metric` (euclidean/cosine),
 `color_by`, `shape_by`
 
-**CLI outputs:** `umap_embeddings.tsv` (cell × UMAP1/UMAP2 + metadata),
-`umap_params.tsv` (parameter values + spread stats + quality score)
+**CLI outputs:** `umap_embeddings.tsv` (cell × UMAP1/UMAP2 + metadata +
+`knn_preserved` per-cell score), `umap_params.tsv` (parameter values + spread
+stats + global and per-cell-type quality scores)
 
 **Shiny inputs:** n_top slider, n_pcs slider (10–50), n_neighbors slider
-(5–50), min_dist slider (0.01–1.0), metric dropdown, color/shape by metadata
+(5–50), min_dist slider (0.01–1.0), metric dropdown, color/shape by metadata,
+per-cell-type k-NN preservation violin plot
 
-**Dependencies:** `SingleCellExperiment`, `uwot`, `scRNAseq` (data only)
+**Dependencies:** `SingleCellExperiment`, `scuttle`, `uwot`, `scRNAseq` (data only)
 
 <details>
 <summary>Raw analysis code</summary>
@@ -345,22 +359,30 @@ default 30), `n_neighbors`, `min_dist`, `metric` (euclidean/cosine),
 ```{r p1-raw, eval=FALSE}
 library(SingleCellExperiment)
 library(scRNAseq)
+library(scuttle)
 library(uwot)
 library(ggplot2)
+
+set.seed(42) # UMAP has randomness so we set a seed for reproducibility
 
 # --- Load data ---
 sce <- ZeiselBrainData()
 counts_mat <- counts(sce)
 cell_type <- colData(sce)$level1class
 
+# ============================================================================
+# Everything above is upstream data preparation — belongs in data-raw/.
+# Everything below is core analysis — should be functionized in R/.
+# ============================================================================
+
+# --- Log-normalize using scuttle ---
+# Normalize on the full SCE so size factors reflect the complete library
+sce <- logNormCounts(sce)
+
 # --- Feature selection: top 2000 most variable genes ---
 gene_vars <- apply(counts_mat, 1, var)
 top_idx <- order(gene_vars, decreasing = TRUE)[seq_len(2000)]
-mat <- counts_mat[top_idx, ]
-
-# --- Log-normalize ---
-lib_sizes <- colSums(counts_mat)
-mat_norm <- log2(t(t(mat) / lib_sizes * 1e6) + 1)  # log2-CPM
+mat_norm <- as.matrix(logcounts(sce)[top_idx, ])
 
 # --- PCA on the top 2000 most variable genes using the transformed counts ---
 n_pcs <- 30
@@ -368,7 +390,6 @@ pca_result <- prcomp(t(mat_norm), scale. = TRUE, center = TRUE)
 pca_mat <- pca_result$x[, seq_len(n_pcs)]
 
 # --- Run UMAP on PCA-reduced data ---
-set.seed(42)
 n_neighbors <- 15
 min_dist    <- 0.1
 metric      <- "euclidean"
@@ -394,12 +415,43 @@ for (i in seq_len(n_cells_eval)) {
 knn_preservation <- mean(preserved)
 cat("k-NN preservation:", round(knn_preservation, 3), "\n")
 
+# --- Per-cell-type k-NN preservation ---
+knn_df <- data.frame(
+    cell_id        = colnames(sce),
+    cell_type      = cell_type,
+    knn_preserved  = preserved
+)
+
+# Global mean per cell type — flag types with mean below overall mean
+knn_by_type <- tapply(knn_df$knn_preserved, knn_df$cell_type, mean)
+cat("Per-cell-type mean k-NN preservation:\n")
+print(round(sort(knn_by_type), 3))
+
+# Violin + box plot: per-cell-type distribution, sorted by median
+cell_type_order <- names(sort(tapply(knn_df$knn_preserved, knn_df$cell_type, median)))
+knn_df$cell_type <- factor(knn_df$cell_type, levels = cell_type_order)
+
+p_knn <- ggplot(knn_df, aes(x = cell_type, y = knn_preserved, fill = cell_type)) +
+    geom_violin(trim = FALSE, alpha = 0.6) +
+    geom_boxplot(width = 0.15, outlier.size = 0.8, alpha = 0.9) +
+    geom_hline(yintercept = knn_preservation, lty = 2, color = "black") +
+    theme_bw(base_size = 14) +
+    theme(axis.text.x = element_text(angle = 30, hjust = 1),
+          legend.position = "none") +
+    labs(x = "Cell Type",
+         y = paste0("k-NN Preservation (k = ", k_eval, ")"),
+         title = paste0("Per-Cell-Type k-NN Preservation (global mean = ",
+                        round(knn_preservation, 3), ")"),
+         caption = "Dashed line = global mean. Low-scoring types may benefit from subclustering.")
+print(p_knn)
+
 # --- Build embeddings data.frame ---
 embeddings <- data.frame(
-    cell_id   = colnames(sce),
-    UMAP1     = umap_coords[, 1],
-    UMAP2     = umap_coords[, 2],
-    cell_type = cell_type
+    cell_id       = colnames(sce),
+    UMAP1         = umap_coords[, 1],
+    UMAP2         = umap_coords[, 2],
+    cell_type     = cell_type,
+    knn_preserved = preserved
 )
 
 # --- Parameter summary ---
@@ -417,6 +469,13 @@ params <- data.frame(
               round(sd(umap_coords[, 2]), 2),
               round(knn_preservation, 4))
 )
+
+# Append per-cell-type k-NN preservation to params
+knn_type_rows <- data.frame(
+    parameter = paste0("knn_pres_", names(knn_by_type)),
+    value     = as.character(round(knn_by_type, 4))
+)
+params <- rbind(params, knn_type_rows)
 
 # --- UMAP scatter plot ---
 p <- ggplot(embeddings, aes(x = UMAP1, y = UMAP2, color = cell_type)) +
@@ -543,6 +602,11 @@ gse <- summarizeToGene(se)
 # Simplify metadata
 condition <- factor(gse$condition_name)
 donor     <- factor(gse$line_id)
+
+# ============================================================================
+# Everything above is upstream data preparation — belongs in data-raw/.
+# Everything below is core analysis — should be functionized in R/.
+# ============================================================================
 
 # --- Feature selection: top 2000 most variable genes ---
 mat <- assay(gse, "counts")
@@ -751,6 +815,11 @@ keep <- se_clean$tissue == "Lymph-N"
 se_ln <- se_clean[, keep]
 se_ln$cell_type <- droplevels(se_ln$cell_type)
 
+# ============================================================================
+# Everything above is upstream data preparation — belongs in data-raw/.
+# Everything below is core analysis — should be functionized in R/.
+# ============================================================================
+
 # Filter low-count genes
 keep_genes <- rowSums(assay(se_ln, "counts")) >= 10
 se_ln <- se_ln[keep_genes, ]
@@ -894,7 +963,7 @@ usethis::use_data(example_sce, overwrite = TRUE)
 **Shiny inputs:** n_top slider, max_k slider, selected k slider, toggle between
 elbow plot and cluster scatter, color by cluster or cell_type metadata
 
-**Dependencies:** `SingleCellExperiment`, `cluster`, `scRNAseq` (data only)
+**Dependencies:** `SingleCellExperiment`, `scuttle`, `cluster`, `scRNAseq` (data only)
 
 <details>
 <summary>Raw analysis code</summary>
@@ -902,6 +971,7 @@ elbow plot and cluster scatter, color by cluster or cell_type metadata
 ```{r p4-raw, eval=FALSE}
 library(SingleCellExperiment)
 library(scRNAseq)
+library(scuttle)
 library(cluster)
 library(ggplot2)
 
@@ -910,14 +980,21 @@ sce <- BaronPancreasData("human")
 counts_mat <- counts(sce)
 cell_type <- colData(sce)$label
 
+# ============================================================================
+# Everything above is upstream data preparation — belongs in data-raw/.
+# Everything below is core analysis — should be functionized in R/.
+# ============================================================================
+
+# --- Log-normalize using scuttle ---
+# Normalize on the full SCE so size factors reflect the complete library
+sce <- logNormCounts(sce)
+
 # --- Feature selection: top 2000 most variable genes ---
 gene_vars <- apply(counts_mat, 1, var)
 top_idx <- order(gene_vars, decreasing = TRUE)[seq_len(2000)]
-mat <- counts_mat[top_idx, ]
+mat_norm <- as.matrix(logcounts(sce)[top_idx, ])
 
-# --- Log-normalize + PCA ---
-lib_sizes <- colSums(counts_mat)
-mat_norm <- log2(t(t(mat) / lib_sizes * 1e6) + 1)
+# --- PCA ---
 pca <- prcomp(t(mat_norm), scale. = TRUE, center = TRUE)
 pca_mat <- pca$x[, 1:20]  # first 20 PCs for clustering
 
@@ -1108,6 +1185,12 @@ sce <- LunSpikeInData()
 gene_ids <- rownames(sce)
 gene_symbols <- mapIds(org.Mm.eg.db, keys = gene_ids, column = "SYMBOL", keytype = "ENSEMBL", multiVals = "first")
 rowData(sce)$symbol <- gene_symbols
+
+
+# ============================================================================
+# Everything above is upstream data preparation — belongs in data-raw/.
+# Everything below is core analysis — should be functionized in R/.
+# ============================================================================
 
 counts_mat <- counts(sce)
 
@@ -1311,6 +1394,11 @@ rownames(mat) <- symbols[keep]
 hallmarks <- msigdbr(species = "Homo sapiens", collection = "H")
 gene_sets <- split(hallmarks$gene_symbol, hallmarks$gs_name)
 
+# ============================================================================
+# Everything above is upstream data preparation — belongs in data-raw/.
+# Everything below is core analysis — should be functionized in R/.
+# ============================================================================
+
 # --- Compute per-sample gene set scores ---
 mat_z <- t(scale(t(mat)))  # z-score each gene across samples
 
@@ -1391,21 +1479,23 @@ list.files(output_dir)
 
 ---
 
-## Project 7: Normalization Comparison Tool
+## Project 7: Gene Expression Profiler
 
-**Rationale:** Raw counts must be normalized for library size (and composition bias, though we skip that here) before cross-sample comparison.
-Different methods (CPM, log2-CPM, quantile, upper-quartile) make different
-assumptions. Visualizing how each method reshapes per-sample distributions
-can be informative.
+**Rationale:** After cell types are annotated, a common question is
+"How is gene X expressed across these groups?" Biologists routinely look up
+known marker genes to sanity-check annotations, explore candidate genes for
+follow-up experiments, or compare expression patterns between related genes.
+This tool provides per-group expression statistics and figures
+visualizations for any user-specified set of genes.
 
 ### Dataset: Muraro Human Pancreas (Human scRNA-seq)
 
 The [Muraro et al. (2016) dataset](https://pubmed.ncbi.nlm.nih.gov/27693023/) from `scRNAseq` profiles ~2,300 cells from
 human donor pancreatic islets using CEL-Seq2. Cell types include alpha, beta,
-delta, acinar, ductal, and more. The dramatic library size variation across
-cells (typical of scRNA-seq) makes normalization effects visually striking —
-CPM, log2-CPM, and quantile normalization reshape per-cell distributions in
-very different ways.
+delta, acinar, ductal, and more. The well-characterized marker genes for each
+pancreatic cell type (INS for beta cells, GCG for alpha, SST for delta,
+PRSS1 for acinar, KRT19 for ductal) make results immediately interpretable —
+students can verify their tool produces biologically expected patterns.
 
 <details>
 <summary>Data preparation code</summary>
@@ -1420,8 +1510,12 @@ sce <- MuraroPancreasData()
 example_sce <- sce
 
 assays(example_sce) <- list(counts = counts(example_sce))
-colData(example_sce) <- colData(example_sce)[, "label", drop = FALSE]
-colnames(colData(example_sce)) <- "cell_type"
+
+# Note: rownames have a "__chrN" suffix (e.g. "INS__chr11") —
+rownames(example_sce) <- sub("__chr.*$", "", rownames(example_sce))
+
+# Remove cells with NA cell type (unlabeled)
+example_sce <- example_sce[, !is.na(colData(example_sce)$label)]
 
 usethis::use_data(example_sce, overwrite = TRUE)
 ```
@@ -1432,30 +1526,34 @@ usethis::use_data(example_sce, overwrite = TRUE)
 
 **What users should be able to do:**
 
-- Filter out low-expression genes
-- Apply multiple normalization methods (CPM, log2-CPM, quantile,
-  size-factor/median-of-ratios) and store the normalized values as new
-  assays in the SCE
-- Compute per-cell distributional statistics (median, IQR, CV) before and
-  after each normalization method
-- Compute cross-method agreement: pairwise Spearman correlation of gene
-  rankings between each pair of methods to quantify how much the
-  normalization choice affects downstream results
-- Visualize side-by-side distributions across methods as boxplots or density
-  curves
-- Export normalized counts, normalization statistics, and method agreement
-  matrix to TSV files
+- Normalize raw counts using `scuttle::logNormCounts()` — the standard
+  Bioconductor approach (library-size-based size factors + log2 transform)
+- Look up a set of genes by name, with validation against the dataset
+  (report which genes were found and which were missing)
+- Compute per-group expression statistics for each queried gene: mean
+  expression, median expression, and detection rate (fraction of cells
+  in each group with non-zero counts)
+- Compute a gene specificity score for each gene — a [Gini coefficient](https://en.wikipedia.org/wiki/Gini_coefficient)
+  measuring how concentrated a gene's expression is in one group versus
+  spread evenly across all groups (0 = uniform, 1 = perfectly specific)
+- Visualize expression as faceted violin plots (one panel per gene,
+  x = cell type, colored by group) and as a co-expression scatter plot
+  (two selected genes plotted against each other, colored by cell type)
+- Export per-group expression statistics and gene specificity scores to
+  TSV files
 
-**Key parameters:** `methods` (character vector: "cpm", "log2", "quantile",
-"size_factor"), `min_count`
+**Key parameters:** `genes` (character vector of gene names to query),
+`group_column` (metadata column for grouping, default `"cell_type"`),
+`min_detection` (minimum fraction of cells detecting a gene in at least one
+group to include it in results)
 
-**CLI outputs:** `normalized_counts.tsv`, `normalization_stats.tsv`,
-`method_agreement.tsv`
+**CLI outputs:** `expression_stats.tsv`, `gene_specificity.tsv`
 
-**Shiny inputs:** Checkbox group to select methods, boxplot ↔ density toggle,
-per-cell or per-method view, agreement heatmap
+**Shiny inputs:** Gene name text input (comma-separated), grouping variable
+dropdown, plot type toggle (violin / co-expression scatter), gene pair
+selectors for scatter view, detection threshold slider
 
-**Dependencies:** `SingleCellExperiment`, `scRNAseq` (data only)
+**Dependencies:** `SingleCellExperiment`, `scuttle`, `scRNAseq` (data only)
 
 <details>
 <summary>Raw analysis code</summary>
@@ -1463,101 +1561,145 @@ per-cell or per-method view, agreement heatmap
 ```{r p8-raw, eval=FALSE}
 library(SingleCellExperiment)
 library(scRNAseq)
+library(scuttle)
 library(ggplot2)
 
 # --- Load data ---
 sce <- MuraroPancreasData()
-counts_mat <- counts(sce)
+
+# Muraro rownames have a "__chrN" suffix — strip it for readable gene names
+rownames(sce) <- sub("__chr.*$", "", rownames(sce))
+
+# Remove cells with NA cell type (unlabeled)
+sce <- sce[, !is.na(colData(sce)$label)]
 cell_type <- colData(sce)$label
 
-# --- Filter low-expression genes (detected in < 5 cells) ---
-keep_genes <- rowSums(counts_mat > 0) >= 5
-counts_mat <- counts_mat[keep_genes, ]
-cat("Genes after filtering:", nrow(counts_mat), "\n")
+# --- Normalize using scuttle (standard Bioconductor scRNA-seq pipeline) ---
+# logNormCounts() computes library-size-based size factors, normalizes,
+# and log2-transforms, storing the result in logcounts(sce)
+sce <- logNormCounts(sce)
+mat_norm <- as.matrix(logcounts(sce))
 
-# --- Apply normalization methods ---
-lib_sizes <- colSums(counts_mat)
+# ============================================================================
+# Everything above is upstream data preparation — belongs in data-raw/.
+# Everything below is core analysis — should be functionized in R/.
+# ============================================================================
 
-# CPM
-mat_cpm <- t(t(counts_mat) / lib_sizes * 1e6)
+# --- Define query genes (well-known pancreatic markers) ---
+query_genes <- c("INS", "GCG", "SST", "PPY", "PRSS1", "KRT19")
 
-# log2-CPM
-mat_log2 <- log2(mat_cpm + 1)
+# Validate: check which genes are present in the dataset
+found <- query_genes %in% rownames(mat_norm)
+cat("Found:", paste(query_genes[found], collapse = ", "), "\n")
+if (any(!found)) cat("Missing:", paste(query_genes[!found], collapse = ", "), "\n")
+query_genes <- query_genes[found]
 
-# Quantile normalization (simple rank-based)
-counts_dense_q <- as.matrix(counts_mat)
-ranks <- apply(counts_dense_q, 2, rank, ties.method = "average")
-sorted_means <- rowMeans(apply(counts_dense_q, 2, sort))
-mat_quant <- apply(ranks, 2, function(r) sorted_means[as.integer(r)])
-dimnames(mat_quant) <- dimnames(counts_dense_q)
+# --- Build long-format expression data frame ---
+n_cells <- ncol(mat_norm)
+expr_vals <- c()
+for (g in query_genes) expr_vals <- c(expr_vals, mat_norm[g, ])
 
-# Size-factor normalization (median-of-ratios, simplified DESeq2-style)
-counts_dense <- as.matrix(counts_mat)
-log_means <- rowMeans(log(counts_dense + 1))
-ratios <- sweep(log(counts_dense + 1), 1, log_means, FUN = "-")
-size_factors <- exp(apply(ratios, 2, median))
-mat_sf <- t(t(counts_dense) / size_factors)
+expr_long <- data.frame(
+    cell_id   = rep(colnames(mat_norm), length(query_genes)),
+    gene      = rep(query_genes, each = n_cells),
+    expr      = expr_vals,
+    cell_type = rep(cell_type, length(query_genes)),
+    stringsAsFactors = FALSE
+)
 
-# --- Per-cell distributional statistics ---
-all_stats <- data.frame()
-for (method_info in list(
-    list(mat = as.matrix(counts_mat), name = "raw"),
-    list(mat = mat_cpm, name = "cpm"),
-    list(mat = mat_log2, name = "log2_cpm"),
-    list(mat = mat_quant, name = "quantile"),
-    list(mat = mat_sf, name = "size_factor")
-)) {
-    m <- method_info$mat
-    stats_i <- data.frame(
-        cell_id = colnames(m),
-        method  = method_info$name,
-        median  = apply(m, 2, median),
-        iqr     = apply(m, 2, IQR),
-        cv      = apply(m, 2, function(x) sd(x) / (mean(x) + 1e-8))
-    )
-    all_stats <- rbind(all_stats, stats_i)
+# --- Per-group expression statistics ---
+groups <- unique(cell_type)
+counts_mat <- as.matrix(counts(sce))
+stats_list <- vector("list", length(query_genes) * length(groups))
+k <- 1
+for (gene in query_genes) {
+    vals <- mat_norm[gene, ]
+    raw_vals <- counts_mat[gene, ]
+    for (ct in groups) {
+        idx <- which(cell_type == ct)
+        stats_list[[k]] <- data.frame(
+            gene           = gene,
+            cell_type      = ct,
+            mean_expr      = mean(vals[idx]),
+            median_expr    = median(vals[idx]),
+            detection_rate = mean(raw_vals[idx] > 0),
+            n_cells        = length(idx),
+            stringsAsFactors = FALSE
+        )
+        k <- k + 1
+    }
 }
-all_stats$method <- factor(all_stats$method,
-                           levels = c("raw", "cpm", "log2_cpm", "quantile",
-                                      "size_factor"))
+expr_stats <- do.call(rbind, stats_list)
+head(expr_stats)
 
-# --- Side-by-side boxplots of per-cell medians ---
-p <- ggplot(all_stats, aes(x = method, y = median, fill = method)) +
-    geom_boxplot(outlier.size = 0.3) +
-    theme_bw(base_size = 14) +
-    labs(x = "Normalization Method", y = "Per-Cell Median Expression",
-         title = "Effect of Normalization on Per-Cell Distributions")
-print(p)
+# --- Gene specificity: Gini coefficient of mean expression across groups ---
+# Gini = 0 means the gene is equally expressed in all groups
+# Gini = 1 means the gene is expressed in only one group
+gini <- function(x) {
+    x <- sort(x[x >= 0])
+    n <- length(x)
+    if (n == 0 || sum(x) == 0) return(0)
+    indices <- seq_len(n)
+    2 * sum(indices * x) / (n * sum(x)) - (n + 1) / n
+}
+
+spec_list <- vector("list", length(query_genes))
+for (i in seq_along(query_genes)) {
+    gene <- query_genes[i]
+    group_means <- tapply(mat_norm[gene, ], cell_type, mean)
+    top_group <- names(which.max(group_means))
+    spec_list[[i]] <- data.frame(
+        gene         = gene,
+        gini_score   = gini(as.numeric(group_means)),
+        top_group    = top_group,
+        top_mean     = max(group_means),
+        overall_mean = mean(mat_norm[gene, ]),
+        stringsAsFactors = FALSE
+    )
+}
+specificity <- do.call(rbind, spec_list)
+specificity <- specificity[order(specificity$gini_score, decreasing = TRUE), ]
+print(specificity)
+
+# --- Violin plot: one panel per gene, x = cell type ---
+p_violin <- ggplot(expr_long, aes(x = cell_type, y = expr, fill = cell_type)) +
+    geom_violin(trim = FALSE, alpha = 0.7, scale = "width") +
+    geom_boxplot(width = 0.15, fill = "white", outlier.size = 0.3) +
+    facet_wrap(~ gene, scales = "free_y", ncol = 3) +
+    theme_bw(base_size = 13) +
+    theme(axis.text.x = element_text(angle = 45, hjust = 1, size = 9),
+          legend.position = "none") +
+    labs(x = "Cell Type", y = "Normalized Expression (log2)",
+         title = "Gene Expression Across Cell Types")
+print(p_violin)
+
+# --- Co-expression scatter: INS vs GCG, colored by cell type ---
+gene_a <- "INS"
+gene_b <- "GCG"
+scatter_df <- data.frame(
+    expr_a    = mat_norm[gene_a, ],
+    expr_b    = mat_norm[gene_b, ],
+    cell_type = cell_type
+)
+
+p_scatter <- ggplot(scatter_df, aes(x = expr_a, y = expr_b, color = cell_type)) +
+    geom_point(size = 1.5, alpha = 1) +
+    theme_bw(base_size = 13) +
+    labs(x = paste0(gene_a, " (log-normalized)"),
+         y = paste0(gene_b, " (log-normalized)"),
+         color = "Cell Type",
+         title = paste0("Co-Expression: ", gene_a, " vs. ", gene_b),
+         subtitle = "Mutually exclusive in alpha vs. beta cells")
+print(p_scatter)
 
 # --- Export ---
-output_dir <- file.path(tempdir(), "norm_output")
+output_dir <- file.path(tempdir(), "expr_output")
 dir.create(output_dir, recursive = TRUE, showWarnings = FALSE)
 
-# Export log2-CPM for a subset of genes (full matrix too large)
-subset_genes <- rownames(mat_log2)[1:min(500, nrow(mat_log2))]
-norm_out <- as.data.frame(as.matrix(mat_log2[subset_genes, ]))
-norm_out$gene <- subset_genes
-write.table(norm_out, file.path(output_dir, "normalized_counts.tsv"),
+write.table(expr_stats, file.path(output_dir, "expression_stats.tsv"),
             sep = "\t", row.names = FALSE, quote = FALSE)
 
-write.table(all_stats, file.path(output_dir, "normalization_stats.tsv"),
-            sep = "\t", row.names = FALSE, quote = FALSE)
-
-# --- Cross-method agreement ---
-# For top 500 variable genes, compute pairwise Spearman r of gene means
-# across methods to assess how much normalization choice matters
-top_var_genes <- rownames(mat_log2)[1:min(500, nrow(mat_log2))]
-method_means <- data.frame(
-    raw      = rowMeans(as.matrix(counts_mat[top_var_genes, ])),
-    cpm      = rowMeans(mat_cpm[top_var_genes, ]),
-    log2_cpm = rowMeans(mat_log2[top_var_genes, ]),
-    quantile = rowMeans(mat_quant[top_var_genes, ]),
-    size_factor = rowMeans(mat_sf[top_var_genes, ])
-)
-agreement_mat <- cor(method_means, method = "spearman")
-agreement_df <- as.data.frame(agreement_mat)
-agreement_df$method <- rownames(agreement_df)
-write.table(agreement_df, file.path(output_dir, "method_agreement.tsv"),
+write.table(specificity, file.path(output_dir, "gene_specificity.tsv"),
             sep = "\t", row.names = FALSE, quote = FALSE)
 
 list.files(output_dir)
@@ -1686,6 +1828,11 @@ gene_symbols[is.na(gene_symbols) | gene_symbols == ""] <- rownames(se)[
     is.na(gene_symbols) | gene_symbols == ""
 ]
 rownames(mat) <- make.unique(gene_symbols)  # resolve rare duplicates
+
+# ============================================================================
+# Everything above is upstream data preparation — belongs in data-raw/.
+# Everything below is core analysis — should be functionized in R/.
+# ============================================================================
 
 # --- Pairwise Pearson correlation ---
 cor_mat <- cor(t(mat), method = "pearson")
@@ -1926,6 +2073,11 @@ mat    <- assay(fission, "counts")
 strain <- fission$strain   # wt / mut
 minute <- fission$minute   # 0, 15, 30, 60, 120, 180
 
+# ============================================================================
+# Everything above is upstream data preparation — belongs in data-raw/.
+# Everything below is core analysis — should be functionized in R/.
+# ============================================================================
+
 # --- Log-normalize counts (log2-CPM) ---
 # This reduces the dynamic range and makes the scaling more interpretable
 lib_sizes  <- colSums(mat)
@@ -2081,7 +2233,7 @@ usethis::use_data(example_sce, overwrite = TRUE)
 **Shiny inputs:** n_top slider, checkboxes to toggle overlay of each method,
 max_pcs slider, summary table of recommendations
 
-**Dependencies:** `SingleCellExperiment`, `TENxPBMCData` (data only)
+**Dependencies:** `SingleCellExperiment`, `scuttle`, `TENxPBMCData` (data only)
 
 <details>
 <summary>Raw analysis code</summary>
@@ -2089,6 +2241,7 @@ max_pcs slider, summary table of recommendations
 ```{r p11-raw, eval=FALSE}
 library(SingleCellExperiment)
 library(TENxPBMCData)
+library(scuttle)
 library(ggplot2)
 library(matrixStats)
 
@@ -2096,17 +2249,22 @@ library(matrixStats)
 sce <- TENxPBMCData("pbmc3k")
 counts_mat <- counts(sce)
 
+# --- Log-normalize using scuttle ---
+# Normalize on the full SCE so size factors reflect the complete library
+sce <- logNormCounts(sce)
+
+# ============================================================================
+# Everything above is upstream data preparation — belongs in data-raw/.
+# Everything below is core analysis — should be functionized in R/.
+# ============================================================================
+
 # --- Feature selection: top 2000 most variable genes ---
 gene_vars <- rowVars(counts_mat)
 top_idx <- order(gene_vars, decreasing = TRUE)[seq_len(2000)]
-mat <- counts_mat[top_idx, ]
-
-# Log-normalize
-lib_sizes <- colSums(counts_mat)
-mat_norm <- log2(t(t(mat) / lib_sizes * 1e6) + 1)
+mat_norm <- as.matrix(logcounts(sce)[top_idx, ])
 
 # --- PCA ---
-pca <- prcomp(t(as.matrix(mat_norm)), scale. = TRUE, center = TRUE)
+pca <- prcomp(t(mat_norm), scale. = TRUE, center = TRUE)
 max_pcs <- min(50, ncol(pca$x))
 eigenvalues <- pca$sdev[1:max_pcs]^2
 var_pct <- eigenvalues / sum(pca$sdev^2) * 100
@@ -2380,6 +2538,11 @@ sce_all   <- cbind(sce_z, sce_t)
 batch     <- sce_all$batch
 cell_type <- sce_all$cell_type
 
+# ============================================================================
+# Everything above is upstream data preparation — belongs in data-raw/.
+# Everything below is core analysis — should be functionized in R/.
+# ============================================================================
+
 # --- HVG selection: model gene variance per batch, combine, pick top 5000 ---
 dec_z        <- modelGeneVar(sce_z)
 dec_t        <- modelGeneVar(sce_t)
@@ -2553,7 +2716,7 @@ usethis::use_data(example_sce, overwrite = TRUE)
 **Shiny inputs:** Grouping variable dropdown, n_markers slider, FC threshold
 slider, detection threshold slider, dot plot + filterable gene table
 
-**Dependencies:** `SingleCellExperiment`, `scRNAseq` (data only)
+**Dependencies:** `SingleCellExperiment`, `scuttle`, `scRNAseq` (data only)
 
 <details>
 <summary>Raw analysis code</summary>
@@ -2561,6 +2724,7 @@ slider, detection threshold slider, dot plot + filterable gene table
 ```{r p13-raw, eval=FALSE}
 library(SingleCellExperiment)
 library(scRNAseq)
+library(scuttle)
 library(ggplot2)
 
 # --- Load data ---
@@ -2568,15 +2732,21 @@ sce <- BaronPancreasData("mouse")
 counts_mat <- counts(sce)
 cell_type <- colData(sce)$label
 
+# ============================================================================
+# Everything above is upstream data preparation — belongs in data-raw/.
+# Everything below is core analysis — should be functionized in R/.
+# ============================================================================
+
 # --- Filter genes detected in < 5% of cells ---
 detect_rate_all <- rowSums(counts_mat > 0) / ncol(counts_mat)
 keep_genes <- detect_rate_all >= 0.05
-counts_mat <- counts_mat[keep_genes, ]
-cat("Genes after filtering:", nrow(counts_mat), "\n")
+sce <- sce[keep_genes, ]
+counts_mat <- counts(sce)
+cat("Genes after filtering:", nrow(sce), "\n")
 
-# --- Log-normalize ---
-lib_sizes <- colSums(counts_mat)
-mat_norm <- log2(t(t(counts_mat) / lib_sizes * 1e6) + 1)
+# --- Log-normalize using scuttle ---
+sce <- logNormCounts(sce)
+mat_norm <- as.matrix(logcounts(sce))
 
 # --- One-vs-rest Wilcoxon testing per cell type ---
 cell_types <- unique(cell_type)
