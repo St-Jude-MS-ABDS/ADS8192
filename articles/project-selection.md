@@ -24,7 +24,8 @@ Each project uses a **different dataset** chosen to be at least somewhat
 appropriate for the analysis.
 
 The analysis is secondary here, though you might be interested in
-reading more about them.
+reading more about them. Some of the single cell projects may take a few
+minutes to run, as they may contain thousands of cells.
 
 Depending on the project, your primary data structure will be either a
 **SummarizedExperiment** (bulk experiments) or a
@@ -71,8 +72,8 @@ blocks, looking them on in R is your friend, e.g. `?prcomcp`.
 > demonstrate the process of this project being converted into a full R
 > package with a Shiny app and CLI, documentation, and tests.
 
-PCA is a very common first step in exploratory analysis of
-high-dimensional data. It reduces thousands of features to a few
+**Rationale:** PCA is a very common first step in exploratory analysis
+of high-dimensional data. It reduces thousands of features to a few
 principal components that capture the dominant sources of variation for
 the dataset.
 
@@ -265,6 +266,7 @@ list.files(output_dir)
 
 ## Project 1: UMAP Embedding Explorer
 
+**Rationale:**
 [UMAP](https://alleninstitute.org/resource/what-is-a-umap/) is a
 nonlinear dimensionality reduction method that reveals biological
 structure, such as cell types, that PCA may struggle to cleanly reveal.
@@ -441,12 +443,13 @@ list.files(output_dir)
 
 ## Project 2: Sample Similarity & Clustering
 
-Before formal analysis, you often must check whether samples group by
-the expected biological variable (treatment, genotype) rather than
-technical artifacts (batch, patient). A sample-by-sample correlation
-heatmap with hierarchical clustering is a common diagnostic and can also
-be used to display sample groupings with additional metadata
-annotations.
+**Rationale:** Before formal analysis, you often must check whether
+samples group by the expected biological variable (treatment, genotype)
+rather than technical artifacts (batch, patient). A sample-by-sample
+correlation heatmap with hierarchical clustering is a common diagnostic
+and can also be used to display sample groupings with additional
+metadata annotations. It can also be useful for identifying outlier
+samples that should perhaps be investigated more closely.
 
 ### Dataset: Macrophage Stimulation (Human bulk RNA-seq)
 
@@ -629,15 +632,15 @@ list.files(output_dir)
 
 ## Project 3: Differential Expression with DESeq2
 
-One of the most bog standard ’omics analyses is differential expression
-analysis.
+**Rationale:** One of the most common ’omics analyses is differential
+expression analysis.
 [DESeq2](https://bioconductor.org/packages/devel/bioc/vignettes/DESeq2/inst/doc/DESeq2.html)
 is a common package for differential analysis of count data (RNA-seq or
 otherwise) — it models the mean-variance relationship with a negative
 binomial distribution, shares information across features to stabilize
 fold-change estimates, and provides log2 fold-change shrinkage for
-reliable ranking. Volcano and MA plots of differential results are tried
-and true visualizations for count-based data.
+reliable ranking. Volcano and MA plots of differential results are
+bog-standard visualizations for count-based data.
 
 ### Dataset: Tissue-Resident Regulatory T Cells (Mouse bulk RNA-seq)
 
@@ -826,12 +829,14 @@ list.files(output_dir)
 
 ## Project 4: K-means Cell Clustering
 
-K-means clustering partitions samples into `k` groups by minimizing
-within-cluster variance. Choosing k when you don’t know the real value
-is a real practical decision — the elbow plot of within-cluster sum of
-squares is one diagnostic. K-means clustering is also a simple way to
-split a dataset into a specific number of groups, which can be useful
-when qualitative groups are obvious (e.g. via PCA). Evaluating cluster
+**Rationale:** [K-means
+clustering](https://stanford.edu/~cpiech/cs221/handouts/kmeans.html)
+partitions samples into `k` groups by minimizing within-cluster
+variance. Choosing k when you don’t know the real value is a real
+practical decision — the elbow plot of within-cluster sum of squares is
+one diagnostic. K-means clustering is also a simple way to split a
+dataset into a specific number of groups, which can be useful when
+qualitative groups are obvious (e.g. via PCA). Evaluating cluster
 quality is an open question, but silhouette widths and gap statistics
 are common metrics. When reference labels are available, the Adjusted
 Rand Index (ARI) quantifies how well the clusters match known groups.
@@ -1003,11 +1008,11 @@ list.files(output_dir)
 
 ## Project 5: Cell QC Dashboard
 
-Quality control is the essential first step in scRNA-seq analysis.
-Before any biological interpretation, low-quality cells (those with too
-few detected genes, low library sizes, or high spike-in proportions)
-must be identified and flagged. ERCC spike-in controls provide a
-ground-truth reference for QC.
+**Rationale:** Quality control is the essential first step in scRNA-seq
+analysis. Before any biological interpretation, low-quality cells (those
+with too few detected genes, low library sizes, or high spike-in
+proportions) must be identified and flagged. ERCC spike-in controls
+provide a ground-truth reference for QC.
 
 ### Dataset: Lun Spike-In (Mouse scRNA-seq)
 
@@ -1206,12 +1211,12 @@ list.files(output_dir)
 
 ## Project 6: Gene Set Scoring
 
-Rather than analyzing genes individually, biologists often ask whether a
-predefined *set* of genes (a pathway, signature) is collectively up- or
-down-regulated. Per-sample gene set scores reduce genes composing a
-pathway or contributing to a given biological process to a single number
-per sample, enabling group comparisons. This project combines expression
-data with external pathway knowledge from MSigDB.
+**Rationale:** Rather than analyzing genes individually, biologists
+often ask whether a predefined *set* of genes (a pathway, signature) is
+collectively up- or down-regulated. Per-sample gene set scores reduce
+genes composing a pathway or contributing to a given biological process
+to a single number per sample, enabling group comparisons. This project
+combines expression data with external pathway knowledge from MSigDB.
 
 ### Dataset: Airway (Human bulk RNA-seq) + MSigDB Hallmark Gene Sets
 
@@ -1223,6 +1228,14 @@ total). Dexamethasone activates inflammatory and stress-response
 pathways that are well-represented in MSigDB Hallmark gene sets — making
 this a compact, self-contained dataset for demonstrating pathway-level
 scoring without requiring large data downloads.
+
+In this case, you wouldn’t really have to prepare the data yourself or
+include it in your package - it’s already readily available in the
+format you need. But for the sake of the exercise, go ahead and write
+code to load the data, extract the counts and metadata, and save it as
+an internal dataset in your package. This will give you practice with
+data preparation and packaging, even if it’s not strictly necessary for
+this particular dataset.
 
 Data preparation code
 
@@ -1389,11 +1402,11 @@ list.files(output_dir)
 
 ## Project 7: Normalization Comparison Tool
 
-Raw counts must be normalized for library size (and composition bias,
-though we skip that here) before cross-sample comparison. Different
-methods (CPM, log2-CPM, quantile, upper-quartile) make different
-assumptions. Visualizing how each method reshapes per-sample
-distributions can be informative.
+**Rationale:** Raw counts must be normalized for library size (and
+composition bias, though we skip that here) before cross-sample
+comparison. Different methods (CPM, log2-CPM, quantile, upper-quartile)
+make different assumptions. Visualizing how each method reshapes
+per-sample distributions can be informative.
 
 ### Dataset: Muraro Human Pancreas (Human scRNA-seq)
 
@@ -1562,11 +1575,11 @@ list.files(output_dir)
 
 ## Project 8: Gene Correlation Network
 
-Co-expressed genes often share biological functions. Building a
-gene-gene correlation network by computing pairwise correlations,
-thresholding to an adjacency matrix, and identifying hub genes is a
-lightweight introduction to network biology. Datasets with many samples
-provide stable pairwise gene correlations that reveal known
+**Rationale:** Co-expressed genes often share biological functions.
+Building a gene-gene correlation network by computing pairwise
+correlations, thresholding to an adjacency matrix, and identifying hub
+genes is a lightweight introduction to network biology. Datasets with
+many samples provide stable pairwise gene correlations that reveal known
 co-regulation patterns.
 
 ### Dataset: GTEx Skeletal Muscle (Human bulk RNA-seq)
@@ -1840,11 +1853,11 @@ list.files(output_dir)
 
 TODO: Fix - swap dataset.
 
-The genes-by-samples heatmap is one of the most iconic figures in
-genomics. Building one from scratch — row scaling, hierarchical
-clustering of both axes, sample metadata annotation bars — requires
-integrating several analysis steps into a single publication-quality
-visualization.
+**Rationale:** The genes-by-samples heatmap is one of the most iconic
+figures in genomics. Building one from scratch — row scaling,
+hierarchical clustering of both axes, sample metadata annotation bars —
+requires integrating several analysis steps into a single
+publication-quality visualization.
 
 ### Dataset: TCGA GBM (Human bulk RNA-seq)
 
@@ -1870,7 +1883,7 @@ library(SummarizedExperiment)
 # Download GBM RNA-seq data
 gbm <- curatedTCGAData("GBM", "RNASeq2*", version = "2.0.1",
                         dry.run = FALSE)
-rse <- experiments(gbm)[[1]]
+rse <- getWithColData(gbm, "GBM_RNASeq2Gene-20160128", mode = "replace")
 
 # Subset to top 2000 variable genes
 vars <- apply(assay(rse), 1, var, na.rm = TRUE)
@@ -1928,24 +1941,20 @@ library(grid)
 # --- Load TCGA GBM data ---
 gbm <- curatedTCGAData("GBM", "RNASeq2*", version = "2.0.1",
                         dry.run = FALSE)
-rse <- experiments(gbm)[[1]]
+se <- getWithColData(gbm, "GBM_RNASeq2Gene-20160128", mode = "replace")
 
-# Top 200 variable genes
-vars <- apply(assay(rse), 1, var, na.rm = TRUE)
-keep_genes <- names(sort(vars, decreasing = TRUE))[1:200]
-rse <- rse[keep_genes, ]
+# Subset to top 2000 variable genes
+vars <- apply(assay(se), 1, var, na.rm = TRUE)
+keep_genes <- names(sort(vars, decreasing = TRUE))[1:2000]
+se <- se[keep_genes, ]
+assayNames(se) <- "counts"
 
-# Clinical metadata
-clin <- colData(gbm)
-subtype <- clin[colnames(rse), "subtype_Transcriptome.Subtype"]
-
-se <- SummarizedExperiment(
-    assays  = list(exprs = assay(rse)),
-    colData = DataFrame(sample_id = colnames(rse), subtype = subtype)
-)
+# Simplify the sample metadata
+colData(se) <- colData(se)[, c("histological_type", "years_to_birth"), drop = FALSE]
+colnames(colData(se)) <- c("type", "age")
 
 # --- Z-score row scaling ---
-mat <- assay(se, "exprs")
+mat <- assay(se, "counts")
 mat_scaled <- t(scale(t(mat)))  # z-score each gene across samples
 
 # --- Hierarchical clustering of genes → gene modules ---
@@ -1960,7 +1969,7 @@ module_df <- data.frame(
 
 # --- Annotated heatmap ---
 col_anno <- HeatmapAnnotation(
-    subtype = se$subtype,
+    type = se$type,
     na_col = "grey90"
 )
 row_anno <- rowAnnotation(
@@ -1993,13 +2002,14 @@ list.files(output_dir)
 
 ## Project 10: Dimensionality Estimation Tool
 
-Determining the meaningful number of principal components after PCA is a
-common task. Use too many and you’re effectively including noise; use
-too few and you may miss real variation. The broken-stick model, Kaiser
-criterion, and elbow heuristic each encode different assumptions.
-Looking at these metrics can help users determine the number of
-principal components to retain for downstream analyses like additional
-dimensionality reduction (e.g., t-SNE, UMAP) and clustering.
+**Rationale:** Determining the meaningful number of principal components
+after PCA is a common task. Use too many and you’re effectively
+including noise; use too few and you may miss real variation. The
+broken-stick model, Kaiser criterion, and elbow heuristic each encode
+different assumptions. Looking at these metrics can help users determine
+the number of principal components to retain for downstream analyses
+like additional dimensionality reduction (e.g., t-SNE, UMAP) and
+clustering.
 
 ### Dataset: PBMC 3k (Human scRNA-seq)
 
@@ -2146,11 +2156,11 @@ list.files(output_dir)
 
 ## Project 11: Batch Effect Assessment
 
-Batch effects (systematic technical variation from processing date,
-lane, or operator) can muddy biological signal. Quantifying how much
-variance each PC attributes to batch (via linear regression R²) is a
-common diagnostic before deciding whether batch correction or modeling
-is needed.
+**Rationale:** Batch effects (systematic technical variation from
+processing date, lane, or operator) can muddy biological signal.
+Quantifying how much variance each PC attributes to batch (via linear
+regression R²) is a common diagnostic before deciding whether batch
+correction or modeling is needed.
 
 ### Dataset: Grun Human Pancreas (Human scRNA-seq)
 
@@ -2319,14 +2329,15 @@ list.files(output_dir)
 
 ## Project 12: Marker Gene Identification
 
-After clustering samples in scRNA-seq data, identifying the genes that
-best distinguish each cluster from the others. One-vs-rest testing
-produces ranked marker lists that help you assign a cell type or state
-to each cluster (e.g. T cells, monocytes, B cells, etc). This task often
-requires manual review, expert knowledge, and some literature searching
-to validate the markers against known biology. The dot plot (size =
-detection rate, color = mean expression) is a common way to summarize
-marker expression patterns across clusters or cell types.
+**Rationale:** After clustering samples in scRNA-seq data, identifying
+the genes that best distinguish each cluster from the others.
+One-vs-rest testing produces ranked marker lists that help you assign a
+cell type or state to each cluster (e.g. T cells, monocytes, B cells,
+etc). This task often requires manual review, expert knowledge, and some
+literature searching to validate the markers against known biology. The
+dot plot (size = detection rate, color = mean expression) is a common
+way to summarize marker expression patterns across clusters or cell
+types.
 
 This code takes a few minutes to run, single cell analysis is
 computationally expensive.

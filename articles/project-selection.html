@@ -73,7 +73,7 @@
                         <h4 data-toc-skip class="author">Jared
 Andrews</h4>
             
-            <h4 data-toc-skip class="date">2026-04-13</h4>
+            <h4 data-toc-skip class="date">2026-04-14</h4>
       
       <small class="dont-index">Source: <a href="https://github.com/St-Jude-MS-ABDS/ADS8192/blob/main/vignettes/articles/project-selection.Rmd" class="external-link"><code>vignettes/articles/project-selection.Rmd</code></a></small>
       <div class="d-none name"><code>project-selection.Rmd</code></div>
@@ -106,7 +106,8 @@ one of the 12 projects below, or propose your own (see <a href="#custom-projects
 <p>Each project uses a <strong>different dataset</strong> chosen to be
 at least somewhat appropriate for the analysis.</p>
 <p>The analysis is secondary here, though you might be interested in
-reading more about them.</p>
+reading more about them. Some of the single cell projects may take a few
+minutes to run, as they may contain thousands of cells.</p>
 <p>Depending on the project, your primary data structure will be either
 a <strong>SummarizedExperiment</strong> (bulk experiments) or a
 <strong>SingleCellExperiment</strong> (single-cell experiments).</p>
@@ -187,10 +188,10 @@ lectures will demonstrate the process of this project being converted
 into a full R package with a Shiny app and CLI, documentation, and
 tests.</p>
 </blockquote>
-<p>PCA is a very common first step in exploratory analysis of
-high-dimensional data. It reduces thousands of features to a few
-principal components that capture the dominant sources of variation for
-the dataset.</p>
+<p><strong>Rationale:</strong> PCA is a very common first step in
+exploratory analysis of high-dimensional data. It reduces thousands of
+features to a few principal components that capture the dominant sources
+of variation for the dataset.</p>
 <div class="section level3">
 <h3 id="dataset-simulated-rna-seq">Dataset: Simulated RNA-seq<a class="anchor" aria-label="anchor" href="#dataset-simulated-rna-seq"></a>
 </h3>
@@ -379,7 +380,7 @@ Raw analysis code
 <div class="section level2">
 <h2 id="project-1-umap-embedding-explorer">Project 1: UMAP Embedding Explorer<a class="anchor" aria-label="anchor" href="#project-1-umap-embedding-explorer"></a>
 </h2>
-<p><a href="https://alleninstitute.org/resource/what-is-a-umap/" class="external-link">UMAP</a> is a
+<p><strong>Rationale:</strong> <a href="https://alleninstitute.org/resource/what-is-a-umap/" class="external-link">UMAP</a> is a
 nonlinear dimensionality reduction method that reveals biological
 structure, such as cell types, that PCA may struggle to cleanly reveal.
 It is a standard visualization in single-cell RNA-seq analysis, and
@@ -551,12 +552,13 @@ Raw analysis code
 <div class="section level2">
 <h2 id="project-2-sample-similarity-clustering">Project 2: Sample Similarity &amp; Clustering<a class="anchor" aria-label="anchor" href="#project-2-sample-similarity-clustering"></a>
 </h2>
-<p>Before formal analysis, you often must check whether samples group by
-the expected biological variable (treatment, genotype) rather than
-technical artifacts (batch, patient). A sample-by-sample correlation
-heatmap with hierarchical clustering is a common diagnostic and can also
-be used to display sample groupings with additional metadata
-annotations.</p>
+<p><strong>Rationale:</strong> Before formal analysis, you often must
+check whether samples group by the expected biological variable
+(treatment, genotype) rather than technical artifacts (batch, patient).
+A sample-by-sample correlation heatmap with hierarchical clustering is a
+common diagnostic and can also be used to display sample groupings with
+additional metadata annotations. It can also be useful for identifying
+outlier samples that should perhaps be investigated more closely.</p>
 <div class="section level3">
 <h3 id="dataset-macrophage-stimulation-human-bulk-rna-seq">Dataset: Macrophage Stimulation (Human bulk RNA-seq)<a class="anchor" aria-label="anchor" href="#dataset-macrophage-stimulation-human-bulk-rna-seq"></a>
 </h3>
@@ -736,14 +738,14 @@ Raw analysis code
 <div class="section level2">
 <h2 id="project-3-differential-expression-with-deseq2">Project 3: Differential Expression with DESeq2<a class="anchor" aria-label="anchor" href="#project-3-differential-expression-with-deseq2"></a>
 </h2>
-<p>One of the most bog standard ’omics analyses is differential
-expression analysis. <a href="https://bioconductor.org/packages/devel/bioc/vignettes/DESeq2/inst/doc/DESeq2.html" class="external-link">DESeq2</a>
+<p><strong>Rationale:</strong> One of the most common ’omics analyses is
+differential expression analysis. <a href="https://bioconductor.org/packages/devel/bioc/vignettes/DESeq2/inst/doc/DESeq2.html" class="external-link">DESeq2</a>
 is a common package for differential analysis of count data (RNA-seq or
 otherwise) — it models the mean-variance relationship with a negative
 binomial distribution, shares information across features to stabilize
 fold-change estimates, and provides log2 fold-change shrinkage for
-reliable ranking. Volcano and MA plots of differential results are tried
-and true visualizations for count-based data.</p>
+reliable ranking. Volcano and MA plots of differential results are
+bog-standard visualizations for count-based data.</p>
 <div class="section level3">
 <h3 id="dataset-tissue-resident-regulatory-t-cells-mouse-bulk-rna-seq">Dataset: Tissue-Resident Regulatory T Cells (Mouse bulk
 RNA-seq)<a class="anchor" aria-label="anchor" href="#dataset-tissue-resident-regulatory-t-cells-mouse-bulk-rna-seq"></a>
@@ -928,7 +930,8 @@ Raw analysis code
 <div class="section level2">
 <h2 id="project-4-k-means-cell-clustering">Project 4: K-means Cell Clustering<a class="anchor" aria-label="anchor" href="#project-4-k-means-cell-clustering"></a>
 </h2>
-<p>K-means clustering partitions samples into <code>k</code> groups by
+<p><strong>Rationale:</strong> <a href="https://stanford.edu/~cpiech/cs221/handouts/kmeans.html" class="external-link">K-means
+clustering</a> partitions samples into <code>k</code> groups by
 minimizing within-cluster variance. Choosing k when you don’t know the
 real value is a real practical decision — the elbow plot of
 within-cluster sum of squares is one diagnostic. K-means clustering is
@@ -1102,11 +1105,11 @@ Raw analysis code
 <div class="section level2">
 <h2 id="project-5-cell-qc-dashboard">Project 5: Cell QC Dashboard<a class="anchor" aria-label="anchor" href="#project-5-cell-qc-dashboard"></a>
 </h2>
-<p>Quality control is the essential first step in scRNA-seq analysis.
-Before any biological interpretation, low-quality cells (those with too
-few detected genes, low library sizes, or high spike-in proportions)
-must be identified and flagged. ERCC spike-in controls provide a
-ground-truth reference for QC.</p>
+<p><strong>Rationale:</strong> Quality control is the essential first
+step in scRNA-seq analysis. Before any biological interpretation,
+low-quality cells (those with too few detected genes, low library sizes,
+or high spike-in proportions) must be identified and flagged. ERCC
+spike-in controls provide a ground-truth reference for QC.</p>
 <div class="section level3">
 <h3 id="dataset-lun-spike-in-mouse-scrna-seq">Dataset: Lun Spike-In (Mouse scRNA-seq)<a class="anchor" aria-label="anchor" href="#dataset-lun-spike-in-mouse-scrna-seq"></a>
 </h3>
@@ -1302,13 +1305,13 @@ Raw analysis code
 <div class="section level2">
 <h2 id="project-6-gene-set-scoring">Project 6: Gene Set Scoring<a class="anchor" aria-label="anchor" href="#project-6-gene-set-scoring"></a>
 </h2>
-<p>Rather than analyzing genes individually, biologists often ask
-whether a predefined <em>set</em> of genes (a pathway, signature) is
-collectively up- or down-regulated. Per-sample gene set scores reduce
-genes composing a pathway or contributing to a given biological process
-to a single number per sample, enabling group comparisons. This project
-combines expression data with external pathway knowledge from
-MSigDB.</p>
+<p><strong>Rationale:</strong> Rather than analyzing genes individually,
+biologists often ask whether a predefined <em>set</em> of genes (a
+pathway, signature) is collectively up- or down-regulated. Per-sample
+gene set scores reduce genes composing a pathway or contributing to a
+given biological process to a single number per sample, enabling group
+comparisons. This project combines expression data with external pathway
+knowledge from MSigDB.</p>
 <div class="section level3">
 <h3 id="dataset-airway-human-bulk-rna-seq-msigdb-hallmark-gene-sets">Dataset: Airway (Human bulk RNA-seq) + MSigDB Hallmark Gene
 Sets<a class="anchor" aria-label="anchor" href="#dataset-airway-human-bulk-rna-seq-msigdb-hallmark-gene-sets"></a>
@@ -1322,6 +1325,13 @@ stress-response pathways that are well-represented in MSigDB Hallmark
 gene sets — making this a compact, self-contained dataset for
 demonstrating pathway-level scoring without requiring large data
 downloads.</p>
+<p>In this case, you wouldn’t really have to prepare the data yourself
+or include it in your package - it’s already readily available in the
+format you need. But for the sake of the exercise, go ahead and write
+code to load the data, extract the counts and metadata, and save it as
+an internal dataset in your package. This will give you practice with
+data preparation and packaging, even if it’s not strictly necessary for
+this particular dataset.</p>
 <details><summary>
 Data preparation code
 </summary><div class="sourceCode" id="cb13"><pre class="downlit sourceCode r">
@@ -1484,11 +1494,11 @@ Raw analysis code
 <div class="section level2">
 <h2 id="project-7-normalization-comparison-tool">Project 7: Normalization Comparison Tool<a class="anchor" aria-label="anchor" href="#project-7-normalization-comparison-tool"></a>
 </h2>
-<p>Raw counts must be normalized for library size (and composition bias,
-though we skip that here) before cross-sample comparison. Different
-methods (CPM, log2-CPM, quantile, upper-quartile) make different
-assumptions. Visualizing how each method reshapes per-sample
-distributions can be informative.</p>
+<p><strong>Rationale:</strong> Raw counts must be normalized for library
+size (and composition bias, though we skip that here) before
+cross-sample comparison. Different methods (CPM, log2-CPM, quantile,
+upper-quartile) make different assumptions. Visualizing how each method
+reshapes per-sample distributions can be informative.</p>
 <div class="section level3">
 <h3 id="dataset-muraro-human-pancreas-human-scrna-seq">Dataset: Muraro Human Pancreas (Human scRNA-seq)<a class="anchor" aria-label="anchor" href="#dataset-muraro-human-pancreas-human-scrna-seq"></a>
 </h3>
@@ -1653,12 +1663,12 @@ Raw analysis code
 <div class="section level2">
 <h2 id="project-8-gene-correlation-network">Project 8: Gene Correlation Network<a class="anchor" aria-label="anchor" href="#project-8-gene-correlation-network"></a>
 </h2>
-<p>Co-expressed genes often share biological functions. Building a
-gene-gene correlation network by computing pairwise correlations,
-thresholding to an adjacency matrix, and identifying hub genes is a
-lightweight introduction to network biology. Datasets with many samples
-provide stable pairwise gene correlations that reveal known
-co-regulation patterns.</p>
+<p><strong>Rationale:</strong> Co-expressed genes often share biological
+functions. Building a gene-gene correlation network by computing
+pairwise correlations, thresholding to an adjacency matrix, and
+identifying hub genes is a lightweight introduction to network biology.
+Datasets with many samples provide stable pairwise gene correlations
+that reveal known co-regulation patterns.</p>
 <div class="section level3">
 <h3 id="dataset-gtex-skeletal-muscle-human-bulk-rna-seq">Dataset: GTEx Skeletal Muscle (Human bulk RNA-seq)<a class="anchor" aria-label="anchor" href="#dataset-gtex-skeletal-muscle-human-bulk-rna-seq"></a>
 </h3>
@@ -1928,11 +1938,11 @@ Raw analysis code
 <h2 id="project-9-expression-heatmap-builder">Project 9: Expression Heatmap Builder<a class="anchor" aria-label="anchor" href="#project-9-expression-heatmap-builder"></a>
 </h2>
 <p>TODO: Fix - swap dataset.</p>
-<p>The genes-by-samples heatmap is one of the most iconic figures in
-genomics. Building one from scratch — row scaling, hierarchical
-clustering of both axes, sample metadata annotation bars — requires
-integrating several analysis steps into a single publication-quality
-visualization.</p>
+<p><strong>Rationale:</strong> The genes-by-samples heatmap is one of
+the most iconic figures in genomics. Building one from scratch — row
+scaling, hierarchical clustering of both axes, sample metadata
+annotation bars — requires integrating several analysis steps into a
+single publication-quality visualization.</p>
 <div class="section level3">
 <h3 id="dataset-tcga-gbm-human-bulk-rna-seq">Dataset: TCGA GBM (Human bulk RNA-seq)<a class="anchor" aria-label="anchor" href="#dataset-tcga-gbm-human-bulk-rna-seq"></a>
 </h3>
@@ -1957,7 +1967,7 @@ Data preparation code
 <span><span class="co"># Download GBM RNA-seq data</span></span>
 <span><span class="va">gbm</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/pkg/curatedTCGAData/man/curatedTCGAData.html" class="external-link">curatedTCGAData</a></span><span class="op">(</span><span class="st">"GBM"</span>, <span class="st">"RNASeq2*"</span>, version <span class="op">=</span> <span class="st">"2.0.1"</span>,</span>
 <span>                        dry.run <span class="op">=</span> <span class="cn">FALSE</span><span class="op">)</span></span>
-<span><span class="va">rse</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://github.com/waldronlab/MultiAssayExperiment/reference/MultiAssayExperiment-methods.html" class="external-link">experiments</a></span><span class="op">(</span><span class="va">gbm</span><span class="op">)</span><span class="op">[[</span><span class="fl">1</span><span class="op">]</span><span class="op">]</span></span>
+<span><span class="va">rse</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://github.com/waldronlab/MultiAssayExperiment/reference/MultiAssayExperiment-helpers.html" class="external-link">getWithColData</a></span><span class="op">(</span><span class="va">gbm</span>, <span class="st">"GBM_RNASeq2Gene-20160128"</span>, mode <span class="op">=</span> <span class="st">"replace"</span><span class="op">)</span></span>
 <span></span>
 <span><span class="co"># Subset to top 2000 variable genes</span></span>
 <span><span class="va">vars</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/base/apply.html" class="external-link">apply</a></span><span class="op">(</span><span class="fu"><a href="https://rdrr.io/pkg/SummarizedExperiment/man/SummarizedExperiment-class.html" class="external-link">assay</a></span><span class="op">(</span><span class="va">rse</span><span class="op">)</span>, <span class="fl">1</span>, <span class="va">var</span>, na.rm <span class="op">=</span> <span class="cn">TRUE</span><span class="op">)</span></span>
@@ -2015,24 +2025,20 @@ Raw analysis code
 <span><span class="co"># --- Load TCGA GBM data ---</span></span>
 <span><span class="va">gbm</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/pkg/curatedTCGAData/man/curatedTCGAData.html" class="external-link">curatedTCGAData</a></span><span class="op">(</span><span class="st">"GBM"</span>, <span class="st">"RNASeq2*"</span>, version <span class="op">=</span> <span class="st">"2.0.1"</span>,</span>
 <span>                        dry.run <span class="op">=</span> <span class="cn">FALSE</span><span class="op">)</span></span>
-<span><span class="va">rse</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://github.com/waldronlab/MultiAssayExperiment/reference/MultiAssayExperiment-methods.html" class="external-link">experiments</a></span><span class="op">(</span><span class="va">gbm</span><span class="op">)</span><span class="op">[[</span><span class="fl">1</span><span class="op">]</span><span class="op">]</span></span>
+<span><span class="va">se</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://github.com/waldronlab/MultiAssayExperiment/reference/MultiAssayExperiment-helpers.html" class="external-link">getWithColData</a></span><span class="op">(</span><span class="va">gbm</span>, <span class="st">"GBM_RNASeq2Gene-20160128"</span>, mode <span class="op">=</span> <span class="st">"replace"</span><span class="op">)</span></span>
 <span></span>
-<span><span class="co"># Top 200 variable genes</span></span>
-<span><span class="va">vars</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/base/apply.html" class="external-link">apply</a></span><span class="op">(</span><span class="fu"><a href="https://rdrr.io/pkg/SummarizedExperiment/man/SummarizedExperiment-class.html" class="external-link">assay</a></span><span class="op">(</span><span class="va">rse</span><span class="op">)</span>, <span class="fl">1</span>, <span class="va">var</span>, na.rm <span class="op">=</span> <span class="cn">TRUE</span><span class="op">)</span></span>
-<span><span class="va">keep_genes</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/base/names.html" class="external-link">names</a></span><span class="op">(</span><span class="fu"><a href="https://rdrr.io/pkg/BiocGenerics/man/sort.html" class="external-link">sort</a></span><span class="op">(</span><span class="va">vars</span>, decreasing <span class="op">=</span> <span class="cn">TRUE</span><span class="op">)</span><span class="op">)</span><span class="op">[</span><span class="fl">1</span><span class="op">:</span><span class="fl">200</span><span class="op">]</span></span>
-<span><span class="va">rse</span> <span class="op">&lt;-</span> <span class="va">rse</span><span class="op">[</span><span class="va">keep_genes</span>, <span class="op">]</span></span>
+<span><span class="co"># Subset to top 2000 variable genes</span></span>
+<span><span class="va">vars</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/base/apply.html" class="external-link">apply</a></span><span class="op">(</span><span class="fu"><a href="https://rdrr.io/pkg/SummarizedExperiment/man/SummarizedExperiment-class.html" class="external-link">assay</a></span><span class="op">(</span><span class="va">se</span><span class="op">)</span>, <span class="fl">1</span>, <span class="va">var</span>, na.rm <span class="op">=</span> <span class="cn">TRUE</span><span class="op">)</span></span>
+<span><span class="va">keep_genes</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/base/names.html" class="external-link">names</a></span><span class="op">(</span><span class="fu"><a href="https://rdrr.io/pkg/BiocGenerics/man/sort.html" class="external-link">sort</a></span><span class="op">(</span><span class="va">vars</span>, decreasing <span class="op">=</span> <span class="cn">TRUE</span><span class="op">)</span><span class="op">)</span><span class="op">[</span><span class="fl">1</span><span class="op">:</span><span class="fl">2000</span><span class="op">]</span></span>
+<span><span class="va">se</span> <span class="op">&lt;-</span> <span class="va">se</span><span class="op">[</span><span class="va">keep_genes</span>, <span class="op">]</span></span>
+<span><span class="fu"><a href="https://rdrr.io/pkg/SummarizedExperiment/man/SummarizedExperiment-class.html" class="external-link">assayNames</a></span><span class="op">(</span><span class="va">se</span><span class="op">)</span> <span class="op">&lt;-</span> <span class="st">"counts"</span></span>
 <span></span>
-<span><span class="co"># Clinical metadata</span></span>
-<span><span class="va">clin</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/pkg/SummarizedExperiment/man/SummarizedExperiment-class.html" class="external-link">colData</a></span><span class="op">(</span><span class="va">gbm</span><span class="op">)</span></span>
-<span><span class="va">subtype</span> <span class="op">&lt;-</span> <span class="va">clin</span><span class="op">[</span><span class="fu"><a href="https://rdrr.io/pkg/BiocGenerics/man/row_colnames.html" class="external-link">colnames</a></span><span class="op">(</span><span class="va">rse</span><span class="op">)</span>, <span class="st">"subtype_Transcriptome.Subtype"</span><span class="op">]</span></span>
-<span></span>
-<span><span class="va">se</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/pkg/SummarizedExperiment/man/SummarizedExperiment-class.html" class="external-link">SummarizedExperiment</a></span><span class="op">(</span></span>
-<span>    assays  <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/list.html" class="external-link">list</a></span><span class="op">(</span>exprs <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/pkg/SummarizedExperiment/man/SummarizedExperiment-class.html" class="external-link">assay</a></span><span class="op">(</span><span class="va">rse</span><span class="op">)</span><span class="op">)</span>,</span>
-<span>    colData <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/pkg/S4Vectors/man/DataFrame-class.html" class="external-link">DataFrame</a></span><span class="op">(</span>sample_id <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/pkg/BiocGenerics/man/row_colnames.html" class="external-link">colnames</a></span><span class="op">(</span><span class="va">rse</span><span class="op">)</span>, subtype <span class="op">=</span> <span class="va">subtype</span><span class="op">)</span></span>
-<span><span class="op">)</span></span>
+<span><span class="co"># Simplify the sample metadata</span></span>
+<span><span class="fu"><a href="https://rdrr.io/pkg/SummarizedExperiment/man/SummarizedExperiment-class.html" class="external-link">colData</a></span><span class="op">(</span><span class="va">se</span><span class="op">)</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/pkg/SummarizedExperiment/man/SummarizedExperiment-class.html" class="external-link">colData</a></span><span class="op">(</span><span class="va">se</span><span class="op">)</span><span class="op">[</span>, <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="st">"histological_type"</span>, <span class="st">"years_to_birth"</span><span class="op">)</span>, drop <span class="op">=</span> <span class="cn">FALSE</span><span class="op">]</span></span>
+<span><span class="fu"><a href="https://rdrr.io/pkg/BiocGenerics/man/row_colnames.html" class="external-link">colnames</a></span><span class="op">(</span><span class="fu"><a href="https://rdrr.io/pkg/SummarizedExperiment/man/SummarizedExperiment-class.html" class="external-link">colData</a></span><span class="op">(</span><span class="va">se</span><span class="op">)</span><span class="op">)</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="st">"type"</span>, <span class="st">"age"</span><span class="op">)</span></span>
 <span></span>
 <span><span class="co"># --- Z-score row scaling ---</span></span>
-<span><span class="va">mat</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/pkg/SummarizedExperiment/man/SummarizedExperiment-class.html" class="external-link">assay</a></span><span class="op">(</span><span class="va">se</span>, <span class="st">"exprs"</span><span class="op">)</span></span>
+<span><span class="va">mat</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/pkg/SummarizedExperiment/man/SummarizedExperiment-class.html" class="external-link">assay</a></span><span class="op">(</span><span class="va">se</span>, <span class="st">"counts"</span><span class="op">)</span></span>
 <span><span class="va">mat_scaled</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/pkg/BiocGenerics/man/t.html" class="external-link">t</a></span><span class="op">(</span><span class="fu"><a href="https://rdrr.io/r/base/scale.html" class="external-link">scale</a></span><span class="op">(</span><span class="fu"><a href="https://rdrr.io/pkg/BiocGenerics/man/t.html" class="external-link">t</a></span><span class="op">(</span><span class="va">mat</span><span class="op">)</span><span class="op">)</span><span class="op">)</span>  <span class="co"># z-score each gene across samples</span></span>
 <span></span>
 <span><span class="co"># --- Hierarchical clustering of genes → gene modules ---</span></span>
@@ -2047,7 +2053,7 @@ Raw analysis code
 <span></span>
 <span><span class="co"># --- Annotated heatmap ---</span></span>
 <span><span class="va">col_anno</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/pkg/ComplexHeatmap/man/HeatmapAnnotation.html" class="external-link">HeatmapAnnotation</a></span><span class="op">(</span></span>
-<span>    subtype <span class="op">=</span> <span class="va">se</span><span class="op">$</span><span class="va">subtype</span>,</span>
+<span>    type <span class="op">=</span> <span class="va">se</span><span class="op">$</span><span class="va">type</span>,</span>
 <span>    na_col <span class="op">=</span> <span class="st">"grey90"</span></span>
 <span><span class="op">)</span></span>
 <span><span class="va">row_anno</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/pkg/ComplexHeatmap/man/rowAnnotation.html" class="external-link">rowAnnotation</a></span><span class="op">(</span></span>
@@ -2080,13 +2086,14 @@ Raw analysis code
 <div class="section level2">
 <h2 id="project-10-dimensionality-estimation-tool">Project 10: Dimensionality Estimation Tool<a class="anchor" aria-label="anchor" href="#project-10-dimensionality-estimation-tool"></a>
 </h2>
-<p>Determining the meaningful number of principal components after PCA
-is a common task. Use too many and you’re effectively including noise;
-use too few and you may miss real variation. The broken-stick model,
-Kaiser criterion, and elbow heuristic each encode different assumptions.
-Looking at these metrics can help users determine the number of
-principal components to retain for downstream analyses like additional
-dimensionality reduction (e.g., t-SNE, UMAP) and clustering.</p>
+<p><strong>Rationale:</strong> Determining the meaningful number of
+principal components after PCA is a common task. Use too many and you’re
+effectively including noise; use too few and you may miss real
+variation. The broken-stick model, Kaiser criterion, and elbow heuristic
+each encode different assumptions. Looking at these metrics can help
+users determine the number of principal components to retain for
+downstream analyses like additional dimensionality reduction (e.g.,
+t-SNE, UMAP) and clustering.</p>
 <div class="section level3">
 <h3 id="dataset-pbmc-3k-human-scrna-seq">Dataset: PBMC 3k (Human scRNA-seq)<a class="anchor" aria-label="anchor" href="#dataset-pbmc-3k-human-scrna-seq"></a>
 </h3>
@@ -2231,11 +2238,11 @@ Raw analysis code
 <div class="section level2">
 <h2 id="project-11-batch-effect-assessment">Project 11: Batch Effect Assessment<a class="anchor" aria-label="anchor" href="#project-11-batch-effect-assessment"></a>
 </h2>
-<p>Batch effects (systematic technical variation from processing date,
-lane, or operator) can muddy biological signal. Quantifying how much
-variance each PC attributes to batch (via linear regression R²) is a
-common diagnostic before deciding whether batch correction or modeling
-is needed.</p>
+<p><strong>Rationale:</strong> Batch effects (systematic technical
+variation from processing date, lane, or operator) can muddy biological
+signal. Quantifying how much variance each PC attributes to batch (via
+linear regression R²) is a common diagnostic before deciding whether
+batch correction or modeling is needed.</p>
 <div class="section level3">
 <h3 id="dataset-grun-human-pancreas-human-scrna-seq">Dataset: Grun Human Pancreas (Human scRNA-seq)<a class="anchor" aria-label="anchor" href="#dataset-grun-human-pancreas-human-scrna-seq"></a>
 </h3>
@@ -2401,14 +2408,15 @@ Raw analysis code
 <div class="section level2">
 <h2 id="project-12-marker-gene-identification">Project 12: Marker Gene Identification<a class="anchor" aria-label="anchor" href="#project-12-marker-gene-identification"></a>
 </h2>
-<p>After clustering samples in scRNA-seq data, identifying the genes
-that best distinguish each cluster from the others. One-vs-rest testing
-produces ranked marker lists that help you assign a cell type or state
-to each cluster (e.g. T cells, monocytes, B cells, etc). This task often
-requires manual review, expert knowledge, and some literature searching
-to validate the markers against known biology. The dot plot (size =
-detection rate, color = mean expression) is a common way to summarize
-marker expression patterns across clusters or cell types.</p>
+<p><strong>Rationale:</strong> After clustering samples in scRNA-seq
+data, identifying the genes that best distinguish each cluster from the
+others. One-vs-rest testing produces ranked marker lists that help you
+assign a cell type or state to each cluster (e.g. T cells, monocytes, B
+cells, etc). This task often requires manual review, expert knowledge,
+and some literature searching to validate the markers against known
+biology. The dot plot (size = detection rate, color = mean expression)
+is a common way to summarize marker expression patterns across clusters
+or cell types.</p>
 <p>This code takes a few minutes to run, single cell analysis is
 computationally expensive.</p>
 <div class="section level3">
