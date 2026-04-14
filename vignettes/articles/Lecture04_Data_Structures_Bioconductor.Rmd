@@ -1,5 +1,5 @@
 ---
-title: "Lecture 4: Data Structures & R Ecosystems (Bioconductor)"
+title: "Lecture 4: Data Structures & R Ecosystems"
 author: "Jared Andrews"
 date: "April 14, 2026"
 output:
