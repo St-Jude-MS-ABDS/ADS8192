@@ -1226,7 +1226,7 @@ pathways that are well-represented in MSigDB Hallmark gene sets — making this
 a compact, self-contained dataset for demonstrating pathway-level scoring
 without requiring large data downloads.
 
-In this case, you wouldn't really have to prepare the data yourself or include it in your package - it's already readily available in the format you need. But for the sake of the exercise, go ahead and write code to load the data, extract the counts and metadata, and save it as an internal dataset in your package. This will give you practice with data preparation and packaging, even if it's not strictly necessary for this particular dataset.
+In this case, you wouldn't really have to prepare the data yourself or include it in your package - it's already readily available in the format you need. But for the sake of the exercise, go ahead and  save it as an internal dataset in your package. This will give you practice with packaging and documenting data, even if it's not strictly necessary for this particular dataset.
 
 <details>
 <summary>Data preparation code</summary>
@@ -1238,14 +1238,7 @@ library(SummarizedExperiment)
 
 data(airway)
 
-example_se <- SummarizedExperiment(
-  assays  = list(counts = assay(airway, "counts")),
-  colData = DataFrame(
-    sample_id  = colnames(airway),
-    dex        = colData(airway)$dex,
-    cell       = colData(airway)$cell
-  )
-)
+example_se <- airway
 
 usethis::use_data(example_se, overwrite = TRUE)
 ```
@@ -1852,54 +1845,39 @@ list.files(output_dir)
 
 ## Project 9: Expression Heatmap Builder
 
-TODO: Fix - swap dataset.
-
 **Rationale:** The genes-by-samples heatmap is one of the most iconic figures
 in genomics. Building one from scratch — row scaling, hierarchical clustering
 of both axes, sample metadata annotation bars — requires integrating several analysis
 steps into a single publication-quality visualization.
 
-### Dataset: TCGA GBM (Human bulk RNA-seq)
+### Dataset: Fission yeast stress response (*S. pombe* RNA-seq)
 
-The `curatedTCGAData` package provides RNA-seq expression data from [The Cancer
-Genome Atlas](https://www.cancer.gov/ccg/research/genome-sequencing/tcga). The GBM (glioblastoma multiforme) cohort includes ~170 patients
-with rich clinical annotations: transcriptional subtype (Classical, Mesenchymal,
-Proneural, Neural), IDH mutation status, MGMT methylation, age, and survival.
-The multiple clinical variables make ideal column annotation bars, and the known
-molecular subtypes produce distinctive gene module patterns in unsupervised
-clustering.
+The [`fission` Bioconductor package](https://bioconductor.org/packages/fission) provides RNA-seq count data for
+36 *Schizosaccharomyces pombe* samples from [Rhind et al. (2011)](https://pubmed.ncbi.nlm.nih.gov/21511999/).
+Cells were sampled at six time points (0, 15, 30, 60, 120, 180 minutes) following
+oxidative stress treatment, across two genetic backgrounds: wild-type and an
+atf21Δ mutant that knocks out a key stress-response transcription factor.
+The mutant completely fails to mount the normal transcriptional response,
+producing a dramatic, biologically interpretable separation between `wt` and
+`mut` columns in unsupervised clustering — gene modules corresponding to
+early-response, sustained-response, and housekeeping genes are immediately
+visible. 
+
+In this case, you wouldn't really have to prepare the data yourself or include it in your package - it's already readily available in the format you need. But for the sake of the exercise, go ahead and  save it as an internal dataset in your package. This will give you practice with packaging and documenting data, even if it's not strictly necessary for this particular dataset.
 
 <details>
 <summary>Data preparation code</summary>
 
 ```{r p10-data, eval=FALSE}
 ## data-raw/example_se.R
-BiocManager::install(c("curatedTCGAData", "TCGAutils"))
-library(curatedTCGAData)
-library(TCGAutils)
+BiocManager::install("fission")
+library(fission)
 library(SummarizedExperiment)
 
-# Download GBM RNA-seq data
-gbm <- curatedTCGAData("GBM", "RNASeq2*", version = "2.0.1",
-                        dry.run = FALSE)
-rse <- getWithColData(gbm, "GBM_RNASeq2Gene-20160128", mode = "replace")
+data(fission)
 
-# Subset to top 2000 variable genes
-vars <- apply(assay(rse), 1, var, na.rm = TRUE)
-keep_genes <- names(sort(vars, decreasing = TRUE))[1:2000]
-rse <- rse[keep_genes, ]
-
-# Get clinical data
-clin <- colData(gbm)
-
-example_se <- SummarizedExperiment(
-  assays = list(exprs = assay(rse)),
-  colData = DataFrame(
-    sample_id = colnames(rse),
-    subtype   = clin[colnames(rse), "subtype_Transcriptome.Subtype"],
-    age       = clin[colnames(rse), "years_to_birth"]
-  )
-)
+# fission is already a SummarizedExperiment with counts and colData
+example_se <- fission
 
 usethis::use_data(example_se, overwrite = TRUE)
 ```
@@ -1912,88 +1890,130 @@ usethis::use_data(example_se, overwrite = TRUE)
 
 - Select the most variable genes
 - Row-scale the expression matrix (z-score or min-max normalization)
-- Perform hierarchical clustering on rows (genes) and cut at k to assign gene
-  modules
-- Generate a genes × samples heatmap with row dendrogram, column annotation
-  bars from clinical metadata, and a gene module color strip
-- Export the scaled expression matrix and gene module assignments to TSV files
+- Perform k-means clustering on rows (genes) directly inside the `Heatmap()`
+  call and extract the resulting module assignments post-draw
+- Generate a genes × samples heatmap with k-means row splits, column annotation
+  bars from sample metadata (`strain`, `minute`), and column splits by strain
+- Export the scaled expression matrix, per-gene module assignments (long format),
+  and per-module gene lists with gene counts (wide format) to TSV files
 
 **Key parameters:** `n_top`, `scale_method` (zscore/minmax/none), `gene_k`,
 `column_split_by` (metadata column)
 
-**CLI outputs:** `scaled_expression.tsv`, `gene_modules.tsv`
+**CLI outputs:** `scaled_expression.tsv`, `gene_modules.tsv`,
+`module_gene_lists.tsv`
 
 **Shiny inputs:** n_top slider, scale method dropdown, gene_k slider, metadata
-column selector for annotation, heatmap updates reactively
+column selector for annotation and column splitting, heatmap updates reactively
 
 **Dependencies:** `SummarizedExperiment`, `ComplexHeatmap` (Suggests),
-`curatedTCGAData` (data only)
+`fission` (data only)
 
 <details>
 <summary>Raw analysis code</summary>
 
 ```{r p10-raw, eval=FALSE}
+library(fission)
 library(SummarizedExperiment)
-library(curatedTCGAData)
-library(TCGAutils)
 library(ComplexHeatmap)
-library(grid)
 
-# --- Load TCGA GBM data ---
-gbm <- curatedTCGAData("GBM", "RNASeq2*", version = "2.0.1",
-                        dry.run = FALSE)
-se <- getWithColData(gbm, "GBM_RNASeq2Gene-20160128", mode = "replace")
+# --- Load fission yeast data ---
+data(fission)
+mat    <- assay(fission, "counts")
+strain <- fission$strain   # wt / mut
+minute <- fission$minute   # 0, 15, 30, 60, 120, 180
 
-# Subset to top 2000 variable genes
-vars <- apply(assay(se), 1, var, na.rm = TRUE)
-keep_genes <- names(sort(vars, decreasing = TRUE))[1:2000]
-se <- se[keep_genes, ]
-assayNames(se) <- "counts"
+# --- Log-normalize counts (log2-CPM) ---
+# This reduces the dynamic range and makes the scaling more interpretable
+lib_sizes  <- colSums(mat)
+mat_norm   <- log2(t(t(mat) / lib_sizes * 1e6) + 1)
 
-# Simplify the sample metadata
-colData(se) <- colData(se)[, c("histological_type", "years_to_birth"), drop = FALSE]
-colnames(colData(se)) <- c("type", "age")
+# --- Select top 500 most variable genes ---
+gene_vars  <- apply(mat_norm, 1, var)
+top_genes  <- names(sort(gene_vars, decreasing = TRUE))[1:500]
+mat_top    <- mat_norm[top_genes, ]
 
 # --- Z-score row scaling ---
-mat <- assay(se, "counts")
-mat_scaled <- t(scale(t(mat)))  # z-score each gene across samples
+mat_scaled <- t(scale(t(mat_top)))  # z-score each gene across samples
 
-# --- Hierarchical clustering of genes → gene modules ---
+# --- Annotated heatmap with k-means row clustering ---
 gene_k <- 5
-hc_genes <- hclust(dist(mat_scaled), method = "ward.D2")
-gene_modules <- cutree(hc_genes, k = gene_k)
+
+# Explicit color palettes for each annotation track
+strain_colors <- c(wt  = "#027a2a", mut = "#a50181")
+
+minute_colors <- c("0"   = "#a1a1a0",
+                   "15"  = "#FDCC8A",
+                   "30"  = "#FC8D59",
+                   "60"  = "#E34A33",
+                   "120" = "#B30000",
+                   "180" = "#7A0000")
+
+# One color per k-means module (length must equal gene_k)
+module_colors <- c("#3C5488", "#00A087", "#ffee01", "#f80404", "#00e1ff")
+
+col_anno <- HeatmapAnnotation(
+    strain = strain,
+    minute = as.character(minute),
+    na_col = "grey90",
+    col    = list(strain = strain_colors,
+                  minute = minute_colors)
+)
+
+# Left annotation block: colors each k-means split and labels it M1–M5
+row_anno <- rowAnnotation(
+    module = anno_block(
+        gp        = gpar(fill = module_colors),
+        labels    = paste0("M", seq_len(gene_k)),
+        labels_gp = gpar(col = "white", fontsize = 10)
+    )
+)
+
+ht <- Heatmap(mat_scaled, name = "Z-score",
+              top_annotation    = col_anno,
+              left_annotation   = row_anno,
+              row_km            = gene_k,   # k-means on rows inside the heatmap
+              column_split      = strain,
+              show_row_names    = FALSE,
+              show_column_names = FALSE,
+              column_title      = "Fission Yeast Stress Response (top 500 genes)")
+ht_drawn <- draw(ht)
+
+# --- Extract k-means module assignments from the drawn heatmap ---
+row_clusters <- row_order(ht_drawn)   # named list: one element per k-means group
+gene_modules <- integer(nrow(mat_scaled))
+for (i in seq_along(row_clusters)) {
+    gene_modules[row_clusters[[i]]] <- i
+}
+names(gene_modules) <- rownames(mat_scaled)
 
 module_df <- data.frame(
     gene   = names(gene_modules),
     module = paste0("M", gene_modules)
 )
 
-# --- Annotated heatmap ---
-col_anno <- HeatmapAnnotation(
-    type = se$type,
-    na_col = "grey90"
-)
-row_anno <- rowAnnotation(
-    module = factor(paste0("M", gene_modules))
-)
-
-ht <- Heatmap(mat_scaled, name = "Z-score",
-              top_annotation = col_anno,
-              left_annotation = row_anno,
-              show_row_names = FALSE,
-              show_column_names = FALSE,
-              column_title = "GBM Expression Heatmap (top 200 genes)")
-draw(ht)
-
 # --- Export ---
 output_dir <- file.path(tempdir(), "heatmap_output")
 dir.create(output_dir, recursive = TRUE, showWarnings = FALSE)
 
-scaled_out <- as.data.frame(mat_scaled)
-scaled_out$gene <- rownames(mat_scaled)
+scaled_out       <- as.data.frame(mat_scaled)
+scaled_out$gene  <- rownames(mat_scaled)
 write.table(scaled_out, file.path(output_dir, "scaled_expression.tsv"),
             sep = "\t", row.names = FALSE, quote = FALSE)
+
+# Per-gene module assignments (long format: one row per gene)
 write.table(module_df, file.path(output_dir, "gene_modules.tsv"),
+            sep = "\t", row.names = FALSE, quote = FALSE)
+
+# Per-module gene lists (wide format: one row per module, genes comma-separated)
+module_gene_list <- do.call(rbind, lapply(sort(unique(module_df$module)), function(m) {
+    genes <- module_df$gene[module_df$module == m]
+    data.frame(module   = m,
+               n_genes  = length(genes),
+               genes    = paste(genes, collapse = ","),
+               stringsAsFactors = FALSE)
+}))
+write.table(module_gene_list, file.path(output_dir, "module_gene_lists.tsv"),
             sep = "\t", row.names = FALSE, quote = FALSE)
 
 list.files(output_dir)
@@ -2530,7 +2550,7 @@ list.files(output_dir)
 | 6 | Gene Set Scoring | TCGA BRCA + MSigDB | Human | SE | boxplot / violin | msigdbr, curatedTCGAData |
 | 7 | Normalization | Muraro pancreas | Human | SCE | density / boxplot | — |
 | 8 | Gene Corr Network | GTEx skeletal muscle | Human | SE | network / heatmap | igraph (opt.), recount3 |
-| 9 | Expression Heatmap | TCGA GBM | Human | SE | genes × samples heatmap | ComplexHeatmap, curatedTCGAData |
+| 9 | Expression Heatmap | Fission yeast stress response | *S. pombe* | SE | genes × samples heatmap | ComplexHeatmap, fission |
 | 10 | Dim Estimation | PBMC 3k | Human | SCE | scree + overlays | — |
 | 11 | Batch Effect | Grun human pancreas | Human | SCE | before/after PCA + R² | — |
 | 12 | Marker Genes | Baron mouse pancreas | Mouse | SCE | dot plot | — |
