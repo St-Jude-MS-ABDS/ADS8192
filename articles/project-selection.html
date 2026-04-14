@@ -312,6 +312,11 @@ Raw analysis code
 <span>  rowData <span class="op">=</span> <span class="va">gene_data</span></span>
 <span><span class="op">)</span></span>
 <span></span>
+<span><span class="co"># ============================================================================</span></span>
+<span><span class="co"># Everything above is upstream data preparation — belongs in data-raw/.</span></span>
+<span><span class="co"># Everything below is core analysis — should be functionized in R/.</span></span>
+<span><span class="co"># ============================================================================</span></span>
+<span></span>
 <span><span class="co"># --- Feature selection: top 200 most variable genes ---</span></span>
 <span><span class="va">mat</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/pkg/SummarizedExperiment/man/SummarizedExperiment-class.html" class="external-link">assay</a></span><span class="op">(</span><span class="va">example_se</span>, <span class="st">"counts"</span><span class="op">)</span></span>
 <span><span class="va">vars</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/base/apply.html" class="external-link">apply</a></span><span class="op">(</span><span class="va">mat</span>, <span class="fl">1</span>, <span class="fu">stats</span><span class="fu">::</span><span class="va"><a href="https://rdrr.io/r/stats/cor.html" class="external-link">var</a></span><span class="op">)</span></span>
@@ -394,6 +399,11 @@ a UMAP embedding is an open question. One common approach is to compute
 k-nearest-neighbor preservation, which quantifies how well the local
 neighborhood structure of the original high-dimensional data is
 preserved in the UMAP embedding.</p>
+<p>Examining k-NN preservation <em>per cell type</em> (rather than only
+as a global mean) adds biological interpretability: cell types with low
+preservation scores may have diffuse or intermixed structure in the
+original PCA space, suggesting that subclustering or finer resolution
+analysis could be warranted for those populations.</p>
 <div class="section level3">
 <h3 id="dataset-zeisel-brain-mouse-scrna-seq">Dataset: Zeisel Brain (Mouse scRNA-seq)<a class="anchor" aria-label="anchor" href="#dataset-zeisel-brain-mouse-scrna-seq"></a>
 </h3>
@@ -432,10 +442,15 @@ scRNA-seq workflows — reduces noise and speeds up computation)</li>
 <li>Compute an embedding quality metric: k-nearest-neighbor preservation
 (what fraction of each cell’s k nearest neighbors in the
 high-dimensional PCA space are preserved in UMAP space)</li>
-<li>Summarize the embedding (parameter values, spread statistics,
-quality score)</li>
+<li>Break down k-NN preservation by cell type to identify populations
+whose local neighborhood structure is poorly captured by the embedding,
+which may indicate candidates for subclustering</li>
+<li>Summarize the embedding (parameter values, spread statistics, global
+and per-cell-type quality scores)</li>
 <li>Visualize cells in UMAP space, colored/shaped by metadata
 columns</li>
+<li>Visualize per-cell-type k-NN preservation as a violin/box plot to
+flag populations with low embedding fidelity</li>
 <li>Export UMAP coordinates, parameter summaries, and quality metrics to
 TSV files</li>
 </ul>
@@ -444,34 +459,44 @@ TSV files</li>
 <code>n_neighbors</code>, <code>min_dist</code>, <code>metric</code>
 (euclidean/cosine), <code>color_by</code>, <code>shape_by</code></p>
 <p><strong>CLI outputs:</strong> <code>umap_embeddings.tsv</code> (cell
-× UMAP1/UMAP2 + metadata), <code>umap_params.tsv</code> (parameter
-values + spread stats + quality score)</p>
+× UMAP1/UMAP2 + metadata + <code>knn_preserved</code> per-cell score),
+<code>umap_params.tsv</code> (parameter values + spread stats + global
+and per-cell-type quality scores)</p>
 <p><strong>Shiny inputs:</strong> n_top slider, n_pcs slider (10–50),
 n_neighbors slider (5–50), min_dist slider (0.01–1.0), metric dropdown,
-color/shape by metadata</p>
+color/shape by metadata, per-cell-type k-NN preservation violin plot</p>
 <p><strong>Dependencies:</strong> <code>SingleCellExperiment</code>,
-<code>uwot</code>, <code>scRNAseq</code> (data only)</p>
+<code>scuttle</code>, <code>uwot</code>, <code>scRNAseq</code> (data
+only)</p>
 <details><summary>
 Raw analysis code
 </summary><div class="sourceCode" id="cb4"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="kw"><a href="https://rdrr.io/r/base/library.html" class="external-link">library</a></span><span class="op">(</span><span class="va">SingleCellExperiment</span><span class="op">)</span></span>
 <span><span class="kw"><a href="https://rdrr.io/r/base/library.html" class="external-link">library</a></span><span class="op">(</span><span class="va">scRNAseq</span><span class="op">)</span></span>
+<span><span class="kw"><a href="https://rdrr.io/r/base/library.html" class="external-link">library</a></span><span class="op">(</span><span class="va">scuttle</span><span class="op">)</span></span>
 <span><span class="kw"><a href="https://rdrr.io/r/base/library.html" class="external-link">library</a></span><span class="op">(</span><span class="va"><a href="https://github.com/jlmelville/uwot" class="external-link">uwot</a></span><span class="op">)</span></span>
 <span><span class="kw"><a href="https://rdrr.io/r/base/library.html" class="external-link">library</a></span><span class="op">(</span><span class="va"><a href="https://ggplot2.tidyverse.org" class="external-link">ggplot2</a></span><span class="op">)</span></span>
+<span></span>
+<span><span class="fu"><a href="https://rdrr.io/r/base/Random.html" class="external-link">set.seed</a></span><span class="op">(</span><span class="fl">42</span><span class="op">)</span> <span class="co"># UMAP has randomness so we set a seed for reproducibility</span></span>
 <span></span>
 <span><span class="co"># --- Load data ---</span></span>
 <span><span class="va">sce</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/pkg/scRNAseq/man/ZeiselBrainData.html" class="external-link">ZeiselBrainData</a></span><span class="op">(</span><span class="op">)</span></span>
 <span><span class="va">counts_mat</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/pkg/BiocGenerics/man/dge.html" class="external-link">counts</a></span><span class="op">(</span><span class="va">sce</span><span class="op">)</span></span>
 <span><span class="va">cell_type</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/pkg/SummarizedExperiment/man/SummarizedExperiment-class.html" class="external-link">colData</a></span><span class="op">(</span><span class="va">sce</span><span class="op">)</span><span class="op">$</span><span class="va">level1class</span></span>
 <span></span>
+<span><span class="co"># ============================================================================</span></span>
+<span><span class="co"># Everything above is upstream data preparation — belongs in data-raw/.</span></span>
+<span><span class="co"># Everything below is core analysis — should be functionized in R/.</span></span>
+<span><span class="co"># ============================================================================</span></span>
+<span></span>
+<span><span class="co"># --- Log-normalize using scuttle ---</span></span>
+<span><span class="co"># Normalize on the full SCE so size factors reflect the complete library</span></span>
+<span><span class="va">sce</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/pkg/scuttle/man/logNormCounts.html" class="external-link">logNormCounts</a></span><span class="op">(</span><span class="va">sce</span><span class="op">)</span></span>
+<span></span>
 <span><span class="co"># --- Feature selection: top 2000 most variable genes ---</span></span>
 <span><span class="va">gene_vars</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/base/apply.html" class="external-link">apply</a></span><span class="op">(</span><span class="va">counts_mat</span>, <span class="fl">1</span>, <span class="va">var</span><span class="op">)</span></span>
 <span><span class="va">top_idx</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/base/order.html" class="external-link">order</a></span><span class="op">(</span><span class="va">gene_vars</span>, decreasing <span class="op">=</span> <span class="cn">TRUE</span><span class="op">)</span><span class="op">[</span><span class="fu"><a href="https://rdrr.io/r/base/seq.html" class="external-link">seq_len</a></span><span class="op">(</span><span class="fl">2000</span><span class="op">)</span><span class="op">]</span></span>
-<span><span class="va">mat</span> <span class="op">&lt;-</span> <span class="va">counts_mat</span><span class="op">[</span><span class="va">top_idx</span>, <span class="op">]</span></span>
-<span></span>
-<span><span class="co"># --- Log-normalize ---</span></span>
-<span><span class="va">lib_sizes</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/pkg/Matrix/man/colSums-methods.html" class="external-link">colSums</a></span><span class="op">(</span><span class="va">counts_mat</span><span class="op">)</span></span>
-<span><span class="va">mat_norm</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/base/Log.html" class="external-link">log2</a></span><span class="op">(</span><span class="fu"><a href="https://rdrr.io/r/base/t.html" class="external-link">t</a></span><span class="op">(</span><span class="fu"><a href="https://rdrr.io/r/base/t.html" class="external-link">t</a></span><span class="op">(</span><span class="va">mat</span><span class="op">)</span> <span class="op">/</span> <span class="va">lib_sizes</span> <span class="op">*</span> <span class="fl">1e6</span><span class="op">)</span> <span class="op">+</span> <span class="fl">1</span><span class="op">)</span>  <span class="co"># log2-CPM</span></span>
+<span><span class="va">mat_norm</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/base/matrix.html" class="external-link">as.matrix</a></span><span class="op">(</span><span class="fu"><a href="https://rdrr.io/pkg/SingleCellExperiment/man/assays.html" class="external-link">logcounts</a></span><span class="op">(</span><span class="va">sce</span><span class="op">)</span><span class="op">[</span><span class="va">top_idx</span>, <span class="op">]</span><span class="op">)</span></span>
 <span></span>
 <span><span class="co"># --- PCA on the top 2000 most variable genes using the transformed counts ---</span></span>
 <span><span class="va">n_pcs</span> <span class="op">&lt;-</span> <span class="fl">30</span></span>
@@ -479,7 +504,6 @@ Raw analysis code
 <span><span class="va">pca_mat</span> <span class="op">&lt;-</span> <span class="va">pca_result</span><span class="op">$</span><span class="va">x</span><span class="op">[</span>, <span class="fu"><a href="https://rdrr.io/r/base/seq.html" class="external-link">seq_len</a></span><span class="op">(</span><span class="va">n_pcs</span><span class="op">)</span><span class="op">]</span></span>
 <span></span>
 <span><span class="co"># --- Run UMAP on PCA-reduced data ---</span></span>
-<span><span class="fu"><a href="https://rdrr.io/r/base/Random.html" class="external-link">set.seed</a></span><span class="op">(</span><span class="fl">42</span><span class="op">)</span></span>
 <span><span class="va">n_neighbors</span> <span class="op">&lt;-</span> <span class="fl">15</span></span>
 <span><span class="va">min_dist</span>    <span class="op">&lt;-</span> <span class="fl">0.1</span></span>
 <span><span class="va">metric</span>      <span class="op">&lt;-</span> <span class="st">"euclidean"</span></span>
@@ -505,12 +529,43 @@ Raw analysis code
 <span><span class="va">knn_preservation</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/base/mean.html" class="external-link">mean</a></span><span class="op">(</span><span class="va">preserved</span><span class="op">)</span></span>
 <span><span class="fu"><a href="https://rdrr.io/r/base/cat.html" class="external-link">cat</a></span><span class="op">(</span><span class="st">"k-NN preservation:"</span>, <span class="fu"><a href="https://rdrr.io/r/base/Round.html" class="external-link">round</a></span><span class="op">(</span><span class="va">knn_preservation</span>, <span class="fl">3</span><span class="op">)</span>, <span class="st">"\n"</span><span class="op">)</span></span>
 <span></span>
+<span><span class="co"># --- Per-cell-type k-NN preservation ---</span></span>
+<span><span class="va">knn_df</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/base/data.frame.html" class="external-link">data.frame</a></span><span class="op">(</span></span>
+<span>    cell_id        <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/colnames.html" class="external-link">colnames</a></span><span class="op">(</span><span class="va">sce</span><span class="op">)</span>,</span>
+<span>    cell_type      <span class="op">=</span> <span class="va">cell_type</span>,</span>
+<span>    knn_preserved  <span class="op">=</span> <span class="va">preserved</span></span>
+<span><span class="op">)</span></span>
+<span></span>
+<span><span class="co"># Global mean per cell type — flag types with mean below overall mean</span></span>
+<span><span class="va">knn_by_type</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/base/tapply.html" class="external-link">tapply</a></span><span class="op">(</span><span class="va">knn_df</span><span class="op">$</span><span class="va">knn_preserved</span>, <span class="va">knn_df</span><span class="op">$</span><span class="va">cell_type</span>, <span class="va">mean</span><span class="op">)</span></span>
+<span><span class="fu"><a href="https://rdrr.io/r/base/cat.html" class="external-link">cat</a></span><span class="op">(</span><span class="st">"Per-cell-type mean k-NN preservation:\n"</span><span class="op">)</span></span>
+<span><span class="fu"><a href="https://rdrr.io/r/base/print.html" class="external-link">print</a></span><span class="op">(</span><span class="fu"><a href="https://rdrr.io/r/base/Round.html" class="external-link">round</a></span><span class="op">(</span><span class="fu"><a href="https://rdrr.io/r/base/sort.html" class="external-link">sort</a></span><span class="op">(</span><span class="va">knn_by_type</span><span class="op">)</span>, <span class="fl">3</span><span class="op">)</span><span class="op">)</span></span>
+<span></span>
+<span><span class="co"># Violin + box plot: per-cell-type distribution, sorted by median</span></span>
+<span><span class="va">cell_type_order</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/base/names.html" class="external-link">names</a></span><span class="op">(</span><span class="fu"><a href="https://rdrr.io/r/base/sort.html" class="external-link">sort</a></span><span class="op">(</span><span class="fu"><a href="https://rdrr.io/r/base/tapply.html" class="external-link">tapply</a></span><span class="op">(</span><span class="va">knn_df</span><span class="op">$</span><span class="va">knn_preserved</span>, <span class="va">knn_df</span><span class="op">$</span><span class="va">cell_type</span>, <span class="va">median</span><span class="op">)</span><span class="op">)</span><span class="op">)</span></span>
+<span><span class="va">knn_df</span><span class="op">$</span><span class="va">cell_type</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/base/factor.html" class="external-link">factor</a></span><span class="op">(</span><span class="va">knn_df</span><span class="op">$</span><span class="va">cell_type</span>, levels <span class="op">=</span> <span class="va">cell_type_order</span><span class="op">)</span></span>
+<span></span>
+<span><span class="va">p_knn</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://ggplot2.tidyverse.org/reference/ggplot.html" class="external-link">ggplot</a></span><span class="op">(</span><span class="va">knn_df</span>, <span class="fu"><a href="https://ggplot2.tidyverse.org/reference/aes.html" class="external-link">aes</a></span><span class="op">(</span>x <span class="op">=</span> <span class="va">cell_type</span>, y <span class="op">=</span> <span class="va">knn_preserved</span>, fill <span class="op">=</span> <span class="va">cell_type</span><span class="op">)</span><span class="op">)</span> <span class="op">+</span></span>
+<span>    <span class="fu"><a href="https://ggplot2.tidyverse.org/reference/geom_violin.html" class="external-link">geom_violin</a></span><span class="op">(</span>trim <span class="op">=</span> <span class="cn">FALSE</span>, alpha <span class="op">=</span> <span class="fl">0.6</span><span class="op">)</span> <span class="op">+</span></span>
+<span>    <span class="fu"><a href="https://ggplot2.tidyverse.org/reference/geom_boxplot.html" class="external-link">geom_boxplot</a></span><span class="op">(</span>width <span class="op">=</span> <span class="fl">0.15</span>, outlier.size <span class="op">=</span> <span class="fl">0.8</span>, alpha <span class="op">=</span> <span class="fl">0.9</span><span class="op">)</span> <span class="op">+</span></span>
+<span>    <span class="fu"><a href="https://ggplot2.tidyverse.org/reference/geom_abline.html" class="external-link">geom_hline</a></span><span class="op">(</span>yintercept <span class="op">=</span> <span class="va">knn_preservation</span>, lty <span class="op">=</span> <span class="fl">2</span>, color <span class="op">=</span> <span class="st">"black"</span><span class="op">)</span> <span class="op">+</span></span>
+<span>    <span class="fu"><a href="https://ggplot2.tidyverse.org/reference/ggtheme.html" class="external-link">theme_bw</a></span><span class="op">(</span>base_size <span class="op">=</span> <span class="fl">14</span><span class="op">)</span> <span class="op">+</span></span>
+<span>    <span class="fu"><a href="https://ggplot2.tidyverse.org/reference/theme.html" class="external-link">theme</a></span><span class="op">(</span>axis.text.x <span class="op">=</span> <span class="fu"><a href="https://ggplot2.tidyverse.org/reference/element.html" class="external-link">element_text</a></span><span class="op">(</span>angle <span class="op">=</span> <span class="fl">30</span>, hjust <span class="op">=</span> <span class="fl">1</span><span class="op">)</span>,</span>
+<span>          legend.position <span class="op">=</span> <span class="st">"none"</span><span class="op">)</span> <span class="op">+</span></span>
+<span>    <span class="fu"><a href="https://ggplot2.tidyverse.org/reference/labs.html" class="external-link">labs</a></span><span class="op">(</span>x <span class="op">=</span> <span class="st">"Cell Type"</span>,</span>
+<span>         y <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/paste.html" class="external-link">paste0</a></span><span class="op">(</span><span class="st">"k-NN Preservation (k = "</span>, <span class="va">k_eval</span>, <span class="st">")"</span><span class="op">)</span>,</span>
+<span>         title <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/paste.html" class="external-link">paste0</a></span><span class="op">(</span><span class="st">"Per-Cell-Type k-NN Preservation (global mean = "</span>,</span>
+<span>                        <span class="fu"><a href="https://rdrr.io/r/base/Round.html" class="external-link">round</a></span><span class="op">(</span><span class="va">knn_preservation</span>, <span class="fl">3</span><span class="op">)</span>, <span class="st">")"</span><span class="op">)</span>,</span>
+<span>         caption <span class="op">=</span> <span class="st">"Dashed line = global mean. Low-scoring types may benefit from subclustering."</span><span class="op">)</span></span>
+<span><span class="fu"><a href="https://rdrr.io/r/base/print.html" class="external-link">print</a></span><span class="op">(</span><span class="va">p_knn</span><span class="op">)</span></span>
+<span></span>
 <span><span class="co"># --- Build embeddings data.frame ---</span></span>
 <span><span class="va">embeddings</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/base/data.frame.html" class="external-link">data.frame</a></span><span class="op">(</span></span>
-<span>    cell_id   <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/colnames.html" class="external-link">colnames</a></span><span class="op">(</span><span class="va">sce</span><span class="op">)</span>,</span>
-<span>    UMAP1     <span class="op">=</span> <span class="va">umap_coords</span><span class="op">[</span>, <span class="fl">1</span><span class="op">]</span>,</span>
-<span>    UMAP2     <span class="op">=</span> <span class="va">umap_coords</span><span class="op">[</span>, <span class="fl">2</span><span class="op">]</span>,</span>
-<span>    cell_type <span class="op">=</span> <span class="va">cell_type</span></span>
+<span>    cell_id       <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/colnames.html" class="external-link">colnames</a></span><span class="op">(</span><span class="va">sce</span><span class="op">)</span>,</span>
+<span>    UMAP1         <span class="op">=</span> <span class="va">umap_coords</span><span class="op">[</span>, <span class="fl">1</span><span class="op">]</span>,</span>
+<span>    UMAP2         <span class="op">=</span> <span class="va">umap_coords</span><span class="op">[</span>, <span class="fl">2</span><span class="op">]</span>,</span>
+<span>    cell_type     <span class="op">=</span> <span class="va">cell_type</span>,</span>
+<span>    knn_preserved <span class="op">=</span> <span class="va">preserved</span></span>
 <span><span class="op">)</span></span>
 <span></span>
 <span><span class="co"># --- Parameter summary ---</span></span>
@@ -528,6 +583,13 @@ Raw analysis code
 <span>              <span class="fu"><a href="https://rdrr.io/r/base/Round.html" class="external-link">round</a></span><span class="op">(</span><span class="fu"><a href="https://rdrr.io/r/stats/sd.html" class="external-link">sd</a></span><span class="op">(</span><span class="va">umap_coords</span><span class="op">[</span>, <span class="fl">2</span><span class="op">]</span><span class="op">)</span>, <span class="fl">2</span><span class="op">)</span>,</span>
 <span>              <span class="fu"><a href="https://rdrr.io/r/base/Round.html" class="external-link">round</a></span><span class="op">(</span><span class="va">knn_preservation</span>, <span class="fl">4</span><span class="op">)</span><span class="op">)</span></span>
 <span><span class="op">)</span></span>
+<span></span>
+<span><span class="co"># Append per-cell-type k-NN preservation to params</span></span>
+<span><span class="va">knn_type_rows</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/base/data.frame.html" class="external-link">data.frame</a></span><span class="op">(</span></span>
+<span>    parameter <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/paste.html" class="external-link">paste0</a></span><span class="op">(</span><span class="st">"knn_pres_"</span>, <span class="fu"><a href="https://rdrr.io/r/base/names.html" class="external-link">names</a></span><span class="op">(</span><span class="va">knn_by_type</span><span class="op">)</span><span class="op">)</span>,</span>
+<span>    value     <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/character.html" class="external-link">as.character</a></span><span class="op">(</span><span class="fu"><a href="https://rdrr.io/r/base/Round.html" class="external-link">round</a></span><span class="op">(</span><span class="va">knn_by_type</span>, <span class="fl">4</span><span class="op">)</span><span class="op">)</span></span>
+<span><span class="op">)</span></span>
+<span><span class="va">params</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/base/cbind.html" class="external-link">rbind</a></span><span class="op">(</span><span class="va">params</span>, <span class="va">knn_type_rows</span><span class="op">)</span></span>
 <span></span>
 <span><span class="co"># --- UMAP scatter plot ---</span></span>
 <span><span class="va">p</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://ggplot2.tidyverse.org/reference/ggplot.html" class="external-link">ggplot</a></span><span class="op">(</span><span class="va">embeddings</span>, <span class="fu"><a href="https://ggplot2.tidyverse.org/reference/aes.html" class="external-link">aes</a></span><span class="op">(</span>x <span class="op">=</span> <span class="va">UMAP1</span>, y <span class="op">=</span> <span class="va">UMAP2</span>, color <span class="op">=</span> <span class="va">cell_type</span><span class="op">)</span><span class="op">)</span> <span class="op">+</span></span>
@@ -649,6 +711,11 @@ Raw analysis code
 <span><span class="co"># Simplify metadata</span></span>
 <span><span class="va">condition</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/base/factor.html" class="external-link">factor</a></span><span class="op">(</span><span class="va">gse</span><span class="op">$</span><span class="va">condition_name</span><span class="op">)</span></span>
 <span><span class="va">donor</span>     <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/base/factor.html" class="external-link">factor</a></span><span class="op">(</span><span class="va">gse</span><span class="op">$</span><span class="va">line_id</span><span class="op">)</span></span>
+<span></span>
+<span><span class="co"># ============================================================================</span></span>
+<span><span class="co"># Everything above is upstream data preparation — belongs in data-raw/.</span></span>
+<span><span class="co"># Everything below is core analysis — should be functionized in R/.</span></span>
+<span><span class="co"># ============================================================================</span></span>
 <span></span>
 <span><span class="co"># --- Feature selection: top 2000 most variable genes ---</span></span>
 <span><span class="va">mat</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/pkg/SummarizedExperiment/man/SummarizedExperiment-class.html" class="external-link">assay</a></span><span class="op">(</span><span class="va">gse</span>, <span class="st">"counts"</span><span class="op">)</span></span>
@@ -854,6 +921,11 @@ Raw analysis code
 <span><span class="va">se_ln</span> <span class="op">&lt;-</span> <span class="va">se_clean</span><span class="op">[</span>, <span class="va">keep</span><span class="op">]</span></span>
 <span><span class="va">se_ln</span><span class="op">$</span><span class="va">cell_type</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/base/droplevels.html" class="external-link">droplevels</a></span><span class="op">(</span><span class="va">se_ln</span><span class="op">$</span><span class="va">cell_type</span><span class="op">)</span></span>
 <span></span>
+<span><span class="co"># ============================================================================</span></span>
+<span><span class="co"># Everything above is upstream data preparation — belongs in data-raw/.</span></span>
+<span><span class="co"># Everything below is core analysis — should be functionized in R/.</span></span>
+<span><span class="co"># ============================================================================</span></span>
+<span></span>
 <span><span class="co"># Filter low-count genes</span></span>
 <span><span class="va">keep_genes</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/pkg/MatrixGenerics/man/rowSums.html" class="external-link">rowSums</a></span><span class="op">(</span><span class="fu"><a href="https://rdrr.io/pkg/SummarizedExperiment/man/SummarizedExperiment-class.html" class="external-link">assay</a></span><span class="op">(</span><span class="va">se_ln</span>, <span class="st">"counts"</span><span class="op">)</span><span class="op">)</span> <span class="op">&gt;=</span> <span class="fl">10</span></span>
 <span><span class="va">se_ln</span> <span class="op">&lt;-</span> <span class="va">se_ln</span><span class="op">[</span><span class="va">keep_genes</span>, <span class="op">]</span></span>
@@ -999,12 +1071,14 @@ to TSV files</li>
 slider, toggle between elbow plot and cluster scatter, color by cluster
 or cell_type metadata</p>
 <p><strong>Dependencies:</strong> <code>SingleCellExperiment</code>,
-<code>cluster</code>, <code>scRNAseq</code> (data only)</p>
+<code>scuttle</code>, <code>cluster</code>, <code>scRNAseq</code> (data
+only)</p>
 <details><summary>
 Raw analysis code
 </summary><div class="sourceCode" id="cb10"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="kw"><a href="https://rdrr.io/r/base/library.html" class="external-link">library</a></span><span class="op">(</span><span class="va">SingleCellExperiment</span><span class="op">)</span></span>
 <span><span class="kw"><a href="https://rdrr.io/r/base/library.html" class="external-link">library</a></span><span class="op">(</span><span class="va">scRNAseq</span><span class="op">)</span></span>
+<span><span class="kw"><a href="https://rdrr.io/r/base/library.html" class="external-link">library</a></span><span class="op">(</span><span class="va">scuttle</span><span class="op">)</span></span>
 <span><span class="kw"><a href="https://rdrr.io/r/base/library.html" class="external-link">library</a></span><span class="op">(</span><span class="va"><a href="https://svn.r-project.org/R-packages/trunk/cluster/" class="external-link">cluster</a></span><span class="op">)</span></span>
 <span><span class="kw"><a href="https://rdrr.io/r/base/library.html" class="external-link">library</a></span><span class="op">(</span><span class="va"><a href="https://ggplot2.tidyverse.org" class="external-link">ggplot2</a></span><span class="op">)</span></span>
 <span></span>
@@ -1013,14 +1087,21 @@ Raw analysis code
 <span><span class="va">counts_mat</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/pkg/BiocGenerics/man/dge.html" class="external-link">counts</a></span><span class="op">(</span><span class="va">sce</span><span class="op">)</span></span>
 <span><span class="va">cell_type</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/pkg/SummarizedExperiment/man/SummarizedExperiment-class.html" class="external-link">colData</a></span><span class="op">(</span><span class="va">sce</span><span class="op">)</span><span class="op">$</span><span class="va">label</span></span>
 <span></span>
+<span><span class="co"># ============================================================================</span></span>
+<span><span class="co"># Everything above is upstream data preparation — belongs in data-raw/.</span></span>
+<span><span class="co"># Everything below is core analysis — should be functionized in R/.</span></span>
+<span><span class="co"># ============================================================================</span></span>
+<span></span>
+<span><span class="co"># --- Log-normalize using scuttle ---</span></span>
+<span><span class="co"># Normalize on the full SCE so size factors reflect the complete library</span></span>
+<span><span class="va">sce</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/pkg/scuttle/man/logNormCounts.html" class="external-link">logNormCounts</a></span><span class="op">(</span><span class="va">sce</span><span class="op">)</span></span>
+<span></span>
 <span><span class="co"># --- Feature selection: top 2000 most variable genes ---</span></span>
 <span><span class="va">gene_vars</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/base/apply.html" class="external-link">apply</a></span><span class="op">(</span><span class="va">counts_mat</span>, <span class="fl">1</span>, <span class="va">var</span><span class="op">)</span></span>
 <span><span class="va">top_idx</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/pkg/BiocGenerics/man/order.html" class="external-link">order</a></span><span class="op">(</span><span class="va">gene_vars</span>, decreasing <span class="op">=</span> <span class="cn">TRUE</span><span class="op">)</span><span class="op">[</span><span class="fu"><a href="https://rdrr.io/r/base/seq.html" class="external-link">seq_len</a></span><span class="op">(</span><span class="fl">2000</span><span class="op">)</span><span class="op">]</span></span>
-<span><span class="va">mat</span> <span class="op">&lt;-</span> <span class="va">counts_mat</span><span class="op">[</span><span class="va">top_idx</span>, <span class="op">]</span></span>
+<span><span class="va">mat_norm</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/base/matrix.html" class="external-link">as.matrix</a></span><span class="op">(</span><span class="fu"><a href="https://rdrr.io/pkg/SingleCellExperiment/man/assays.html" class="external-link">logcounts</a></span><span class="op">(</span><span class="va">sce</span><span class="op">)</span><span class="op">[</span><span class="va">top_idx</span>, <span class="op">]</span><span class="op">)</span></span>
 <span></span>
-<span><span class="co"># --- Log-normalize + PCA ---</span></span>
-<span><span class="va">lib_sizes</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/pkg/MatrixGenerics/man/rowSums.html" class="external-link">colSums</a></span><span class="op">(</span><span class="va">counts_mat</span><span class="op">)</span></span>
-<span><span class="va">mat_norm</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/base/Log.html" class="external-link">log2</a></span><span class="op">(</span><span class="fu"><a href="https://rdrr.io/pkg/BiocGenerics/man/t.html" class="external-link">t</a></span><span class="op">(</span><span class="fu"><a href="https://rdrr.io/pkg/BiocGenerics/man/t.html" class="external-link">t</a></span><span class="op">(</span><span class="va">mat</span><span class="op">)</span> <span class="op">/</span> <span class="va">lib_sizes</span> <span class="op">*</span> <span class="fl">1e6</span><span class="op">)</span> <span class="op">+</span> <span class="fl">1</span><span class="op">)</span></span>
+<span><span class="co"># --- PCA ---</span></span>
 <span><span class="va">pca</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/stats/prcomp.html" class="external-link">prcomp</a></span><span class="op">(</span><span class="fu"><a href="https://rdrr.io/pkg/BiocGenerics/man/t.html" class="external-link">t</a></span><span class="op">(</span><span class="va">mat_norm</span><span class="op">)</span>, scale. <span class="op">=</span> <span class="cn">TRUE</span>, center <span class="op">=</span> <span class="cn">TRUE</span><span class="op">)</span></span>
 <span><span class="va">pca_mat</span> <span class="op">&lt;-</span> <span class="va">pca</span><span class="op">$</span><span class="va">x</span><span class="op">[</span>, <span class="fl">1</span><span class="op">:</span><span class="fl">20</span><span class="op">]</span>  <span class="co"># first 20 PCs for clustering</span></span>
 <span></span>
@@ -1205,6 +1286,12 @@ Raw analysis code
 <span><span class="va">gene_ids</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/pkg/BiocGenerics/man/row_colnames.html" class="external-link">rownames</a></span><span class="op">(</span><span class="va">sce</span><span class="op">)</span></span>
 <span><span class="va">gene_symbols</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/pkg/AnnotationDbi/man/AnnotationDb-class.html" class="external-link">mapIds</a></span><span class="op">(</span><span class="va">org.Mm.eg.db</span>, keys <span class="op">=</span> <span class="va">gene_ids</span>, column <span class="op">=</span> <span class="st">"SYMBOL"</span>, keytype <span class="op">=</span> <span class="st">"ENSEMBL"</span>, multiVals <span class="op">=</span> <span class="st">"first"</span><span class="op">)</span></span>
 <span><span class="fu"><a href="https://rdrr.io/pkg/SummarizedExperiment/man/SummarizedExperiment-class.html" class="external-link">rowData</a></span><span class="op">(</span><span class="va">sce</span><span class="op">)</span><span class="op">$</span><span class="va">symbol</span> <span class="op">&lt;-</span> <span class="va">gene_symbols</span></span>
+<span></span>
+<span></span>
+<span><span class="co"># ============================================================================</span></span>
+<span><span class="co"># Everything above is upstream data preparation — belongs in data-raw/.</span></span>
+<span><span class="co"># Everything below is core analysis — should be functionized in R/.</span></span>
+<span><span class="co"># ============================================================================</span></span>
 <span></span>
 <span><span class="va">counts_mat</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/pkg/BiocGenerics/man/dge.html" class="external-link">counts</a></span><span class="op">(</span><span class="va">sce</span><span class="op">)</span></span>
 <span></span>
@@ -1409,6 +1496,11 @@ Raw analysis code
 <span><span class="va">hallmarks</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://igordot.github.io/msigdbr/reference/msigdbr.html" class="external-link">msigdbr</a></span><span class="op">(</span>species <span class="op">=</span> <span class="st">"Homo sapiens"</span>, collection <span class="op">=</span> <span class="st">"H"</span><span class="op">)</span></span>
 <span><span class="va">gene_sets</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/pkg/S4Vectors/man/splitAsList.html" class="external-link">split</a></span><span class="op">(</span><span class="va">hallmarks</span><span class="op">$</span><span class="va">gene_symbol</span>, <span class="va">hallmarks</span><span class="op">$</span><span class="va">gs_name</span><span class="op">)</span></span>
 <span></span>
+<span><span class="co"># ============================================================================</span></span>
+<span><span class="co"># Everything above is upstream data preparation — belongs in data-raw/.</span></span>
+<span><span class="co"># Everything below is core analysis — should be functionized in R/.</span></span>
+<span><span class="co"># ============================================================================</span></span>
+<span></span>
 <span><span class="co"># --- Compute per-sample gene set scores ---</span></span>
 <span><span class="va">mat_z</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/pkg/BiocGenerics/man/t.html" class="external-link">t</a></span><span class="op">(</span><span class="fu"><a href="https://rdrr.io/r/base/scale.html" class="external-link">scale</a></span><span class="op">(</span><span class="fu"><a href="https://rdrr.io/pkg/BiocGenerics/man/t.html" class="external-link">t</a></span><span class="op">(</span><span class="va">mat</span><span class="op">)</span><span class="op">)</span><span class="op">)</span>  <span class="co"># z-score each gene across samples</span></span>
 <span></span>
@@ -1487,23 +1579,26 @@ Raw analysis code
 </div>
 </div>
 <div class="section level2">
-<h2 id="project-7-normalization-comparison-tool">Project 7: Normalization Comparison Tool<a class="anchor" aria-label="anchor" href="#project-7-normalization-comparison-tool"></a>
+<h2 id="project-7-gene-expression-profiler">Project 7: Gene Expression Profiler<a class="anchor" aria-label="anchor" href="#project-7-gene-expression-profiler"></a>
 </h2>
-<p><strong>Rationale:</strong> Raw counts must be normalized for library
-size (and composition bias, though we skip that here) before
-cross-sample comparison. Different methods (CPM, log2-CPM, quantile,
-upper-quartile) make different assumptions. Visualizing how each method
-reshapes per-sample distributions can be informative.</p>
+<p><strong>Rationale:</strong> After cell types are annotated, a common
+question is “How is gene X expressed across these groups?” Biologists
+routinely look up known marker genes to sanity-check annotations,
+explore candidate genes for follow-up experiments, or compare expression
+patterns between related genes. This tool provides per-group expression
+statistics and figures visualizations for any user-specified set of
+genes.</p>
 <div class="section level3">
 <h3 id="dataset-muraro-human-pancreas-human-scrna-seq">Dataset: Muraro Human Pancreas (Human scRNA-seq)<a class="anchor" aria-label="anchor" href="#dataset-muraro-human-pancreas-human-scrna-seq"></a>
 </h3>
 <p>The <a href="https://pubmed.ncbi.nlm.nih.gov/27693023/" class="external-link">Muraro et
 al. (2016) dataset</a> from <code>scRNAseq</code> profiles ~2,300 cells
 from human donor pancreatic islets using CEL-Seq2. Cell types include
-alpha, beta, delta, acinar, ductal, and more. The dramatic library size
-variation across cells (typical of scRNA-seq) makes normalization
-effects visually striking — CPM, log2-CPM, and quantile normalization
-reshape per-cell distributions in very different ways.</p>
+alpha, beta, delta, acinar, ductal, and more. The well-characterized
+marker genes for each pancreatic cell type (INS for beta cells, GCG for
+alpha, SST for delta, PRSS1 for acinar, KRT19 for ductal) make results
+immediately interpretable — students can verify their tool produces
+biologically expected patterns.</p>
 <details><summary>
 Data preparation code
 </summary><div class="sourceCode" id="cb15"><pre class="downlit sourceCode r">
@@ -1516,139 +1611,193 @@ Data preparation code
 <span><span class="va">example_sce</span> <span class="op">&lt;-</span> <span class="va">sce</span></span>
 <span></span>
 <span><span class="fu"><a href="https://rdrr.io/pkg/SummarizedExperiment/man/SummarizedExperiment-class.html" class="external-link">assays</a></span><span class="op">(</span><span class="va">example_sce</span><span class="op">)</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/base/list.html" class="external-link">list</a></span><span class="op">(</span>counts <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/pkg/BiocGenerics/man/dge.html" class="external-link">counts</a></span><span class="op">(</span><span class="va">example_sce</span><span class="op">)</span><span class="op">)</span></span>
-<span><span class="fu"><a href="https://rdrr.io/pkg/SummarizedExperiment/man/SummarizedExperiment-class.html" class="external-link">colData</a></span><span class="op">(</span><span class="va">example_sce</span><span class="op">)</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/pkg/SummarizedExperiment/man/SummarizedExperiment-class.html" class="external-link">colData</a></span><span class="op">(</span><span class="va">example_sce</span><span class="op">)</span><span class="op">[</span>, <span class="st">"label"</span>, drop <span class="op">=</span> <span class="cn">FALSE</span><span class="op">]</span></span>
-<span><span class="fu"><a href="https://rdrr.io/pkg/BiocGenerics/man/row_colnames.html" class="external-link">colnames</a></span><span class="op">(</span><span class="fu"><a href="https://rdrr.io/pkg/SummarizedExperiment/man/SummarizedExperiment-class.html" class="external-link">colData</a></span><span class="op">(</span><span class="va">example_sce</span><span class="op">)</span><span class="op">)</span> <span class="op">&lt;-</span> <span class="st">"cell_type"</span></span>
+<span></span>
+<span><span class="co"># Note: rownames have a "__chrN" suffix (e.g. "INS__chr11") —</span></span>
+<span><span class="fu"><a href="https://rdrr.io/pkg/BiocGenerics/man/row_colnames.html" class="external-link">rownames</a></span><span class="op">(</span><span class="va">example_sce</span><span class="op">)</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/base/grep.html" class="external-link">sub</a></span><span class="op">(</span><span class="st">"__chr.*$"</span>, <span class="st">""</span>, <span class="fu"><a href="https://rdrr.io/pkg/BiocGenerics/man/row_colnames.html" class="external-link">rownames</a></span><span class="op">(</span><span class="va">example_sce</span><span class="op">)</span><span class="op">)</span></span>
+<span></span>
+<span><span class="co"># Remove cells with NA cell type (unlabeled)</span></span>
+<span><span class="va">example_sce</span> <span class="op">&lt;-</span> <span class="va">example_sce</span><span class="op">[</span>, <span class="op">!</span><span class="fu"><a href="https://rdrr.io/r/base/NA.html" class="external-link">is.na</a></span><span class="op">(</span><span class="fu"><a href="https://rdrr.io/pkg/SummarizedExperiment/man/SummarizedExperiment-class.html" class="external-link">colData</a></span><span class="op">(</span><span class="va">example_sce</span><span class="op">)</span><span class="op">$</span><span class="va">label</span><span class="op">)</span><span class="op">]</span></span>
 <span></span>
 <span><span class="fu">usethis</span><span class="fu">::</span><span class="fu">use_data</span><span class="op">(</span><span class="va">example_sce</span>, overwrite <span class="op">=</span> <span class="cn">TRUE</span><span class="op">)</span></span></code></pre></div>
 </details><p><strong>Data structure:</strong>
 <code>SingleCellExperiment</code></p>
 <p><strong>What users should be able to do:</strong></p>
 <ul>
-<li>Filter out low-expression genes</li>
-<li>Apply multiple normalization methods (CPM, log2-CPM, quantile,
-size-factor/median-of-ratios) and store the normalized values as new
-assays in the SCE</li>
-<li>Compute per-cell distributional statistics (median, IQR, CV) before
-and after each normalization method</li>
-<li>Compute cross-method agreement: pairwise Spearman correlation of
-gene rankings between each pair of methods to quantify how much the
-normalization choice affects downstream results</li>
-<li>Visualize side-by-side distributions across methods as boxplots or
-density curves</li>
-<li>Export normalized counts, normalization statistics, and method
-agreement matrix to TSV files</li>
+<li>Normalize raw counts using <code><a href="https://rdrr.io/pkg/scuttle/man/logNormCounts.html" class="external-link">scuttle::logNormCounts()</a></code> —
+the standard Bioconductor approach (library-size-based size factors +
+log2 transform)</li>
+<li>Look up a set of genes by name, with validation against the dataset
+(report which genes were found and which were missing)</li>
+<li>Compute per-group expression statistics for each queried gene: mean
+expression, median expression, and detection rate (fraction of cells in
+each group with non-zero counts)</li>
+<li>Compute a gene specificity score for each gene — a <a href="https://en.wikipedia.org/wiki/Gini_coefficient" class="external-link">Gini
+coefficient</a> measuring how concentrated a gene’s expression is in one
+group versus spread evenly across all groups (0 = uniform, 1 = perfectly
+specific)</li>
+<li>Visualize expression as faceted violin plots (one panel per gene, x
+= cell type, colored by group) and as a co-expression scatter plot (two
+selected genes plotted against each other, colored by cell type)</li>
+<li>Export per-group expression statistics and gene specificity scores
+to TSV files</li>
 </ul>
-<p><strong>Key parameters:</strong> <code>methods</code> (character
-vector: “cpm”, “log2”, “quantile”, “size_factor”),
-<code>min_count</code></p>
-<p><strong>CLI outputs:</strong> <code>normalized_counts.tsv</code>,
-<code>normalization_stats.tsv</code>,
-<code>method_agreement.tsv</code></p>
-<p><strong>Shiny inputs:</strong> Checkbox group to select methods,
-boxplot ↔︎ density toggle, per-cell or per-method view, agreement
-heatmap</p>
+<p><strong>Key parameters:</strong> <code>genes</code> (character vector
+of gene names to query), <code>group_column</code> (metadata column for
+grouping, default <code>"cell_type"</code>), <code>min_detection</code>
+(minimum fraction of cells detecting a gene in at least one group to
+include it in results)</p>
+<p><strong>CLI outputs:</strong> <code>expression_stats.tsv</code>,
+<code>gene_specificity.tsv</code></p>
+<p><strong>Shiny inputs:</strong> Gene name text input
+(comma-separated), grouping variable dropdown, plot type toggle (violin
+/ co-expression scatter), gene pair selectors for scatter view,
+detection threshold slider</p>
 <p><strong>Dependencies:</strong> <code>SingleCellExperiment</code>,
-<code>scRNAseq</code> (data only)</p>
+<code>scuttle</code>, <code>scRNAseq</code> (data only)</p>
 <details><summary>
 Raw analysis code
 </summary><div class="sourceCode" id="cb16"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="kw"><a href="https://rdrr.io/r/base/library.html" class="external-link">library</a></span><span class="op">(</span><span class="va">SingleCellExperiment</span><span class="op">)</span></span>
 <span><span class="kw"><a href="https://rdrr.io/r/base/library.html" class="external-link">library</a></span><span class="op">(</span><span class="va">scRNAseq</span><span class="op">)</span></span>
+<span><span class="kw"><a href="https://rdrr.io/r/base/library.html" class="external-link">library</a></span><span class="op">(</span><span class="va">scuttle</span><span class="op">)</span></span>
 <span><span class="kw"><a href="https://rdrr.io/r/base/library.html" class="external-link">library</a></span><span class="op">(</span><span class="va"><a href="https://ggplot2.tidyverse.org" class="external-link">ggplot2</a></span><span class="op">)</span></span>
 <span></span>
 <span><span class="co"># --- Load data ---</span></span>
 <span><span class="va">sce</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/pkg/scRNAseq/man/MuraroPancreasData.html" class="external-link">MuraroPancreasData</a></span><span class="op">(</span><span class="op">)</span></span>
-<span><span class="va">counts_mat</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/pkg/BiocGenerics/man/dge.html" class="external-link">counts</a></span><span class="op">(</span><span class="va">sce</span><span class="op">)</span></span>
+<span></span>
+<span><span class="co"># Muraro rownames have a "__chrN" suffix — strip it for readable gene names</span></span>
+<span><span class="fu"><a href="https://rdrr.io/pkg/BiocGenerics/man/row_colnames.html" class="external-link">rownames</a></span><span class="op">(</span><span class="va">sce</span><span class="op">)</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/base/grep.html" class="external-link">sub</a></span><span class="op">(</span><span class="st">"__chr.*$"</span>, <span class="st">""</span>, <span class="fu"><a href="https://rdrr.io/pkg/BiocGenerics/man/row_colnames.html" class="external-link">rownames</a></span><span class="op">(</span><span class="va">sce</span><span class="op">)</span><span class="op">)</span></span>
+<span></span>
+<span><span class="co"># Remove cells with NA cell type (unlabeled)</span></span>
+<span><span class="va">sce</span> <span class="op">&lt;-</span> <span class="va">sce</span><span class="op">[</span>, <span class="op">!</span><span class="fu"><a href="https://rdrr.io/r/base/NA.html" class="external-link">is.na</a></span><span class="op">(</span><span class="fu"><a href="https://rdrr.io/pkg/SummarizedExperiment/man/SummarizedExperiment-class.html" class="external-link">colData</a></span><span class="op">(</span><span class="va">sce</span><span class="op">)</span><span class="op">$</span><span class="va">label</span><span class="op">)</span><span class="op">]</span></span>
 <span><span class="va">cell_type</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/pkg/SummarizedExperiment/man/SummarizedExperiment-class.html" class="external-link">colData</a></span><span class="op">(</span><span class="va">sce</span><span class="op">)</span><span class="op">$</span><span class="va">label</span></span>
 <span></span>
-<span><span class="co"># --- Filter low-expression genes (detected in &lt; 5 cells) ---</span></span>
-<span><span class="va">keep_genes</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/pkg/MatrixGenerics/man/rowSums.html" class="external-link">rowSums</a></span><span class="op">(</span><span class="va">counts_mat</span> <span class="op">&gt;</span> <span class="fl">0</span><span class="op">)</span> <span class="op">&gt;=</span> <span class="fl">5</span></span>
-<span><span class="va">counts_mat</span> <span class="op">&lt;-</span> <span class="va">counts_mat</span><span class="op">[</span><span class="va">keep_genes</span>, <span class="op">]</span></span>
-<span><span class="fu"><a href="https://rdrr.io/r/base/cat.html" class="external-link">cat</a></span><span class="op">(</span><span class="st">"Genes after filtering:"</span>, <span class="fu"><a href="https://rdrr.io/r/base/nrow.html" class="external-link">nrow</a></span><span class="op">(</span><span class="va">counts_mat</span><span class="op">)</span>, <span class="st">"\n"</span><span class="op">)</span></span>
+<span><span class="co"># --- Normalize using scuttle (standard Bioconductor scRNA-seq pipeline) ---</span></span>
+<span><span class="co"># logNormCounts() computes library-size-based size factors, normalizes,</span></span>
+<span><span class="co"># and log2-transforms, storing the result in logcounts(sce)</span></span>
+<span><span class="va">sce</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/pkg/scuttle/man/logNormCounts.html" class="external-link">logNormCounts</a></span><span class="op">(</span><span class="va">sce</span><span class="op">)</span></span>
+<span><span class="va">mat_norm</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/base/matrix.html" class="external-link">as.matrix</a></span><span class="op">(</span><span class="fu"><a href="https://rdrr.io/pkg/SingleCellExperiment/man/assays.html" class="external-link">logcounts</a></span><span class="op">(</span><span class="va">sce</span><span class="op">)</span><span class="op">)</span></span>
 <span></span>
-<span><span class="co"># --- Apply normalization methods ---</span></span>
-<span><span class="va">lib_sizes</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/pkg/MatrixGenerics/man/rowSums.html" class="external-link">colSums</a></span><span class="op">(</span><span class="va">counts_mat</span><span class="op">)</span></span>
+<span><span class="co"># ============================================================================</span></span>
+<span><span class="co"># Everything above is upstream data preparation — belongs in data-raw/.</span></span>
+<span><span class="co"># Everything below is core analysis — should be functionized in R/.</span></span>
+<span><span class="co"># ============================================================================</span></span>
 <span></span>
-<span><span class="co"># CPM</span></span>
-<span><span class="va">mat_cpm</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/pkg/BiocGenerics/man/t.html" class="external-link">t</a></span><span class="op">(</span><span class="fu"><a href="https://rdrr.io/pkg/BiocGenerics/man/t.html" class="external-link">t</a></span><span class="op">(</span><span class="va">counts_mat</span><span class="op">)</span> <span class="op">/</span> <span class="va">lib_sizes</span> <span class="op">*</span> <span class="fl">1e6</span><span class="op">)</span></span>
+<span><span class="co"># --- Define query genes (well-known pancreatic markers) ---</span></span>
+<span><span class="va">query_genes</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="st">"INS"</span>, <span class="st">"GCG"</span>, <span class="st">"SST"</span>, <span class="st">"PPY"</span>, <span class="st">"PRSS1"</span>, <span class="st">"KRT19"</span><span class="op">)</span></span>
 <span></span>
-<span><span class="co"># log2-CPM</span></span>
-<span><span class="va">mat_log2</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/base/Log.html" class="external-link">log2</a></span><span class="op">(</span><span class="va">mat_cpm</span> <span class="op">+</span> <span class="fl">1</span><span class="op">)</span></span>
+<span><span class="co"># Validate: check which genes are present in the dataset</span></span>
+<span><span class="va">found</span> <span class="op">&lt;-</span> <span class="va">query_genes</span> <span class="op"><a href="https://rdrr.io/pkg/BiocGenerics/man/match.html" class="external-link">%in%</a></span> <span class="fu"><a href="https://rdrr.io/pkg/BiocGenerics/man/row_colnames.html" class="external-link">rownames</a></span><span class="op">(</span><span class="va">mat_norm</span><span class="op">)</span></span>
+<span><span class="fu"><a href="https://rdrr.io/r/base/cat.html" class="external-link">cat</a></span><span class="op">(</span><span class="st">"Found:"</span>, <span class="fu"><a href="https://rdrr.io/pkg/BiocGenerics/man/paste.html" class="external-link">paste</a></span><span class="op">(</span><span class="va">query_genes</span><span class="op">[</span><span class="va">found</span><span class="op">]</span>, collapse <span class="op">=</span> <span class="st">", "</span><span class="op">)</span>, <span class="st">"\n"</span><span class="op">)</span></span>
+<span><span class="kw">if</span> <span class="op">(</span><span class="fu"><a href="https://rdrr.io/r/base/any.html" class="external-link">any</a></span><span class="op">(</span><span class="op">!</span><span class="va">found</span><span class="op">)</span><span class="op">)</span> <span class="fu"><a href="https://rdrr.io/r/base/cat.html" class="external-link">cat</a></span><span class="op">(</span><span class="st">"Missing:"</span>, <span class="fu"><a href="https://rdrr.io/pkg/BiocGenerics/man/paste.html" class="external-link">paste</a></span><span class="op">(</span><span class="va">query_genes</span><span class="op">[</span><span class="op">!</span><span class="va">found</span><span class="op">]</span>, collapse <span class="op">=</span> <span class="st">", "</span><span class="op">)</span>, <span class="st">"\n"</span><span class="op">)</span></span>
+<span><span class="va">query_genes</span> <span class="op">&lt;-</span> <span class="va">query_genes</span><span class="op">[</span><span class="va">found</span><span class="op">]</span></span>
 <span></span>
-<span><span class="co"># Quantile normalization (simple rank-based)</span></span>
-<span><span class="va">counts_dense_q</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/base/matrix.html" class="external-link">as.matrix</a></span><span class="op">(</span><span class="va">counts_mat</span><span class="op">)</span></span>
-<span><span class="va">ranks</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/base/apply.html" class="external-link">apply</a></span><span class="op">(</span><span class="va">counts_dense_q</span>, <span class="fl">2</span>, <span class="va">rank</span>, ties.method <span class="op">=</span> <span class="st">"average"</span><span class="op">)</span></span>
-<span><span class="va">sorted_means</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/pkg/MatrixGenerics/man/rowMeans.html" class="external-link">rowMeans</a></span><span class="op">(</span><span class="fu"><a href="https://rdrr.io/r/base/apply.html" class="external-link">apply</a></span><span class="op">(</span><span class="va">counts_dense_q</span>, <span class="fl">2</span>, <span class="va">sort</span><span class="op">)</span><span class="op">)</span></span>
-<span><span class="va">mat_quant</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/base/apply.html" class="external-link">apply</a></span><span class="op">(</span><span class="va">ranks</span>, <span class="fl">2</span>, <span class="kw">function</span><span class="op">(</span><span class="va">r</span><span class="op">)</span> <span class="va">sorted_means</span><span class="op">[</span><span class="fu"><a href="https://rdrr.io/r/base/integer.html" class="external-link">as.integer</a></span><span class="op">(</span><span class="va">r</span><span class="op">)</span><span class="op">]</span><span class="op">)</span></span>
-<span><span class="fu"><a href="https://rdrr.io/r/base/dimnames.html" class="external-link">dimnames</a></span><span class="op">(</span><span class="va">mat_quant</span><span class="op">)</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/base/dimnames.html" class="external-link">dimnames</a></span><span class="op">(</span><span class="va">counts_dense_q</span><span class="op">)</span></span>
+<span><span class="co"># --- Build long-format expression data frame ---</span></span>
+<span><span class="va">n_cells</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/base/nrow.html" class="external-link">ncol</a></span><span class="op">(</span><span class="va">mat_norm</span><span class="op">)</span></span>
+<span><span class="va">expr_vals</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="op">)</span></span>
+<span><span class="kw">for</span> <span class="op">(</span><span class="va">g</span> <span class="kw">in</span> <span class="va">query_genes</span><span class="op">)</span> <span class="va">expr_vals</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="va">expr_vals</span>, <span class="va">mat_norm</span><span class="op">[</span><span class="va">g</span>, <span class="op">]</span><span class="op">)</span></span>
 <span></span>
-<span><span class="co"># Size-factor normalization (median-of-ratios, simplified DESeq2-style)</span></span>
-<span><span class="va">counts_dense</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/base/matrix.html" class="external-link">as.matrix</a></span><span class="op">(</span><span class="va">counts_mat</span><span class="op">)</span></span>
-<span><span class="va">log_means</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/pkg/MatrixGenerics/man/rowMeans.html" class="external-link">rowMeans</a></span><span class="op">(</span><span class="fu"><a href="https://rdrr.io/r/base/Log.html" class="external-link">log</a></span><span class="op">(</span><span class="va">counts_dense</span> <span class="op">+</span> <span class="fl">1</span><span class="op">)</span><span class="op">)</span></span>
-<span><span class="va">ratios</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/base/sweep.html" class="external-link">sweep</a></span><span class="op">(</span><span class="fu"><a href="https://rdrr.io/r/base/Log.html" class="external-link">log</a></span><span class="op">(</span><span class="va">counts_dense</span> <span class="op">+</span> <span class="fl">1</span><span class="op">)</span>, <span class="fl">1</span>, <span class="va">log_means</span>, FUN <span class="op">=</span> <span class="st">"-"</span><span class="op">)</span></span>
-<span><span class="va">size_factors</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/base/Log.html" class="external-link">exp</a></span><span class="op">(</span><span class="fu"><a href="https://rdrr.io/r/base/apply.html" class="external-link">apply</a></span><span class="op">(</span><span class="va">ratios</span>, <span class="fl">2</span>, <span class="va">median</span><span class="op">)</span><span class="op">)</span></span>
-<span><span class="va">mat_sf</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/pkg/BiocGenerics/man/t.html" class="external-link">t</a></span><span class="op">(</span><span class="fu"><a href="https://rdrr.io/pkg/BiocGenerics/man/t.html" class="external-link">t</a></span><span class="op">(</span><span class="va">counts_dense</span><span class="op">)</span> <span class="op">/</span> <span class="va">size_factors</span><span class="op">)</span></span>
+<span><span class="va">expr_long</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/base/data.frame.html" class="external-link">data.frame</a></span><span class="op">(</span></span>
+<span>    cell_id   <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/rep.html" class="external-link">rep</a></span><span class="op">(</span><span class="fu"><a href="https://rdrr.io/pkg/BiocGenerics/man/row_colnames.html" class="external-link">colnames</a></span><span class="op">(</span><span class="va">mat_norm</span><span class="op">)</span>, <span class="fu"><a href="https://rdrr.io/r/base/length.html" class="external-link">length</a></span><span class="op">(</span><span class="va">query_genes</span><span class="op">)</span><span class="op">)</span>,</span>
+<span>    gene      <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/rep.html" class="external-link">rep</a></span><span class="op">(</span><span class="va">query_genes</span>, each <span class="op">=</span> <span class="va">n_cells</span><span class="op">)</span>,</span>
+<span>    expr      <span class="op">=</span> <span class="va">expr_vals</span>,</span>
+<span>    cell_type <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/rep.html" class="external-link">rep</a></span><span class="op">(</span><span class="va">cell_type</span>, <span class="fu"><a href="https://rdrr.io/r/base/length.html" class="external-link">length</a></span><span class="op">(</span><span class="va">query_genes</span><span class="op">)</span><span class="op">)</span>,</span>
+<span>    stringsAsFactors <span class="op">=</span> <span class="cn">FALSE</span></span>
+<span><span class="op">)</span></span>
 <span></span>
-<span><span class="co"># --- Per-cell distributional statistics ---</span></span>
-<span><span class="va">all_stats</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/base/data.frame.html" class="external-link">data.frame</a></span><span class="op">(</span><span class="op">)</span></span>
-<span><span class="kw">for</span> <span class="op">(</span><span class="va">method_info</span> <span class="kw">in</span> <span class="fu"><a href="https://rdrr.io/r/base/list.html" class="external-link">list</a></span><span class="op">(</span></span>
-<span>    <span class="fu"><a href="https://rdrr.io/r/base/list.html" class="external-link">list</a></span><span class="op">(</span>mat <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/matrix.html" class="external-link">as.matrix</a></span><span class="op">(</span><span class="va">counts_mat</span><span class="op">)</span>, name <span class="op">=</span> <span class="st">"raw"</span><span class="op">)</span>,</span>
-<span>    <span class="fu"><a href="https://rdrr.io/r/base/list.html" class="external-link">list</a></span><span class="op">(</span>mat <span class="op">=</span> <span class="va">mat_cpm</span>, name <span class="op">=</span> <span class="st">"cpm"</span><span class="op">)</span>,</span>
-<span>    <span class="fu"><a href="https://rdrr.io/r/base/list.html" class="external-link">list</a></span><span class="op">(</span>mat <span class="op">=</span> <span class="va">mat_log2</span>, name <span class="op">=</span> <span class="st">"log2_cpm"</span><span class="op">)</span>,</span>
-<span>    <span class="fu"><a href="https://rdrr.io/r/base/list.html" class="external-link">list</a></span><span class="op">(</span>mat <span class="op">=</span> <span class="va">mat_quant</span>, name <span class="op">=</span> <span class="st">"quantile"</span><span class="op">)</span>,</span>
-<span>    <span class="fu"><a href="https://rdrr.io/r/base/list.html" class="external-link">list</a></span><span class="op">(</span>mat <span class="op">=</span> <span class="va">mat_sf</span>, name <span class="op">=</span> <span class="st">"size_factor"</span><span class="op">)</span></span>
-<span><span class="op">)</span><span class="op">)</span> <span class="op">{</span></span>
-<span>    <span class="va">m</span> <span class="op">&lt;-</span> <span class="va">method_info</span><span class="op">$</span><span class="va">mat</span></span>
-<span>    <span class="va">stats_i</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/base/data.frame.html" class="external-link">data.frame</a></span><span class="op">(</span></span>
-<span>        cell_id <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/pkg/BiocGenerics/man/row_colnames.html" class="external-link">colnames</a></span><span class="op">(</span><span class="va">m</span><span class="op">)</span>,</span>
-<span>        method  <span class="op">=</span> <span class="va">method_info</span><span class="op">$</span><span class="va">name</span>,</span>
-<span>        median  <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/apply.html" class="external-link">apply</a></span><span class="op">(</span><span class="va">m</span>, <span class="fl">2</span>, <span class="va">median</span><span class="op">)</span>,</span>
-<span>        iqr     <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/apply.html" class="external-link">apply</a></span><span class="op">(</span><span class="va">m</span>, <span class="fl">2</span>, <span class="va">IQR</span><span class="op">)</span>,</span>
-<span>        cv      <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/apply.html" class="external-link">apply</a></span><span class="op">(</span><span class="va">m</span>, <span class="fl">2</span>, <span class="kw">function</span><span class="op">(</span><span class="va">x</span><span class="op">)</span> <span class="fu">sd</span><span class="op">(</span><span class="va">x</span><span class="op">)</span> <span class="op">/</span> <span class="op">(</span><span class="fu"><a href="https://rdrr.io/pkg/BiocGenerics/man/mean.html" class="external-link">mean</a></span><span class="op">(</span><span class="va">x</span><span class="op">)</span> <span class="op">+</span> <span class="fl">1e-8</span><span class="op">)</span><span class="op">)</span></span>
-<span>    <span class="op">)</span></span>
-<span>    <span class="va">all_stats</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/pkg/BiocGenerics/man/cbind.html" class="external-link">rbind</a></span><span class="op">(</span><span class="va">all_stats</span>, <span class="va">stats_i</span><span class="op">)</span></span>
+<span><span class="co"># --- Per-group expression statistics ---</span></span>
+<span><span class="va">groups</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/pkg/BiocGenerics/man/unique.html" class="external-link">unique</a></span><span class="op">(</span><span class="va">cell_type</span><span class="op">)</span></span>
+<span><span class="va">counts_mat</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/base/matrix.html" class="external-link">as.matrix</a></span><span class="op">(</span><span class="fu"><a href="https://rdrr.io/pkg/BiocGenerics/man/dge.html" class="external-link">counts</a></span><span class="op">(</span><span class="va">sce</span><span class="op">)</span><span class="op">)</span></span>
+<span><span class="va">stats_list</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/base/vector.html" class="external-link">vector</a></span><span class="op">(</span><span class="st">"list"</span>, <span class="fu"><a href="https://rdrr.io/r/base/length.html" class="external-link">length</a></span><span class="op">(</span><span class="va">query_genes</span><span class="op">)</span> <span class="op">*</span> <span class="fu"><a href="https://rdrr.io/r/base/length.html" class="external-link">length</a></span><span class="op">(</span><span class="va">groups</span><span class="op">)</span><span class="op">)</span></span>
+<span><span class="va">k</span> <span class="op">&lt;-</span> <span class="fl">1</span></span>
+<span><span class="kw">for</span> <span class="op">(</span><span class="va">gene</span> <span class="kw">in</span> <span class="va">query_genes</span><span class="op">)</span> <span class="op">{</span></span>
+<span>    <span class="va">vals</span> <span class="op">&lt;-</span> <span class="va">mat_norm</span><span class="op">[</span><span class="va">gene</span>, <span class="op">]</span></span>
+<span>    <span class="va">raw_vals</span> <span class="op">&lt;-</span> <span class="va">counts_mat</span><span class="op">[</span><span class="va">gene</span>, <span class="op">]</span></span>
+<span>    <span class="kw">for</span> <span class="op">(</span><span class="va">ct</span> <span class="kw">in</span> <span class="va">groups</span><span class="op">)</span> <span class="op">{</span></span>
+<span>        <span class="va">idx</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/pkg/BiocGenerics/man/which.html" class="external-link">which</a></span><span class="op">(</span><span class="va">cell_type</span> <span class="op">==</span> <span class="va">ct</span><span class="op">)</span></span>
+<span>        <span class="va">stats_list</span><span class="op">[[</span><span class="va">k</span><span class="op">]</span><span class="op">]</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/base/data.frame.html" class="external-link">data.frame</a></span><span class="op">(</span></span>
+<span>            gene           <span class="op">=</span> <span class="va">gene</span>,</span>
+<span>            cell_type      <span class="op">=</span> <span class="va">ct</span>,</span>
+<span>            mean_expr      <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/pkg/BiocGenerics/man/mean.html" class="external-link">mean</a></span><span class="op">(</span><span class="va">vals</span><span class="op">[</span><span class="va">idx</span><span class="op">]</span><span class="op">)</span>,</span>
+<span>            median_expr    <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/stats/median.html" class="external-link">median</a></span><span class="op">(</span><span class="va">vals</span><span class="op">[</span><span class="va">idx</span><span class="op">]</span><span class="op">)</span>,</span>
+<span>            detection_rate <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/pkg/BiocGenerics/man/mean.html" class="external-link">mean</a></span><span class="op">(</span><span class="va">raw_vals</span><span class="op">[</span><span class="va">idx</span><span class="op">]</span> <span class="op">&gt;</span> <span class="fl">0</span><span class="op">)</span>,</span>
+<span>            n_cells        <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/length.html" class="external-link">length</a></span><span class="op">(</span><span class="va">idx</span><span class="op">)</span>,</span>
+<span>            stringsAsFactors <span class="op">=</span> <span class="cn">FALSE</span></span>
+<span>        <span class="op">)</span></span>
+<span>        <span class="va">k</span> <span class="op">&lt;-</span> <span class="va">k</span> <span class="op">+</span> <span class="fl">1</span></span>
+<span>    <span class="op">}</span></span>
 <span><span class="op">}</span></span>
-<span><span class="va">all_stats</span><span class="op">$</span><span class="va">method</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/base/factor.html" class="external-link">factor</a></span><span class="op">(</span><span class="va">all_stats</span><span class="op">$</span><span class="va">method</span>,</span>
-<span>                           levels <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="st">"raw"</span>, <span class="st">"cpm"</span>, <span class="st">"log2_cpm"</span>, <span class="st">"quantile"</span>,</span>
-<span>                                      <span class="st">"size_factor"</span><span class="op">)</span><span class="op">)</span></span>
+<span><span class="va">expr_stats</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/pkg/BiocGenerics/man/do.call.html" class="external-link">do.call</a></span><span class="op">(</span><span class="va">rbind</span>, <span class="va">stats_list</span><span class="op">)</span></span>
+<span><span class="fu"><a href="https://rdrr.io/r/utils/head.html" class="external-link">head</a></span><span class="op">(</span><span class="va">expr_stats</span><span class="op">)</span></span>
 <span></span>
-<span><span class="co"># --- Side-by-side boxplots of per-cell medians ---</span></span>
-<span><span class="va">p</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://ggplot2.tidyverse.org/reference/ggplot.html" class="external-link">ggplot</a></span><span class="op">(</span><span class="va">all_stats</span>, <span class="fu"><a href="https://ggplot2.tidyverse.org/reference/aes.html" class="external-link">aes</a></span><span class="op">(</span>x <span class="op">=</span> <span class="va">method</span>, y <span class="op">=</span> <span class="va">median</span>, fill <span class="op">=</span> <span class="va">method</span><span class="op">)</span><span class="op">)</span> <span class="op">+</span></span>
-<span>    <span class="fu"><a href="https://ggplot2.tidyverse.org/reference/geom_boxplot.html" class="external-link">geom_boxplot</a></span><span class="op">(</span>outlier.size <span class="op">=</span> <span class="fl">0.3</span><span class="op">)</span> <span class="op">+</span></span>
-<span>    <span class="fu"><a href="https://ggplot2.tidyverse.org/reference/ggtheme.html" class="external-link">theme_bw</a></span><span class="op">(</span>base_size <span class="op">=</span> <span class="fl">14</span><span class="op">)</span> <span class="op">+</span></span>
-<span>    <span class="fu"><a href="https://ggplot2.tidyverse.org/reference/labs.html" class="external-link">labs</a></span><span class="op">(</span>x <span class="op">=</span> <span class="st">"Normalization Method"</span>, y <span class="op">=</span> <span class="st">"Per-Cell Median Expression"</span>,</span>
-<span>         title <span class="op">=</span> <span class="st">"Effect of Normalization on Per-Cell Distributions"</span><span class="op">)</span></span>
-<span><span class="fu"><a href="https://rdrr.io/r/base/print.html" class="external-link">print</a></span><span class="op">(</span><span class="va">p</span><span class="op">)</span></span>
+<span><span class="co"># --- Gene specificity: Gini coefficient of mean expression across groups ---</span></span>
+<span><span class="co"># Gini = 0 means the gene is equally expressed in all groups</span></span>
+<span><span class="co"># Gini = 1 means the gene is expressed in only one group</span></span>
+<span><span class="va">gini</span> <span class="op">&lt;-</span> <span class="kw">function</span><span class="op">(</span><span class="va">x</span><span class="op">)</span> <span class="op">{</span></span>
+<span>    <span class="va">x</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/pkg/BiocGenerics/man/sort.html" class="external-link">sort</a></span><span class="op">(</span><span class="va">x</span><span class="op">[</span><span class="va">x</span> <span class="op">&gt;=</span> <span class="fl">0</span><span class="op">]</span><span class="op">)</span></span>
+<span>    <span class="va">n</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/base/length.html" class="external-link">length</a></span><span class="op">(</span><span class="va">x</span><span class="op">)</span></span>
+<span>    <span class="kw">if</span> <span class="op">(</span><span class="va">n</span> <span class="op">==</span> <span class="fl">0</span> <span class="op">||</span> <span class="fu"><a href="https://rdrr.io/r/base/sum.html" class="external-link">sum</a></span><span class="op">(</span><span class="va">x</span><span class="op">)</span> <span class="op">==</span> <span class="fl">0</span><span class="op">)</span> <span class="kw"><a href="https://rdrr.io/r/base/function.html" class="external-link">return</a></span><span class="op">(</span><span class="fl">0</span><span class="op">)</span></span>
+<span>    <span class="va">indices</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/base/seq.html" class="external-link">seq_len</a></span><span class="op">(</span><span class="va">n</span><span class="op">)</span></span>
+<span>    <span class="fl">2</span> <span class="op">*</span> <span class="fu"><a href="https://rdrr.io/r/base/sum.html" class="external-link">sum</a></span><span class="op">(</span><span class="va">indices</span> <span class="op">*</span> <span class="va">x</span><span class="op">)</span> <span class="op">/</span> <span class="op">(</span><span class="va">n</span> <span class="op">*</span> <span class="fu"><a href="https://rdrr.io/r/base/sum.html" class="external-link">sum</a></span><span class="op">(</span><span class="va">x</span><span class="op">)</span><span class="op">)</span> <span class="op">-</span> <span class="op">(</span><span class="va">n</span> <span class="op">+</span> <span class="fl">1</span><span class="op">)</span> <span class="op">/</span> <span class="va">n</span></span>
+<span><span class="op">}</span></span>
+<span></span>
+<span><span class="va">spec_list</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/base/vector.html" class="external-link">vector</a></span><span class="op">(</span><span class="st">"list"</span>, <span class="fu"><a href="https://rdrr.io/r/base/length.html" class="external-link">length</a></span><span class="op">(</span><span class="va">query_genes</span><span class="op">)</span><span class="op">)</span></span>
+<span><span class="kw">for</span> <span class="op">(</span><span class="va">i</span> <span class="kw">in</span> <span class="fu"><a href="https://rdrr.io/r/base/seq.html" class="external-link">seq_along</a></span><span class="op">(</span><span class="va">query_genes</span><span class="op">)</span><span class="op">)</span> <span class="op">{</span></span>
+<span>    <span class="va">gene</span> <span class="op">&lt;-</span> <span class="va">query_genes</span><span class="op">[</span><span class="va">i</span><span class="op">]</span></span>
+<span>    <span class="va">group_means</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/pkg/BiocGenerics/man/tapply.html" class="external-link">tapply</a></span><span class="op">(</span><span class="va">mat_norm</span><span class="op">[</span><span class="va">gene</span>, <span class="op">]</span>, <span class="va">cell_type</span>, <span class="va">mean</span><span class="op">)</span></span>
+<span>    <span class="va">top_group</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/base/names.html" class="external-link">names</a></span><span class="op">(</span><span class="fu"><a href="https://rdrr.io/pkg/BiocGenerics/man/which.min.html" class="external-link">which.max</a></span><span class="op">(</span><span class="va">group_means</span><span class="op">)</span><span class="op">)</span></span>
+<span>    <span class="va">spec_list</span><span class="op">[[</span><span class="va">i</span><span class="op">]</span><span class="op">]</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/base/data.frame.html" class="external-link">data.frame</a></span><span class="op">(</span></span>
+<span>        gene         <span class="op">=</span> <span class="va">gene</span>,</span>
+<span>        gini_score   <span class="op">=</span> <span class="fu">gini</span><span class="op">(</span><span class="fu"><a href="https://rdrr.io/r/base/numeric.html" class="external-link">as.numeric</a></span><span class="op">(</span><span class="va">group_means</span><span class="op">)</span><span class="op">)</span>,</span>
+<span>        top_group    <span class="op">=</span> <span class="va">top_group</span>,</span>
+<span>        top_mean     <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/Extremes.html" class="external-link">max</a></span><span class="op">(</span><span class="va">group_means</span><span class="op">)</span>,</span>
+<span>        overall_mean <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/pkg/BiocGenerics/man/mean.html" class="external-link">mean</a></span><span class="op">(</span><span class="va">mat_norm</span><span class="op">[</span><span class="va">gene</span>, <span class="op">]</span><span class="op">)</span>,</span>
+<span>        stringsAsFactors <span class="op">=</span> <span class="cn">FALSE</span></span>
+<span>    <span class="op">)</span></span>
+<span><span class="op">}</span></span>
+<span><span class="va">specificity</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/pkg/BiocGenerics/man/do.call.html" class="external-link">do.call</a></span><span class="op">(</span><span class="va">rbind</span>, <span class="va">spec_list</span><span class="op">)</span></span>
+<span><span class="va">specificity</span> <span class="op">&lt;-</span> <span class="va">specificity</span><span class="op">[</span><span class="fu"><a href="https://rdrr.io/pkg/BiocGenerics/man/order.html" class="external-link">order</a></span><span class="op">(</span><span class="va">specificity</span><span class="op">$</span><span class="va">gini_score</span>, decreasing <span class="op">=</span> <span class="cn">TRUE</span><span class="op">)</span>, <span class="op">]</span></span>
+<span><span class="fu"><a href="https://rdrr.io/r/base/print.html" class="external-link">print</a></span><span class="op">(</span><span class="va">specificity</span><span class="op">)</span></span>
+<span></span>
+<span><span class="co"># --- Violin plot: one panel per gene, x = cell type ---</span></span>
+<span><span class="va">p_violin</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://ggplot2.tidyverse.org/reference/ggplot.html" class="external-link">ggplot</a></span><span class="op">(</span><span class="va">expr_long</span>, <span class="fu"><a href="https://ggplot2.tidyverse.org/reference/aes.html" class="external-link">aes</a></span><span class="op">(</span>x <span class="op">=</span> <span class="va">cell_type</span>, y <span class="op">=</span> <span class="va">expr</span>, fill <span class="op">=</span> <span class="va">cell_type</span><span class="op">)</span><span class="op">)</span> <span class="op">+</span></span>
+<span>    <span class="fu"><a href="https://ggplot2.tidyverse.org/reference/geom_violin.html" class="external-link">geom_violin</a></span><span class="op">(</span>trim <span class="op">=</span> <span class="cn">FALSE</span>, alpha <span class="op">=</span> <span class="fl">0.7</span>, scale <span class="op">=</span> <span class="st">"width"</span><span class="op">)</span> <span class="op">+</span></span>
+<span>    <span class="fu"><a href="https://ggplot2.tidyverse.org/reference/geom_boxplot.html" class="external-link">geom_boxplot</a></span><span class="op">(</span>width <span class="op">=</span> <span class="fl">0.15</span>, fill <span class="op">=</span> <span class="st">"white"</span>, outlier.size <span class="op">=</span> <span class="fl">0.3</span><span class="op">)</span> <span class="op">+</span></span>
+<span>    <span class="fu"><a href="https://ggplot2.tidyverse.org/reference/facet_wrap.html" class="external-link">facet_wrap</a></span><span class="op">(</span><span class="op">~</span> <span class="va">gene</span>, scales <span class="op">=</span> <span class="st">"free_y"</span>, ncol <span class="op">=</span> <span class="fl">3</span><span class="op">)</span> <span class="op">+</span></span>
+<span>    <span class="fu"><a href="https://ggplot2.tidyverse.org/reference/ggtheme.html" class="external-link">theme_bw</a></span><span class="op">(</span>base_size <span class="op">=</span> <span class="fl">13</span><span class="op">)</span> <span class="op">+</span></span>
+<span>    <span class="fu"><a href="https://ggplot2.tidyverse.org/reference/theme.html" class="external-link">theme</a></span><span class="op">(</span>axis.text.x <span class="op">=</span> <span class="fu"><a href="https://ggplot2.tidyverse.org/reference/element.html" class="external-link">element_text</a></span><span class="op">(</span>angle <span class="op">=</span> <span class="fl">45</span>, hjust <span class="op">=</span> <span class="fl">1</span>, size <span class="op">=</span> <span class="fl">9</span><span class="op">)</span>,</span>
+<span>          legend.position <span class="op">=</span> <span class="st">"none"</span><span class="op">)</span> <span class="op">+</span></span>
+<span>    <span class="fu"><a href="https://ggplot2.tidyverse.org/reference/labs.html" class="external-link">labs</a></span><span class="op">(</span>x <span class="op">=</span> <span class="st">"Cell Type"</span>, y <span class="op">=</span> <span class="st">"Normalized Expression (log2)"</span>,</span>
+<span>         title <span class="op">=</span> <span class="st">"Gene Expression Across Cell Types"</span><span class="op">)</span></span>
+<span><span class="fu"><a href="https://rdrr.io/r/base/print.html" class="external-link">print</a></span><span class="op">(</span><span class="va">p_violin</span><span class="op">)</span></span>
+<span></span>
+<span><span class="co"># --- Co-expression scatter: INS vs GCG, colored by cell type ---</span></span>
+<span><span class="va">gene_a</span> <span class="op">&lt;-</span> <span class="st">"INS"</span></span>
+<span><span class="va">gene_b</span> <span class="op">&lt;-</span> <span class="st">"GCG"</span></span>
+<span><span class="va">scatter_df</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/base/data.frame.html" class="external-link">data.frame</a></span><span class="op">(</span></span>
+<span>    expr_a    <span class="op">=</span> <span class="va">mat_norm</span><span class="op">[</span><span class="va">gene_a</span>, <span class="op">]</span>,</span>
+<span>    expr_b    <span class="op">=</span> <span class="va">mat_norm</span><span class="op">[</span><span class="va">gene_b</span>, <span class="op">]</span>,</span>
+<span>    cell_type <span class="op">=</span> <span class="va">cell_type</span></span>
+<span><span class="op">)</span></span>
+<span></span>
+<span><span class="va">p_scatter</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://ggplot2.tidyverse.org/reference/ggplot.html" class="external-link">ggplot</a></span><span class="op">(</span><span class="va">scatter_df</span>, <span class="fu"><a href="https://ggplot2.tidyverse.org/reference/aes.html" class="external-link">aes</a></span><span class="op">(</span>x <span class="op">=</span> <span class="va">expr_a</span>, y <span class="op">=</span> <span class="va">expr_b</span>, color <span class="op">=</span> <span class="va">cell_type</span><span class="op">)</span><span class="op">)</span> <span class="op">+</span></span>
+<span>    <span class="fu"><a href="https://ggplot2.tidyverse.org/reference/geom_point.html" class="external-link">geom_point</a></span><span class="op">(</span>size <span class="op">=</span> <span class="fl">1.5</span>, alpha <span class="op">=</span> <span class="fl">1</span><span class="op">)</span> <span class="op">+</span></span>
+<span>    <span class="fu"><a href="https://ggplot2.tidyverse.org/reference/ggtheme.html" class="external-link">theme_bw</a></span><span class="op">(</span>base_size <span class="op">=</span> <span class="fl">13</span><span class="op">)</span> <span class="op">+</span></span>
+<span>    <span class="fu"><a href="https://ggplot2.tidyverse.org/reference/labs.html" class="external-link">labs</a></span><span class="op">(</span>x <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/paste.html" class="external-link">paste0</a></span><span class="op">(</span><span class="va">gene_a</span>, <span class="st">" (log-normalized)"</span><span class="op">)</span>,</span>
+<span>         y <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/paste.html" class="external-link">paste0</a></span><span class="op">(</span><span class="va">gene_b</span>, <span class="st">" (log-normalized)"</span><span class="op">)</span>,</span>
+<span>         color <span class="op">=</span> <span class="st">"Cell Type"</span>,</span>
+<span>         title <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/paste.html" class="external-link">paste0</a></span><span class="op">(</span><span class="st">"Co-Expression: "</span>, <span class="va">gene_a</span>, <span class="st">" vs. "</span>, <span class="va">gene_b</span><span class="op">)</span>,</span>
+<span>         subtitle <span class="op">=</span> <span class="st">"Mutually exclusive in alpha vs. beta cells"</span><span class="op">)</span></span>
+<span><span class="fu"><a href="https://rdrr.io/r/base/print.html" class="external-link">print</a></span><span class="op">(</span><span class="va">p_scatter</span><span class="op">)</span></span>
 <span></span>
 <span><span class="co"># --- Export ---</span></span>
-<span><span class="va">output_dir</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/base/file.path.html" class="external-link">file.path</a></span><span class="op">(</span><span class="fu"><a href="https://rdrr.io/r/base/tempfile.html" class="external-link">tempdir</a></span><span class="op">(</span><span class="op">)</span>, <span class="st">"norm_output"</span><span class="op">)</span></span>
+<span><span class="va">output_dir</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/base/file.path.html" class="external-link">file.path</a></span><span class="op">(</span><span class="fu"><a href="https://rdrr.io/r/base/tempfile.html" class="external-link">tempdir</a></span><span class="op">(</span><span class="op">)</span>, <span class="st">"expr_output"</span><span class="op">)</span></span>
 <span><span class="fu"><a href="https://rdrr.io/r/base/files2.html" class="external-link">dir.create</a></span><span class="op">(</span><span class="va">output_dir</span>, recursive <span class="op">=</span> <span class="cn">TRUE</span>, showWarnings <span class="op">=</span> <span class="cn">FALSE</span><span class="op">)</span></span>
 <span></span>
-<span><span class="co"># Export log2-CPM for a subset of genes (full matrix too large)</span></span>
-<span><span class="va">subset_genes</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/pkg/BiocGenerics/man/row_colnames.html" class="external-link">rownames</a></span><span class="op">(</span><span class="va">mat_log2</span><span class="op">)</span><span class="op">[</span><span class="fl">1</span><span class="op">:</span><span class="fu"><a href="https://rdrr.io/r/base/Extremes.html" class="external-link">min</a></span><span class="op">(</span><span class="fl">500</span>, <span class="fu"><a href="https://rdrr.io/r/base/nrow.html" class="external-link">nrow</a></span><span class="op">(</span><span class="va">mat_log2</span><span class="op">)</span><span class="op">)</span><span class="op">]</span></span>
-<span><span class="va">norm_out</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/pkg/BiocGenerics/man/as.data.frame.html" class="external-link">as.data.frame</a></span><span class="op">(</span><span class="fu"><a href="https://rdrr.io/r/base/matrix.html" class="external-link">as.matrix</a></span><span class="op">(</span><span class="va">mat_log2</span><span class="op">[</span><span class="va">subset_genes</span>, <span class="op">]</span><span class="op">)</span><span class="op">)</span></span>
-<span><span class="va">norm_out</span><span class="op">$</span><span class="va">gene</span> <span class="op">&lt;-</span> <span class="va">subset_genes</span></span>
-<span><span class="fu"><a href="https://rdrr.io/r/utils/write.table.html" class="external-link">write.table</a></span><span class="op">(</span><span class="va">norm_out</span>, <span class="fu"><a href="https://rdrr.io/r/base/file.path.html" class="external-link">file.path</a></span><span class="op">(</span><span class="va">output_dir</span>, <span class="st">"normalized_counts.tsv"</span><span class="op">)</span>,</span>
+<span><span class="fu"><a href="https://rdrr.io/r/utils/write.table.html" class="external-link">write.table</a></span><span class="op">(</span><span class="va">expr_stats</span>, <span class="fu"><a href="https://rdrr.io/r/base/file.path.html" class="external-link">file.path</a></span><span class="op">(</span><span class="va">output_dir</span>, <span class="st">"expression_stats.tsv"</span><span class="op">)</span>,</span>
 <span>            sep <span class="op">=</span> <span class="st">"\t"</span>, row.names <span class="op">=</span> <span class="cn">FALSE</span>, quote <span class="op">=</span> <span class="cn">FALSE</span><span class="op">)</span></span>
 <span></span>
-<span><span class="fu"><a href="https://rdrr.io/r/utils/write.table.html" class="external-link">write.table</a></span><span class="op">(</span><span class="va">all_stats</span>, <span class="fu"><a href="https://rdrr.io/r/base/file.path.html" class="external-link">file.path</a></span><span class="op">(</span><span class="va">output_dir</span>, <span class="st">"normalization_stats.tsv"</span><span class="op">)</span>,</span>
-<span>            sep <span class="op">=</span> <span class="st">"\t"</span>, row.names <span class="op">=</span> <span class="cn">FALSE</span>, quote <span class="op">=</span> <span class="cn">FALSE</span><span class="op">)</span></span>
-<span></span>
-<span><span class="co"># --- Cross-method agreement ---</span></span>
-<span><span class="co"># For top 500 variable genes, compute pairwise Spearman r of gene means</span></span>
-<span><span class="co"># across methods to assess how much normalization choice matters</span></span>
-<span><span class="va">top_var_genes</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/pkg/BiocGenerics/man/row_colnames.html" class="external-link">rownames</a></span><span class="op">(</span><span class="va">mat_log2</span><span class="op">)</span><span class="op">[</span><span class="fl">1</span><span class="op">:</span><span class="fu"><a href="https://rdrr.io/r/base/Extremes.html" class="external-link">min</a></span><span class="op">(</span><span class="fl">500</span>, <span class="fu"><a href="https://rdrr.io/r/base/nrow.html" class="external-link">nrow</a></span><span class="op">(</span><span class="va">mat_log2</span><span class="op">)</span><span class="op">)</span><span class="op">]</span></span>
-<span><span class="va">method_means</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/base/data.frame.html" class="external-link">data.frame</a></span><span class="op">(</span></span>
-<span>    raw      <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/pkg/MatrixGenerics/man/rowMeans.html" class="external-link">rowMeans</a></span><span class="op">(</span><span class="fu"><a href="https://rdrr.io/r/base/matrix.html" class="external-link">as.matrix</a></span><span class="op">(</span><span class="va">counts_mat</span><span class="op">[</span><span class="va">top_var_genes</span>, <span class="op">]</span><span class="op">)</span><span class="op">)</span>,</span>
-<span>    cpm      <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/pkg/MatrixGenerics/man/rowMeans.html" class="external-link">rowMeans</a></span><span class="op">(</span><span class="va">mat_cpm</span><span class="op">[</span><span class="va">top_var_genes</span>, <span class="op">]</span><span class="op">)</span>,</span>
-<span>    log2_cpm <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/pkg/MatrixGenerics/man/rowMeans.html" class="external-link">rowMeans</a></span><span class="op">(</span><span class="va">mat_log2</span><span class="op">[</span><span class="va">top_var_genes</span>, <span class="op">]</span><span class="op">)</span>,</span>
-<span>    quantile <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/pkg/MatrixGenerics/man/rowMeans.html" class="external-link">rowMeans</a></span><span class="op">(</span><span class="va">mat_quant</span><span class="op">[</span><span class="va">top_var_genes</span>, <span class="op">]</span><span class="op">)</span>,</span>
-<span>    size_factor <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/pkg/MatrixGenerics/man/rowMeans.html" class="external-link">rowMeans</a></span><span class="op">(</span><span class="va">mat_sf</span><span class="op">[</span><span class="va">top_var_genes</span>, <span class="op">]</span><span class="op">)</span></span>
-<span><span class="op">)</span></span>
-<span><span class="va">agreement_mat</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/stats/cor.html" class="external-link">cor</a></span><span class="op">(</span><span class="va">method_means</span>, method <span class="op">=</span> <span class="st">"spearman"</span><span class="op">)</span></span>
-<span><span class="va">agreement_df</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/pkg/BiocGenerics/man/as.data.frame.html" class="external-link">as.data.frame</a></span><span class="op">(</span><span class="va">agreement_mat</span><span class="op">)</span></span>
-<span><span class="va">agreement_df</span><span class="op">$</span><span class="va">method</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/pkg/BiocGenerics/man/row_colnames.html" class="external-link">rownames</a></span><span class="op">(</span><span class="va">agreement_df</span><span class="op">)</span></span>
-<span><span class="fu"><a href="https://rdrr.io/r/utils/write.table.html" class="external-link">write.table</a></span><span class="op">(</span><span class="va">agreement_df</span>, <span class="fu"><a href="https://rdrr.io/r/base/file.path.html" class="external-link">file.path</a></span><span class="op">(</span><span class="va">output_dir</span>, <span class="st">"method_agreement.tsv"</span><span class="op">)</span>,</span>
+<span><span class="fu"><a href="https://rdrr.io/r/utils/write.table.html" class="external-link">write.table</a></span><span class="op">(</span><span class="va">specificity</span>, <span class="fu"><a href="https://rdrr.io/r/base/file.path.html" class="external-link">file.path</a></span><span class="op">(</span><span class="va">output_dir</span>, <span class="st">"gene_specificity.tsv"</span><span class="op">)</span>,</span>
 <span>            sep <span class="op">=</span> <span class="st">"\t"</span>, row.names <span class="op">=</span> <span class="cn">FALSE</span>, quote <span class="op">=</span> <span class="cn">FALSE</span><span class="op">)</span></span>
 <span></span>
 <span><span class="fu"><a href="https://rdrr.io/r/base/list.files.html" class="external-link">list.files</a></span><span class="op">(</span><span class="va">output_dir</span><span class="op">)</span></span></code></pre></div>
@@ -1772,6 +1921,11 @@ Raw analysis code
 <span>    <span class="fu"><a href="https://rdrr.io/r/base/NA.html" class="external-link">is.na</a></span><span class="op">(</span><span class="va">gene_symbols</span><span class="op">)</span> <span class="op">|</span> <span class="va">gene_symbols</span> <span class="op">==</span> <span class="st">""</span></span>
 <span><span class="op">]</span></span>
 <span><span class="fu"><a href="https://rdrr.io/pkg/BiocGenerics/man/row_colnames.html" class="external-link">rownames</a></span><span class="op">(</span><span class="va">mat</span><span class="op">)</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/base/make.unique.html" class="external-link">make.unique</a></span><span class="op">(</span><span class="va">gene_symbols</span><span class="op">)</span>  <span class="co"># resolve rare duplicates</span></span>
+<span></span>
+<span><span class="co"># ============================================================================</span></span>
+<span><span class="co"># Everything above is upstream data preparation — belongs in data-raw/.</span></span>
+<span><span class="co"># Everything below is core analysis — should be functionized in R/.</span></span>
+<span><span class="co"># ============================================================================</span></span>
 <span></span>
 <span><span class="co"># --- Pairwise Pearson correlation ---</span></span>
 <span><span class="va">cor_mat</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/stats/cor.html" class="external-link">cor</a></span><span class="op">(</span><span class="fu"><a href="https://rdrr.io/pkg/BiocGenerics/man/t.html" class="external-link">t</a></span><span class="op">(</span><span class="va">mat</span><span class="op">)</span>, method <span class="op">=</span> <span class="st">"pearson"</span><span class="op">)</span></span>
@@ -2014,6 +2168,11 @@ Raw analysis code
 <span><span class="va">strain</span> <span class="op">&lt;-</span> <span class="va">fission</span><span class="op">$</span><span class="va">strain</span>   <span class="co"># wt / mut</span></span>
 <span><span class="va">minute</span> <span class="op">&lt;-</span> <span class="va">fission</span><span class="op">$</span><span class="va">minute</span>   <span class="co"># 0, 15, 30, 60, 120, 180</span></span>
 <span></span>
+<span><span class="co"># ============================================================================</span></span>
+<span><span class="co"># Everything above is upstream data preparation — belongs in data-raw/.</span></span>
+<span><span class="co"># Everything below is core analysis — should be functionized in R/.</span></span>
+<span><span class="co"># ============================================================================</span></span>
+<span></span>
 <span><span class="co"># --- Log-normalize counts (log2-CPM) ---</span></span>
 <span><span class="co"># This reduces the dynamic range and makes the scaling more interpretable</span></span>
 <span><span class="va">lib_sizes</span>  <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/pkg/MatrixGenerics/man/rowSums.html" class="external-link">colSums</a></span><span class="op">(</span><span class="va">mat</span><span class="op">)</span></span>
@@ -2168,12 +2327,13 @@ files</li>
 overlay of each method, max_pcs slider, summary table of
 recommendations</p>
 <p><strong>Dependencies:</strong> <code>SingleCellExperiment</code>,
-<code>TENxPBMCData</code> (data only)</p>
+<code>scuttle</code>, <code>TENxPBMCData</code> (data only)</p>
 <details><summary>
 Raw analysis code
 </summary><div class="sourceCode" id="cb22"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="kw"><a href="https://rdrr.io/r/base/library.html" class="external-link">library</a></span><span class="op">(</span><span class="va">SingleCellExperiment</span><span class="op">)</span></span>
 <span><span class="kw"><a href="https://rdrr.io/r/base/library.html" class="external-link">library</a></span><span class="op">(</span><span class="va">TENxPBMCData</span><span class="op">)</span></span>
+<span><span class="kw"><a href="https://rdrr.io/r/base/library.html" class="external-link">library</a></span><span class="op">(</span><span class="va">scuttle</span><span class="op">)</span></span>
 <span><span class="kw"><a href="https://rdrr.io/r/base/library.html" class="external-link">library</a></span><span class="op">(</span><span class="va"><a href="https://ggplot2.tidyverse.org" class="external-link">ggplot2</a></span><span class="op">)</span></span>
 <span><span class="kw"><a href="https://rdrr.io/r/base/library.html" class="external-link">library</a></span><span class="op">(</span><span class="va"><a href="https://github.com/HenrikBengtsson/matrixStats" class="external-link">matrixStats</a></span><span class="op">)</span></span>
 <span></span>
@@ -2181,17 +2341,22 @@ Raw analysis code
 <span><span class="va">sce</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/pkg/TENxPBMCData/man/TENxPBMCData.html" class="external-link">TENxPBMCData</a></span><span class="op">(</span><span class="st">"pbmc3k"</span><span class="op">)</span></span>
 <span><span class="va">counts_mat</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/pkg/BiocGenerics/man/dge.html" class="external-link">counts</a></span><span class="op">(</span><span class="va">sce</span><span class="op">)</span></span>
 <span></span>
+<span><span class="co"># --- Log-normalize using scuttle ---</span></span>
+<span><span class="co"># Normalize on the full SCE so size factors reflect the complete library</span></span>
+<span><span class="va">sce</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/pkg/scuttle/man/logNormCounts.html" class="external-link">logNormCounts</a></span><span class="op">(</span><span class="va">sce</span><span class="op">)</span></span>
+<span></span>
+<span><span class="co"># ============================================================================</span></span>
+<span><span class="co"># Everything above is upstream data preparation — belongs in data-raw/.</span></span>
+<span><span class="co"># Everything below is core analysis — should be functionized in R/.</span></span>
+<span><span class="co"># ============================================================================</span></span>
+<span></span>
 <span><span class="co"># --- Feature selection: top 2000 most variable genes ---</span></span>
 <span><span class="va">gene_vars</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/pkg/matrixStats/man/rowVars.html" class="external-link">rowVars</a></span><span class="op">(</span><span class="va">counts_mat</span><span class="op">)</span></span>
 <span><span class="va">top_idx</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/pkg/BiocGenerics/man/order.html" class="external-link">order</a></span><span class="op">(</span><span class="va">gene_vars</span>, decreasing <span class="op">=</span> <span class="cn">TRUE</span><span class="op">)</span><span class="op">[</span><span class="fu"><a href="https://rdrr.io/r/base/seq.html" class="external-link">seq_len</a></span><span class="op">(</span><span class="fl">2000</span><span class="op">)</span><span class="op">]</span></span>
-<span><span class="va">mat</span> <span class="op">&lt;-</span> <span class="va">counts_mat</span><span class="op">[</span><span class="va">top_idx</span>, <span class="op">]</span></span>
-<span></span>
-<span><span class="co"># Log-normalize</span></span>
-<span><span class="va">lib_sizes</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/pkg/MatrixGenerics/man/rowSums.html" class="external-link">colSums</a></span><span class="op">(</span><span class="va">counts_mat</span><span class="op">)</span></span>
-<span><span class="va">mat_norm</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/base/Log.html" class="external-link">log2</a></span><span class="op">(</span><span class="fu"><a href="https://rdrr.io/pkg/BiocGenerics/man/t.html" class="external-link">t</a></span><span class="op">(</span><span class="fu"><a href="https://rdrr.io/pkg/BiocGenerics/man/t.html" class="external-link">t</a></span><span class="op">(</span><span class="va">mat</span><span class="op">)</span> <span class="op">/</span> <span class="va">lib_sizes</span> <span class="op">*</span> <span class="fl">1e6</span><span class="op">)</span> <span class="op">+</span> <span class="fl">1</span><span class="op">)</span></span>
+<span><span class="va">mat_norm</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/base/matrix.html" class="external-link">as.matrix</a></span><span class="op">(</span><span class="fu"><a href="https://rdrr.io/pkg/SingleCellExperiment/man/assays.html" class="external-link">logcounts</a></span><span class="op">(</span><span class="va">sce</span><span class="op">)</span><span class="op">[</span><span class="va">top_idx</span>, <span class="op">]</span><span class="op">)</span></span>
 <span></span>
 <span><span class="co"># --- PCA ---</span></span>
-<span><span class="va">pca</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/stats/prcomp.html" class="external-link">prcomp</a></span><span class="op">(</span><span class="fu"><a href="https://rdrr.io/pkg/BiocGenerics/man/t.html" class="external-link">t</a></span><span class="op">(</span><span class="fu"><a href="https://rdrr.io/r/base/matrix.html" class="external-link">as.matrix</a></span><span class="op">(</span><span class="va">mat_norm</span><span class="op">)</span><span class="op">)</span>, scale. <span class="op">=</span> <span class="cn">TRUE</span>, center <span class="op">=</span> <span class="cn">TRUE</span><span class="op">)</span></span>
+<span><span class="va">pca</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/stats/prcomp.html" class="external-link">prcomp</a></span><span class="op">(</span><span class="fu"><a href="https://rdrr.io/pkg/BiocGenerics/man/t.html" class="external-link">t</a></span><span class="op">(</span><span class="va">mat_norm</span><span class="op">)</span>, scale. <span class="op">=</span> <span class="cn">TRUE</span>, center <span class="op">=</span> <span class="cn">TRUE</span><span class="op">)</span></span>
 <span><span class="va">max_pcs</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/base/Extremes.html" class="external-link">min</a></span><span class="op">(</span><span class="fl">50</span>, <span class="fu"><a href="https://rdrr.io/r/base/nrow.html" class="external-link">ncol</a></span><span class="op">(</span><span class="va">pca</span><span class="op">$</span><span class="va">x</span><span class="op">)</span><span class="op">)</span></span>
 <span><span class="va">eigenvalues</span> <span class="op">&lt;-</span> <span class="va">pca</span><span class="op">$</span><span class="va">sdev</span><span class="op">[</span><span class="fl">1</span><span class="op">:</span><span class="va">max_pcs</span><span class="op">]</span><span class="op">^</span><span class="fl">2</span></span>
 <span><span class="va">var_pct</span> <span class="op">&lt;-</span> <span class="va">eigenvalues</span> <span class="op">/</span> <span class="fu"><a href="https://rdrr.io/r/base/sum.html" class="external-link">sum</a></span><span class="op">(</span><span class="va">pca</span><span class="op">$</span><span class="va">sdev</span><span class="op">^</span><span class="fl">2</span><span class="op">)</span> <span class="op">*</span> <span class="fl">100</span></span>
@@ -2463,6 +2628,11 @@ Raw analysis code
 <span><span class="va">batch</span>     <span class="op">&lt;-</span> <span class="va">sce_all</span><span class="op">$</span><span class="va">batch</span></span>
 <span><span class="va">cell_type</span> <span class="op">&lt;-</span> <span class="va">sce_all</span><span class="op">$</span><span class="va">cell_type</span></span>
 <span></span>
+<span><span class="co"># ============================================================================</span></span>
+<span><span class="co"># Everything above is upstream data preparation — belongs in data-raw/.</span></span>
+<span><span class="co"># Everything below is core analysis — should be functionized in R/.</span></span>
+<span><span class="co"># ============================================================================</span></span>
+<span></span>
 <span><span class="co"># --- HVG selection: model gene variance per batch, combine, pick top 5000 ---</span></span>
 <span><span class="va">dec_z</span>        <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/pkg/scran/man/modelGeneVar.html" class="external-link">modelGeneVar</a></span><span class="op">(</span><span class="va">sce_z</span><span class="op">)</span></span>
 <span><span class="va">dec_t</span>        <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/pkg/scran/man/modelGeneVar.html" class="external-link">modelGeneVar</a></span><span class="op">(</span><span class="va">sce_t</span><span class="op">)</span></span>
@@ -2636,12 +2806,13 @@ dot size encodes detection rate, dot color encodes mean expression</li>
 slider, FC threshold slider, detection threshold slider, dot plot +
 filterable gene table</p>
 <p><strong>Dependencies:</strong> <code>SingleCellExperiment</code>,
-<code>scRNAseq</code> (data only)</p>
+<code>scuttle</code>, <code>scRNAseq</code> (data only)</p>
 <details><summary>
 Raw analysis code
 </summary><div class="sourceCode" id="cb26"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="kw"><a href="https://rdrr.io/r/base/library.html" class="external-link">library</a></span><span class="op">(</span><span class="va">SingleCellExperiment</span><span class="op">)</span></span>
 <span><span class="kw"><a href="https://rdrr.io/r/base/library.html" class="external-link">library</a></span><span class="op">(</span><span class="va">scRNAseq</span><span class="op">)</span></span>
+<span><span class="kw"><a href="https://rdrr.io/r/base/library.html" class="external-link">library</a></span><span class="op">(</span><span class="va">scuttle</span><span class="op">)</span></span>
 <span><span class="kw"><a href="https://rdrr.io/r/base/library.html" class="external-link">library</a></span><span class="op">(</span><span class="va"><a href="https://ggplot2.tidyverse.org" class="external-link">ggplot2</a></span><span class="op">)</span></span>
 <span></span>
 <span><span class="co"># --- Load data ---</span></span>
@@ -2649,15 +2820,21 @@ Raw analysis code
 <span><span class="va">counts_mat</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/pkg/BiocGenerics/man/dge.html" class="external-link">counts</a></span><span class="op">(</span><span class="va">sce</span><span class="op">)</span></span>
 <span><span class="va">cell_type</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/pkg/SummarizedExperiment/man/SummarizedExperiment-class.html" class="external-link">colData</a></span><span class="op">(</span><span class="va">sce</span><span class="op">)</span><span class="op">$</span><span class="va">label</span></span>
 <span></span>
+<span><span class="co"># ============================================================================</span></span>
+<span><span class="co"># Everything above is upstream data preparation — belongs in data-raw/.</span></span>
+<span><span class="co"># Everything below is core analysis — should be functionized in R/.</span></span>
+<span><span class="co"># ============================================================================</span></span>
+<span></span>
 <span><span class="co"># --- Filter genes detected in &lt; 5% of cells ---</span></span>
 <span><span class="va">detect_rate_all</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/pkg/MatrixGenerics/man/rowSums.html" class="external-link">rowSums</a></span><span class="op">(</span><span class="va">counts_mat</span> <span class="op">&gt;</span> <span class="fl">0</span><span class="op">)</span> <span class="op">/</span> <span class="fu"><a href="https://rdrr.io/r/base/nrow.html" class="external-link">ncol</a></span><span class="op">(</span><span class="va">counts_mat</span><span class="op">)</span></span>
 <span><span class="va">keep_genes</span> <span class="op">&lt;-</span> <span class="va">detect_rate_all</span> <span class="op">&gt;=</span> <span class="fl">0.05</span></span>
-<span><span class="va">counts_mat</span> <span class="op">&lt;-</span> <span class="va">counts_mat</span><span class="op">[</span><span class="va">keep_genes</span>, <span class="op">]</span></span>
-<span><span class="fu"><a href="https://rdrr.io/r/base/cat.html" class="external-link">cat</a></span><span class="op">(</span><span class="st">"Genes after filtering:"</span>, <span class="fu"><a href="https://rdrr.io/r/base/nrow.html" class="external-link">nrow</a></span><span class="op">(</span><span class="va">counts_mat</span><span class="op">)</span>, <span class="st">"\n"</span><span class="op">)</span></span>
+<span><span class="va">sce</span> <span class="op">&lt;-</span> <span class="va">sce</span><span class="op">[</span><span class="va">keep_genes</span>, <span class="op">]</span></span>
+<span><span class="va">counts_mat</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/pkg/BiocGenerics/man/dge.html" class="external-link">counts</a></span><span class="op">(</span><span class="va">sce</span><span class="op">)</span></span>
+<span><span class="fu"><a href="https://rdrr.io/r/base/cat.html" class="external-link">cat</a></span><span class="op">(</span><span class="st">"Genes after filtering:"</span>, <span class="fu"><a href="https://rdrr.io/r/base/nrow.html" class="external-link">nrow</a></span><span class="op">(</span><span class="va">sce</span><span class="op">)</span>, <span class="st">"\n"</span><span class="op">)</span></span>
 <span></span>
-<span><span class="co"># --- Log-normalize ---</span></span>
-<span><span class="va">lib_sizes</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/pkg/MatrixGenerics/man/rowSums.html" class="external-link">colSums</a></span><span class="op">(</span><span class="va">counts_mat</span><span class="op">)</span></span>
-<span><span class="va">mat_norm</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/base/Log.html" class="external-link">log2</a></span><span class="op">(</span><span class="fu"><a href="https://rdrr.io/pkg/BiocGenerics/man/t.html" class="external-link">t</a></span><span class="op">(</span><span class="fu"><a href="https://rdrr.io/pkg/BiocGenerics/man/t.html" class="external-link">t</a></span><span class="op">(</span><span class="va">counts_mat</span><span class="op">)</span> <span class="op">/</span> <span class="va">lib_sizes</span> <span class="op">*</span> <span class="fl">1e6</span><span class="op">)</span> <span class="op">+</span> <span class="fl">1</span><span class="op">)</span></span>
+<span><span class="co"># --- Log-normalize using scuttle ---</span></span>
+<span><span class="va">sce</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/pkg/scuttle/man/logNormCounts.html" class="external-link">logNormCounts</a></span><span class="op">(</span><span class="va">sce</span><span class="op">)</span></span>
+<span><span class="va">mat_norm</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/base/matrix.html" class="external-link">as.matrix</a></span><span class="op">(</span><span class="fu"><a href="https://rdrr.io/pkg/SingleCellExperiment/man/assays.html" class="external-link">logcounts</a></span><span class="op">(</span><span class="va">sce</span><span class="op">)</span><span class="op">)</span></span>
 <span></span>
 <span><span class="co"># --- One-vs-rest Wilcoxon testing per cell type ---</span></span>
 <span><span class="va">cell_types</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/pkg/BiocGenerics/man/unique.html" class="external-link">unique</a></span><span class="op">(</span><span class="va">cell_type</span><span class="op">)</span></span>
