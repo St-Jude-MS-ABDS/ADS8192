@@ -2189,41 +2189,94 @@ Quantifying how much variance each PC attributes to batch (via linear
 regression R²) is a common diagnostic before deciding whether batch
 correction or modeling is needed.
 
-### Dataset: Grun Human Pancreas (Human scRNA-seq)
+This analysis takes several minutes to run.
 
-The `scRNAseq` package provides the [Grun et al. (2016)
-dataset](https://pubmed.ncbi.nlm.nih.gov/27345837/): ~1,700 human
-pancreatic cells profiled across multiple donors using CEL-Seq. The
-combination of donor (batch) and cell type (biology) creates a realistic
-scenario where one can distinguish technical from biological variation
-in PCA space. PCA colored by donor vs. cell type reveals the batch
-effect immediately.
+### Dataset: Tasic + Zeisel Mouse Brain (Mouse scRNA-seq, two technologies)
+
+The `scRNAseq` package provides two independent mouse brain single-cell
+datasets: [Zeisel et
+al. (2015)](https://pubmed.ncbi.nlm.nih.gov/25700174/) (~3,000 cells
+from mouse cortex and hippocampus sequenced with STRT-seq) and [Tasic et
+al. (2016)](https://pubmed.ncbi.nlm.nih.gov/26727548/) (~1,800 cells
+from mouse primary visual cortex sequenced with SMART-Seq v4). Both
+datasets profile overlapping cell types — excitatory neurons, inhibitory
+neurons, astrocytes, oligodendrocytes, and microglia — but the dramatic
+technology difference (STRT-seq vs SMART-Seq) creates a textbook-visible
+batch effect: PCA before correction separates cells almost entirely by
+dataset rather than by cell type. After `fastMNN` correction the
+cell-type signal dominates, providing an unambiguous before/after
+demonstration. The datasets share thousands of common genes and load
+with single function calls from `scRNAseq`.
 
 Data preparation code
 
 ``` r
 ## data-raw/example_sce.R
-BiocManager::install("scRNAseq")
 library(scRNAseq)
 library(SingleCellExperiment)
+library(scuttle)
+library(batchelor)
 
-sce <- GrunPancreasData()
+sce_z <- ZeiselBrainData()
+sce_t <- TasicBrainData()
 
-# Drop zero-count genes and genes with NA counts (e.g., ERCC spike-ins)
-sce <- sce[rowSums(counts(sce), na.rm = TRUE) > 0 &
-           rowSums(is.na(counts(sce))) == 0, ]
+# QC: remove low-quality cells using mitochondrial gene percentage
+# Note: mito gene prefix differs between the two datasets
+sce_z <- addPerCellQC(sce_z, subsets = list(Mito = grep("mt-", rownames(sce_z))))
+qc_z  <- quickPerCellQC(colData(sce_z), sub.fields = "subsets_Mito_percent")
+sce_z <- sce_z[, !qc_z$discard]
 
-counts_mat <- counts(sce)
-cell_type <- colData(sce)$sample  # "sample" column holds cell type labels
+sce_t <- addPerCellQC(sce_t, subsets = list(Mito = grep("mt_", rownames(sce_t))))
+qc_t  <- quickPerCellQC(colData(sce_t), sub.fields = "subsets_Mito_percent")
+sce_t <- sce_t[, !qc_t$discard]
 
-# Remove cells with NA cell type or zero total counts
-keep <- !is.na(cell_type) & colSums(counts_mat) > 0
-sce <- sce[, keep]
-example_sce <- sce
+# Subset to the common set of genes
+universe <- intersect(rownames(sce_z), rownames(sce_t))
+sce_z    <- sce_z[universe, ]
+sce_t    <- sce_t[universe, ]
 
-assays(example_sce) <- list(counts = counts(example_sce))
-colData(example_sce) <- colData(example_sce)[, c("donor", "sample")]
-colnames(colData(example_sce)) <- c("batch", "cell_type")
+# Cross-batch normalization: downscale to the least-sequenced batch
+out   <- multiBatchNorm(sce_z, sce_t)
+sce_z <- out[[1]]
+sce_t <- out[[2]]
+
+# Save cell-type labels before replacing colData
+ct_z <- as.character(sce_z$level1class)
+ct_t <- as.character(sce_t$broad_type)
+
+# Unify cell-type vocabulary across the two datasets so matching types share
+# the same label and colour in downstream plots.
+# Zeisel uses lowercase/underscore conventions; Tasic uses title case.
+ct_map_z <- c(
+    "pyramidal CA1"        = "Excitatory Neuron",
+    "pyramidal SS"         = "Excitatory Neuron",
+    "interneurons"         = "Inhibitory Neuron",
+    "oligodendrocytes"     = "Oligodendrocyte",
+    "astrocytes_ependymal" = "Astrocyte",
+    "microglia"            = "Microglia",
+    "endothelial-mural"    = "Endothelial"
+)
+ct_map_t <- c(
+    "Glutamatergic Neuron" = "Excitatory Neuron",
+    "GABA-ergic Neuron"    = "Inhibitory Neuron",
+    "Astrocyte"            = "Astrocyte",
+    "Oligodendrocyte"      = "Oligodendrocyte",
+    "Microglia"            = "Microglia",
+    "Endothelial Cell"     = "Endothelial",
+    "OPC"                  = "OPC"
+)
+ct_z <- unname(ct_map_z[ct_z]); ct_z[is.na(ct_z)] <- "Other"
+ct_t <- unname(ct_map_t[ct_t]); ct_t[is.na(ct_t)] <- "Other"
+
+# Drop altExps (ERCC spike-ins, repeats) so cbind works without error
+altExps(sce_z) <- NULL
+altExps(sce_t) <- NULL
+
+# Harmonize colData to two columns used downstream
+colData(sce_z) <- DataFrame(batch = "Zeisel", cell_type = ct_z)
+colData(sce_t) <- DataFrame(batch = "Tasic",  cell_type = ct_t)
+
+example_sce <- cbind(sce_z, sce_t)
 
 usethis::use_data(example_sce, overwrite = TRUE)
 ```
@@ -2232,121 +2285,206 @@ usethis::use_data(example_sce, overwrite = TRUE)
 
 **What users should be able to do:**
 
-- Select the most variable genes
+- Select highly variable genes jointly across both batches using `scran`
+  (`modelGeneVar`, `combineVar`, `getTopHVGs`)
 - Quantify batch effects by fitting a linear model of each PC against
   the batch variable and extracting R² values
-- Apply a simple batch correction (e.g., median-centering per batch) and
-  return a corrected object
-- Visualize dual-panel PCA plots (before and after correction) colored
-  by batch, plus an R² bar chart showing the proportion of variance
-  attributable to batch per PC
-- Export batch variance quantification and corrected counts to TSV files
+- Apply batch correction using
+  [`fastMNN()`](https://rdrr.io/pkg/batchelor/man/fastMNN.html) from the
+  `batchelor` package (mutual nearest-neighbour alignment in PCA space
+  across donor batches) and extract the corrected low-dimensional
+  embedding
+- Visualize dual-panel scatter plots (PCA before vs. MNN-corrected
+  embedding after) colored by batch, plus a side-by-side R² bar chart
+  comparing batch variance before and after correction
+- Export the combined before/after R² table and the corrected embedding
+  to TSV files
 
 **Key parameters:** `batch_column`, `n_top`, `correct` (logical),
 `bio_column`
 
-**CLI outputs:** `batch_variance.tsv`, `corrected_counts.tsv`
+**CLI outputs:** `batch_variance.tsv`, `corrected_embedding.tsv`
 
 **Shiny inputs:** Batch column dropdown, biological column dropdown,
-n_top slider, correction toggle, before/after PCA panels, R² bar chart
+n_top slider, correction toggle, before/after scatter panels, R² bar
+chart
 
-**Dependencies:** `SingleCellExperiment`, `scRNAseq` (data only)
+**Dependencies:** `SingleCellExperiment`, `batchelor`, `scran`,
+`scuttle`, `scRNAseq` (data only)
 
 Raw analysis code
 
 ``` r
-library(SingleCellExperiment)
 library(scRNAseq)
+library(SingleCellExperiment)
+library(scuttle)
+library(batchelor)
+library(scran)
 library(ggplot2)
 library(patchwork)
 
-# --- Load data ---
-sce <- GrunPancreasData()
+set.seed(42)  # For reproducibility of PCA and MNN results
 
-# Drop zero-count genes and genes with NA counts (e.g., ERCC spike-ins)
-sce <- sce[rowSums(counts(sce), na.rm = TRUE) > 0 &
-           rowSums(is.na(counts(sce))) == 0, ]
+# --- Load both datasets ---
+sce_z <- ZeiselBrainData()
+sce_t <- TasicBrainData()
 
-counts_mat <- counts(sce)
-batch <- colData(sce)$donor
-cell_type <- colData(sce)$sample  # "sample" column holds cell type labels
+# --- QC: remove low-quality cells ---
+sce_z <- addPerCellQC(sce_z, subsets = list(Mito = grep("mt-", rownames(sce_z))))
+qc_z  <- quickPerCellQC(colData(sce_z), sub.fields = "subsets_Mito_percent")
+sce_z <- sce_z[, !qc_z$discard]
 
-# Remove cells with NA cell type or zero total counts
-keep <- !is.na(cell_type) & colSums(counts_mat) > 0
-counts_mat <- counts_mat[, keep]
-batch     <- batch[keep]
-cell_type <- cell_type[keep]
+sce_t <- addPerCellQC(sce_t, subsets = list(Mito = grep("mt_", rownames(sce_t))))
+qc_t  <- quickPerCellQC(colData(sce_t), sub.fields = "subsets_Mito_percent")
+sce_t <- sce_t[, !qc_t$discard]
 
-# --- Feature selection: top 2000 most variable genes ---
-gene_vars <- apply(counts_mat, 1, var)
-top_idx <- order(gene_vars, decreasing = TRUE)[seq_len(2000)]
-mat <- counts_mat[top_idx, ]
+# --- Subset to common genes ---
+universe <- intersect(rownames(sce_z), rownames(sce_t))
+sce_z    <- sce_z[universe, ]
+sce_t    <- sce_t[universe, ]
 
-# Log-normalize
-lib_sizes <- colSums(counts_mat)
-mat_norm <- log2(t(t(mat) / lib_sizes * 1e6) + 1)
+# --- Cross-batch normalization ---
+out   <- multiBatchNorm(sce_z, sce_t)
+sce_z <- out[[1]]
+sce_t <- out[[2]]
 
-# Remove zero- or NA-variance genes (would cause division by zero in scale.)
-gene_vars_norm <- apply(mat_norm, 1, var)
-mat_norm <- mat_norm[is.finite(gene_vars_norm) & gene_vars_norm > 0, ]
+# --- Combine into a single SCE and set batch / cell_type ---
+ct_z <- as.character(sce_z$level1class)
+ct_t <- as.character(sce_t$broad_type)
 
-# --- PCA (before correction) ---
-pca_before <- prcomp(t(as.matrix(mat_norm)), scale. = TRUE, center = TRUE)
+# Unify cell-type vocabulary across both datasets
+ct_map_z <- c(
+    "pyramidal CA1"        = "Excitatory Neuron",
+    "pyramidal SS"         = "Excitatory Neuron",
+    "interneurons"         = "Inhibitory Neuron",
+    "oligodendrocytes"     = "Oligodendrocyte",
+    "astrocytes_ependymal" = "Astrocyte",
+    "microglia"            = "Microglia",
+    "endothelial-mural"    = "Endothelial"
+)
+ct_map_t <- c(
+    "Glutamatergic Neuron" = "Excitatory Neuron",
+    "GABA-ergic Neuron"    = "Inhibitory Neuron",
+    "Astrocyte"            = "Astrocyte",
+    "Oligodendrocyte"      = "Oligodendrocyte",
+    "Microglia"            = "Microglia",
+    "Endothelial Cell"     = "Endothelial",
+    "OPC"                  = "OPC"
+)
+ct_z <- unname(ct_map_z[ct_z]); ct_z[is.na(ct_z)] <- "Other"
+ct_t <- unname(ct_map_t[ct_t]); ct_t[is.na(ct_t)] <- "Other"
+
+altExps(sce_z) <- NULL
+altExps(sce_t) <- NULL
+
+colData(sce_z) <- DataFrame(batch = "Zeisel", cell_type = ct_z)
+colData(sce_t) <- DataFrame(batch = "Tasic",  cell_type = ct_t)
+
+sce_all   <- cbind(sce_z, sce_t)
+batch     <- sce_all$batch
+cell_type <- sce_all$cell_type
+
+# --- HVG selection: model gene variance per batch, combine, pick top 5000 ---
+dec_z        <- modelGeneVar(sce_z)
+dec_t        <- modelGeneVar(sce_t)
+combined_dec <- combineVar(dec_z, dec_t)
+chosen_hvgs  <- getTopHVGs(combined_dec, n = 5000)
+cat("HVGs selected:", length(chosen_hvgs), "\n")
+
+# --- PCA (before correction) on log-normalized HVGs ---
+mat_all    <- as.matrix(logcounts(sce_all)[chosen_hvgs, ])
+pca_before <- prcomp(t(mat_all), scale. = TRUE, center = TRUE)
 n_pcs <- 10
 
 # --- Quantify batch effect: R² of each PC ~ batch ---
 r2_df <- data.frame(PC = paste0("PC", 1:n_pcs), R2 = NA_real_)
 for (i in 1:n_pcs) {
-    fit <- lm(pca_before$x[, i] ~ batch)
+    fit        <- lm(pca_before$x[, i] ~ batch)
     r2_df$R2[i] <- summary(fit)$r.squared
 }
 print(r2_df)
 
-# --- Simple batch correction: median-center per batch ---
-mat_corrected <- mat_norm
-for (b in unique(batch)) {
-    idx <- batch == b
-    batch_median <- apply(mat_corrected[, idx], 1, median)
-    global_median <- apply(mat_corrected, 1, median)
-    mat_corrected[, idx] <- mat_corrected[, idx] - batch_median + global_median
+# --- Batch correction ---
+out_mnn        <- fastMNN(sce_all, batch = sce_all$batch, subset.row = chosen_hvgs)
+corrected_embed <- reducedDim(out_mnn, "corrected")  # cells × 50 matrix
+
+# --- Quantify residual batch effect in the corrected embedding ---
+n_dims      <- min(n_pcs, ncol(corrected_embed))
+r2_after_df <- data.frame(dim = paste0("dim", seq_len(n_dims)), R2 = NA_real_)
+for (i in seq_len(n_dims)) {
+    fit               <- lm(corrected_embed[, i] ~ batch)
+    r2_after_df$R2[i] <- summary(fit)$r.squared
 }
 
-# --- PCA (after correction) ---
-pca_after <- prcomp(t(as.matrix(mat_corrected)), scale. = TRUE, center = TRUE)
+# Combine before/after R²
+r2_compare <- rbind(
+    data.frame(dim = r2_df$PC,        R2 = r2_df$R2,       stage = "before"),
+    data.frame(dim = r2_after_df$dim, R2 = r2_after_df$R2, stage = "after")
+)
+# Order dimensions numerically (PC1–PC10 / dim1–dim10) and set stage order
+dim_order <- paste0(c(rep("PC", n_pcs), rep("dim", n_dims)),
+                    c(seq_len(n_pcs), seq_len(n_dims)))
+dim_order <- unique(dim_order[order(as.integer(sub("\\D+", "", dim_order)))])
+r2_compare$dim   <- factor(r2_compare$dim,   levels = dim_order)
+r2_compare$stage <- factor(r2_compare$stage, levels = c("before", "after"))
+print(r2_compare)
 
-# --- Before/after PCA plots ---
-df_before <- data.frame(PC1 = pca_before$x[, 1], PC2 = pca_before$x[, 2],
+# --- Before/after scatter plots ---
+df_before <- data.frame(x = pca_before$x[, 1], y = pca_before$x[, 2],
                          batch = batch, cell_type = cell_type)
-df_after  <- data.frame(PC1 = pca_after$x[, 1], PC2 = pca_after$x[, 2],
+df_after  <- data.frame(x = corrected_embed[, 1], y = corrected_embed[, 2],
                          batch = batch, cell_type = cell_type)
 
-p1 <- ggplot(df_before, aes(x = PC1, y = PC2, color = batch)) +
+# Row 1: colored by batch — reveals the technical confound
+p1 <- ggplot(df_before, aes(x = x, y = y, color = batch)) +
     geom_point(size = 0.8, alpha = 0.5) +
-    theme_bw(base_size = 12) + labs(title = "Before Correction")
-p2 <- ggplot(df_after, aes(x = PC1, y = PC2, color = batch)) +
-    geom_point(size = 0.8, alpha = 0.5) +
-    theme_bw(base_size = 12) + labs(title = "After Correction")
-
-# R² bar chart
-p3 <- ggplot(r2_df, aes(x = PC, y = R2)) +
-    geom_col(fill = "steelblue") +
     theme_bw(base_size = 12) +
-    labs(x = "Principal Component", y = expression(R^2~"(batch)"),
-         title = "Variance Attributable to Batch")
+    labs(x = "PC1", y = "PC2", title = "Before — colored by batch",
+         subtitle = "Cells separate by technology")
+p2 <- ggplot(df_after, aes(x = x, y = y, color = batch)) +
+    geom_point(size = 0.8, alpha = 0.5) +
+    theme_bw(base_size = 12) +
+    labs(x = "MNN dim 1", y = "MNN dim 2", title = "After — colored by batch",
+         subtitle = "Batch signal is reduced")
 
-(p1 + p2) / p3
+# Row 2: colored by cell type — shows the biological signal that emerges
+p3 <- ggplot(df_before, aes(x = x, y = y, color = cell_type)) +
+    geom_point(size = 0.8, alpha = 0.5) +
+    theme_bw(base_size = 12) +
+    labs(x = "PC1", y = "PC2", title = "Before — colored by cell type",
+         subtitle = "Cell types mixed across batch clusters")
+p4 <- ggplot(df_after, aes(x = x, y = y, color = cell_type)) +
+    geom_point(size = 0.8, alpha = 0.5) +
+    theme_bw(base_size = 12) +
+    labs(x = "MNN dim 1", y = "MNN dim 2", title = "After — colored by cell type",
+         subtitle = "Cell-type signal dominates")
+
+# Row 3: R² bar chart
+r2_compare$dim_num <- as.integer(sub("\\D+", "", as.character(r2_compare$dim)))
+
+p_r2 <- ggplot(r2_compare, aes(x = dim_num, y = R2, fill = stage)) +
+    geom_col(position = position_dodge(0.8), width = 0.7) +
+    scale_x_continuous(breaks = seq_len(n_pcs), labels = seq_len(n_pcs)) +
+    scale_fill_manual(values = c(before = "#fcc100", after = "#00b5dd")) +
+    theme_bw(base_size = 12) +
+    labs(x = "Dimension", y = expression(R^2 ~ "(batch)"),
+         fill = NULL,
+         title = "Batch Variance Before vs After fastMNN")
+
+(p1 + p2) / (p3 + p4) / p_r2
 
 # --- Export ---
 output_dir <- file.path(tempdir(), "batch_output")
 dir.create(output_dir, recursive = TRUE, showWarnings = FALSE)
 
-write.table(r2_df, file.path(output_dir, "batch_variance.tsv"),
+write.table(r2_compare, file.path(output_dir, "batch_variance.tsv"),
             sep = "\t", row.names = FALSE, quote = FALSE)
 
-# Export corrected counts (subset of genes for size)
-corrected_out <- as.data.frame(as.matrix(mat_corrected[1:500, ]))
-corrected_out$gene <- rownames(mat_corrected)[1:500]
-write.table(corrected_out, file.path(output_dir, "corrected_counts.tsv"),
+corrected_out           <- as.data.frame(corrected_embed)
+corrected_out$cell      <- colnames(sce_all)
+corrected_out$batch     <- batch
+corrected_out$cell_type <- cell_type
+write.table(corrected_out, file.path(output_dir, "corrected_embedding.tsv"),
             sep = "\t", row.names = FALSE, quote = FALSE)
 
 list.files(output_dir)
@@ -2544,20 +2682,20 @@ list.files(output_dir)
 
 ## Quick Comparison
 
-| \#  | Project                 | Dataset                       | Organism   | Structure | Primary Plot            | Extra Deps               |
-|-----|-------------------------|-------------------------------|------------|-----------|-------------------------|--------------------------|
-| 1   | UMAP Embedding          | Zeisel brain                  | Mouse      | SCE       | 2D scatter              | uwot                     |
-| 2   | Sample Similarity       | Macrophage stimulation        | Human      | SE        | heatmap + dendrogram    | —                        |
-| 3   | Differential Expression | Tissue Tregs (Treg vs Tconv)  | Mouse      | SE        | volcano / MA            | DESeq2                   |
-| 4   | K-means Clustering      | Baron human pancreas          | Human      | SCE       | scatter + elbow         | cluster                  |
-| 5   | Cell QC Dashboard       | Lun spike-in                  | Mouse      | SCE       | multi-panel             | —                        |
-| 6   | Gene Set Scoring        | TCGA BRCA + MSigDB            | Human      | SE        | boxplot / violin        | msigdbr, curatedTCGAData |
-| 7   | Normalization           | Muraro pancreas               | Human      | SCE       | density / boxplot       | —                        |
-| 8   | Gene Corr Network       | GTEx skeletal muscle          | Human      | SE        | network / heatmap       | igraph (opt.), recount3  |
-| 9   | Expression Heatmap      | Fission yeast stress response | *S. pombe* | SE        | genes × samples heatmap | ComplexHeatmap, fission  |
-| 10  | Dim Estimation          | PBMC 3k                       | Human      | SCE       | scree + overlays        | —                        |
-| 11  | Batch Effect            | Grun human pancreas           | Human      | SCE       | before/after PCA + R²   | —                        |
-| 12  | Marker Genes            | Baron mouse pancreas          | Mouse      | SCE       | dot plot                | —                        |
+| \#  | Project                 | Dataset                       | Organism   | Structure | Primary Plot              | Extra Deps              |
+|-----|-------------------------|-------------------------------|------------|-----------|---------------------------|-------------------------|
+| 1   | UMAP Embedding          | Zeisel brain                  | Mouse      | SCE       | 2D scatter                | uwot                    |
+| 2   | Sample Similarity       | Macrophage stimulation        | Human      | SE        | heatmap + dendrogram      | —                       |
+| 3   | Differential Expression | Tissue Tregs (Treg vs Tconv)  | Mouse      | SE        | volcano / MA              | DESeq2                  |
+| 4   | K-means Clustering      | Baron human pancreas          | Human      | SCE       | scatter + elbow           | cluster                 |
+| 5   | Cell QC Dashboard       | Lun spike-in                  | Mouse      | SCE       | multi-panel               | —                       |
+| 6   | Gene Set Scoring        | airway + MSigDB               | Human      | SE        | boxplot / violin          | msigdbr, airway         |
+| 7   | Normalization           | Muraro pancreas               | Human      | SCE       | density / boxplot         | —                       |
+| 8   | Gene Corr Network       | GTEx skeletal muscle          | Human      | SE        | network / heatmap         | igraph (opt.), recount3 |
+| 9   | Expression Heatmap      | Fission yeast stress response | *S. pombe* | SE        | genes × samples heatmap   | ComplexHeatmap, fission |
+| 10  | Dim Estimation          | PBMC 3k                       | Human      | SCE       | scree + overlays          | —                       |
+| 11  | Batch Effect            | Tasic + Zeisel brain          | Mouse      | SCE       | before/after scatter + R² | batchelor               |
+| 12  | Marker Genes            | Baron mouse pancreas          | Mouse      | SCE       | dot plot                  | —                       |
 
 - **12 unique datasets** — all **human or mouse**, all **RNA-seq or
   scRNA-seq**

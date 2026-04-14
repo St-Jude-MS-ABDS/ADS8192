@@ -61,6 +61,9 @@ bioc_pkgs <- c(
   "SingleCellExperiment",
   # Analysis
   "DESeq2",
+  "batchelor",
+  "scran",
+  "scuttle",
   # Visualization
   "ComplexHeatmap",
   "dittoSeq",

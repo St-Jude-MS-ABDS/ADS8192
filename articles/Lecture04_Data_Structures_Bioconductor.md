@@ -1,4 +1,4 @@
-# Lecture 4: Data Structures & R Ecosystems (Bioconductor)
+# Lecture 4: Data Structures & R Ecosystems
 
 ## Motivation
 

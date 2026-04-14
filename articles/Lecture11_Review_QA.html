@@ -95,8 +95,6 @@ functions, run Shiny app, run CLI, and view pkgdown site</li>
 <li>Synthesize the durable software-design heuristics from Unit 1 and
 use them during peer review</li>
 </ol>
-<p><strong>Course Learning Outcomes (CLOs):</strong> CLO 1, 2, 3, 4, 5,
-6</p>
 <div class="section level3">
 <h3 id="motivation">Motivation<a class="anchor" aria-label="anchor" href="#motivation"></a>
 </h3>
@@ -128,15 +126,6 @@ boundaries?</li>
 <li>Would a future collaborator understand what is core logic versus
 interface glue?</li>
 </ul>
-</div>
-<div class="section level3">
-<h3 id="scientific-use-case">Scientific Use Case<a class="anchor" aria-label="anchor" href="#scientific-use-case"></a>
-</h3>
-<p>Imagine you inherit a small but useful lab prototype that currently
-exists as a pile of scripts. You have one week to turn it into something
-another team can install, test, run interactively, and place in a
-workflow. Which Unit 1 principles let you improve the software quickly
-without rewriting the science from scratch?</p>
 <hr>
 </div>
 </div>
@@ -157,8 +146,8 @@ separate from Shiny, CLI, and documentation layers.</li>
 <strong>Public contracts matter.</strong> Function signatures, file
 outputs, and help text become promises to users.</li>
 <li>
-<strong>Tests protect behavior, not ego.</strong> They exist to
-catch regressions and make refactoring safe.</li>
+<strong>Tests protect behavior.</strong> They exist to catch
+regressions and make refactoring safe.</li>
 <li>
 <strong>Packaging is a distribution boundary.</strong> It forces
 dependencies, documentation, and installability into the open.</li>
@@ -243,7 +232,7 @@ only works on your machine, it is not done.</li>
 </div>
 </div>
 <div class="section level2">
-<h2 id="part-1-readiness-checklist-10-min">Part 1: Readiness Checklist (10 min)<a class="anchor" aria-label="anchor" href="#part-1-readiness-checklist-10-min"></a>
+<h2 id="part-1-readiness-checklist">Part 1: Readiness Checklist<a class="anchor" aria-label="anchor" href="#part-1-readiness-checklist"></a>
 </h2>
 <div class="section level3">
 <h3 id="run-the-checklist">Run the Checklist<a class="anchor" aria-label="anchor" href="#run-the-checklist"></a>
@@ -251,92 +240,74 @@ only works on your machine, it is not done.</li>
 <p>Everyone run through this checklist right now. Mark each item ✅ or
 ❌:</p>
 <div class="section level4">
-<h4 id="install-from-github">1. Install from GitHub<a class="anchor" aria-label="anchor" href="#install-from-github"></a>
+<h4 id="r-cmd-check">1. R CMD check<a class="anchor" aria-label="anchor" href="#r-cmd-check"></a>
 </h4>
+<p>Does your package build properly? Do all tests pass?</p>
 <div class="sourceCode" id="cb1"><pre class="downlit sourceCode r">
-<code class="sourceCode R"><span><span class="co"># Start a fresh R session (important!)</span></span>
-<span><span class="fu">.rs.restartR</span><span class="op">(</span><span class="op">)</span></span>
-<span></span>
-<span><span class="co"># Remove local version if exists</span></span>
-<span><span class="kw"><a href="https://rdrr.io/r/base/try.html" class="external-link">try</a></span><span class="op">(</span><span class="fu"><a href="https://rdrr.io/r/utils/remove.packages.html" class="external-link">remove.packages</a></span><span class="op">(</span><span class="st">"sePCA"</span><span class="op">)</span>, silent <span class="op">=</span> <span class="cn">TRUE</span><span class="op">)</span></span>
-<span></span>
-<span><span class="co"># Install from GitHub</span></span>
-<span><span class="fu">remotes</span><span class="fu">::</span><span class="fu">install_github</span><span class="op">(</span><span class="st">"YOUR-USERNAME/sePCA"</span><span class="op">)</span></span>
-<span></span>
-<span><span class="co"># ✅ Success / ❌ Failed</span></span></code></pre></div>
-</div>
-<div class="section level4">
-<h4 id="r-cmd-check">2. R CMD check<a class="anchor" aria-label="anchor" href="#r-cmd-check"></a>
-</h4>
-<div class="sourceCode" id="cb2"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="fu">devtools</span><span class="fu">::</span><span class="fu">check</span><span class="op">(</span><span class="op">)</span></span>
 <span></span>
 <span><span class="co"># Goal: 0 errors, 0 warnings</span></span>
-<span><span class="co"># NOTEs are usually acceptable</span></span>
-<span><span class="co"># ✅ 0 errors, 0 warnings / ❌ Has errors or warnings</span></span></code></pre></div>
+<span><span class="co"># NOTEs are usually acceptable, but check them for anything important or easily addressed</span></span></code></pre></div>
 </div>
 <div class="section level4">
-<h4 id="documentation">3. Documentation<a class="anchor" aria-label="anchor" href="#documentation"></a>
+<h4 id="documentation">2. Documentation<a class="anchor" aria-label="anchor" href="#documentation"></a>
 </h4>
-<div class="sourceCode" id="cb3"><pre class="downlit sourceCode r">
-<code class="sourceCode R"><span><span class="kw"><a href="https://rdrr.io/r/base/library.html" class="external-link">library</a></span><span class="op">(</span><span class="va">sePCA</span><span class="op">)</span></span>
-<span></span>
-<span><span class="co"># Help files work?</span></span>
+<div class="sourceCode" id="cb2"><pre class="downlit sourceCode r">
+<code class="sourceCode R"><span><span class="co"># Help files work?</span></span>
 <span><span class="op">?</span><span class="va">run_pca</span></span>
 <span><span class="op">?</span><span class="va">plot_pca</span></span>
 <span></span>
 <span><span class="co"># Package help?</span></span>
-<span><span class="op">?</span><span class="va">sePCA</span></span>
-<span></span>
-<span><span class="co"># ✅ Help displays / ❌ Missing docs</span></span></code></pre></div>
+<span><span class="op">?</span><span class="va">ADS8192</span></span></code></pre></div>
 </div>
 <div class="section level4">
-<h4 id="tests">4. Tests<a class="anchor" aria-label="anchor" href="#tests"></a>
+<h4 id="tests">3. Tests<a class="anchor" aria-label="anchor" href="#tests"></a>
 </h4>
-<div class="sourceCode" id="cb4"><pre class="downlit sourceCode r">
+<p>Do you have tests that cover your core functionality? Do they
+pass?</p>
+<div class="sourceCode" id="cb3"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="fu">devtools</span><span class="fu">::</span><span class="fu">test</span><span class="op">(</span><span class="op">)</span></span>
 <span></span>
-<span><span class="co"># Goal: All tests pass</span></span>
-<span><span class="co"># ✅ All passed / ❌ Failures</span></span></code></pre></div>
+<span><span class="co"># Goal: All tests pass</span></span></code></pre></div>
 </div>
 <div class="section level4">
-<h4 id="pkgdown-site">5. pkgdown Site<a class="anchor" aria-label="anchor" href="#pkgdown-site"></a>
+<h4 id="pkgdown-site">4. pkgdown Site<a class="anchor" aria-label="anchor" href="#pkgdown-site"></a>
 </h4>
-<div class="sourceCode" id="cb5"><pre class="downlit sourceCode r">
-<code class="sourceCode R"><span><span class="fu">pkgdown</span><span class="fu">::</span><span class="fu"><a href="https://pkgdown.r-lib.org/reference/build_site.html" class="external-link">build_site</a></span><span class="op">(</span><span class="op">)</span></span>
-<span></span>
-<span><span class="co"># Opens in browser - check:</span></span>
-<span><span class="co"># - Home page renders</span></span>
-<span><span class="co"># - Reference pages work</span></span>
-<span><span class="co"># - Articles/vignettes render</span></span>
-<span></span>
-<span><span class="co"># ✅ Site builds / ❌ Build fails</span></span></code></pre></div>
+<p>Does your site exist, have reference pages for exported functions, a
+landing page with basic installation, and at least one vignette?</p>
+<p>Is it linked from your Github repo/README?</p>
 </div>
 <div class="section level4">
-<h4 id="shiny-app">6. Shiny App<a class="anchor" aria-label="anchor" href="#shiny-app"></a>
+<h4 id="shiny-app">5. Shiny App<a class="anchor" aria-label="anchor" href="#shiny-app"></a>
 </h4>
-<div class="sourceCode" id="cb6"><pre class="downlit sourceCode r">
-<code class="sourceCode R"><span><span class="kw"><a href="https://rdrr.io/r/base/library.html" class="external-link">library</a></span><span class="op">(</span><span class="va">sePCA</span><span class="op">)</span></span>
+<div class="sourceCode" id="cb4"><pre class="downlit sourceCode r">
+<code class="sourceCode R"><span><span class="kw"><a href="https://rdrr.io/r/base/library.html" class="external-link">library</a></span><span class="op">(</span><span class="va"><a href="https://github.com/St-Jude-MS-ABDS/ADS8192" class="external-link">ADS8192</a></span><span class="op">)</span></span>
 <span><span class="fu"><a href="../reference/run_app.html">run_app</a></span><span class="op">(</span><span class="op">)</span></span>
 <span></span>
 <span><span class="co"># Check:</span></span>
 <span><span class="co"># - App launches without error</span></span>
-<span><span class="co"># - Plot renders</span></span>
-<span><span class="co"># - Inputs change the plot</span></span>
-<span></span>
-<span><span class="co"># ✅ App works / ❌ App fails</span></span></code></pre></div>
+<span><span class="co"># - Plots render</span></span>
+<span><span class="co"># - Inputs change the plot</span></span></code></pre></div>
 </div>
 <div class="section level4">
-<h4 id="cli">7. CLI<a class="anchor" aria-label="anchor" href="#cli"></a>
+<h4 id="cli">6. CLI<a class="anchor" aria-label="anchor" href="#cli"></a>
 </h4>
-<div class="sourceCode" id="cb7"><pre class="sourceCode bash"><code class="sourceCode bash"><span id="cb7-1"><a href="#cb7-1" tabindex="-1"></a><span class="co"># From terminal</span></span>
-<span id="cb7-2"><a href="#cb7-2" tabindex="-1"></a><span class="ex">sePCA</span> pca <span class="at">--help</span></span>
-<span id="cb7-3"><a href="#cb7-3" tabindex="-1"></a></span>
-<span id="cb7-4"><a href="#cb7-4" tabindex="-1"></a><span class="co"># If launchers are not installed</span></span>
-<span id="cb7-5"><a href="#cb7-5" tabindex="-1"></a><span class="co"># Rapp exec/sePCA pca --help</span></span>
-<span id="cb7-6"><a href="#cb7-6" tabindex="-1"></a></span>
-<span id="cb7-7"><a href="#cb7-7" tabindex="-1"></a><span class="co"># Should show help text</span></span>
-<span id="cb7-8"><a href="#cb7-8" tabindex="-1"></a><span class="co"># ✅ Help shows / ❌ Error</span></span></code></pre></div>
+<div class="sourceCode" id="cb5"><pre class="sourceCode bash"><code class="sourceCode bash"><span id="cb5-1"><a href="#cb5-1" tabindex="-1"></a><span class="co"># From terminal</span></span>
+<span id="cb5-2"><a href="#cb5-2" tabindex="-1"></a><span class="ex">ADS8192</span> pca <span class="at">--help</span></span>
+<span id="cb5-3"><a href="#cb5-3" tabindex="-1"></a></span>
+<span id="cb5-4"><a href="#cb5-4" tabindex="-1"></a><span class="co"># If launchers are not installed</span></span>
+<span id="cb5-5"><a href="#cb5-5" tabindex="-1"></a><span class="co"># Rapp exec/ADS8192 pca --help</span></span></code></pre></div>
+</div>
+<div class="section level4">
+<h4 id="install-from-github">7. Install from GitHub<a class="anchor" aria-label="anchor" href="#install-from-github"></a>
+</h4>
+<p>In a fresh R session, try installing your package from Github:</p>
+<div class="sourceCode" id="cb6"><pre class="downlit sourceCode r">
+<code class="sourceCode R"><span><span class="co"># Install from GitHub (replace with your username/repo)</span></span>
+<span><span class="fu">remotes</span><span class="fu">::</span><span class="fu">install_github</span><span class="op">(</span><span class="st">"YOUR-USERNAME/YOUR-PACKAGE"</span><span class="op">)</span></span>
+<span></span>
+<span><span class="co"># Then ensure it loads</span></span>
+<span><span class="kw"><a href="https://rdrr.io/r/base/library.html" class="external-link">library</a></span><span class="op">(</span><span class="va"><a href="https://github.com/St-Jude-MS-ABDS/ADS8192" class="external-link">ADS8192</a></span><span class="op">)</span></span></code></pre></div>
 <hr>
 </div>
 </div>
@@ -414,7 +385,7 @@ primary blocker.</p>
 <h4 id="reproduce">1. Reproduce<a class="anchor" aria-label="anchor" href="#reproduce"></a>
 </h4>
 <p>Can you reliably trigger the error?</p>
-<div class="sourceCode" id="cb9"><pre class="downlit sourceCode r">
+<div class="sourceCode" id="cb8"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="co"># Write down exact steps:</span></span>
 <span><span class="co"># 1. Restart R</span></span>
 <span><span class="co"># 2. Run: library(sePCA)</span></span>
@@ -425,7 +396,7 @@ primary blocker.</p>
 <h4 id="isolate">2. Isolate<a class="anchor" aria-label="anchor" href="#isolate"></a>
 </h4>
 <p>What’s the minimal code that triggers it?</p>
-<div class="sourceCode" id="cb10"><pre class="downlit sourceCode r">
+<div class="sourceCode" id="cb9"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="co"># Start removing parts until you find the core issue</span></span>
 <span><span class="co"># Does this work?</span></span>
 <span><span class="kw"><a href="https://rdrr.io/r/base/library.html" class="external-link">library</a></span><span class="op">(</span><span class="va"><a href="https://bioconductor.org/packages/SummarizedExperiment" class="external-link">SummarizedExperiment</a></span><span class="op">)</span></span>
@@ -438,7 +409,7 @@ primary blocker.</p>
 <h4 id="fix">3. Fix<a class="anchor" aria-label="anchor" href="#fix"></a>
 </h4>
 <p>Apply the fix:</p>
-<div class="sourceCode" id="cb11"><pre class="downlit sourceCode r">
+<div class="sourceCode" id="cb10"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="co"># Common fixes by error type</span></span>
 <span></span>
 <span><span class="co"># "could not find function X" </span></span>
@@ -454,7 +425,7 @@ primary blocker.</p>
 <h4 id="test">4. Test<a class="anchor" aria-label="anchor" href="#test"></a>
 </h4>
 <p>Verify the fix:</p>
-<div class="sourceCode" id="cb12"><pre class="downlit sourceCode r">
+<div class="sourceCode" id="cb11"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="co"># Run the minimal reproduction case</span></span>
 <span><span class="co"># Confirm error is gone</span></span>
 <span><span class="co"># Run full test suite</span></span>
@@ -464,7 +435,7 @@ primary blocker.</p>
 <h4 id="document">5. Document<a class="anchor" aria-label="anchor" href="#document"></a>
 </h4>
 <p>Record what you learned:</p>
-<div class="sourceCode" id="cb13"><pre class="downlit sourceCode r">
+<div class="sourceCode" id="cb12"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="co"># Add a comment explaining the fix</span></span>
 <span><span class="co"># Update documentation if needed</span></span>
 <span><span class="co"># Commit with descriptive message:</span></span>
@@ -485,7 +456,7 @@ primary blocker.</p>
 <p><strong>Problem:</strong> Function from another package isn’t
 available.</p>
 <p><strong>Fix:</strong></p>
-<div class="sourceCode" id="cb14"><pre class="downlit sourceCode r">
+<div class="sourceCode" id="cb13"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="co"># Option 1: Explicit namespace</span></span>
 <span><span class="fu">SummarizedExperiment</span><span class="fu">::</span><span class="fu"><a href="https://rdrr.io/pkg/SummarizedExperiment/man/SummarizedExperiment-class.html" class="external-link">assay</a></span><span class="op">(</span><span class="va">se</span>, <span class="st">"counts"</span><span class="op">)</span></span>
 <span></span>
@@ -498,7 +469,7 @@ available.</p>
 <p><strong>Problem:</strong> ggplot2 aesthetics trigger R CMD check
 notes.</p>
 <p><strong>Fix:</strong></p>
-<div class="sourceCode" id="cb15"><pre class="downlit sourceCode r">
+<div class="sourceCode" id="cb14"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="co"># Instead of:</span></span>
 <span><span class="fu"><a href="https://ggplot2.tidyverse.org/reference/ggplot.html" class="external-link">ggplot</a></span><span class="op">(</span><span class="va">data</span>, <span class="fu"><a href="https://ggplot2.tidyverse.org/reference/aes.html" class="external-link">aes</a></span><span class="op">(</span>x <span class="op">=</span> <span class="va">PC1</span>, y <span class="op">=</span> <span class="va">PC2</span><span class="op">)</span><span class="op">)</span></span>
 <span></span>
@@ -512,7 +483,7 @@ notes.</p>
 <h4 id="missing-imports-in-description">Missing imports in DESCRIPTION<a class="anchor" aria-label="anchor" href="#missing-imports-in-description"></a>
 </h4>
 <p><strong>Fix:</strong></p>
-<div class="sourceCode" id="cb16"><pre class="downlit sourceCode r">
+<div class="sourceCode" id="cb15"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="co"># Add missing packages</span></span>
 <span><span class="fu">usethis</span><span class="fu">::</span><span class="fu">use_package</span><span class="op">(</span><span class="st">"ggplot2"</span><span class="op">)</span></span>
 <span><span class="fu">usethis</span><span class="fu">::</span><span class="fu">use_package</span><span class="op">(</span><span class="st">"SummarizedExperiment"</span><span class="op">)</span></span></code></pre></div>
@@ -526,7 +497,7 @@ notes.</p>
 <h4 id="undocumented-arguments">“Undocumented arguments”<a class="anchor" aria-label="anchor" href="#undocumented-arguments"></a>
 </h4>
 <p><strong>Fix:</strong> Add missing <code>@param</code> tags:</p>
-<div class="sourceCode" id="cb17"><pre class="downlit sourceCode r">
+<div class="sourceCode" id="cb16"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="co">#' @param se A SummarizedExperiment object</span></span>
 <span><span class="co">#' @param n_top Number of top variable genes</span></span></code></pre></div>
 </div>
@@ -534,7 +505,7 @@ notes.</p>
 <h4 id="examples-fail">Examples fail<a class="anchor" aria-label="anchor" href="#examples-fail"></a>
 </h4>
 <p><strong>Fix:</strong> Wrap long-running or interactive examples:</p>
-<div class="sourceCode" id="cb18"><pre class="downlit sourceCode r">
+<div class="sourceCode" id="cb17"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="co">#' @examples</span></span>
 <span><span class="co">#' \dontrun{</span></span>
 <span><span class="co">#' # This example takes a while</span></span>
@@ -556,7 +527,7 @@ notes.</p>
 </h4>
 <p><strong>Fix:</strong> Make sure you’re using the package correctly in
 tests:</p>
-<div class="sourceCode" id="cb19"><pre class="downlit sourceCode r">
+<div class="sourceCode" id="cb18"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="co"># tests/testthat/test-pca.R</span></span>
 <span></span>
 <span><span class="co"># Functions should be available without library()</span></span>
@@ -589,7 +560,7 @@ are in Suggests.</p>
 <h4 id="site-wont-build">Site won’t build<a class="anchor" aria-label="anchor" href="#site-wont-build"></a>
 </h4>
 <p><strong>Common fixes:</strong></p>
-<div class="sourceCode" id="cb20"><pre class="downlit sourceCode r">
+<div class="sourceCode" id="cb19"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="co"># Check pkgdown config is valid YAML</span></span>
 <span><span class="fu">yaml</span><span class="fu">::</span><span class="fu"><a href="https://yaml.r-lib.org/reference/read_yaml.html" class="external-link">read_yaml</a></span><span class="op">(</span><span class="st">"_pkgdown.yml"</span><span class="op">)</span></span>
 <span></span>
@@ -604,7 +575,7 @@ are in Suggests.</p>
 <h4 id="missing-reference-pages">Missing reference pages<a class="anchor" aria-label="anchor" href="#missing-reference-pages"></a>
 </h4>
 <p><strong>Fix:</strong> Ensure functions are exported:</p>
-<div class="sourceCode" id="cb21"><pre class="downlit sourceCode r">
+<div class="sourceCode" id="cb20"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="co">#' @export</span></span>
 <span><span class="va">run_pca</span> <span class="op">&lt;-</span> <span class="kw">function</span><span class="op">(</span><span class="va">...</span><span class="op">)</span> <span class="op">{</span></span>
 <span>  <span class="va">...</span></span>
@@ -619,7 +590,7 @@ are in Suggests.</p>
 <h4 id="app-crashes-on-startup">App crashes on startup<a class="anchor" aria-label="anchor" href="#app-crashes-on-startup"></a>
 </h4>
 <p><strong>Debug approach:</strong></p>
-<div class="sourceCode" id="cb22"><pre class="downlit sourceCode r">
+<div class="sourceCode" id="cb21"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="co"># Run with error tracing</span></span>
 <span><span class="fu"><a href="https://rdrr.io/r/base/options.html" class="external-link">options</a></span><span class="op">(</span>shiny.error <span class="op">=</span> <span class="va">browser</span><span class="op">)</span></span>
 <span><span class="fu"><a href="../reference/run_app.html">run_app</a></span><span class="op">(</span><span class="op">)</span></span>
@@ -633,7 +604,7 @@ are in Suggests.</p>
 <h4 id="reactivity-not-working">Reactivity not working<a class="anchor" aria-label="anchor" href="#reactivity-not-working"></a>
 </h4>
 <p><strong>Common causes:</strong></p>
-<div class="sourceCode" id="cb23"><pre class="downlit sourceCode r">
+<div class="sourceCode" id="cb22"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="co"># Forgot parentheses on reactive</span></span>
 <span><span class="va">output</span><span class="op">$</span><span class="va">plot</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/pkg/shiny/man/renderPlot.html" class="external-link">renderPlot</a></span><span class="op">(</span><span class="op">{</span></span>
 <span>    <span class="fu"><a href="../reference/plot_pca.html">plot_pca</a></span><span class="op">(</span><span class="va">pca_result</span><span class="op">)</span>  <span class="co"># WRONG: missing ()</span></span>
@@ -652,7 +623,7 @@ are in Suggests.</p>
 <h4 id="arguments-not-parsing">Arguments not parsing<a class="anchor" aria-label="anchor" href="#arguments-not-parsing"></a>
 </h4>
 <p><strong>Debug:</strong></p>
-<div class="sourceCode" id="cb24"><pre class="downlit sourceCode r">
+<div class="sourceCode" id="cb23"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="co"># Test the CLI directly from R</span></span>
 <span><span class="fu">Rapp</span><span class="fu">::</span><span class="fu"><a href="https://rdrr.io/pkg/Rapp/man/run.html" class="external-link">run</a></span><span class="op">(</span></span>
 <span>    <span class="fu"><a href="https://rdrr.io/r/base/system.file.html" class="external-link">system.file</a></span><span class="op">(</span><span class="st">"exec"</span>, <span class="st">"sePCA"</span>, package <span class="op">=</span> <span class="st">"sePCA"</span><span class="op">)</span>,</span>
@@ -663,7 +634,7 @@ are in Suggests.</p>
 <h4 id="files-not-found">Files not found<a class="anchor" aria-label="anchor" href="#files-not-found"></a>
 </h4>
 <p><strong>Check:</strong></p>
-<div class="sourceCode" id="cb25"><pre class="downlit sourceCode r">
+<div class="sourceCode" id="cb24"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="co"># Are you using absolute paths?</span></span>
 <span><span class="co"># Relative paths are relative to working directory!</span></span>
 <span><span class="fu"><a href="https://rdrr.io/r/base/getwd.html" class="external-link">getwd</a></span><span class="op">(</span><span class="op">)</span></span>
@@ -691,20 +662,20 @@ are in Suggests.</p>
 <h3 id="capture-patterns">Capture Patterns<a class="anchor" aria-label="anchor" href="#capture-patterns"></a>
 </h3>
 <p>As we discuss, we’ll build a shared FAQ:</p>
-<div class="sourceCode" id="cb26"><pre class="sourceCode markdown"><code class="sourceCode markdown"><span id="cb26-1"><a href="#cb26-1" tabindex="-1"></a><span class="fu">## FAQ: Common Issues and Fixes</span></span>
-<span id="cb26-2"><a href="#cb26-2" tabindex="-1"></a></span>
-<span id="cb26-3"><a href="#cb26-3" tabindex="-1"></a><span class="fu">### Q: My function works locally but not after install</span></span>
-<span id="cb26-4"><a href="#cb26-4" tabindex="-1"></a>A: Make sure you're not using <span class="in">`devtools::load_all()`</span> logic. Test with </span>
-<span id="cb26-5"><a href="#cb26-5" tabindex="-1"></a>a fresh <span class="in">`remotes::install_github()`</span> install.</span>
-<span id="cb26-6"><a href="#cb26-6" tabindex="-1"></a></span>
-<span id="cb26-7"><a href="#cb26-7" tabindex="-1"></a><span class="fu">### Q: R CMD check complains about global variables</span></span>
-<span id="cb26-8"><a href="#cb26-8" tabindex="-1"></a>A: Use <span class="in">`.data$varname`</span> in ggplot2 aes() calls, or add <span class="in">`globalVariables()`</span>.</span>
-<span id="cb26-9"><a href="#cb26-9" tabindex="-1"></a></span>
-<span id="cb26-10"><a href="#cb26-10" tabindex="-1"></a><span class="fu">### Q: CI fails but local passes</span></span>
-<span id="cb26-11"><a href="#cb26-11" tabindex="-1"></a>A: Check that all dependencies are in DESCRIPTION. Look at the CI log</span>
-<span id="cb26-12"><a href="#cb26-12" tabindex="-1"></a>for the specific error.</span>
-<span id="cb26-13"><a href="#cb26-13" tabindex="-1"></a></span>
-<span id="cb26-14"><a href="#cb26-14" tabindex="-1"></a>... (add more as we discuss)</span></code></pre></div>
+<div class="sourceCode" id="cb25"><pre class="sourceCode markdown"><code class="sourceCode markdown"><span id="cb25-1"><a href="#cb25-1" tabindex="-1"></a><span class="fu">## FAQ: Common Issues and Fixes</span></span>
+<span id="cb25-2"><a href="#cb25-2" tabindex="-1"></a></span>
+<span id="cb25-3"><a href="#cb25-3" tabindex="-1"></a><span class="fu">### Q: My function works locally but not after install</span></span>
+<span id="cb25-4"><a href="#cb25-4" tabindex="-1"></a>A: Make sure you're not using <span class="in">`devtools::load_all()`</span> logic. Test with </span>
+<span id="cb25-5"><a href="#cb25-5" tabindex="-1"></a>a fresh <span class="in">`remotes::install_github()`</span> install.</span>
+<span id="cb25-6"><a href="#cb25-6" tabindex="-1"></a></span>
+<span id="cb25-7"><a href="#cb25-7" tabindex="-1"></a><span class="fu">### Q: R CMD check complains about global variables</span></span>
+<span id="cb25-8"><a href="#cb25-8" tabindex="-1"></a>A: Use <span class="in">`.data$varname`</span> in ggplot2 aes() calls, or add <span class="in">`globalVariables()`</span>.</span>
+<span id="cb25-9"><a href="#cb25-9" tabindex="-1"></a></span>
+<span id="cb25-10"><a href="#cb25-10" tabindex="-1"></a><span class="fu">### Q: CI fails but local passes</span></span>
+<span id="cb25-11"><a href="#cb25-11" tabindex="-1"></a>A: Check that all dependencies are in DESCRIPTION. Look at the CI log</span>
+<span id="cb25-12"><a href="#cb25-12" tabindex="-1"></a>for the specific error.</span>
+<span id="cb25-13"><a href="#cb25-13" tabindex="-1"></a></span>
+<span id="cb25-14"><a href="#cb25-14" tabindex="-1"></a>... (add more as we discuss)</span></code></pre></div>
 <hr>
 </div>
 </div>
@@ -715,24 +686,24 @@ are in Suggests.</p>
 <h3 id="exercise-a-minimal-bug-report">Exercise A: Minimal Bug Report<a class="anchor" aria-label="anchor" href="#exercise-a-minimal-bug-report"></a>
 </h3>
 <p>For one unresolved blocker, write an issue-style bug report:</p>
-<div class="sourceCode" id="cb27"><pre class="sourceCode markdown"><code class="sourceCode markdown"><span id="cb27-1"><a href="#cb27-1" tabindex="-1"></a><span class="fu">## Bug: [Short description]</span></span>
-<span id="cb27-2"><a href="#cb27-2" tabindex="-1"></a></span>
-<span id="cb27-3"><a href="#cb27-3" tabindex="-1"></a><span class="fu">### Expected behavior</span></span>
-<span id="cb27-4"><a href="#cb27-4" tabindex="-1"></a><span class="co">[</span><span class="ot">What should happen</span><span class="co">]</span></span>
-<span id="cb27-5"><a href="#cb27-5" tabindex="-1"></a></span>
-<span id="cb27-6"><a href="#cb27-6" tabindex="-1"></a><span class="fu">### Actual behavior</span></span>
-<span id="cb27-7"><a href="#cb27-7" tabindex="-1"></a><span class="co">[</span><span class="ot">What actually happens</span><span class="co">]</span></span>
-<span id="cb27-8"><a href="#cb27-8" tabindex="-1"></a></span>
-<span id="cb27-9"><a href="#cb27-9" tabindex="-1"></a><span class="fu">### Steps to reproduce</span></span>
-<span id="cb27-10"><a href="#cb27-10" tabindex="-1"></a><span class="ss">1. </span>Start a fresh R session</span>
-<span id="cb27-11"><a href="#cb27-11" tabindex="-1"></a><span class="ss">2. </span>Run: <span class="in">`library(sePCA)`</span></span>
-<span id="cb27-12"><a href="#cb27-12" tabindex="-1"></a><span class="ss">3. </span>Run: <span class="in">`run_pca(example_se)`</span></span>
-<span id="cb27-13"><a href="#cb27-13" tabindex="-1"></a><span class="ss">4. </span>See error: <span class="co">[</span><span class="ot">error message</span><span class="co">]</span></span>
-<span id="cb27-14"><a href="#cb27-14" tabindex="-1"></a></span>
-<span id="cb27-15"><a href="#cb27-15" tabindex="-1"></a><span class="fu">### Environment</span></span>
-<span id="cb27-16"><a href="#cb27-16" tabindex="-1"></a><span class="in">```r</span></span>
-<span id="cb27-17"><a href="#cb27-17" tabindex="-1"></a><span class="fu">sessionInfo</span>()</span>
-<span id="cb27-18"><a href="#cb27-18" tabindex="-1"></a><span class="co"># Paste output here</span></span></code></pre></div>
+<div class="sourceCode" id="cb26"><pre class="sourceCode markdown"><code class="sourceCode markdown"><span id="cb26-1"><a href="#cb26-1" tabindex="-1"></a><span class="fu">## Bug: [Short description]</span></span>
+<span id="cb26-2"><a href="#cb26-2" tabindex="-1"></a></span>
+<span id="cb26-3"><a href="#cb26-3" tabindex="-1"></a><span class="fu">### Expected behavior</span></span>
+<span id="cb26-4"><a href="#cb26-4" tabindex="-1"></a><span class="co">[</span><span class="ot">What should happen</span><span class="co">]</span></span>
+<span id="cb26-5"><a href="#cb26-5" tabindex="-1"></a></span>
+<span id="cb26-6"><a href="#cb26-6" tabindex="-1"></a><span class="fu">### Actual behavior</span></span>
+<span id="cb26-7"><a href="#cb26-7" tabindex="-1"></a><span class="co">[</span><span class="ot">What actually happens</span><span class="co">]</span></span>
+<span id="cb26-8"><a href="#cb26-8" tabindex="-1"></a></span>
+<span id="cb26-9"><a href="#cb26-9" tabindex="-1"></a><span class="fu">### Steps to reproduce</span></span>
+<span id="cb26-10"><a href="#cb26-10" tabindex="-1"></a><span class="ss">1. </span>Start a fresh R session</span>
+<span id="cb26-11"><a href="#cb26-11" tabindex="-1"></a><span class="ss">2. </span>Run: <span class="in">`library(sePCA)`</span></span>
+<span id="cb26-12"><a href="#cb26-12" tabindex="-1"></a><span class="ss">3. </span>Run: <span class="in">`run_pca(example_se)`</span></span>
+<span id="cb26-13"><a href="#cb26-13" tabindex="-1"></a><span class="ss">4. </span>See error: <span class="co">[</span><span class="ot">error message</span><span class="co">]</span></span>
+<span id="cb26-14"><a href="#cb26-14" tabindex="-1"></a></span>
+<span id="cb26-15"><a href="#cb26-15" tabindex="-1"></a><span class="fu">### Environment</span></span>
+<span id="cb26-16"><a href="#cb26-16" tabindex="-1"></a><span class="in">```r</span></span>
+<span id="cb26-17"><a href="#cb26-17" tabindex="-1"></a><span class="fu">sessionInfo</span>()</span>
+<span id="cb26-18"><a href="#cb26-18" tabindex="-1"></a><span class="co"># Paste output here</span></span></code></pre></div>
 <div class="section level4">
 <h4 id="additional-context">Additional context<a class="anchor" aria-label="anchor" href="#additional-context"></a>
 </h4>
@@ -905,7 +876,7 @@ questions</li>
 <div class="section level2">
 <h2 id="session-info">Session Info<a class="anchor" aria-label="anchor" href="#session-info"></a>
 </h2>
-<div class="sourceCode" id="cb29"><pre class="downlit sourceCode r">
+<div class="sourceCode" id="cb28"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="fu"><a href="https://rdrr.io/r/utils/sessionInfo.html" class="external-link">sessionInfo</a></span><span class="op">(</span><span class="op">)</span></span></code></pre></div>
 <pre><code><span><span class="co">## R version 4.5.3 (2026-03-11)</span></span>
 <span><span class="co">## Platform: x86_64-pc-linux-gnu</span></span>

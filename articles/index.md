@@ -16,8 +16,8 @@
 
 ### Lectures
 
-- [Lecture 4: Data Structures & R Ecosystems
-  (Bioconductor)](https://st-jude-ms-abds.github.io/ADS8192/articles/Lecture04_Data_Structures_Bioconductor.md):
+- [Lecture 4: Data Structures & R
+  Ecosystems](https://st-jude-ms-abds.github.io/ADS8192/articles/Lecture04_Data_Structures_Bioconductor.md):
 - [Lecture 5: Lab – R Package Development
   (devtools)](https://st-jude-ms-abds.github.io/ADS8192/articles/Lecture05_Package_Development_devtools.md):
 - [Lecture 6: Lab – R Package Development (pkgdown,

@@ -12,8 +12,6 @@ By the end of this session, you will be able to:
 4.  Synthesize the durable software-design heuristics from Unit 1 and
     use them during peer review
 
-**Course Learning Outcomes (CLOs):** CLO 1, 2, 3, 4, 5, 6
-
 ### Motivation
 
 Robust scientific software is evaluated end to end: can someone else
@@ -41,14 +39,6 @@ As you review a package at the end of Unit 1, ask:
 - Would a future collaborator understand what is core logic versus
   interface glue?
 
-### Scientific Use Case
-
-Imagine you inherit a small but useful lab prototype that currently
-exists as a pile of scripts. You have one week to turn it into something
-another team can install, test, run interactively, and place in a
-workflow. Which Unit 1 principles let you improve the software quickly
-without rewriting the science from scratch?
-
 ------------------------------------------------------------------------
 
 ## Unit 1 Design Synthesis
@@ -63,8 +53,8 @@ more:
   Shiny, CLI, and documentation layers.
 - **Public contracts matter.** Function signatures, file outputs, and
   help text become promises to users.
-- **Tests protect behavior, not ego.** They exist to catch regressions
-  and make refactoring safe.
+- **Tests protect behavior.** They exist to catch regressions and make
+  refactoring safe.
 - **Packaging is a distribution boundary.** It forces dependencies,
   documentation, and installability into the open.
 - **Validate at the boundary.** Friendly errors in functions, apps, and
@@ -93,99 +83,83 @@ A GitHub repository containing an R package that:
 
 ------------------------------------------------------------------------
 
-## Part 1: Readiness Checklist (10 min)
+## Part 1: Readiness Checklist
 
 ### Run the Checklist
 
 Everyone run through this checklist right now. Mark each item ✅ or ❌:
 
-#### 1. Install from GitHub
+#### 1. R CMD check
 
-``` r
-# Start a fresh R session (important!)
-.rs.restartR()
-
-# Remove local version if exists
-try(remove.packages("sePCA"), silent = TRUE)
-
-# Install from GitHub
-remotes::install_github("YOUR-USERNAME/sePCA")
-
-# ✅ Success / ❌ Failed
-```
-
-#### 2. R CMD check
+Does your package build properly? Do all tests pass?
 
 ``` r
 devtools::check()
 
 # Goal: 0 errors, 0 warnings
-# NOTEs are usually acceptable
-# ✅ 0 errors, 0 warnings / ❌ Has errors or warnings
+# NOTEs are usually acceptable, but check them for anything important or easily addressed
 ```
 
-#### 3. Documentation
+#### 2. Documentation
 
 ``` r
-library(sePCA)
-
 # Help files work?
 ?run_pca
 ?plot_pca
 
 # Package help?
-?sePCA
-
-# ✅ Help displays / ❌ Missing docs
+?ADS8192
 ```
 
-#### 4. Tests
+#### 3. Tests
+
+Do you have tests that cover your core functionality? Do they pass?
 
 ``` r
 devtools::test()
 
 # Goal: All tests pass
-# ✅ All passed / ❌ Failures
 ```
 
-#### 5. pkgdown Site
+#### 4. pkgdown Site
+
+Does your site exist, have reference pages for exported functions, a
+landing page with basic installation, and at least one vignette?
+
+Is it linked from your Github repo/README?
+
+#### 5. Shiny App
 
 ``` r
-pkgdown::build_site()
-
-# Opens in browser - check:
-# - Home page renders
-# - Reference pages work
-# - Articles/vignettes render
-
-# ✅ Site builds / ❌ Build fails
-```
-
-#### 6. Shiny App
-
-``` r
-library(sePCA)
+library(ADS8192)
 run_app()
 
 # Check:
 # - App launches without error
-# - Plot renders
+# - Plots render
 # - Inputs change the plot
-
-# ✅ App works / ❌ App fails
 ```
 
-#### 7. CLI
+#### 6. CLI
 
 ``` bash
 # From terminal
-sePCA pca --help
+ADS8192 pca --help
 
 # If launchers are not installed
-# Rapp exec/sePCA pca --help
+# Rapp exec/ADS8192 pca --help
+```
 
-# Should show help text
-# ✅ Help shows / ❌ Error
+#### 7. Install from GitHub
+
+In a fresh R session, try installing your package from Github:
+
+``` r
+# Install from GitHub (replace with your username/repo)
+remotes::install_github("YOUR-USERNAME/YOUR-PACKAGE")
+
+# Then ensure it loads
+library(ADS8192)
 ```
 
 ------------------------------------------------------------------------
