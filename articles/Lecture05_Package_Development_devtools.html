@@ -780,7 +780,7 @@ for Git.</p>
 <strong>fresh R session</strong> and try:</p>
 <div class="sourceCode" id="cb31"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="co"># Install from GitHub</span></span>
-<span><span class="co"># remotes::install_github("St-Jude-MS-ABDS/ADS8192")</span></span>
+<span><span class="fu">remotes</span><span class="fu">::</span><span class="fu">install_github</span><span class="op">(</span><span class="st">"St-Jude-MS-ABDS/ADS8192"</span><span class="op">)</span></span>
 <span></span>
 <span><span class="co"># Load and test your package, here's what mine looks like:</span></span>
 <span><span class="kw"><a href="https://rdrr.io/r/base/library.html" class="external-link">library</a></span><span class="op">(</span><span class="va"><a href="https://github.com/St-Jude-MS-ABDS/ADS8192" class="external-link">ADS8192</a></span><span class="op">)</span></span>
@@ -825,24 +825,23 @@ simple example:</p>
 <span id="cb33-11"><a href="#cb33-11" tabindex="-1"></a></span>
 <span id="cb33-12"><a href="#cb33-12" tabindex="-1"></a><span class="in">```r</span></span>
 <span id="cb33-13"><a href="#cb33-13" tabindex="-1"></a><span class="co"># Install from GitHub</span></span>
-<span id="cb33-14"><a href="#cb33-14" tabindex="-1"></a>remotes<span class="sc">::</span><span class="fu">install_github</span>(<span class="st">"your-username/ADS8192"</span>)</span>
+<span id="cb33-14"><a href="#cb33-14" tabindex="-1"></a>remotes<span class="sc">::</span><span class="fu">install_github</span>(<span class="st">"St-Jude-MS-ABDS/ADS8192"</span>)</span>
 <span id="cb33-15"><a href="#cb33-15" tabindex="-1"></a><span class="in">```</span></span>
 <span id="cb33-16"><a href="#cb33-16" tabindex="-1"></a></span>
 <span id="cb33-17"><a href="#cb33-17" tabindex="-1"></a><span class="fu">## Quick Start</span></span>
 <span id="cb33-18"><a href="#cb33-18" tabindex="-1"></a></span>
 <span id="cb33-19"><a href="#cb33-19" tabindex="-1"></a><span class="in">```r</span></span>
 <span id="cb33-20"><a href="#cb33-20" tabindex="-1"></a><span class="fu">library</span>(ADS8192)</span>
-<span id="cb33-21"><a href="#cb33-21" tabindex="-1"></a><span class="fu">library</span>(airway)</span>
-<span id="cb33-22"><a href="#cb33-22" tabindex="-1"></a></span>
-<span id="cb33-23"><a href="#cb33-23" tabindex="-1"></a><span class="co"># Load example data</span></span>
-<span id="cb33-24"><a href="#cb33-24" tabindex="-1"></a><span class="fu">data</span>(airway)</span>
-<span id="cb33-25"><a href="#cb33-25" tabindex="-1"></a></span>
-<span id="cb33-26"><a href="#cb33-26" tabindex="-1"></a><span class="co"># Run PCA</span></span>
-<span id="cb33-27"><a href="#cb33-27" tabindex="-1"></a>result <span class="ot">&lt;-</span> <span class="fu">run_pca</span>(airway, <span class="at">n_top =</span> <span class="dv">500</span>)</span>
-<span id="cb33-28"><a href="#cb33-28" tabindex="-1"></a></span>
-<span id="cb33-29"><a href="#cb33-29" tabindex="-1"></a><span class="co"># Plot</span></span>
-<span id="cb33-30"><a href="#cb33-30" tabindex="-1"></a><span class="fu">plot_pca</span>(result, <span class="at">color_by =</span> <span class="st">"dex"</span>)</span>
-<span id="cb33-31"><a href="#cb33-31" tabindex="-1"></a><span class="in">```</span></span></code></pre></div>
+<span id="cb33-21"><a href="#cb33-21" tabindex="-1"></a></span>
+<span id="cb33-22"><a href="#cb33-22" tabindex="-1"></a><span class="co"># Load example data</span></span>
+<span id="cb33-23"><a href="#cb33-23" tabindex="-1"></a><span class="fu">data</span>(example_se)</span>
+<span id="cb33-24"><a href="#cb33-24" tabindex="-1"></a></span>
+<span id="cb33-25"><a href="#cb33-25" tabindex="-1"></a><span class="co"># Run PCA</span></span>
+<span id="cb33-26"><a href="#cb33-26" tabindex="-1"></a>result <span class="ot">&lt;-</span> <span class="fu">run_pca</span>(example_se, <span class="at">n_top =</span> <span class="dv">500</span>)</span>
+<span id="cb33-27"><a href="#cb33-27" tabindex="-1"></a></span>
+<span id="cb33-28"><a href="#cb33-28" tabindex="-1"></a><span class="co"># Plot</span></span>
+<span id="cb33-29"><a href="#cb33-29" tabindex="-1"></a><span class="fu">plot_pca</span>(result, <span class="at">color_by =</span> <span class="st">"treatment"</span>)</span>
+<span id="cb33-30"><a href="#cb33-30" tabindex="-1"></a><span class="in">```</span></span></code></pre></div>
 <p>Then build the README:</p>
 <div class="sourceCode" id="cb34"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="fu">build_readme</span><span class="op">(</span><span class="op">)</span></span></code></pre></div>
