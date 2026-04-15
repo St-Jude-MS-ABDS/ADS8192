@@ -35,7 +35,7 @@ command-line interface via Rapp.
 ## Interactive App
 
 - [`run_app`](https://st-jude-ms-abds.github.io/ADS8192/reference/run_app.md):
-  Launch the Shiny PCA Explorer
+  Launch the Shiny PCA Explorer on a SummarizedExperiment
 
 ## See also
 

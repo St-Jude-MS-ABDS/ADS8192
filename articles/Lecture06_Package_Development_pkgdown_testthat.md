@@ -140,45 +140,67 @@ use_test("pca")
 This creates `tests/testthat/test-pca.R`. Edit it:
 
 ``` r
-# tests/testthat/test-pca.R
-
-test_that("top_variable_features returns correct subset size", {
-    data(example_se, package = "ADS8192")
-
-    se_top <- top_variable_features(example_se, n = 50)
-
-    expect_equal(nrow(se_top), 50)
-    expect_equal(ncol(se_top), ncol(example_se))  # Same samples
-})
-
-test_that("top_variable_features returns most variable genes", {
-    data(example_se, package = "ADS8192")
-
-    se_top <- top_variable_features(example_se, n = 10)
-    mat <- SummarizedExperiment::assay(se_top, "counts")
-    vars <- apply(mat, 1, var)
-
-    # All variances in top-10 should be >= the 11th highest
-    full_mat <- SummarizedExperiment::assay(example_se, "counts")
-    full_vars <- sort(apply(full_mat, 1, var), decreasing = TRUE)
-    expect_true(all(vars >= full_vars[11]))
-})
-
-test_that("top_variable_features handles n > nrow gracefully", {
-    data(example_se, package = "ADS8192")
-
-    se_all <- top_variable_features(example_se, n = 100000)
-
-    expect_equal(nrow(se_all), nrow(example_se))
-})
+# Tests for run_pca()
 
 test_that("run_pca returns correct structure", {
-    data(example_se, package = "ADS8192")
+    data(example_se)
 
     result <- run_pca(example_se, n_top = 50)
 
     expect_type(result, "list")
     expect_named(result, c("pca", "scores"))
+    expect_s3_class(result$pca, "prcomp")
+    expect_s3_class(result$scores, "data.frame")
+})
+
+test_that("run_pca scores contain sample metadata", {
+    data(example_se)
+
+    result <- run_pca(example_se, n_top = 50)
+
+    expect_true("treatment" %in% colnames(result$scores))
+    expect_true("sample_id" %in% colnames(result$scores))
+    expect_true("cell" %in% colnames(result$scores))
+})
+
+test_that("run_pca scores contain PC columns", {
+    data(example_se)
+
+    result <- run_pca(example_se, n_top = 50)
+
+    expect_true("PC1" %in% colnames(result$scores))
+    expect_true("PC2" %in% colnames(result$scores))
+    # n_samples = 8, so at most 8 PCs
+    n_samples <- ncol(example_se)
+    expect_true(paste0("PC", n_samples) %in% colnames(result$scores))
+})
+
+test_that("run_pca works with log_transform = FALSE", {
+    data(example_se)
+
+    result <- run_pca(example_se, n_top = 50, log_transform = FALSE)
+
+    expect_type(result, "list")
+    expect_s3_class(result$pca, "prcomp")
+})
+
+test_that("run_pca works with scale = FALSE", {
+    data(example_se)
+
+    result <- run_pca(example_se, n_top = 50, scale = FALSE)
+
+    expect_type(result, "list")
+    expect_s3_class(result$pca, "prcomp")
+})
+
+test_that("run_pca produces deterministic output", {
+    data(example_se)
+
+    result1 <- run_pca(example_se, n_top = 50)
+    result2 <- run_pca(example_se, n_top = 50)
+
+    expect_equal(result1$scores$PC1, result2$scores$PC1)
+    expect_equal(result1$scores$PC2, result2$scores$PC2)
 })
 ```
 
@@ -189,7 +211,7 @@ Every test follows this pattern:
 ``` r
 test_that("description of what we're testing", {
     # ARRANGE - Set up data and conditions
-    data(example_se, package = "ADS8192")
+    data(example_se)
 
     # ACT - Run the code being tested
     result <- top_variable_features(example_se, n = 50)
@@ -219,18 +241,20 @@ Expected output:
 
     ℹ Testing ADS8192
     ✔ | F W S  OK | Context
-    ✔ |         4 | pca
+    ✔ |         6 | pca
 
     ══ Results ═════════════════════════════════════════════════════════════════
-    [ FAIL 0 | WARN 0 | SKIP 0 | PASS 4 ]
+    [ FAIL 0 | WARN 0 | SKIP 0 | PASS 6 ]
 
 ------------------------------------------------------------------------
 
 ### Common testthat Expectations
 
-[testthat](https://st-jude-ms-abds.github.io/ADS8192/articles/) includes
-many ways to check for expected results from specific scenarios. Some of
-the most common ones include:
+[testthat](https://testthat.r-lib.org/reference/index.html#expectations)
+includes many ways to check for expected results from specific
+scenarios. You can also create custom expectations if needed, but the
+built-in ones cover most of the common cases. Some of the most common
+ones include:
 
 ``` r
 # Common testthat expect_*() functions — reference
@@ -312,7 +336,7 @@ doesn’t validate that `n_top` is a positive integer. Let’s fix that.
 
 ``` r
 test_that("run_pca errors on negative n_top", {
-    data(example_se, package = "ADS8192")
+    data(example_se)
 
     expect_error(run_pca(example_se, n_top = -5), "positive")
 })
@@ -345,63 +369,6 @@ run_pca <- function(se, assay_name = "counts", n_top = 500,
 
 ``` r
 test()  # All tests should pass now
-```
-
-------------------------------------------------------------------------
-
-### Writing a Few More Tests
-
-Below are examples of a covering a few more bases for inspiration.
-
-Click to expand more test examples
-
-``` r
-# tests/testthat/test-pca.R
-
-test_that("run_pca returns correct structure", {
-    data(example_se, package = "ADS8192")
-
-    result <- run_pca(example_se, n_top = 50)
-
-    expect_type(result, "list")
-    expect_named(result, c("pca", "scores"))
-    expect_s3_class(result$pca, "prcomp")
-    expect_s3_class(result$scores, "data.frame")
-})
-
-test_that("run_pca scores contain sample metadata", {
-    data(example_se, package = "ADS8192")
-
-    result <- run_pca(example_se, n_top = 50)
-
-    # Should have treatment column from colData
-    expect_true("treatment" %in% colnames(result$scores))
-    expect_true("sample_id" %in% colnames(result$scores))
-})
-
-test_that("run_pca returns expected number of PCs", {
-    data(example_se, package = "ADS8192")
-
-    result <- run_pca(example_se, n_top = 50)
-
-    # Should have PCs equal to min(n_samples, n_features)
-    n_samples <- ncol(example_se)
-    expect_true(paste0("PC", 1) %in% colnames(result$scores))
-    expect_true(paste0("PC", n_samples) %in% colnames(result$scores))
-})
-
-test_that("pca_variance_explained returns percentages", {
-    data(example_se, package = "ADS8192")
-
-    result <- run_pca(example_se, n_top = 50)
-    var_df <- pca_variance_explained(result)
-
-    # Variance should sum to 100
-    expect_equal(sum(var_df$variance_percent), 100, tolerance = 0.01)
-
-    # Should be sorted descending (PC1 explains most)
-    expect_true(var_df$variance_percent[1] >= var_df$variance_percent[2])
-})
 ```
 
 ------------------------------------------------------------------------
