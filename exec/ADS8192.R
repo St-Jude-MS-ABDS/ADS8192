@@ -75,7 +75,7 @@ switch(
         if (color_by != "") {
             plot_file <- file.path(output, "pca_plot.png")
             p <- plot_pca(result, color_by = color_by)
-            ggsave(plot_file, p, width = 8, height = 6, dpi = 150)
+            ggsave(plot_file, p, width = 8, height = 6, dpi = 300)
             message("Saved: ", plot_file)
         }
 

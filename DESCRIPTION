@@ -9,7 +9,8 @@ Description: Course materials and reference implementation for ADS 8192:
     and layered architecture: PCA analysis functions for
     SummarizedExperiment objects, a Shiny interactive explorer, and a
     command-line interface via Rapp. Includes lectures, quizzes, and a
-    grading rubric. Students build their own packages following this model.
+    grading rubric. Students build their own packages from simple
+    raw project code following this model.
 License: MIT + file LICENSE
 Encoding: UTF-8
 Roxygen: list(markdown = TRUE)
@@ -23,12 +24,12 @@ Imports:
     rlang,
     methods,
     stats,
-    utils
+    utils,
+    shiny,
+    bslib
 Suggests:
     testthat (>= 3.0.0),
     airway,
-    shiny (>= 1.7.0),
-    bslib (>= 0.6.0),
     DT,
     Rapp,
     knitr,
