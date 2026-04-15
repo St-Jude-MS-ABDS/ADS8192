@@ -19,7 +19,7 @@ test_that("run_pca scores contain sample metadata", {
 
     expect_true("treatment" %in% colnames(result$scores))
     expect_true("sample_id" %in% colnames(result$scores))
-    expect_true("cell" %in% colnames(result$scores))
+    expect_true("batch" %in% colnames(result$scores))
 })
 
 test_that("run_pca scores contain PC columns", {
