@@ -13,6 +13,8 @@ Manipulate SummarizedExperiment objects
 
 - [`top_variable_features()`](https://st-jude-ms-abds.github.io/ADS8192/reference/top_variable_features.md)
   : Select top variable features
+- [`make_toast()`](https://st-jude-ms-abds.github.io/ADS8192/reference/make_toast.md)
+  : Make toast with any bread you want
 
 ## PCA Analysis
 

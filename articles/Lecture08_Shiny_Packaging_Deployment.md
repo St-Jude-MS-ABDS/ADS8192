@@ -601,9 +601,6 @@ run_app(se = example_se)
 Click "Download Plot" to save the current PCA plot as a PNG file.
 ````
 
-> **Exercise B:** Add screenshots to your vignette to make it more
-> visual.
-
 ------------------------------------------------------------------------
 
 ## Part 4: Advanced Interactions
@@ -658,10 +655,6 @@ output$download_scores <- downloadHandler(
     }
 )
 ```
-
-> **Exercise C:** Pair up. Try to crash your partner’s app with weird
-> inputs (extreme values, rapid clicking, etc.). Add validation to
-> prevent it.
 
 ------------------------------------------------------------------------
 
