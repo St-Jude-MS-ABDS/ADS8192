@@ -50,6 +50,7 @@ reference:
   desc: Manipulate SummarizedExperiment objects
   contents:
   - top_variable_features
+  - make_toast
 - title: PCA Analysis
   desc: Run and analyze PCA
   contents:

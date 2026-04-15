@@ -1,5 +1,5 @@
 test_that("that buttered works", {
-  expect_equal(make_toast("rye", buttered = FALSE), 
+  expect_equal(make_toast("rye", buttered = TRUE), 
                "A buttered slice of rye toast")
   
   expect_equal(make_toast("rye", buttered = FALSE), 
