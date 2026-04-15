@@ -652,7 +652,7 @@ jobs:
 
 This file is pretty simple. "on" specifies the events that trigger the workflow (push or PR to main/master, you could add other branches if wanted). "jobs" defines the tasks to run, and "strategy" sets up a matrix of OS and R version combinations to test against. "env" sets environment variables, and "steps" lists the individual steps to execute, such as checking out the code, setting up R and pandoc, installing dependencies, and running R CMD check.
 
-There are a whole host of pre-built general and language-task specific actions/workflows for R packages that you can find in the [usethis documentation](https://usethis.r-lib.org/reference/use_github_action.html) and the [GitHub Actions Marketplace](https://github.com/marketplace?type=actions).
+There are a whole host of pre-built general and language-specific actions/workflows that you can find in the [usethis documentation](https://usethis.r-lib.org/reference/use_github_action.html) and the [GitHub Actions Marketplace](https://github.com/marketplace?type=actions).
 
 CI is powerful and easy to set up. You can do some very complex things with it, but it doesn't have to be complex to be extremely useful.
 
@@ -833,7 +833,7 @@ It can feel like extra work in the moment, but it saves you time and stress in t
 
 # Summary
 
-Today we:
+In this lab, we:
 
 1. Set up testthat and wrote unit tests
 2. Practiced test-driven development (TDD)
@@ -845,7 +845,7 @@ Today we:
 
 Package has tests and CI, and a pkgdown site built directly from GitHub.
 
-At this point, people could indepedently find, understand, and actually use your package. This is a point that many projects never hit, but it's also the point at which software becomes a real product.
+At this point, people could independently find, understand, and actually use your package. This is a point that many projects never hit, but it's also the point at which software becomes a real product.
 
 This is especially true in science, where community usage and contribution is essential for software to have an impact on a field.
 If many people are already regularly using your software, then you will have a much easier time both maintaining it (as you'll have power users capable of understanding and contributing to the codebase) and publishing it (as its usefulness has already been demonstrated by the user base).
