@@ -8,27 +8,25 @@ skip_if_not_installed_bioc <- function(pkg) {
 
 # ── Project 0: PCA Explorer ─────────────────────────────────────────────────
 test_that("Project 0: raw PCA analysis runs and exports correctly", {
-    skip_if_not_installed_bioc("airway")
     skip_if_not_installed_bioc("SummarizedExperiment")
     skip_on_cran()
 
     library(SummarizedExperiment)
-    library(airway)
     library(ggplot2)
 
-    data("airway")
+    data("example_se")
 
-    mat <- assay(airway, "counts")
+    mat <- assay(example_se, "counts")
     vars <- apply(mat, 1, stats::var)
     top_idx <- order(vars, decreasing = TRUE)[seq_len(500)]
-    se_top <- airway[top_idx, ]
+    se_top <- example_se[top_idx, ]
     mat <- assay(se_top, "counts")
     mat <- log2(mat + 1)
     pca_result <- prcomp(t(mat), scale. = TRUE, center = TRUE)
 
     scores <- as.data.frame(pca_result$x)
     scores$sample_id <- rownames(scores)
-    col_data <- as.data.frame(colData(airway))
+    col_data <- as.data.frame(colData(example_se))
     col_data$sample_id <- rownames(col_data)
     scores <- merge(scores, col_data, by = "sample_id")
     scores <- scores[order(scores$sample_id), ]
@@ -39,7 +37,7 @@ test_that("Project 0: raw PCA analysis runs and exports correctly", {
 
     # PCA plot
     p <- ggplot(scores, aes(x = .data[["PC1"]], y = .data[["PC2"]])) +
-        geom_point(aes(color = .data[["dex"]]), size = 4) +
+        geom_point(aes(color = .data[["treatment"]]), size = 4) +
         theme_bw()
     expect_s3_class(p, "ggplot")
 

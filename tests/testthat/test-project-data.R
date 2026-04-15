@@ -11,32 +11,30 @@ skip_if_not_installed_bioc <- function(pkg) {
 }
 
 # ---------------------------------------------------------------------------
-# Project 0: PCA Explorer (Reference) — airway
+# Project 0: PCA Explorer (Reference) — example_se
 # ---------------------------------------------------------------------------
-test_that("Project 0: airway dataset loads and subsets correctly", {
-  skip_if_not_installed_bioc("airway")
+test_that("Project 0: example dataset loads and subsets correctly", {
   skip_if_not_installed_bioc("SummarizedExperiment")
   skip_on_cran()
 
-  library(airway)
   library(SummarizedExperiment)
 
-  data("airway")
-  expect_s4_class(airway, "RangedSummarizedExperiment")
-  expect_gt(ncol(airway), 0)
-  expect_gt(nrow(airway), 0)
+  data("example_se")
+  expect_s4_class(example_se, "SummarizedExperiment")
+  expect_gt(ncol(example_se), 0)
+  expect_gt(nrow(example_se), 0)
 
   # Test the subsetting logic from data-raw
-  counts <- assay(airway)
+  counts <- assay(example_se)
   vars <- apply(counts, 1, var)
   top100 <- names(sort(vars, decreasing = TRUE))[1:100]
   expect_length(top100, 100)
 
   set.seed(42)
   rest <- sample(setdiff(rownames(counts), top100), 400)
-  subset_se <- airway[c(top100, rest), ]
+  subset_se <- example_se[c(top100, rest), ]
   expect_equal(nrow(subset_se), 500)
-  expect_equal(ncol(subset_se), ncol(airway))
+  expect_equal(ncol(subset_se), ncol(example_se))
 })
 
 # ---------------------------------------------------------------------------

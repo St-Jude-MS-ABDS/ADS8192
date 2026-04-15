@@ -2,8 +2,8 @@
 # Tests for save_pca_results()
 
 test_that("save_pca_results creates output files", {
-    data(airway, package = "airway")
-    result <- run_pca(airway, n_top = 50)
+    data(example_se)
+    result <- run_pca(example_se, n_top = 50)
 
     tmp_dir <- file.path(tempdir(), "test_export")
     on.exit(unlink(tmp_dir, recursive = TRUE), add = TRUE)
@@ -18,8 +18,8 @@ test_that("save_pca_results creates output files", {
 })
 
 test_that("save_pca_results scores file has correct structure", {
-    data(airway, package = "airway")
-    result <- run_pca(airway, n_top = 50)
+    data(example_se)
+    result <- run_pca(example_se, n_top = 50)
 
     tmp_dir <- file.path(tempdir(), "test_export2")
     on.exit(unlink(tmp_dir, recursive = TRUE), add = TRUE)
@@ -33,13 +33,13 @@ test_that("save_pca_results scores file has correct structure", {
 
     expect_true("PC1" %in% colnames(scores))
     expect_true("sample_id" %in% colnames(scores))
-    expect_true("dex" %in% colnames(scores))
-    expect_equal(nrow(scores), ncol(airway))
+    expect_true("treatment" %in% colnames(scores))
+    expect_equal(nrow(scores), ncol(example_se))
 })
 
 test_that("save_pca_results variance file has correct structure", {
-    data(airway, package = "airway")
-    result <- run_pca(airway, n_top = 50)
+    data(example_se)
+    result <- run_pca(example_se, n_top = 50)
 
     tmp_dir <- file.path(tempdir(), "test_export3")
     on.exit(unlink(tmp_dir, recursive = TRUE), add = TRUE)
@@ -56,8 +56,8 @@ test_that("save_pca_results variance file has correct structure", {
 })
 
 test_that("save_pca_results creates output directory if needed", {
-    data(airway, package = "airway")
-    result <- run_pca(airway, n_top = 50)
+    data(example_se)
+    result <- run_pca(example_se, n_top = 50)
 
     tmp_dir <- file.path(tempdir(), "test_nested", "deep", "dir")
     on.exit(unlink(file.path(tempdir(), "test_nested"), recursive = TRUE),

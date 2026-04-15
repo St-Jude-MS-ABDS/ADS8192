@@ -26,7 +26,7 @@
 #'
 #' @section Interactive App:
 #' \itemize{
-#'   \item \code{\link{run_app}}: Launch the Shiny PCA Explorer
+#'   \item \code{\link{run_app}}: Launch the Shiny PCA Explorer on a SummarizedExperiment
 #' }
 #'
 #' @importFrom rlang .data

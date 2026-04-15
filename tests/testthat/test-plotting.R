@@ -2,8 +2,8 @@
 # Tests for plot_pca()
 
 test_that("plot_pca returns a ggplot object", {
-    data(airway, package = "airway")
-    result <- run_pca(airway, n_top = 50)
+    data(example_se)
+    result <- run_pca(example_se, n_top = 50)
 
     p <- plot_pca(result)
 
@@ -11,26 +11,26 @@ test_that("plot_pca returns a ggplot object", {
 })
 
 test_that("plot_pca works with color_by", {
-    data(airway, package = "airway")
-    result <- run_pca(airway, n_top = 50)
+    data(example_se)
+    result <- run_pca(example_se, n_top = 50)
 
-    p <- plot_pca(result, color_by = "dex")
+    p <- plot_pca(result, color_by = "treatment")
 
     expect_s3_class(p, "ggplot")
 })
 
 test_that("plot_pca works with color_by and shape_by", {
-    data(airway, package = "airway")
-    result <- run_pca(airway, n_top = 50)
+    data(example_se)
+    result <- run_pca(example_se, n_top = 50)
 
-    p <- plot_pca(result, color_by = "dex", shape_by = "cell")
+    p <- plot_pca(result, color_by = "treatment", shape_by = "cell")
 
     expect_s3_class(p, "ggplot")
 })
 
 test_that("plot_pca works with different PCs", {
-    data(airway, package = "airway")
-    result <- run_pca(airway, n_top = 50)
+    data(example_se)
+    result <- run_pca(example_se, n_top = 50)
 
     p <- plot_pca(result, pcs = c(2, 3))
 
@@ -38,15 +38,15 @@ test_that("plot_pca works with different PCs", {
 })
 
 test_that("plot_pca errors on invalid PCs", {
-    data(airway, package = "airway")
-    result <- run_pca(airway, n_top = 50)
+    data(example_se)
+    result <- run_pca(example_se, n_top = 50)
 
     expect_error(plot_pca(result, pcs = c(1, 99)), "not found")
 })
 
 test_that("plot_pca respects point_size", {
-    data(airway, package = "airway")
-    result <- run_pca(airway, n_top = 50)
+    data(example_se)
+    result <- run_pca(example_se, n_top = 50)
 
     # Just verify it doesn't error with different sizes
     p <- plot_pca(result, point_size = 2)
