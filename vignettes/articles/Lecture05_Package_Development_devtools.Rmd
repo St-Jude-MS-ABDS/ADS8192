@@ -610,7 +610,7 @@ Now we can try installing the package as an end-user would. Open a **fresh R ses
 
 ```{r test-install, eval=FALSE}
 # Install from GitHub
-# remotes::install_github("St-Jude-MS-ABDS/ADS8192")
+remotes::install_github("St-Jude-MS-ABDS/ADS8192")
 
 # Load and test your package, here's what mine looks like:
 library(ADS8192)
@@ -652,23 +652,22 @@ ADS8192 provides tools for performing PCA on SummarizedExperiment objects.
 
 ```r
 # Install from GitHub
-remotes::install_github("your-username/ADS8192")
+remotes::install_github("St-Jude-MS-ABDS/ADS8192")
 ```
 
 ## Quick Start
 
 ```r
 library(ADS8192)
-library(airway)
 
 # Load example data
-data(airway)
+data(example_se)
 
 # Run PCA
-result <- run_pca(airway, n_top = 500)
+result <- run_pca(example_se, n_top = 500)
 
 # Plot
-plot_pca(result, color_by = "dex")
+plot_pca(result, color_by = "treatment")
 ```
 ````
 
