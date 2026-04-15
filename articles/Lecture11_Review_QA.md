@@ -134,10 +134,14 @@ Is it linked from your Github repo/README?
 library(ADS8192)
 run_app()
 
+# Or with your own data:
+# run_app(se = my_se)
+
 # Check:
 # - App launches without error
 # - Plots render
 # - Inputs change the plot
+# - Assay selector is populated
 ```
 
 #### 6. CLI
@@ -417,6 +421,9 @@ run_pca <- function(...) {
 # Run with error tracing
 options(shiny.error = browser)
 run_app()
+
+# Or with custom data:
+# run_app(se = my_se)
 
 # Or check the app components separately
 app_ui()      # Does UI build?

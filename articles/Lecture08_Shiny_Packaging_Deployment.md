@@ -1,21 +1,6 @@
 # Lecture 8: Lab – Shiny (R) – Packaging, Documentation, and Deployment
 
-## Learning Objectives
-
-By the end of this session, you will be able to:
-
-1.  Add a Shiny application to the package as a function and document it
-2.  Deploy the application to a hosting platform (Posit Connect or Posit
-    Cloud)
-3.  Add inputs for flexibility and interactive elements in outputs
-4.  Explain why packaging, optional dependencies, and deployment are
-    reproducibility decisions as much as UI decisions
-5.  Discuss and (optionally) implement a basic testing strategy for
-    Shiny apps
-
-**Course Learning Outcomes (CLOs):** CLO 1, 4, 5, 6
-
-### Motivation
+## Motivation
 
 An app is only useful scientific software if other people can install
 it, launch it, and trust that it behaves the same way outside your own
@@ -26,6 +11,16 @@ This lecture matters because deployment decisions shape maintainability.
 Stable entry points, optional dependencies, and clean file lookup rules
 save time for collaborators, reduce environment-specific failures, and
 keep the app aligned with the same package core used everywhere else.
+
+### Learning Objectives
+
+By the end of this session, you will be able to:
+
+1.  Add a Shiny application to the package as a function and document it
+2.  Deploy the application to a hosting platform (Posit Cloud)
+3.  Explain why packaging, optional dependencies, and deployment are
+    reproducibility decisions as much as UI decisions
+4.  Discuss basic testing strategies for Shiny apps
 
 ### Evaluation Checklist
 
@@ -59,43 +54,37 @@ need to:
 
 1.  Clone your repo (or copy the file)
 2.  Install all dependencies manually
-3.  Run `shiny::runApp("path/to/app.R")`
+3.  Like change data inputs to point to their own files
+4.  Run `shiny::runApp("path/to/app.R")`
 
 ### Goal: Packaged App
 
-After packaging, users can:
+After packaging, users can easily run the app on arbitrary data.
 
 ``` r
-# Install once
-remotes::install_github("you/ADS8192")
+library(ADS8192)
 
-# Run anywhere
-ADS8192::run_app()
+# Run with built-in example data
+data("example_se")
+run_app(se = example_se)
+
+# Or supply your own SummarizedExperiment
+library(airway)
+data("airway")
+run_app(se = airway)
 ```
 
 Benefits:
 
 - **Single install command** handles all dependencies
 - **Works anywhere** — no file paths to manage
+- **Works on any data** — pass any SummarizedExperiment
 - **Version-controlled** — users get consistent behavior
 - **Documented** —
   [`?run_app`](https://st-jude-ms-abds.github.io/ADS8192/reference/run_app.md)
   shows how to use it
 
 ------------------------------------------------------------------------
-
-### Why Reuse Package Conventions and Deployment Platforms?
-
-Package conventions such as `inst/`,
-[`system.file()`](https://rdrr.io/r/base/system.file.html), and
-[`run_app()`](https://st-jude-ms-abds.github.io/ADS8192/reference/run_app.md)
-exist so you do not have to invent a custom file layout or startup story
-for every app. Hosting platforms then give you a managed way to share
-that app instead of building deployment plumbing yourself.
-
-Reusing those conventions keeps the design problem focused where it
-belongs: what should the app expose, how should dependencies be
-declared, and how should failures be handled for real users.
 
 ## Part 1: Package Structure for Shiny Apps
 
@@ -110,7 +99,6 @@ The conventional location is `inst/app/`:
     │   ├── run_app.R        # Exported function to launch app
     │   ├── app_ui.R         # UI definition
     │   ├── app_server.R     # Server logic
-    │   └── mod_*.R          # Module files
     ├── inst/
     │   └── app/
     │       └── app.R        # App entry point (calls run_app)
@@ -134,49 +122,63 @@ dir.create("inst/app", recursive = TRUE)
 #### R/app_ui.R
 
 ``` r
-# R/app_ui.R — Shiny UI definition
-
 #' Shiny App UI
 #'
+#' @import shiny
+#' @importFrom bslib page_sidebar sidebar navset_card_tab nav_panel bs_theme
 #' @return A Shiny UI definition
 #' @noRd
 app_ui <- function() {
-    bslib::page_sidebar(
-        title = "ADS8192 Explorer",
-        theme = bslib::bs_theme(bootswatch = "flatly"),
-
-        sidebar = bslib::sidebar(
-            shiny::h4(shiny::icon("cogs"), "Analysis Settings"),
-
-            shiny::numericInput(
+    page_sidebar(
+        title = "ADS 8192 PCA Explorer",
+        theme = bs_theme(bootswatch = "flatly"),
+        sidebar = sidebar(
+            h4(icon("cogs"), "Analysis Settings"),
+            selectInput("assay_name", "Assay:", choices = NULL),
+            numericInput(
                 "n_top",
                 "Top variable genes:",
-                value = 500, min = 50, max = 5000, step = 50
+                value = 500, min = 5, step = 50
             ),
-            shiny::checkboxInput("log_transform", "Log-transform counts", TRUE),
-            shiny::checkboxInput("scale", "Scale features", TRUE),
-
-            shiny::hr(),
-            shiny::h4(shiny::icon("palette"), "Visualization"),
-
-            shiny::selectInput("color_by", "Color by:", choices = NULL),
-            shiny::selectInput("shape_by", "Shape by:", choices = NULL),
-            shiny::sliderInput("point_size", "Point size:", 4, 1, 10, 1),
-
-            shiny::hr(),
-            shiny::downloadButton("download_plot", "Download Plot")
+            checkboxInput("log_transform", "Log-transform counts", TRUE),
+            checkboxInput("scale", "Scale features", TRUE),
+            hr(),
+            h4(icon("palette"), "Visualization"),
+            selectInput("color_by", "Color by:", choices = NULL),
+            selectInput("shape_by", "Shape by:", choices = NULL),
+            fluidRow(
+                column(
+                    6,
+                    numericInput("pc_x", "PC X:",
+                        value = 1,
+                        min = 1, max = 8
+                    )
+                ),
+                column(
+                    6,
+                    numericInput("pc_y", "PC Y:",
+                        value = 2,
+                        min = 1, max = 8
+                    )
+                )
+            ),
+            sliderInput("point_size", "Point size:",
+                value = 4,
+                min = 1, max = 10, step = 1
+            ),
+            hr(),
+            downloadButton("download_plot", "Download Plot")
         ),
-
-        bslib::navset_card_tab(
-            bslib::nav_panel(
+        navset_card_tab(
+            nav_panel(
                 "PCA Plot",
-                shiny::plotOutput("pca_plot", height = "500px")
+                plotOutput("pca_plot", height = "500px")
             ),
-            bslib::nav_panel(
+            nav_panel(
                 "Variance",
-                shiny::plotOutput("variance_plot", height = "400px")
+                plotOutput("variance_plot", height = "400px")
             ),
-            bslib::nav_panel(
+            nav_panel(
                 "Sample Data",
                 DT::dataTableOutput("scores_table")
             )
@@ -187,52 +189,76 @@ app_ui <- function() {
 
 #### R/app_server.R
 
-``` r
-# R/app_server.R — Shiny server logic
+**R/app_server.R** (click to expand)
 
+``` r
 #' Shiny App Server
 #'
 #' @param input Shiny input
 #' @param output Shiny output
 #' @param session Shiny session
+#' @param se A \code{SummarizedExperiment} object
 #'
 #' @return NULL (side effects only)
 #' @noRd
 #'
-#' @importFrom SummarizedExperiment colData
-#' @importFrom ggplot2 ggplot aes geom_col geom_text theme_minimal labs ylim
+#' @import shiny
+#' @importFrom SummarizedExperiment colData assayNames
+#' @importFrom ggplot2 ggsave
 #' @importFrom rlang .data
-app_server <- function(input, output, session) {
-    # Load example data
-    # In a real app, you might want to let users upload their own data
-    se_data <- shiny::reactive({
-        data("airway", package = "airway", envir = environment())
-        get("airway", envir = environment())
-    })
+#' @importFrom utils data
+#' @author Jared Andrews
+app_server <- function(input, output, session, se) {
+    se_data <- reactiveVal(se)
 
-    # Update select inputs based on available metadata
-    shiny::observe({
+    # Update select inputs based on available metadata and assays
+    observe({
         se <- se_data()
-        cols <- colnames(SummarizedExperiment::colData(se))
-        shiny::updateSelectInput(session, "color_by", choices = cols)
-        shiny::updateSelectInput(session, "shape_by", choices = c("None", cols))
+        req(se)
+        cols <- colnames(colData(se))
+        updateSelectInput(session, "color_by", choices = cols)
+        updateSelectInput(session, "shape_by",
+                                 choices = c("None", cols))
+        updateSelectInput(session, "assay_name",
+                                 choices = assayNames(se))
+        updateNumericInput(session, "n_top",
+                                  max = nrow(se))
     })
 
-    # Compute PCA
-    pca_result <- shiny::reactive({
-        shiny::req(se_data(), input$n_top)
+    # Compute PCA (cached; only re-runs when analysis params change)
+    pca_result <- reactive({
+        req(se_data(), input$n_top, input$assay_name)
+
+        validate(
+            need(input$n_top >= 10,
+                        "Please select at least 10 genes"),
+            need(input$n_top <= nrow(se_data()),
+                        "Cannot select more genes than available")
+        )
 
         run_pca(
             se_data(),
+            assay_name = input$assay_name,
             n_top = input$n_top,
             log_transform = input$log_transform,
             scale = input$scale
         )
     })
 
-    # PCA scatter plot
-    output$pca_plot <- shiny::renderPlot({
-        shiny::req(pca_result(), input$color_by)
+    output$pca_plot <- renderPlot({
+        req(pca_result(), input$color_by)
+
+        n_pcs <- ncol(pca_result()$pca$x)
+        validate(
+            need(input$pc_x <= n_pcs,
+                        paste("PC X must be <=", n_pcs)),
+            need(input$pc_y <= n_pcs,
+                        paste("PC Y must be <=", n_pcs)),
+            need(input$pc_x != input$pc_y,
+                        "Please select different PCs for X and Y"),
+            need(input$point_size > 0,
+                        "Point size must be positive")
+        )
 
         shape <- if (is.null(input$shape_by) || input$shape_by == "None") {
             NULL
@@ -244,48 +270,32 @@ app_server <- function(input, output, session) {
             pca_result(),
             color_by = input$color_by,
             shape_by = shape,
+            pcs = c(input$pc_x, input$pc_y),
             point_size = input$point_size
         )
     })
 
-    # Variance plot
-    output$variance_plot <- shiny::renderPlot({
-        shiny::req(pca_result())
+    output$variance_plot <- renderPlot({
+        req(pca_result())
 
-        var_df <- pca_variance_explained(pca_result())
-        var_df <- var_df[seq_len(min(8, nrow(var_df))), ]
-        var_df$PC <- factor(var_df$PC, levels = var_df$PC)
-
-        ggplot2::ggplot(var_df, ggplot2::aes(x = .data$PC, y = .data$variance_percent)) +
-            ggplot2::geom_col(fill = "steelblue") +
-            ggplot2::geom_text(
-                ggplot2::aes(label = sprintf("%.1f%%", .data$variance_percent)),
-                vjust = -0.5, size = 4
-            ) +
-            ggplot2::theme_minimal(base_size = 14) +
-            ggplot2::labs(
-                x = "Principal Component",
-                y = "Variance Explained (%)"
-            ) +
-            ggplot2::ylim(0, max(var_df$variance_percent) * 1.15)
+        plot_variance_explained(pca_result())
     })
 
-    # Scores table
     output$scores_table <- DT::renderDataTable({
-        shiny::req(pca_result())
+        req(pca_result())
         DT::datatable(
             pca_result()$scores,
             options = list(pageLength = 10, scrollX = TRUE)
         )
     })
 
-    # Download handler
-    output$download_plot <- shiny::downloadHandler(
+    output$download_plot <- downloadHandler(
         filename = function() {
             paste0("pca_plot_", Sys.Date(), ".png")
         },
         content = function(file) {
-            shape <- if (is.null(input$shape_by) || input$shape_by == "None") {
+            shape <- if (is.null(input$shape_by) ||
+                         input$shape_by == "None") {
                 NULL
             } else {
                 input$shape_by
@@ -298,7 +308,7 @@ app_server <- function(input, output, session) {
                 point_size = input$point_size
             )
 
-            ggplot2::ggsave(file, p, width = 8, height = 6, dpi = 150)
+            ggsave(file, p, width = 8, height = 6, dpi = 300)
         }
     )
 }
@@ -306,71 +316,91 @@ app_server <- function(input, output, session) {
 
 #### R/run_app.R
 
-``` r
-# R/run_app.R
+**R/run_app.R** (click to expand)
 
-#' Run the ADS8192 Shiny Application
+``` r
+#' Run the PCA Explorer Shiny Application
 #'
 #' Launches an interactive Shiny application for exploring PCA results
-#' on SummarizedExperiment data.
+#' on SummarizedExperiment data. The app allows users to select assays, adjust PCA parameters,
+#' and visualize results with customizable options.
 #'
-#' @param ... Additional arguments passed to [shiny::shinyApp()]
+#' @param se A \code{\link[SummarizedExperiment]{SummarizedExperiment}} object
+#'   to explore.
+#' @param return_as_list If \code{TRUE}, returns a list containing the UI and
+#'   server functions instead of launching the app. Useful for certain deployment
+#'   scenarios.
+#' @param ... Additional arguments passed to \code{\link[shiny]{shinyApp}()}.
 #'
-#' @return A Shiny app object (invisibly)
+#' @return A Shiny app object or a named list containing the UI and
+#'   server functions if \code{return_as_list = TRUE}.
+#'
+#' @import shiny
+#' @importFrom methods is
 #' @export
+#' @author Jared Andrews
 #'
 #' @examples
-#' \dontrun{
-#' run_app()
+#' if (interactive()) {
+#'   library(ADS8192)
+#'   data("example_se")
+#'   run_app(se = example_se)
 #' }
-run_app <- function(...) {
-    # Check for required packages
+run_app <- function(se, return_as_list = FALSE, ...) {
     if (!requireNamespace("shiny", quietly = TRUE)) {
-        stop("Package 'shiny' is required. Install with: install.packages('shiny')")
+        stop("Package 'shiny' is required for app usage. Install with: ",
+             "install.packages('shiny')", call. = FALSE)
     }
     if (!requireNamespace("bslib", quietly = TRUE)) {
-        stop("Package 'bslib' is required. Install with: install.packages('bslib')")
+        stop("Package 'bslib' is required for app usage. Install with: ",
+             "install.packages('bslib')", call. = FALSE)
     }
     if (!requireNamespace("DT", quietly = TRUE)) {
-        stop("Package 'DT' is required. Install with: install.packages('DT')")
+        stop("Package 'DT' is required for app usage. Install with: ",
+             "install.packages('DT')", call. = FALSE)
     }
-    if (!requireNamespace("airway", quietly = TRUE)) {
-        stop("Package 'airway' is required. Install with: BiocManager::install('airway')")
+
+    if (!is(se, "SummarizedExperiment")) {
+        stop("'se' must be a SummarizedExperiment object.", call. = FALSE)
+    }
+
+    server <- function(input, output, session) {
+        app_server(input, output, session, se = se)
     }
 
     app <- shiny::shinyApp(
         ui = app_ui(),
-        server = app_server,
+        server = server,
         ...
     )
 
-    shiny::runApp(app)
+    if (return_as_list) {
+        return(list(ui = app_ui(), server = server))
+    } else {
+        app
+    }
 }
 ```
 
-### Step 3: Create inst/app/app.R (Optional Entry Point)
+### Step 3: Create inst/app/app.R
 
-This allows running the app via
-`shiny::runApp(system.file("app", package = "ADS8192"))`:
+This file exists for deployment platforms like Posit Cloud that expect a
+standalone `app.R` entry point. Rather than calling internal package
+functions directly (which requires `:::` and is bad practice), it uses
+`return_as_list = TRUE` to get the UI and server back as a plain list,
+then passes them to
+[`shinyApp()`](https://rdrr.io/pkg/shiny/man/shinyApp.html).
 
 ``` r
 # inst/app/app.R
+library(ADS8192)
+library(shiny)
 
-# Launch the ADS8192 Shiny application
-# This file exists for compatibility with runApp()
-# Preferred method: ADS8192::run_app()
+data("example_se")
 
-if (!requireNamespace("ADS8192", quietly = TRUE)) {
-    stop("Please install ADS8192 first: remotes::install_github('you/ADS8192')")
-}
+app <- run_app(se = example_se, return_as_list = TRUE)
 
-ADS8192:::app_ui
-ADS8192:::app_server
-
-shiny::shinyApp(
-    ui = ADS8192:::app_ui(),
-    server = ADS8192:::app_server
-)
+shinyApp(ui = app$ui, server = app$server)
 ```
 
 ------------------------------------------------------------------------
@@ -389,7 +419,6 @@ library(usethis)
 use_package("shiny", type = "Suggests")
 use_package("bslib", type = "Suggests")
 use_package("DT", type = "Suggests")
-use_package("airway", type = "Suggests")
 use_package("rlang")  # For .data pronoun in ggplot2 aes()
 ```
 
@@ -397,7 +426,6 @@ Your DESCRIPTION now includes:
 
 ``` yaml
 Suggests:
-    airway,
     bslib,
     DT,
     knitr,
@@ -411,6 +439,8 @@ Suggests:
 - Keeps the core package lightweight
 - [`run_app()`](https://st-jude-ms-abds.github.io/ADS8192/reference/run_app.md)
   checks for packages at runtime
+- The app works on any `SummarizedExperiment` — no extra data packages
+  required
 
 ### Checking for Optional Dependencies
 
@@ -423,46 +453,26 @@ missing. Two approaches:
 Best for checking inside a function body before using the package:
 
 ``` r
-# In run_app() or any function that needs optional packages
-run_app <- function(...) {
-    # Check for CRAN packages
+# In run_app() — checks happen before any work is done
+run_app <- function(se, return_as_list = FALSE, ...) {
     if (!requireNamespace("shiny", quietly = TRUE)) {
-        stop(
-            "Package 'shiny' is required to run the app.\n",
-            "Install it with: install.packages('shiny')",
-            call. = FALSE
-        )
+        stop("Package 'shiny' is required for app usage. Install with: ",
+             "install.packages('shiny')", call. = FALSE)
+    }
+    if (!requireNamespace("bslib", quietly = TRUE)) {
+        stop("Package 'bslib' is required for app usage. Install with: ",
+             "install.packages('bslib')", call. = FALSE)
+    }
+    if (!requireNamespace("DT", quietly = TRUE)) {
+        stop("Package 'DT' is required for app usage. Install with: ",
+             "install.packages('DT')", call. = FALSE)
     }
 
-    # Check for Bioconductor packages
-    if (!requireNamespace("airway", quietly = TRUE)) {
-        stop(
-            "Package 'airway' is required to run the app.\n",
-            "Install it with: BiocManager::install('airway')",
-            call. = FALSE
-        )
+    # Validate user-supplied data
+    if (!methods::is(se, "SummarizedExperiment")) {
+        stop("'se' must be a SummarizedExperiment object.", call. = FALSE)
     }
 
-    # ... rest of function
-}
-```
-
-#### `rlang::check_installed()` — Richer Messages
-
-[`rlang::check_installed()`](https://rlang.r-lib.org/reference/is_installed.html)
-provides nicer error messages and in some interactive contexts offers to
-install the package for you:
-
-``` r
-run_app <- function(...) {
-    rlang::check_installed(
-        c("shiny", "bslib", "DT"),
-        reason = "to run the Shiny app"
-    )
-    rlang::check_installed(
-        "airway",
-        reason = "to load the example dataset"
-    )
     # ... rest of function
 }
 ```
@@ -477,53 +487,42 @@ scatter checks throughout the code — it leads to confusing partial
 failures:
 
 ``` r
-# Good: check everything upfront
-run_app <- function(...) {
-    required_pkgs <- c("shiny", "bslib", "DT")
-    missing_pkgs <- required_pkgs[!sapply(required_pkgs, requireNamespace, quietly = TRUE)]
-    if (length(missing_pkgs) > 0) {
-        stop(
-            "The following packages are required but not installed:\n",
-            paste0("  - ", missing_pkgs, collapse = "\n"), "\n",
-            "Install them with: install.packages(c(",
-            paste0('"', missing_pkgs, '"', collapse = ", "), "))",
-            call. = FALSE
-        )
+# The actual ADS8192::run_app() — three focused checks, then proceed
+run_app <- function(se, return_as_list = FALSE, ...) {
+    if (!requireNamespace("shiny", quietly = TRUE)) {
+        stop("Package 'shiny' is required for app usage. Install with: ",
+             "install.packages('shiny')", call. = FALSE)
+    }
+    if (!requireNamespace("bslib", quietly = TRUE)) {
+        stop("Package 'bslib' is required for app usage. Install with: ",
+             "install.packages('bslib')", call. = FALSE)
+    }
+    if (!requireNamespace("DT", quietly = TRUE)) {
+        stop("Package 'DT' is required for app usage. Install with: ",
+             "install.packages('DT')", call. = FALSE)
     }
 
-    if (!requireNamespace("airway", quietly = TRUE)) {
-        stop(
-            "Package 'airway' (Bioconductor) is required.\n",
-            "Install it with: BiocManager::install('airway')",
-            call. = FALSE
-        )
+    if (!is(se, "SummarizedExperiment")) {
+        stop("'se' must be a SummarizedExperiment object.", call. = FALSE)
     }
 
     # All dependencies confirmed — proceed
-    app <- shiny::shinyApp(ui = app_ui(), server = app_server, ...)
-    shiny::runApp(app)
+    server <- function(input, output, session) {
+        app_server(input, output, session, se = se)
+    }
+    app <- shiny::shinyApp(ui = app_ui(), server = server, ...)
+
+    if (return_as_list) {
+        return(list(ui = app_ui(), server = server))
+    } else {
+        app
+    }
 }
 ```
 
 This pattern is exactly what the
 [`ADS8192::run_app()`](https://st-jude-ms-abds.github.io/ADS8192/reference/run_app.md)
 function uses.
-
-### Graceful Fallbacks
-
-What if DT isn’t installed? Handle it gracefully:
-
-``` r
-# In app_ui.R, instead of:
-DT::dataTableOutput("table")
-
-# Use:
-if (requireNamespace("DT", quietly = TRUE)) {
-    DT::dataTableOutput("table")
-} else {
-    shiny::tableOutput("table")  # Basic fallback
-}
-```
 
 > **Exercise A:** Ensure
 > [`run_app()`](https://st-jude-ms-abds.github.io/ADS8192/reference/run_app.md)
@@ -573,7 +572,8 @@ After installing ADS8192, launch the interactive PCA explorer:
 
 ```r
 library(ADS8192)
-run_app()
+data("example_se")
+run_app(se = example_se)
 ```
 
 ## Features
@@ -810,8 +810,8 @@ environment:
 
 1.  Create a new project from Git
 2.  Install your package: `remotes::install_github("you/ADS8192")`
-3.  Create an `app.R` that calls
-    [`ADS8192::run_app()`](https://st-jude-ms-abds.github.io/ADS8192/reference/run_app.md)
+3.  Use `inst/app/app.R` (already in your repo) which calls
+    `run_app(se = example_se, return_as_list = TRUE)`
 4.  Click **Publish** → **Shiny**
 
 Best for course demonstrations and quick sharing. The free tier has
@@ -838,7 +838,9 @@ After deploying, add to your README:
 Run locally:
 
 ```r
-ADS8192::run_app()
+library(ADS8192)
+data("example_se")
+ADS8192::run_app(se = example_se)
 ```
 
 Or access the deployed version at: <https://your-deployment-url/>
@@ -886,7 +888,9 @@ Or access the deployed version at: <https://your-deployment-url/>
     remotes::install_github("you/ADS8192")
 
     # Run the app
-    ADS8192::run_app()
+    library(ADS8192)
+    data("example_se")
+    ADS8192::run_app(se = example_se)
 
 ### Micro-task 2: Update README
 
@@ -895,11 +899,6 @@ Add an “Interactive App” section to README with:
 - Instructions to launch
 - Screenshot or GIF (optional but nice!)
 - Link to deployed version (if you deployed)
-
-### Optional: Deploy
-
-Deploy to Posit Connect or Posit Cloud and record the URL in your
-README.
 
 ------------------------------------------------------------------------
 

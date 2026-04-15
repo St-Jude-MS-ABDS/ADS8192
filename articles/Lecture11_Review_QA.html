@@ -284,10 +284,14 @@ landing page with basic installation, and at least one vignette?</p>
 <code class="sourceCode R"><span><span class="kw"><a href="https://rdrr.io/r/base/library.html" class="external-link">library</a></span><span class="op">(</span><span class="va"><a href="https://github.com/St-Jude-MS-ABDS/ADS8192" class="external-link">ADS8192</a></span><span class="op">)</span></span>
 <span><span class="fu"><a href="../reference/run_app.html">run_app</a></span><span class="op">(</span><span class="op">)</span></span>
 <span></span>
+<span><span class="co"># Or with your own data:</span></span>
+<span><span class="co"># run_app(se = my_se)</span></span>
+<span></span>
 <span><span class="co"># Check:</span></span>
 <span><span class="co"># - App launches without error</span></span>
 <span><span class="co"># - Plots render</span></span>
-<span><span class="co"># - Inputs change the plot</span></span></code></pre></div>
+<span><span class="co"># - Inputs change the plot</span></span>
+<span><span class="co"># - Assay selector is populated</span></span></code></pre></div>
 </div>
 <div class="section level4">
 <h4 id="cli">6. CLI<a class="anchor" aria-label="anchor" href="#cli"></a>
@@ -594,6 +598,9 @@ are in Suggests.</p>
 <code class="sourceCode R"><span><span class="co"># Run with error tracing</span></span>
 <span><span class="fu"><a href="https://rdrr.io/r/base/options.html" class="external-link">options</a></span><span class="op">(</span>shiny.error <span class="op">=</span> <span class="va">browser</span><span class="op">)</span></span>
 <span><span class="fu"><a href="../reference/run_app.html">run_app</a></span><span class="op">(</span><span class="op">)</span></span>
+<span></span>
+<span><span class="co"># Or with custom data:</span></span>
+<span><span class="co"># run_app(se = my_se)</span></span>
 <span></span>
 <span><span class="co"># Or check the app components separately</span></span>
 <span><span class="fu">app_ui</span><span class="op">(</span><span class="op">)</span>      <span class="co"># Does UI build?</span></span>

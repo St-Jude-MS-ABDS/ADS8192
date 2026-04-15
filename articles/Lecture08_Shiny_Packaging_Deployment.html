@@ -82,24 +82,8 @@ Andrews</h4>
     
     
 <div class="section level2">
-<h2 id="learning-objectives">Learning Objectives<a class="anchor" aria-label="anchor" href="#learning-objectives"></a>
+<h2 id="motivation">Motivation<a class="anchor" aria-label="anchor" href="#motivation"></a>
 </h2>
-<p>By the end of this session, you will be able to:</p>
-<ol style="list-style-type: decimal">
-<li>Add a Shiny application to the package as a function and document
-it</li>
-<li>Deploy the application to a hosting platform (Posit Connect or Posit
-Cloud)</li>
-<li>Add inputs for flexibility and interactive elements in outputs</li>
-<li>Explain why packaging, optional dependencies, and deployment are
-reproducibility decisions as much as UI decisions</li>
-<li>Discuss and (optionally) implement a basic testing strategy for
-Shiny apps</li>
-</ol>
-<p><strong>Course Learning Outcomes (CLOs):</strong> CLO 1, 4, 5, 6</p>
-<div class="section level3">
-<h3 id="motivation">Motivation<a class="anchor" aria-label="anchor" href="#motivation"></a>
-</h3>
 <p>An app is only useful scientific software if other people can install
 it, launch it, and trust that it behaves the same way outside your own
 machine. Packaging and deployment turn an interesting interface into a
@@ -109,6 +93,18 @@ maintainability. Stable entry points, optional dependencies, and clean
 file lookup rules save time for collaborators, reduce
 environment-specific failures, and keep the app aligned with the same
 package core used everywhere else.</p>
+<div class="section level3">
+<h3 id="learning-objectives">Learning Objectives<a class="anchor" aria-label="anchor" href="#learning-objectives"></a>
+</h3>
+<p>By the end of this session, you will be able to:</p>
+<ol style="list-style-type: decimal">
+<li>Add a Shiny application to the package as a function and document
+it</li>
+<li>Deploy the application to a hosting platform (Posit Cloud)</li>
+<li>Explain why packaging, optional dependencies, and deployment are
+reproducibility decisions as much as UI decisions</li>
+<li>Discuss basic testing strategies for Shiny apps</li>
+</ol>
 </div>
 <div class="section level3">
 <h3 id="evaluation-checklist">Evaluation Checklist<a class="anchor" aria-label="anchor" href="#evaluation-checklist"></a>
@@ -149,6 +145,7 @@ run it, users need to:</p>
 <ol style="list-style-type: decimal">
 <li>Clone your repo (or copy the file)</li>
 <li>Install all dependencies manually</li>
+<li>Like change data inputs to point to their own files</li>
 <li>Run <code>shiny::runApp("path/to/app.R")</code>
 </li>
 </ol>
@@ -156,13 +153,18 @@ run it, users need to:</p>
 <div class="section level3">
 <h3 id="goal-packaged-app">Goal: Packaged App<a class="anchor" aria-label="anchor" href="#goal-packaged-app"></a>
 </h3>
-<p>After packaging, users can:</p>
+<p>After packaging, users can easily run the app on arbitrary data.</p>
 <div class="sourceCode" id="cb1"><pre class="downlit sourceCode r">
-<code class="sourceCode R"><span><span class="co"># Install once</span></span>
-<span><span class="fu">remotes</span><span class="fu">::</span><span class="fu">install_github</span><span class="op">(</span><span class="st">"you/ADS8192"</span><span class="op">)</span></span>
+<code class="sourceCode R"><span><span class="kw"><a href="https://rdrr.io/r/base/library.html" class="external-link">library</a></span><span class="op">(</span><span class="va"><a href="https://github.com/St-Jude-MS-ABDS/ADS8192" class="external-link">ADS8192</a></span><span class="op">)</span></span>
 <span></span>
-<span><span class="co"># Run anywhere</span></span>
-<span><span class="fu">ADS8192</span><span class="fu">::</span><span class="fu"><a href="../reference/run_app.html">run_app</a></span><span class="op">(</span><span class="op">)</span></span></code></pre></div>
+<span><span class="co"># Run with built-in example data</span></span>
+<span><span class="fu"><a href="https://rdrr.io/r/utils/data.html" class="external-link">data</a></span><span class="op">(</span><span class="st">"example_se"</span><span class="op">)</span></span>
+<span><span class="fu"><a href="../reference/run_app.html">run_app</a></span><span class="op">(</span>se <span class="op">=</span> <span class="va">example_se</span><span class="op">)</span></span>
+<span></span>
+<span><span class="co"># Or supply your own SummarizedExperiment</span></span>
+<span><span class="kw"><a href="https://rdrr.io/r/base/library.html" class="external-link">library</a></span><span class="op">(</span><span class="va">airway</span><span class="op">)</span></span>
+<span><span class="fu"><a href="https://rdrr.io/r/utils/data.html" class="external-link">data</a></span><span class="op">(</span><span class="st">"airway"</span><span class="op">)</span></span>
+<span><span class="fu"><a href="../reference/run_app.html">run_app</a></span><span class="op">(</span>se <span class="op">=</span> <span class="va">airway</span><span class="op">)</span></span></code></pre></div>
 <p>Benefits:</p>
 <ul>
 <li>
@@ -171,6 +173,9 @@ dependencies</li>
 <li>
 <strong>Works anywhere</strong> — no file paths to manage</li>
 <li>
+<strong>Works on any data</strong> — pass any
+SummarizedExperiment</li>
+<li>
 <strong>Version-controlled</strong> — users get consistent
 behavior</li>
 <li>
@@ -178,18 +183,6 @@ behavior</li>
 it</li>
 </ul>
 <hr>
-</div>
-<div class="section level3">
-<h3 id="why-reuse-package-conventions-and-deployment-platforms">Why Reuse Package Conventions and Deployment Platforms?<a class="anchor" aria-label="anchor" href="#why-reuse-package-conventions-and-deployment-platforms"></a>
-</h3>
-<p>Package conventions such as <code>inst/</code>,
-<code><a href="https://rdrr.io/r/base/system.file.html" class="external-link">system.file()</a></code>, and <code><a href="../reference/run_app.html">run_app()</a></code> exist so you do
-not have to invent a custom file layout or startup story for every app.
-Hosting platforms then give you a managed way to share that app instead
-of building deployment plumbing yourself.</p>
-<p>Reusing those conventions keeps the design problem focused where it
-belongs: what should the app expose, how should dependencies be
-declared, and how should failures be handled for real users.</p>
 </div>
 </div>
 <div class="section level2">
@@ -206,7 +199,6 @@ declared, and how should failures be handled for real users.</p>
 │   ├── run_app.R        # Exported function to launch app
 │   ├── app_ui.R         # UI definition
 │   ├── app_server.R     # Server logic
-│   └── mod_*.R          # Module files
 ├── inst/
 │   └── app/
 │       └── app.R        # App entry point (calls run_app)
@@ -236,49 +228,63 @@ testing</li>
 <h4 id="rapp_ui-r">R/app_ui.R<a class="anchor" aria-label="anchor" href="#rapp_ui-r"></a>
 </h4>
 <div class="sourceCode" id="cb4"><pre class="downlit sourceCode r">
-<code class="sourceCode R"><span><span class="co"># R/app_ui.R — Shiny UI definition</span></span>
-<span></span>
-<span><span class="co">#' Shiny App UI</span></span>
+<code class="sourceCode R"><span><span class="co">#' Shiny App UI</span></span>
 <span><span class="co">#'</span></span>
+<span><span class="co">#' @import shiny</span></span>
+<span><span class="co">#' @importFrom bslib page_sidebar sidebar navset_card_tab nav_panel bs_theme</span></span>
 <span><span class="co">#' @return A Shiny UI definition</span></span>
 <span><span class="co">#' @noRd</span></span>
 <span><span class="va">app_ui</span> <span class="op">&lt;-</span> <span class="kw">function</span><span class="op">(</span><span class="op">)</span> <span class="op">{</span></span>
-<span>    <span class="fu">bslib</span><span class="fu">::</span><span class="fu"><a href="https://rstudio.github.io/bslib/reference/page_sidebar.html" class="external-link">page_sidebar</a></span><span class="op">(</span></span>
-<span>        title <span class="op">=</span> <span class="st">"ADS8192 Explorer"</span>,</span>
-<span>        theme <span class="op">=</span> <span class="fu">bslib</span><span class="fu">::</span><span class="fu"><a href="https://rstudio.github.io/bslib/reference/bs_theme.html" class="external-link">bs_theme</a></span><span class="op">(</span>bootswatch <span class="op">=</span> <span class="st">"flatly"</span><span class="op">)</span>,</span>
-<span></span>
-<span>        sidebar <span class="op">=</span> <span class="fu">bslib</span><span class="fu">::</span><span class="fu"><a href="https://rstudio.github.io/bslib/reference/sidebar.html" class="external-link">sidebar</a></span><span class="op">(</span></span>
-<span>            <span class="fu">shiny</span><span class="fu">::</span><span class="fu"><a href="https://rstudio.github.io/htmltools/reference/builder.html" class="external-link">h4</a></span><span class="op">(</span><span class="fu">shiny</span><span class="fu">::</span><span class="fu"><a href="https://rdrr.io/pkg/shiny/man/icon.html" class="external-link">icon</a></span><span class="op">(</span><span class="st">"cogs"</span><span class="op">)</span>, <span class="st">"Analysis Settings"</span><span class="op">)</span>,</span>
-<span></span>
-<span>            <span class="fu">shiny</span><span class="fu">::</span><span class="fu"><a href="https://rdrr.io/pkg/shiny/man/numericInput.html" class="external-link">numericInput</a></span><span class="op">(</span></span>
+<span>    <span class="fu"><a href="https://rstudio.github.io/bslib/reference/page_sidebar.html" class="external-link">page_sidebar</a></span><span class="op">(</span></span>
+<span>        title <span class="op">=</span> <span class="st">"ADS 8192 PCA Explorer"</span>,</span>
+<span>        theme <span class="op">=</span> <span class="fu"><a href="https://rstudio.github.io/bslib/reference/bs_theme.html" class="external-link">bs_theme</a></span><span class="op">(</span>bootswatch <span class="op">=</span> <span class="st">"flatly"</span><span class="op">)</span>,</span>
+<span>        sidebar <span class="op">=</span> <span class="fu"><a href="https://rstudio.github.io/bslib/reference/sidebar.html" class="external-link">sidebar</a></span><span class="op">(</span></span>
+<span>            <span class="fu"><a href="https://rstudio.github.io/htmltools/reference/builder.html" class="external-link">h4</a></span><span class="op">(</span><span class="fu"><a href="https://rdrr.io/pkg/shiny/man/icon.html" class="external-link">icon</a></span><span class="op">(</span><span class="st">"cogs"</span><span class="op">)</span>, <span class="st">"Analysis Settings"</span><span class="op">)</span>,</span>
+<span>            <span class="fu"><a href="https://rdrr.io/pkg/shiny/man/selectInput.html" class="external-link">selectInput</a></span><span class="op">(</span><span class="st">"assay_name"</span>, <span class="st">"Assay:"</span>, choices <span class="op">=</span> <span class="cn">NULL</span><span class="op">)</span>,</span>
+<span>            <span class="fu"><a href="https://rdrr.io/pkg/shiny/man/numericInput.html" class="external-link">numericInput</a></span><span class="op">(</span></span>
 <span>                <span class="st">"n_top"</span>,</span>
 <span>                <span class="st">"Top variable genes:"</span>,</span>
-<span>                value <span class="op">=</span> <span class="fl">500</span>, min <span class="op">=</span> <span class="fl">50</span>, max <span class="op">=</span> <span class="fl">5000</span>, step <span class="op">=</span> <span class="fl">50</span></span>
+<span>                value <span class="op">=</span> <span class="fl">500</span>, min <span class="op">=</span> <span class="fl">5</span>, step <span class="op">=</span> <span class="fl">50</span></span>
 <span>            <span class="op">)</span>,</span>
-<span>            <span class="fu">shiny</span><span class="fu">::</span><span class="fu"><a href="https://rdrr.io/pkg/shiny/man/checkboxInput.html" class="external-link">checkboxInput</a></span><span class="op">(</span><span class="st">"log_transform"</span>, <span class="st">"Log-transform counts"</span>, <span class="cn">TRUE</span><span class="op">)</span>,</span>
-<span>            <span class="fu">shiny</span><span class="fu">::</span><span class="fu"><a href="https://rdrr.io/pkg/shiny/man/checkboxInput.html" class="external-link">checkboxInput</a></span><span class="op">(</span><span class="st">"scale"</span>, <span class="st">"Scale features"</span>, <span class="cn">TRUE</span><span class="op">)</span>,</span>
-<span></span>
-<span>            <span class="fu">shiny</span><span class="fu">::</span><span class="fu"><a href="https://rstudio.github.io/htmltools/reference/builder.html" class="external-link">hr</a></span><span class="op">(</span><span class="op">)</span>,</span>
-<span>            <span class="fu">shiny</span><span class="fu">::</span><span class="fu"><a href="https://rstudio.github.io/htmltools/reference/builder.html" class="external-link">h4</a></span><span class="op">(</span><span class="fu">shiny</span><span class="fu">::</span><span class="fu"><a href="https://rdrr.io/pkg/shiny/man/icon.html" class="external-link">icon</a></span><span class="op">(</span><span class="st">"palette"</span><span class="op">)</span>, <span class="st">"Visualization"</span><span class="op">)</span>,</span>
-<span></span>
-<span>            <span class="fu">shiny</span><span class="fu">::</span><span class="fu"><a href="https://rdrr.io/pkg/shiny/man/selectInput.html" class="external-link">selectInput</a></span><span class="op">(</span><span class="st">"color_by"</span>, <span class="st">"Color by:"</span>, choices <span class="op">=</span> <span class="cn">NULL</span><span class="op">)</span>,</span>
-<span>            <span class="fu">shiny</span><span class="fu">::</span><span class="fu"><a href="https://rdrr.io/pkg/shiny/man/selectInput.html" class="external-link">selectInput</a></span><span class="op">(</span><span class="st">"shape_by"</span>, <span class="st">"Shape by:"</span>, choices <span class="op">=</span> <span class="cn">NULL</span><span class="op">)</span>,</span>
-<span>            <span class="fu">shiny</span><span class="fu">::</span><span class="fu"><a href="https://rdrr.io/pkg/shiny/man/sliderInput.html" class="external-link">sliderInput</a></span><span class="op">(</span><span class="st">"point_size"</span>, <span class="st">"Point size:"</span>, <span class="fl">4</span>, <span class="fl">1</span>, <span class="fl">10</span>, <span class="fl">1</span><span class="op">)</span>,</span>
-<span></span>
-<span>            <span class="fu">shiny</span><span class="fu">::</span><span class="fu"><a href="https://rstudio.github.io/htmltools/reference/builder.html" class="external-link">hr</a></span><span class="op">(</span><span class="op">)</span>,</span>
-<span>            <span class="fu">shiny</span><span class="fu">::</span><span class="fu"><a href="https://rdrr.io/pkg/shiny/man/downloadButton.html" class="external-link">downloadButton</a></span><span class="op">(</span><span class="st">"download_plot"</span>, <span class="st">"Download Plot"</span><span class="op">)</span></span>
+<span>            <span class="fu"><a href="https://rdrr.io/pkg/shiny/man/checkboxInput.html" class="external-link">checkboxInput</a></span><span class="op">(</span><span class="st">"log_transform"</span>, <span class="st">"Log-transform counts"</span>, <span class="cn">TRUE</span><span class="op">)</span>,</span>
+<span>            <span class="fu"><a href="https://rdrr.io/pkg/shiny/man/checkboxInput.html" class="external-link">checkboxInput</a></span><span class="op">(</span><span class="st">"scale"</span>, <span class="st">"Scale features"</span>, <span class="cn">TRUE</span><span class="op">)</span>,</span>
+<span>            <span class="fu"><a href="https://rstudio.github.io/htmltools/reference/builder.html" class="external-link">hr</a></span><span class="op">(</span><span class="op">)</span>,</span>
+<span>            <span class="fu"><a href="https://rstudio.github.io/htmltools/reference/builder.html" class="external-link">h4</a></span><span class="op">(</span><span class="fu"><a href="https://rdrr.io/pkg/shiny/man/icon.html" class="external-link">icon</a></span><span class="op">(</span><span class="st">"palette"</span><span class="op">)</span>, <span class="st">"Visualization"</span><span class="op">)</span>,</span>
+<span>            <span class="fu"><a href="https://rdrr.io/pkg/shiny/man/selectInput.html" class="external-link">selectInput</a></span><span class="op">(</span><span class="st">"color_by"</span>, <span class="st">"Color by:"</span>, choices <span class="op">=</span> <span class="cn">NULL</span><span class="op">)</span>,</span>
+<span>            <span class="fu"><a href="https://rdrr.io/pkg/shiny/man/selectInput.html" class="external-link">selectInput</a></span><span class="op">(</span><span class="st">"shape_by"</span>, <span class="st">"Shape by:"</span>, choices <span class="op">=</span> <span class="cn">NULL</span><span class="op">)</span>,</span>
+<span>            <span class="fu"><a href="https://rdrr.io/pkg/shiny/man/fluidPage.html" class="external-link">fluidRow</a></span><span class="op">(</span></span>
+<span>                <span class="fu"><a href="https://rdrr.io/pkg/shiny/man/column.html" class="external-link">column</a></span><span class="op">(</span></span>
+<span>                    <span class="fl">6</span>,</span>
+<span>                    <span class="fu"><a href="https://rdrr.io/pkg/shiny/man/numericInput.html" class="external-link">numericInput</a></span><span class="op">(</span><span class="st">"pc_x"</span>, <span class="st">"PC X:"</span>,</span>
+<span>                        value <span class="op">=</span> <span class="fl">1</span>,</span>
+<span>                        min <span class="op">=</span> <span class="fl">1</span>, max <span class="op">=</span> <span class="fl">8</span></span>
+<span>                    <span class="op">)</span></span>
+<span>                <span class="op">)</span>,</span>
+<span>                <span class="fu"><a href="https://rdrr.io/pkg/shiny/man/column.html" class="external-link">column</a></span><span class="op">(</span></span>
+<span>                    <span class="fl">6</span>,</span>
+<span>                    <span class="fu"><a href="https://rdrr.io/pkg/shiny/man/numericInput.html" class="external-link">numericInput</a></span><span class="op">(</span><span class="st">"pc_y"</span>, <span class="st">"PC Y:"</span>,</span>
+<span>                        value <span class="op">=</span> <span class="fl">2</span>,</span>
+<span>                        min <span class="op">=</span> <span class="fl">1</span>, max <span class="op">=</span> <span class="fl">8</span></span>
+<span>                    <span class="op">)</span></span>
+<span>                <span class="op">)</span></span>
+<span>            <span class="op">)</span>,</span>
+<span>            <span class="fu"><a href="https://rdrr.io/pkg/shiny/man/sliderInput.html" class="external-link">sliderInput</a></span><span class="op">(</span><span class="st">"point_size"</span>, <span class="st">"Point size:"</span>,</span>
+<span>                value <span class="op">=</span> <span class="fl">4</span>,</span>
+<span>                min <span class="op">=</span> <span class="fl">1</span>, max <span class="op">=</span> <span class="fl">10</span>, step <span class="op">=</span> <span class="fl">1</span></span>
+<span>            <span class="op">)</span>,</span>
+<span>            <span class="fu"><a href="https://rstudio.github.io/htmltools/reference/builder.html" class="external-link">hr</a></span><span class="op">(</span><span class="op">)</span>,</span>
+<span>            <span class="fu"><a href="https://rdrr.io/pkg/shiny/man/downloadButton.html" class="external-link">downloadButton</a></span><span class="op">(</span><span class="st">"download_plot"</span>, <span class="st">"Download Plot"</span><span class="op">)</span></span>
 <span>        <span class="op">)</span>,</span>
-<span></span>
-<span>        <span class="fu">bslib</span><span class="fu">::</span><span class="fu"><a href="https://rstudio.github.io/bslib/reference/navset.html" class="external-link">navset_card_tab</a></span><span class="op">(</span></span>
-<span>            <span class="fu">bslib</span><span class="fu">::</span><span class="fu"><a href="https://rstudio.github.io/bslib/reference/nav-items.html" class="external-link">nav_panel</a></span><span class="op">(</span></span>
+<span>        <span class="fu"><a href="https://rstudio.github.io/bslib/reference/navset.html" class="external-link">navset_card_tab</a></span><span class="op">(</span></span>
+<span>            <span class="fu"><a href="https://rstudio.github.io/bslib/reference/nav-items.html" class="external-link">nav_panel</a></span><span class="op">(</span></span>
 <span>                <span class="st">"PCA Plot"</span>,</span>
-<span>                <span class="fu">shiny</span><span class="fu">::</span><span class="fu"><a href="https://rdrr.io/pkg/shiny/man/plotOutput.html" class="external-link">plotOutput</a></span><span class="op">(</span><span class="st">"pca_plot"</span>, height <span class="op">=</span> <span class="st">"500px"</span><span class="op">)</span></span>
+<span>                <span class="fu"><a href="https://rdrr.io/pkg/shiny/man/plotOutput.html" class="external-link">plotOutput</a></span><span class="op">(</span><span class="st">"pca_plot"</span>, height <span class="op">=</span> <span class="st">"500px"</span><span class="op">)</span></span>
 <span>            <span class="op">)</span>,</span>
-<span>            <span class="fu">bslib</span><span class="fu">::</span><span class="fu"><a href="https://rstudio.github.io/bslib/reference/nav-items.html" class="external-link">nav_panel</a></span><span class="op">(</span></span>
+<span>            <span class="fu"><a href="https://rstudio.github.io/bslib/reference/nav-items.html" class="external-link">nav_panel</a></span><span class="op">(</span></span>
 <span>                <span class="st">"Variance"</span>,</span>
-<span>                <span class="fu">shiny</span><span class="fu">::</span><span class="fu"><a href="https://rdrr.io/pkg/shiny/man/plotOutput.html" class="external-link">plotOutput</a></span><span class="op">(</span><span class="st">"variance_plot"</span>, height <span class="op">=</span> <span class="st">"400px"</span><span class="op">)</span></span>
+<span>                <span class="fu"><a href="https://rdrr.io/pkg/shiny/man/plotOutput.html" class="external-link">plotOutput</a></span><span class="op">(</span><span class="st">"variance_plot"</span>, height <span class="op">=</span> <span class="st">"400px"</span><span class="op">)</span></span>
 <span>            <span class="op">)</span>,</span>
-<span>            <span class="fu">bslib</span><span class="fu">::</span><span class="fu"><a href="https://rstudio.github.io/bslib/reference/nav-items.html" class="external-link">nav_panel</a></span><span class="op">(</span></span>
+<span>            <span class="fu"><a href="https://rstudio.github.io/bslib/reference/nav-items.html" class="external-link">nav_panel</a></span><span class="op">(</span></span>
 <span>                <span class="st">"Sample Data"</span>,</span>
 <span>                <span class="fu">DT</span><span class="fu">::</span><span class="fu"><a href="https://rdrr.io/pkg/DT/man/dataTableOutput.html" class="external-link">dataTableOutput</a></span><span class="op">(</span><span class="st">"scores_table"</span><span class="op">)</span></span>
 <span>            <span class="op">)</span></span>
@@ -289,52 +295,75 @@ testing</li>
 <div class="section level4">
 <h4 id="rapp_server-r">R/app_server.R<a class="anchor" aria-label="anchor" href="#rapp_server-r"></a>
 </h4>
-<div class="sourceCode" id="cb5"><pre class="downlit sourceCode r">
-<code class="sourceCode R"><span><span class="co"># R/app_server.R — Shiny server logic</span></span>
-<span></span>
-<span><span class="co">#' Shiny App Server</span></span>
+<details><summary><strong>R/app_server.R</strong> (click to expand)
+</summary><div class="sourceCode" id="cb5"><pre class="downlit sourceCode r">
+<code class="sourceCode R"><span><span class="co">#' Shiny App Server</span></span>
 <span><span class="co">#'</span></span>
 <span><span class="co">#' @param input Shiny input</span></span>
 <span><span class="co">#' @param output Shiny output</span></span>
 <span><span class="co">#' @param session Shiny session</span></span>
+<span><span class="co">#' @param se A \code{SummarizedExperiment} object</span></span>
 <span><span class="co">#'</span></span>
 <span><span class="co">#' @return NULL (side effects only)</span></span>
 <span><span class="co">#' @noRd</span></span>
 <span><span class="co">#'</span></span>
-<span><span class="co">#' @importFrom SummarizedExperiment colData</span></span>
-<span><span class="co">#' @importFrom ggplot2 ggplot aes geom_col geom_text theme_minimal labs ylim</span></span>
+<span><span class="co">#' @import shiny</span></span>
+<span><span class="co">#' @importFrom SummarizedExperiment colData assayNames</span></span>
+<span><span class="co">#' @importFrom ggplot2 ggsave</span></span>
 <span><span class="co">#' @importFrom rlang .data</span></span>
-<span><span class="va">app_server</span> <span class="op">&lt;-</span> <span class="kw">function</span><span class="op">(</span><span class="va">input</span>, <span class="va">output</span>, <span class="va">session</span><span class="op">)</span> <span class="op">{</span></span>
-<span>    <span class="co"># Load example data</span></span>
-<span>    <span class="co"># In a real app, you might want to let users upload their own data</span></span>
-<span>    <span class="va">se_data</span> <span class="op">&lt;-</span> <span class="fu">shiny</span><span class="fu">::</span><span class="fu"><a href="https://rdrr.io/pkg/shiny/man/reactive.html" class="external-link">reactive</a></span><span class="op">(</span><span class="op">{</span></span>
-<span>        <span class="fu"><a href="https://rdrr.io/r/utils/data.html" class="external-link">data</a></span><span class="op">(</span><span class="st">"airway"</span>, package <span class="op">=</span> <span class="st">"airway"</span>, envir <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/environment.html" class="external-link">environment</a></span><span class="op">(</span><span class="op">)</span><span class="op">)</span></span>
-<span>        <span class="fu"><a href="https://rdrr.io/r/base/get.html" class="external-link">get</a></span><span class="op">(</span><span class="st">"airway"</span>, envir <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/environment.html" class="external-link">environment</a></span><span class="op">(</span><span class="op">)</span><span class="op">)</span></span>
-<span>    <span class="op">}</span><span class="op">)</span></span>
+<span><span class="co">#' @importFrom utils data</span></span>
+<span><span class="co">#' @author Jared Andrews</span></span>
+<span><span class="va">app_server</span> <span class="op">&lt;-</span> <span class="kw">function</span><span class="op">(</span><span class="va">input</span>, <span class="va">output</span>, <span class="va">session</span>, <span class="va">se</span><span class="op">)</span> <span class="op">{</span></span>
+<span>    <span class="va">se_data</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/pkg/shiny/man/reactiveVal.html" class="external-link">reactiveVal</a></span><span class="op">(</span><span class="va">se</span><span class="op">)</span></span>
 <span></span>
-<span>    <span class="co"># Update select inputs based on available metadata</span></span>
-<span>    <span class="fu">shiny</span><span class="fu">::</span><span class="fu"><a href="https://rdrr.io/pkg/shiny/man/observe.html" class="external-link">observe</a></span><span class="op">(</span><span class="op">{</span></span>
+<span>    <span class="co"># Update select inputs based on available metadata and assays</span></span>
+<span>    <span class="fu"><a href="https://rdrr.io/pkg/shiny/man/observe.html" class="external-link">observe</a></span><span class="op">(</span><span class="op">{</span></span>
 <span>        <span class="va">se</span> <span class="op">&lt;-</span> <span class="fu">se_data</span><span class="op">(</span><span class="op">)</span></span>
-<span>        <span class="va">cols</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/base/colnames.html" class="external-link">colnames</a></span><span class="op">(</span><span class="fu">SummarizedExperiment</span><span class="fu">::</span><span class="fu"><a href="https://rdrr.io/pkg/SummarizedExperiment/man/SummarizedExperiment-class.html" class="external-link">colData</a></span><span class="op">(</span><span class="va">se</span><span class="op">)</span><span class="op">)</span></span>
-<span>        <span class="fu">shiny</span><span class="fu">::</span><span class="fu"><a href="https://rdrr.io/pkg/shiny/man/updateSelectInput.html" class="external-link">updateSelectInput</a></span><span class="op">(</span><span class="va">session</span>, <span class="st">"color_by"</span>, choices <span class="op">=</span> <span class="va">cols</span><span class="op">)</span></span>
-<span>        <span class="fu">shiny</span><span class="fu">::</span><span class="fu"><a href="https://rdrr.io/pkg/shiny/man/updateSelectInput.html" class="external-link">updateSelectInput</a></span><span class="op">(</span><span class="va">session</span>, <span class="st">"shape_by"</span>, choices <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="st">"None"</span>, <span class="va">cols</span><span class="op">)</span><span class="op">)</span></span>
+<span>        <span class="fu"><a href="https://rdrr.io/pkg/shiny/man/req.html" class="external-link">req</a></span><span class="op">(</span><span class="va">se</span><span class="op">)</span></span>
+<span>        <span class="va">cols</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/base/colnames.html" class="external-link">colnames</a></span><span class="op">(</span><span class="fu"><a href="https://rdrr.io/pkg/SummarizedExperiment/man/SummarizedExperiment-class.html" class="external-link">colData</a></span><span class="op">(</span><span class="va">se</span><span class="op">)</span><span class="op">)</span></span>
+<span>        <span class="fu"><a href="https://rdrr.io/pkg/shiny/man/updateSelectInput.html" class="external-link">updateSelectInput</a></span><span class="op">(</span><span class="va">session</span>, <span class="st">"color_by"</span>, choices <span class="op">=</span> <span class="va">cols</span><span class="op">)</span></span>
+<span>        <span class="fu"><a href="https://rdrr.io/pkg/shiny/man/updateSelectInput.html" class="external-link">updateSelectInput</a></span><span class="op">(</span><span class="va">session</span>, <span class="st">"shape_by"</span>,</span>
+<span>                                 choices <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="st">"None"</span>, <span class="va">cols</span><span class="op">)</span><span class="op">)</span></span>
+<span>        <span class="fu"><a href="https://rdrr.io/pkg/shiny/man/updateSelectInput.html" class="external-link">updateSelectInput</a></span><span class="op">(</span><span class="va">session</span>, <span class="st">"assay_name"</span>,</span>
+<span>                                 choices <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/pkg/SummarizedExperiment/man/SummarizedExperiment-class.html" class="external-link">assayNames</a></span><span class="op">(</span><span class="va">se</span><span class="op">)</span><span class="op">)</span></span>
+<span>        <span class="fu"><a href="https://rdrr.io/pkg/shiny/man/updateNumericInput.html" class="external-link">updateNumericInput</a></span><span class="op">(</span><span class="va">session</span>, <span class="st">"n_top"</span>,</span>
+<span>                                  max <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/nrow.html" class="external-link">nrow</a></span><span class="op">(</span><span class="va">se</span><span class="op">)</span><span class="op">)</span></span>
 <span>    <span class="op">}</span><span class="op">)</span></span>
 <span></span>
-<span>    <span class="co"># Compute PCA</span></span>
-<span>    <span class="va">pca_result</span> <span class="op">&lt;-</span> <span class="fu">shiny</span><span class="fu">::</span><span class="fu"><a href="https://rdrr.io/pkg/shiny/man/reactive.html" class="external-link">reactive</a></span><span class="op">(</span><span class="op">{</span></span>
-<span>        <span class="fu">shiny</span><span class="fu">::</span><span class="fu"><a href="https://rdrr.io/pkg/shiny/man/req.html" class="external-link">req</a></span><span class="op">(</span><span class="fu">se_data</span><span class="op">(</span><span class="op">)</span>, <span class="va">input</span><span class="op">$</span><span class="va">n_top</span><span class="op">)</span></span>
+<span>    <span class="co"># Compute PCA (cached; only re-runs when analysis params change)</span></span>
+<span>    <span class="va">pca_result</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/pkg/shiny/man/reactive.html" class="external-link">reactive</a></span><span class="op">(</span><span class="op">{</span></span>
+<span>        <span class="fu"><a href="https://rdrr.io/pkg/shiny/man/req.html" class="external-link">req</a></span><span class="op">(</span><span class="fu">se_data</span><span class="op">(</span><span class="op">)</span>, <span class="va">input</span><span class="op">$</span><span class="va">n_top</span>, <span class="va">input</span><span class="op">$</span><span class="va">assay_name</span><span class="op">)</span></span>
+<span></span>
+<span>        <span class="fu"><a href="https://rdrr.io/pkg/shiny/man/validate.html" class="external-link">validate</a></span><span class="op">(</span></span>
+<span>            <span class="fu"><a href="https://rdrr.io/pkg/shiny/man/validate.html" class="external-link">need</a></span><span class="op">(</span><span class="va">input</span><span class="op">$</span><span class="va">n_top</span> <span class="op">&gt;=</span> <span class="fl">10</span>,</span>
+<span>                        <span class="st">"Please select at least 10 genes"</span><span class="op">)</span>,</span>
+<span>            <span class="fu"><a href="https://rdrr.io/pkg/shiny/man/validate.html" class="external-link">need</a></span><span class="op">(</span><span class="va">input</span><span class="op">$</span><span class="va">n_top</span> <span class="op">&lt;=</span> <span class="fu"><a href="https://rdrr.io/r/base/nrow.html" class="external-link">nrow</a></span><span class="op">(</span><span class="fu">se_data</span><span class="op">(</span><span class="op">)</span><span class="op">)</span>,</span>
+<span>                        <span class="st">"Cannot select more genes than available"</span><span class="op">)</span></span>
+<span>        <span class="op">)</span></span>
 <span></span>
 <span>        <span class="fu"><a href="../reference/run_pca.html">run_pca</a></span><span class="op">(</span></span>
 <span>            <span class="fu">se_data</span><span class="op">(</span><span class="op">)</span>,</span>
+<span>            assay_name <span class="op">=</span> <span class="va">input</span><span class="op">$</span><span class="va">assay_name</span>,</span>
 <span>            n_top <span class="op">=</span> <span class="va">input</span><span class="op">$</span><span class="va">n_top</span>,</span>
 <span>            log_transform <span class="op">=</span> <span class="va">input</span><span class="op">$</span><span class="va">log_transform</span>,</span>
 <span>            scale <span class="op">=</span> <span class="va">input</span><span class="op">$</span><span class="va">scale</span></span>
 <span>        <span class="op">)</span></span>
 <span>    <span class="op">}</span><span class="op">)</span></span>
 <span></span>
-<span>    <span class="co"># PCA scatter plot</span></span>
-<span>    <span class="va">output</span><span class="op">$</span><span class="va">pca_plot</span> <span class="op">&lt;-</span> <span class="fu">shiny</span><span class="fu">::</span><span class="fu"><a href="https://rdrr.io/pkg/shiny/man/renderPlot.html" class="external-link">renderPlot</a></span><span class="op">(</span><span class="op">{</span></span>
-<span>        <span class="fu">shiny</span><span class="fu">::</span><span class="fu"><a href="https://rdrr.io/pkg/shiny/man/req.html" class="external-link">req</a></span><span class="op">(</span><span class="fu">pca_result</span><span class="op">(</span><span class="op">)</span>, <span class="va">input</span><span class="op">$</span><span class="va">color_by</span><span class="op">)</span></span>
+<span>    <span class="va">output</span><span class="op">$</span><span class="va">pca_plot</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/pkg/shiny/man/renderPlot.html" class="external-link">renderPlot</a></span><span class="op">(</span><span class="op">{</span></span>
+<span>        <span class="fu"><a href="https://rdrr.io/pkg/shiny/man/req.html" class="external-link">req</a></span><span class="op">(</span><span class="fu">pca_result</span><span class="op">(</span><span class="op">)</span>, <span class="va">input</span><span class="op">$</span><span class="va">color_by</span><span class="op">)</span></span>
+<span></span>
+<span>        <span class="va">n_pcs</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/base/nrow.html" class="external-link">ncol</a></span><span class="op">(</span><span class="fu">pca_result</span><span class="op">(</span><span class="op">)</span><span class="op">$</span><span class="va">pca</span><span class="op">$</span><span class="va">x</span><span class="op">)</span></span>
+<span>        <span class="fu"><a href="https://rdrr.io/pkg/shiny/man/validate.html" class="external-link">validate</a></span><span class="op">(</span></span>
+<span>            <span class="fu"><a href="https://rdrr.io/pkg/shiny/man/validate.html" class="external-link">need</a></span><span class="op">(</span><span class="va">input</span><span class="op">$</span><span class="va">pc_x</span> <span class="op">&lt;=</span> <span class="va">n_pcs</span>,</span>
+<span>                        <span class="fu"><a href="https://rdrr.io/r/base/paste.html" class="external-link">paste</a></span><span class="op">(</span><span class="st">"PC X must be &lt;="</span>, <span class="va">n_pcs</span><span class="op">)</span><span class="op">)</span>,</span>
+<span>            <span class="fu"><a href="https://rdrr.io/pkg/shiny/man/validate.html" class="external-link">need</a></span><span class="op">(</span><span class="va">input</span><span class="op">$</span><span class="va">pc_y</span> <span class="op">&lt;=</span> <span class="va">n_pcs</span>,</span>
+<span>                        <span class="fu"><a href="https://rdrr.io/r/base/paste.html" class="external-link">paste</a></span><span class="op">(</span><span class="st">"PC Y must be &lt;="</span>, <span class="va">n_pcs</span><span class="op">)</span><span class="op">)</span>,</span>
+<span>            <span class="fu"><a href="https://rdrr.io/pkg/shiny/man/validate.html" class="external-link">need</a></span><span class="op">(</span><span class="va">input</span><span class="op">$</span><span class="va">pc_x</span> <span class="op">!=</span> <span class="va">input</span><span class="op">$</span><span class="va">pc_y</span>,</span>
+<span>                        <span class="st">"Please select different PCs for X and Y"</span><span class="op">)</span>,</span>
+<span>            <span class="fu"><a href="https://rdrr.io/pkg/shiny/man/validate.html" class="external-link">need</a></span><span class="op">(</span><span class="va">input</span><span class="op">$</span><span class="va">point_size</span> <span class="op">&gt;</span> <span class="fl">0</span>,</span>
+<span>                        <span class="st">"Point size must be positive"</span><span class="op">)</span></span>
+<span>        <span class="op">)</span></span>
 <span></span>
 <span>        <span class="va">shape</span> <span class="op">&lt;-</span> <span class="kw">if</span> <span class="op">(</span><span class="fu"><a href="https://rdrr.io/r/base/NULL.html" class="external-link">is.null</a></span><span class="op">(</span><span class="va">input</span><span class="op">$</span><span class="va">shape_by</span><span class="op">)</span> <span class="op">||</span> <span class="va">input</span><span class="op">$</span><span class="va">shape_by</span> <span class="op">==</span> <span class="st">"None"</span><span class="op">)</span> <span class="op">{</span></span>
 <span>            <span class="cn">NULL</span></span>
@@ -346,48 +375,32 @@ testing</li>
 <span>            <span class="fu">pca_result</span><span class="op">(</span><span class="op">)</span>,</span>
 <span>            color_by <span class="op">=</span> <span class="va">input</span><span class="op">$</span><span class="va">color_by</span>,</span>
 <span>            shape_by <span class="op">=</span> <span class="va">shape</span>,</span>
+<span>            pcs <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="va">input</span><span class="op">$</span><span class="va">pc_x</span>, <span class="va">input</span><span class="op">$</span><span class="va">pc_y</span><span class="op">)</span>,</span>
 <span>            point_size <span class="op">=</span> <span class="va">input</span><span class="op">$</span><span class="va">point_size</span></span>
 <span>        <span class="op">)</span></span>
 <span>    <span class="op">}</span><span class="op">)</span></span>
 <span></span>
-<span>    <span class="co"># Variance plot</span></span>
-<span>    <span class="va">output</span><span class="op">$</span><span class="va">variance_plot</span> <span class="op">&lt;-</span> <span class="fu">shiny</span><span class="fu">::</span><span class="fu"><a href="https://rdrr.io/pkg/shiny/man/renderPlot.html" class="external-link">renderPlot</a></span><span class="op">(</span><span class="op">{</span></span>
-<span>        <span class="fu">shiny</span><span class="fu">::</span><span class="fu"><a href="https://rdrr.io/pkg/shiny/man/req.html" class="external-link">req</a></span><span class="op">(</span><span class="fu">pca_result</span><span class="op">(</span><span class="op">)</span><span class="op">)</span></span>
+<span>    <span class="va">output</span><span class="op">$</span><span class="va">variance_plot</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/pkg/shiny/man/renderPlot.html" class="external-link">renderPlot</a></span><span class="op">(</span><span class="op">{</span></span>
+<span>        <span class="fu"><a href="https://rdrr.io/pkg/shiny/man/req.html" class="external-link">req</a></span><span class="op">(</span><span class="fu">pca_result</span><span class="op">(</span><span class="op">)</span><span class="op">)</span></span>
 <span></span>
-<span>        <span class="va">var_df</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/pca_variance_explained.html">pca_variance_explained</a></span><span class="op">(</span><span class="fu">pca_result</span><span class="op">(</span><span class="op">)</span><span class="op">)</span></span>
-<span>        <span class="va">var_df</span> <span class="op">&lt;-</span> <span class="va">var_df</span><span class="op">[</span><span class="fu"><a href="https://rdrr.io/r/base/seq.html" class="external-link">seq_len</a></span><span class="op">(</span><span class="fu"><a href="https://rdrr.io/r/base/Extremes.html" class="external-link">min</a></span><span class="op">(</span><span class="fl">8</span>, <span class="fu"><a href="https://rdrr.io/r/base/nrow.html" class="external-link">nrow</a></span><span class="op">(</span><span class="va">var_df</span><span class="op">)</span><span class="op">)</span><span class="op">)</span>, <span class="op">]</span></span>
-<span>        <span class="va">var_df</span><span class="op">$</span><span class="va">PC</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/base/factor.html" class="external-link">factor</a></span><span class="op">(</span><span class="va">var_df</span><span class="op">$</span><span class="va">PC</span>, levels <span class="op">=</span> <span class="va">var_df</span><span class="op">$</span><span class="va">PC</span><span class="op">)</span></span>
-<span></span>
-<span>        <span class="fu">ggplot2</span><span class="fu">::</span><span class="fu"><a href="https://ggplot2.tidyverse.org/reference/ggplot.html" class="external-link">ggplot</a></span><span class="op">(</span><span class="va">var_df</span>, <span class="fu">ggplot2</span><span class="fu">::</span><span class="fu"><a href="https://ggplot2.tidyverse.org/reference/aes.html" class="external-link">aes</a></span><span class="op">(</span>x <span class="op">=</span> <span class="va">.data</span><span class="op">$</span><span class="va">PC</span>, y <span class="op">=</span> <span class="va">.data</span><span class="op">$</span><span class="va">variance_percent</span><span class="op">)</span><span class="op">)</span> <span class="op">+</span></span>
-<span>            <span class="fu">ggplot2</span><span class="fu">::</span><span class="fu"><a href="https://ggplot2.tidyverse.org/reference/geom_bar.html" class="external-link">geom_col</a></span><span class="op">(</span>fill <span class="op">=</span> <span class="st">"steelblue"</span><span class="op">)</span> <span class="op">+</span></span>
-<span>            <span class="fu">ggplot2</span><span class="fu">::</span><span class="fu"><a href="https://ggplot2.tidyverse.org/reference/geom_text.html" class="external-link">geom_text</a></span><span class="op">(</span></span>
-<span>                <span class="fu">ggplot2</span><span class="fu">::</span><span class="fu"><a href="https://ggplot2.tidyverse.org/reference/aes.html" class="external-link">aes</a></span><span class="op">(</span>label <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/sprintf.html" class="external-link">sprintf</a></span><span class="op">(</span><span class="st">"%.1f%%"</span>, <span class="va">.data</span><span class="op">$</span><span class="va">variance_percent</span><span class="op">)</span><span class="op">)</span>,</span>
-<span>                vjust <span class="op">=</span> <span class="op">-</span><span class="fl">0.5</span>, size <span class="op">=</span> <span class="fl">4</span></span>
-<span>            <span class="op">)</span> <span class="op">+</span></span>
-<span>            <span class="fu">ggplot2</span><span class="fu">::</span><span class="fu"><a href="https://ggplot2.tidyverse.org/reference/ggtheme.html" class="external-link">theme_minimal</a></span><span class="op">(</span>base_size <span class="op">=</span> <span class="fl">14</span><span class="op">)</span> <span class="op">+</span></span>
-<span>            <span class="fu">ggplot2</span><span class="fu">::</span><span class="fu"><a href="https://ggplot2.tidyverse.org/reference/labs.html" class="external-link">labs</a></span><span class="op">(</span></span>
-<span>                x <span class="op">=</span> <span class="st">"Principal Component"</span>,</span>
-<span>                y <span class="op">=</span> <span class="st">"Variance Explained (%)"</span></span>
-<span>            <span class="op">)</span> <span class="op">+</span></span>
-<span>            <span class="fu">ggplot2</span><span class="fu">::</span><span class="fu"><a href="https://ggplot2.tidyverse.org/reference/lims.html" class="external-link">ylim</a></span><span class="op">(</span><span class="fl">0</span>, <span class="fu"><a href="https://rdrr.io/r/base/Extremes.html" class="external-link">max</a></span><span class="op">(</span><span class="va">var_df</span><span class="op">$</span><span class="va">variance_percent</span><span class="op">)</span> <span class="op">*</span> <span class="fl">1.15</span><span class="op">)</span></span>
+<span>        <span class="fu"><a href="../reference/plot_variance_explained.html">plot_variance_explained</a></span><span class="op">(</span><span class="fu">pca_result</span><span class="op">(</span><span class="op">)</span><span class="op">)</span></span>
 <span>    <span class="op">}</span><span class="op">)</span></span>
 <span></span>
-<span>    <span class="co"># Scores table</span></span>
 <span>    <span class="va">output</span><span class="op">$</span><span class="va">scores_table</span> <span class="op">&lt;-</span> <span class="fu">DT</span><span class="fu">::</span><span class="fu"><a href="https://rdrr.io/pkg/DT/man/dataTableOutput.html" class="external-link">renderDataTable</a></span><span class="op">(</span><span class="op">{</span></span>
-<span>        <span class="fu">shiny</span><span class="fu">::</span><span class="fu"><a href="https://rdrr.io/pkg/shiny/man/req.html" class="external-link">req</a></span><span class="op">(</span><span class="fu">pca_result</span><span class="op">(</span><span class="op">)</span><span class="op">)</span></span>
+<span>        <span class="fu"><a href="https://rdrr.io/pkg/shiny/man/req.html" class="external-link">req</a></span><span class="op">(</span><span class="fu">pca_result</span><span class="op">(</span><span class="op">)</span><span class="op">)</span></span>
 <span>        <span class="fu">DT</span><span class="fu">::</span><span class="fu"><a href="https://rdrr.io/pkg/DT/man/datatable.html" class="external-link">datatable</a></span><span class="op">(</span></span>
 <span>            <span class="fu">pca_result</span><span class="op">(</span><span class="op">)</span><span class="op">$</span><span class="va">scores</span>,</span>
 <span>            options <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/list.html" class="external-link">list</a></span><span class="op">(</span>pageLength <span class="op">=</span> <span class="fl">10</span>, scrollX <span class="op">=</span> <span class="cn">TRUE</span><span class="op">)</span></span>
 <span>        <span class="op">)</span></span>
 <span>    <span class="op">}</span><span class="op">)</span></span>
 <span></span>
-<span>    <span class="co"># Download handler</span></span>
-<span>    <span class="va">output</span><span class="op">$</span><span class="va">download_plot</span> <span class="op">&lt;-</span> <span class="fu">shiny</span><span class="fu">::</span><span class="fu"><a href="https://rdrr.io/pkg/shiny/man/downloadHandler.html" class="external-link">downloadHandler</a></span><span class="op">(</span></span>
+<span>    <span class="va">output</span><span class="op">$</span><span class="va">download_plot</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/pkg/shiny/man/downloadHandler.html" class="external-link">downloadHandler</a></span><span class="op">(</span></span>
 <span>        filename <span class="op">=</span> <span class="kw">function</span><span class="op">(</span><span class="op">)</span> <span class="op">{</span></span>
 <span>            <span class="fu"><a href="https://rdrr.io/r/base/paste.html" class="external-link">paste0</a></span><span class="op">(</span><span class="st">"pca_plot_"</span>, <span class="fu"><a href="https://rdrr.io/r/base/Sys.time.html" class="external-link">Sys.Date</a></span><span class="op">(</span><span class="op">)</span>, <span class="st">".png"</span><span class="op">)</span></span>
 <span>        <span class="op">}</span>,</span>
 <span>        content <span class="op">=</span> <span class="kw">function</span><span class="op">(</span><span class="va">file</span><span class="op">)</span> <span class="op">{</span></span>
-<span>            <span class="va">shape</span> <span class="op">&lt;-</span> <span class="kw">if</span> <span class="op">(</span><span class="fu"><a href="https://rdrr.io/r/base/NULL.html" class="external-link">is.null</a></span><span class="op">(</span><span class="va">input</span><span class="op">$</span><span class="va">shape_by</span><span class="op">)</span> <span class="op">||</span> <span class="va">input</span><span class="op">$</span><span class="va">shape_by</span> <span class="op">==</span> <span class="st">"None"</span><span class="op">)</span> <span class="op">{</span></span>
+<span>            <span class="va">shape</span> <span class="op">&lt;-</span> <span class="kw">if</span> <span class="op">(</span><span class="fu"><a href="https://rdrr.io/r/base/NULL.html" class="external-link">is.null</a></span><span class="op">(</span><span class="va">input</span><span class="op">$</span><span class="va">shape_by</span><span class="op">)</span> <span class="op">||</span></span>
+<span>                         <span class="va">input</span><span class="op">$</span><span class="va">shape_by</span> <span class="op">==</span> <span class="st">"None"</span><span class="op">)</span> <span class="op">{</span></span>
 <span>                <span class="cn">NULL</span></span>
 <span>            <span class="op">}</span> <span class="kw">else</span> <span class="op">{</span></span>
 <span>                <span class="va">input</span><span class="op">$</span><span class="va">shape_by</span></span>
@@ -400,79 +413,100 @@ testing</li>
 <span>                point_size <span class="op">=</span> <span class="va">input</span><span class="op">$</span><span class="va">point_size</span></span>
 <span>            <span class="op">)</span></span>
 <span></span>
-<span>            <span class="fu">ggplot2</span><span class="fu">::</span><span class="fu"><a href="https://ggplot2.tidyverse.org/reference/ggsave.html" class="external-link">ggsave</a></span><span class="op">(</span><span class="va">file</span>, <span class="va">p</span>, width <span class="op">=</span> <span class="fl">8</span>, height <span class="op">=</span> <span class="fl">6</span>, dpi <span class="op">=</span> <span class="fl">150</span><span class="op">)</span></span>
+<span>            <span class="fu"><a href="https://ggplot2.tidyverse.org/reference/ggsave.html" class="external-link">ggsave</a></span><span class="op">(</span><span class="va">file</span>, <span class="va">p</span>, width <span class="op">=</span> <span class="fl">8</span>, height <span class="op">=</span> <span class="fl">6</span>, dpi <span class="op">=</span> <span class="fl">300</span><span class="op">)</span></span>
 <span>        <span class="op">}</span></span>
 <span>    <span class="op">)</span></span>
 <span><span class="op">}</span></span></code></pre></div>
+</details>
 </div>
 <div class="section level4">
 <h4 id="rrun_app-r">R/run_app.R<a class="anchor" aria-label="anchor" href="#rrun_app-r"></a>
 </h4>
-<div class="sourceCode" id="cb6"><pre class="downlit sourceCode r">
-<code class="sourceCode R"><span><span class="co"># R/run_app.R</span></span>
-<span></span>
-<span><span class="co">#' Run the ADS8192 Shiny Application</span></span>
+<details><summary><strong>R/run_app.R</strong> (click to expand)
+</summary><div class="sourceCode" id="cb6"><pre class="downlit sourceCode r">
+<code class="sourceCode R"><span><span class="co">#' Run the PCA Explorer Shiny Application</span></span>
 <span><span class="co">#'</span></span>
 <span><span class="co">#' Launches an interactive Shiny application for exploring PCA results</span></span>
-<span><span class="co">#' on SummarizedExperiment data.</span></span>
+<span><span class="co">#' on SummarizedExperiment data. The app allows users to select assays, adjust PCA parameters,</span></span>
+<span><span class="co">#' and visualize results with customizable options.</span></span>
 <span><span class="co">#'</span></span>
-<span><span class="co">#' @param ... Additional arguments passed to [shiny::shinyApp()]</span></span>
+<span><span class="co">#' @param se A \code{\link[SummarizedExperiment]{SummarizedExperiment}} object</span></span>
+<span><span class="co">#'   to explore.</span></span>
+<span><span class="co">#' @param return_as_list If \code{TRUE}, returns a list containing the UI and</span></span>
+<span><span class="co">#'   server functions instead of launching the app. Useful for certain deployment</span></span>
+<span><span class="co">#'   scenarios.</span></span>
+<span><span class="co">#' @param ... Additional arguments passed to \code{\link[shiny]{shinyApp}()}.</span></span>
 <span><span class="co">#'</span></span>
-<span><span class="co">#' @return A Shiny app object (invisibly)</span></span>
+<span><span class="co">#' @return A Shiny app object or a named list containing the UI and</span></span>
+<span><span class="co">#'   server functions if \code{return_as_list = TRUE}.</span></span>
+<span><span class="co">#'</span></span>
+<span><span class="co">#' @import shiny</span></span>
+<span><span class="co">#' @importFrom methods is</span></span>
 <span><span class="co">#' @export</span></span>
+<span><span class="co">#' @author Jared Andrews</span></span>
 <span><span class="co">#'</span></span>
 <span><span class="co">#' @examples</span></span>
-<span><span class="co">#' \dontrun{</span></span>
-<span><span class="co">#' run_app()</span></span>
+<span><span class="co">#' if (interactive()) {</span></span>
+<span><span class="co">#'   library(ADS8192)</span></span>
+<span><span class="co">#'   data("example_se")</span></span>
+<span><span class="co">#'   run_app(se = example_se)</span></span>
 <span><span class="co">#' }</span></span>
-<span><span class="va">run_app</span> <span class="op">&lt;-</span> <span class="kw">function</span><span class="op">(</span><span class="va">...</span><span class="op">)</span> <span class="op">{</span></span>
-<span>    <span class="co"># Check for required packages</span></span>
+<span><span class="va">run_app</span> <span class="op">&lt;-</span> <span class="kw">function</span><span class="op">(</span><span class="va">se</span>, <span class="va">return_as_list</span> <span class="op">=</span> <span class="cn">FALSE</span>, <span class="va">...</span><span class="op">)</span> <span class="op">{</span></span>
 <span>    <span class="kw">if</span> <span class="op">(</span><span class="op">!</span><span class="fu"><a href="https://rdrr.io/r/base/ns-load.html" class="external-link">requireNamespace</a></span><span class="op">(</span><span class="st">"shiny"</span>, quietly <span class="op">=</span> <span class="cn">TRUE</span><span class="op">)</span><span class="op">)</span> <span class="op">{</span></span>
-<span>        <span class="kw"><a href="https://rdrr.io/r/base/stop.html" class="external-link">stop</a></span><span class="op">(</span><span class="st">"Package 'shiny' is required. Install with: install.packages('shiny')"</span><span class="op">)</span></span>
+<span>        <span class="kw"><a href="https://rdrr.io/r/base/stop.html" class="external-link">stop</a></span><span class="op">(</span><span class="st">"Package 'shiny' is required for app usage. Install with: "</span>,</span>
+<span>             <span class="st">"install.packages('shiny')"</span>, call. <span class="op">=</span> <span class="cn">FALSE</span><span class="op">)</span></span>
 <span>    <span class="op">}</span></span>
 <span>    <span class="kw">if</span> <span class="op">(</span><span class="op">!</span><span class="fu"><a href="https://rdrr.io/r/base/ns-load.html" class="external-link">requireNamespace</a></span><span class="op">(</span><span class="st">"bslib"</span>, quietly <span class="op">=</span> <span class="cn">TRUE</span><span class="op">)</span><span class="op">)</span> <span class="op">{</span></span>
-<span>        <span class="kw"><a href="https://rdrr.io/r/base/stop.html" class="external-link">stop</a></span><span class="op">(</span><span class="st">"Package 'bslib' is required. Install with: install.packages('bslib')"</span><span class="op">)</span></span>
+<span>        <span class="kw"><a href="https://rdrr.io/r/base/stop.html" class="external-link">stop</a></span><span class="op">(</span><span class="st">"Package 'bslib' is required for app usage. Install with: "</span>,</span>
+<span>             <span class="st">"install.packages('bslib')"</span>, call. <span class="op">=</span> <span class="cn">FALSE</span><span class="op">)</span></span>
 <span>    <span class="op">}</span></span>
 <span>    <span class="kw">if</span> <span class="op">(</span><span class="op">!</span><span class="fu"><a href="https://rdrr.io/r/base/ns-load.html" class="external-link">requireNamespace</a></span><span class="op">(</span><span class="st">"DT"</span>, quietly <span class="op">=</span> <span class="cn">TRUE</span><span class="op">)</span><span class="op">)</span> <span class="op">{</span></span>
-<span>        <span class="kw"><a href="https://rdrr.io/r/base/stop.html" class="external-link">stop</a></span><span class="op">(</span><span class="st">"Package 'DT' is required. Install with: install.packages('DT')"</span><span class="op">)</span></span>
+<span>        <span class="kw"><a href="https://rdrr.io/r/base/stop.html" class="external-link">stop</a></span><span class="op">(</span><span class="st">"Package 'DT' is required for app usage. Install with: "</span>,</span>
+<span>             <span class="st">"install.packages('DT')"</span>, call. <span class="op">=</span> <span class="cn">FALSE</span><span class="op">)</span></span>
 <span>    <span class="op">}</span></span>
-<span>    <span class="kw">if</span> <span class="op">(</span><span class="op">!</span><span class="fu"><a href="https://rdrr.io/r/base/ns-load.html" class="external-link">requireNamespace</a></span><span class="op">(</span><span class="st">"airway"</span>, quietly <span class="op">=</span> <span class="cn">TRUE</span><span class="op">)</span><span class="op">)</span> <span class="op">{</span></span>
-<span>        <span class="kw"><a href="https://rdrr.io/r/base/stop.html" class="external-link">stop</a></span><span class="op">(</span><span class="st">"Package 'airway' is required. Install with: BiocManager::install('airway')"</span><span class="op">)</span></span>
+<span></span>
+<span>    <span class="kw">if</span> <span class="op">(</span><span class="op">!</span><span class="fu"><a href="https://rdrr.io/r/methods/is.html" class="external-link">is</a></span><span class="op">(</span><span class="va">se</span>, <span class="st">"SummarizedExperiment"</span><span class="op">)</span><span class="op">)</span> <span class="op">{</span></span>
+<span>        <span class="kw"><a href="https://rdrr.io/r/base/stop.html" class="external-link">stop</a></span><span class="op">(</span><span class="st">"'se' must be a SummarizedExperiment object."</span>, call. <span class="op">=</span> <span class="cn">FALSE</span><span class="op">)</span></span>
+<span>    <span class="op">}</span></span>
+<span></span>
+<span>    <span class="va">server</span> <span class="op">&lt;-</span> <span class="kw">function</span><span class="op">(</span><span class="va">input</span>, <span class="va">output</span>, <span class="va">session</span><span class="op">)</span> <span class="op">{</span></span>
+<span>        <span class="fu">app_server</span><span class="op">(</span><span class="va">input</span>, <span class="va">output</span>, <span class="va">session</span>, se <span class="op">=</span> <span class="va">se</span><span class="op">)</span></span>
 <span>    <span class="op">}</span></span>
 <span></span>
 <span>    <span class="va">app</span> <span class="op">&lt;-</span> <span class="fu">shiny</span><span class="fu">::</span><span class="fu"><a href="https://rdrr.io/pkg/shiny/man/shinyApp.html" class="external-link">shinyApp</a></span><span class="op">(</span></span>
 <span>        ui <span class="op">=</span> <span class="fu">app_ui</span><span class="op">(</span><span class="op">)</span>,</span>
-<span>        server <span class="op">=</span> <span class="va">app_server</span>,</span>
+<span>        server <span class="op">=</span> <span class="va">server</span>,</span>
 <span>        <span class="va">...</span></span>
 <span>    <span class="op">)</span></span>
 <span></span>
-<span>    <span class="fu">shiny</span><span class="fu">::</span><span class="fu"><a href="https://rdrr.io/pkg/shiny/man/runApp.html" class="external-link">runApp</a></span><span class="op">(</span><span class="va">app</span><span class="op">)</span></span>
+<span>    <span class="kw">if</span> <span class="op">(</span><span class="va">return_as_list</span><span class="op">)</span> <span class="op">{</span></span>
+<span>        <span class="kw"><a href="https://rdrr.io/r/base/function.html" class="external-link">return</a></span><span class="op">(</span><span class="fu"><a href="https://rdrr.io/r/base/list.html" class="external-link">list</a></span><span class="op">(</span>ui <span class="op">=</span> <span class="fu">app_ui</span><span class="op">(</span><span class="op">)</span>, server <span class="op">=</span> <span class="va">server</span><span class="op">)</span><span class="op">)</span></span>
+<span>    <span class="op">}</span> <span class="kw">else</span> <span class="op">{</span></span>
+<span>        <span class="va">app</span></span>
+<span>    <span class="op">}</span></span>
 <span><span class="op">}</span></span></code></pre></div>
+</details>
 </div>
 </div>
 <div class="section level3">
-<h3 id="step-3-create-instappapp-r-optional-entry-point">Step 3: Create inst/app/app.R (Optional Entry Point)<a class="anchor" aria-label="anchor" href="#step-3-create-instappapp-r-optional-entry-point"></a>
+<h3 id="step-3-create-instappapp-r">Step 3: Create inst/app/app.R<a class="anchor" aria-label="anchor" href="#step-3-create-instappapp-r"></a>
 </h3>
-<p>This allows running the app via
-<code>shiny::runApp(system.file("app", package = "ADS8192"))</code>:</p>
+<p>This file exists for deployment platforms like Posit Cloud that
+expect a standalone <code>app.R</code> entry point. Rather than calling
+internal package functions directly (which requires <code>:::</code> and
+is bad practice), it uses <code>return_as_list = TRUE</code> to get the
+UI and server back as a plain list, then passes them to
+<code><a href="https://rdrr.io/pkg/shiny/man/shinyApp.html" class="external-link">shinyApp()</a></code>.</p>
 <div class="sourceCode" id="cb7"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="co"># inst/app/app.R</span></span>
+<span><span class="kw"><a href="https://rdrr.io/r/base/library.html" class="external-link">library</a></span><span class="op">(</span><span class="va"><a href="https://github.com/St-Jude-MS-ABDS/ADS8192" class="external-link">ADS8192</a></span><span class="op">)</span></span>
+<span><span class="kw"><a href="https://rdrr.io/r/base/library.html" class="external-link">library</a></span><span class="op">(</span><span class="va"><a href="https://shiny.posit.co/" class="external-link">shiny</a></span><span class="op">)</span></span>
 <span></span>
-<span><span class="co"># Launch the ADS8192 Shiny application</span></span>
-<span><span class="co"># This file exists for compatibility with runApp()</span></span>
-<span><span class="co"># Preferred method: ADS8192::run_app()</span></span>
+<span><span class="fu"><a href="https://rdrr.io/r/utils/data.html" class="external-link">data</a></span><span class="op">(</span><span class="st">"example_se"</span><span class="op">)</span></span>
 <span></span>
-<span><span class="kw">if</span> <span class="op">(</span><span class="op">!</span><span class="fu"><a href="https://rdrr.io/r/base/ns-load.html" class="external-link">requireNamespace</a></span><span class="op">(</span><span class="st">"ADS8192"</span>, quietly <span class="op">=</span> <span class="cn">TRUE</span><span class="op">)</span><span class="op">)</span> <span class="op">{</span></span>
-<span>    <span class="kw"><a href="https://rdrr.io/r/base/stop.html" class="external-link">stop</a></span><span class="op">(</span><span class="st">"Please install ADS8192 first: remotes::install_github('you/ADS8192')"</span><span class="op">)</span></span>
-<span><span class="op">}</span></span>
+<span><span class="va">app</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/run_app.html">run_app</a></span><span class="op">(</span>se <span class="op">=</span> <span class="va">example_se</span>, return_as_list <span class="op">=</span> <span class="cn">TRUE</span><span class="op">)</span></span>
 <span></span>
-<span><span class="fu">ADS8192</span><span class="fu">:::</span><span class="va">app_ui</span></span>
-<span><span class="fu">ADS8192</span><span class="fu">:::</span><span class="va">app_server</span></span>
-<span></span>
-<span><span class="fu">shiny</span><span class="fu">::</span><span class="fu"><a href="https://rdrr.io/pkg/shiny/man/shinyApp.html" class="external-link">shinyApp</a></span><span class="op">(</span></span>
-<span>    ui <span class="op">=</span> <span class="fu">ADS8192</span><span class="fu">:::</span><span class="fu">app_ui</span><span class="op">(</span><span class="op">)</span>,</span>
-<span>    server <span class="op">=</span> <span class="fu">ADS8192</span><span class="fu">:::</span><span class="va">app_server</span></span>
-<span><span class="op">)</span></span></code></pre></div>
+<span><span class="fu"><a href="https://rdrr.io/pkg/shiny/man/shinyApp.html" class="external-link">shinyApp</a></span><span class="op">(</span>ui <span class="op">=</span> <span class="va">app</span><span class="op">$</span><span class="va">ui</span>, server <span class="op">=</span> <span class="va">app</span><span class="op">$</span><span class="va">server</span><span class="op">)</span></span></code></pre></div>
 <hr>
 </div>
 </div>
@@ -491,16 +525,14 @@ Imports) so the core package works without them:</p>
 <span><span class="fu">use_package</span><span class="op">(</span><span class="st">"shiny"</span>, type <span class="op">=</span> <span class="st">"Suggests"</span><span class="op">)</span></span>
 <span><span class="fu">use_package</span><span class="op">(</span><span class="st">"bslib"</span>, type <span class="op">=</span> <span class="st">"Suggests"</span><span class="op">)</span></span>
 <span><span class="fu">use_package</span><span class="op">(</span><span class="st">"DT"</span>, type <span class="op">=</span> <span class="st">"Suggests"</span><span class="op">)</span></span>
-<span><span class="fu">use_package</span><span class="op">(</span><span class="st">"airway"</span>, type <span class="op">=</span> <span class="st">"Suggests"</span><span class="op">)</span></span>
 <span><span class="fu">use_package</span><span class="op">(</span><span class="st">"rlang"</span><span class="op">)</span>  <span class="co"># For .data pronoun in ggplot2 aes()</span></span></code></pre></div>
 <p>Your DESCRIPTION now includes:</p>
 <div class="sourceCode" id="cb9"><pre class="sourceCode yaml"><code class="sourceCode yaml"><span id="cb9-1"><a href="#cb9-1" tabindex="-1"></a><span class="fu">Suggests</span><span class="kw">:</span></span>
-<span id="cb9-2"><a href="#cb9-2" tabindex="-1"></a><span class="at">    airway,</span></span>
-<span id="cb9-3"><a href="#cb9-3" tabindex="-1"></a><span class="at">    bslib,</span></span>
-<span id="cb9-4"><a href="#cb9-4" tabindex="-1"></a><span class="at">    DT,</span></span>
-<span id="cb9-5"><a href="#cb9-5" tabindex="-1"></a><span class="at">    knitr,</span></span>
-<span id="cb9-6"><a href="#cb9-6" tabindex="-1"></a><span class="at">    shiny,</span></span>
-<span id="cb9-7"><a href="#cb9-7" tabindex="-1"></a><span class="at">    testthat (&gt;= 3.0.0)</span></span></code></pre></div>
+<span id="cb9-2"><a href="#cb9-2" tabindex="-1"></a><span class="at">    bslib,</span></span>
+<span id="cb9-3"><a href="#cb9-3" tabindex="-1"></a><span class="at">    DT,</span></span>
+<span id="cb9-4"><a href="#cb9-4" tabindex="-1"></a><span class="at">    knitr,</span></span>
+<span id="cb9-5"><a href="#cb9-5" tabindex="-1"></a><span class="at">    shiny,</span></span>
+<span id="cb9-6"><a href="#cb9-6" tabindex="-1"></a><span class="at">    testthat (&gt;= 3.0.0)</span></span></code></pre></div>
 </div>
 <div class="section level3">
 <h3 id="why-suggests">Why Suggests?<a class="anchor" aria-label="anchor" href="#why-suggests"></a>
@@ -510,6 +542,8 @@ Imports) so the core package works without them:</p>
 <li>Keeps the core package lightweight</li>
 <li>
 <code><a href="../reference/run_app.html">run_app()</a></code> checks for packages at runtime</li>
+<li>The app works on any <code>SummarizedExperiment</code> — no extra
+data packages required</li>
 </ul>
 </div>
 <div class="section level3">
@@ -525,46 +559,26 @@ helpful error message if it’s missing. Two approaches:</p>
 <p>Best for checking inside a function body before using the
 package:</p>
 <div class="sourceCode" id="cb10"><pre class="downlit sourceCode r">
-<code class="sourceCode R"><span><span class="co"># In run_app() or any function that needs optional packages</span></span>
-<span><span class="va">run_app</span> <span class="op">&lt;-</span> <span class="kw">function</span><span class="op">(</span><span class="va">...</span><span class="op">)</span> <span class="op">{</span></span>
-<span>    <span class="co"># Check for CRAN packages</span></span>
+<code class="sourceCode R"><span><span class="co"># In run_app() — checks happen before any work is done</span></span>
+<span><span class="va">run_app</span> <span class="op">&lt;-</span> <span class="kw">function</span><span class="op">(</span><span class="va">se</span>, <span class="va">return_as_list</span> <span class="op">=</span> <span class="cn">FALSE</span>, <span class="va">...</span><span class="op">)</span> <span class="op">{</span></span>
 <span>    <span class="kw">if</span> <span class="op">(</span><span class="op">!</span><span class="fu"><a href="https://rdrr.io/r/base/ns-load.html" class="external-link">requireNamespace</a></span><span class="op">(</span><span class="st">"shiny"</span>, quietly <span class="op">=</span> <span class="cn">TRUE</span><span class="op">)</span><span class="op">)</span> <span class="op">{</span></span>
-<span>        <span class="kw"><a href="https://rdrr.io/r/base/stop.html" class="external-link">stop</a></span><span class="op">(</span></span>
-<span>            <span class="st">"Package 'shiny' is required to run the app.\n"</span>,</span>
-<span>            <span class="st">"Install it with: install.packages('shiny')"</span>,</span>
-<span>            call. <span class="op">=</span> <span class="cn">FALSE</span></span>
-<span>        <span class="op">)</span></span>
+<span>        <span class="kw"><a href="https://rdrr.io/r/base/stop.html" class="external-link">stop</a></span><span class="op">(</span><span class="st">"Package 'shiny' is required for app usage. Install with: "</span>,</span>
+<span>             <span class="st">"install.packages('shiny')"</span>, call. <span class="op">=</span> <span class="cn">FALSE</span><span class="op">)</span></span>
+<span>    <span class="op">}</span></span>
+<span>    <span class="kw">if</span> <span class="op">(</span><span class="op">!</span><span class="fu"><a href="https://rdrr.io/r/base/ns-load.html" class="external-link">requireNamespace</a></span><span class="op">(</span><span class="st">"bslib"</span>, quietly <span class="op">=</span> <span class="cn">TRUE</span><span class="op">)</span><span class="op">)</span> <span class="op">{</span></span>
+<span>        <span class="kw"><a href="https://rdrr.io/r/base/stop.html" class="external-link">stop</a></span><span class="op">(</span><span class="st">"Package 'bslib' is required for app usage. Install with: "</span>,</span>
+<span>             <span class="st">"install.packages('bslib')"</span>, call. <span class="op">=</span> <span class="cn">FALSE</span><span class="op">)</span></span>
+<span>    <span class="op">}</span></span>
+<span>    <span class="kw">if</span> <span class="op">(</span><span class="op">!</span><span class="fu"><a href="https://rdrr.io/r/base/ns-load.html" class="external-link">requireNamespace</a></span><span class="op">(</span><span class="st">"DT"</span>, quietly <span class="op">=</span> <span class="cn">TRUE</span><span class="op">)</span><span class="op">)</span> <span class="op">{</span></span>
+<span>        <span class="kw"><a href="https://rdrr.io/r/base/stop.html" class="external-link">stop</a></span><span class="op">(</span><span class="st">"Package 'DT' is required for app usage. Install with: "</span>,</span>
+<span>             <span class="st">"install.packages('DT')"</span>, call. <span class="op">=</span> <span class="cn">FALSE</span><span class="op">)</span></span>
 <span>    <span class="op">}</span></span>
 <span></span>
-<span>    <span class="co"># Check for Bioconductor packages</span></span>
-<span>    <span class="kw">if</span> <span class="op">(</span><span class="op">!</span><span class="fu"><a href="https://rdrr.io/r/base/ns-load.html" class="external-link">requireNamespace</a></span><span class="op">(</span><span class="st">"airway"</span>, quietly <span class="op">=</span> <span class="cn">TRUE</span><span class="op">)</span><span class="op">)</span> <span class="op">{</span></span>
-<span>        <span class="kw"><a href="https://rdrr.io/r/base/stop.html" class="external-link">stop</a></span><span class="op">(</span></span>
-<span>            <span class="st">"Package 'airway' is required to run the app.\n"</span>,</span>
-<span>            <span class="st">"Install it with: BiocManager::install('airway')"</span>,</span>
-<span>            call. <span class="op">=</span> <span class="cn">FALSE</span></span>
-<span>        <span class="op">)</span></span>
+<span>    <span class="co"># Validate user-supplied data</span></span>
+<span>    <span class="kw">if</span> <span class="op">(</span><span class="op">!</span><span class="fu">methods</span><span class="fu">::</span><span class="fu"><a href="https://rdrr.io/r/methods/is.html" class="external-link">is</a></span><span class="op">(</span><span class="va">se</span>, <span class="st">"SummarizedExperiment"</span><span class="op">)</span><span class="op">)</span> <span class="op">{</span></span>
+<span>        <span class="kw"><a href="https://rdrr.io/r/base/stop.html" class="external-link">stop</a></span><span class="op">(</span><span class="st">"'se' must be a SummarizedExperiment object."</span>, call. <span class="op">=</span> <span class="cn">FALSE</span><span class="op">)</span></span>
 <span>    <span class="op">}</span></span>
 <span></span>
-<span>    <span class="co"># ... rest of function</span></span>
-<span><span class="op">}</span></span></code></pre></div>
-</div>
-<div class="section level4">
-<h4 id="rlangcheck_installed-richer-messages">
-<code>rlang::check_installed()</code> — Richer Messages<a class="anchor" aria-label="anchor" href="#rlangcheck_installed-richer-messages"></a>
-</h4>
-<p><code><a href="https://rlang.r-lib.org/reference/is_installed.html" class="external-link">rlang::check_installed()</a></code> provides nicer error messages
-and in some interactive contexts offers to install the package for
-you:</p>
-<div class="sourceCode" id="cb11"><pre class="downlit sourceCode r">
-<code class="sourceCode R"><span><span class="va">run_app</span> <span class="op">&lt;-</span> <span class="kw">function</span><span class="op">(</span><span class="va">...</span><span class="op">)</span> <span class="op">{</span></span>
-<span>    <span class="fu">rlang</span><span class="fu">::</span><span class="fu"><a href="https://rlang.r-lib.org/reference/is_installed.html" class="external-link">check_installed</a></span><span class="op">(</span></span>
-<span>        <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="st">"shiny"</span>, <span class="st">"bslib"</span>, <span class="st">"DT"</span><span class="op">)</span>,</span>
-<span>        reason <span class="op">=</span> <span class="st">"to run the Shiny app"</span></span>
-<span>    <span class="op">)</span></span>
-<span>    <span class="fu">rlang</span><span class="fu">::</span><span class="fu"><a href="https://rlang.r-lib.org/reference/is_installed.html" class="external-link">check_installed</a></span><span class="op">(</span></span>
-<span>        <span class="st">"airway"</span>,</span>
-<span>        reason <span class="op">=</span> <span class="st">"to load the example dataset"</span></span>
-<span>    <span class="op">)</span></span>
 <span>    <span class="co"># ... rest of function</span></span>
 <span><span class="op">}</span></span></code></pre></div>
 </div>
@@ -575,57 +589,47 @@ you:</p>
 optional packages (like <code><a href="../reference/run_app.html">run_app()</a></code>), check all required
 packages <strong>once at the top</strong> of the function. Don’t scatter
 checks throughout the code — it leads to confusing partial failures:</p>
-<div class="sourceCode" id="cb12"><pre class="downlit sourceCode r">
-<code class="sourceCode R"><span><span class="co"># Good: check everything upfront</span></span>
-<span><span class="va">run_app</span> <span class="op">&lt;-</span> <span class="kw">function</span><span class="op">(</span><span class="va">...</span><span class="op">)</span> <span class="op">{</span></span>
-<span>    <span class="va">required_pkgs</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="st">"shiny"</span>, <span class="st">"bslib"</span>, <span class="st">"DT"</span><span class="op">)</span></span>
-<span>    <span class="va">missing_pkgs</span> <span class="op">&lt;-</span> <span class="va">required_pkgs</span><span class="op">[</span><span class="op">!</span><span class="fu"><a href="https://rdrr.io/r/base/lapply.html" class="external-link">sapply</a></span><span class="op">(</span><span class="va">required_pkgs</span>, <span class="va">requireNamespace</span>, quietly <span class="op">=</span> <span class="cn">TRUE</span><span class="op">)</span><span class="op">]</span></span>
-<span>    <span class="kw">if</span> <span class="op">(</span><span class="fu"><a href="https://rdrr.io/r/base/length.html" class="external-link">length</a></span><span class="op">(</span><span class="va">missing_pkgs</span><span class="op">)</span> <span class="op">&gt;</span> <span class="fl">0</span><span class="op">)</span> <span class="op">{</span></span>
-<span>        <span class="kw"><a href="https://rdrr.io/r/base/stop.html" class="external-link">stop</a></span><span class="op">(</span></span>
-<span>            <span class="st">"The following packages are required but not installed:\n"</span>,</span>
-<span>            <span class="fu"><a href="https://rdrr.io/r/base/paste.html" class="external-link">paste0</a></span><span class="op">(</span><span class="st">"  - "</span>, <span class="va">missing_pkgs</span>, collapse <span class="op">=</span> <span class="st">"\n"</span><span class="op">)</span>, <span class="st">"\n"</span>,</span>
-<span>            <span class="st">"Install them with: install.packages(c("</span>,</span>
-<span>            <span class="fu"><a href="https://rdrr.io/r/base/paste.html" class="external-link">paste0</a></span><span class="op">(</span><span class="st">'"'</span>, <span class="va">missing_pkgs</span>, <span class="st">'"'</span>, collapse <span class="op">=</span> <span class="st">", "</span><span class="op">)</span>, <span class="st">"))"</span>,</span>
-<span>            call. <span class="op">=</span> <span class="cn">FALSE</span></span>
-<span>        <span class="op">)</span></span>
+<div class="sourceCode" id="cb11"><pre class="downlit sourceCode r">
+<code class="sourceCode R"><span><span class="co"># The actual ADS8192::run_app() — three focused checks, then proceed</span></span>
+<span><span class="va">run_app</span> <span class="op">&lt;-</span> <span class="kw">function</span><span class="op">(</span><span class="va">se</span>, <span class="va">return_as_list</span> <span class="op">=</span> <span class="cn">FALSE</span>, <span class="va">...</span><span class="op">)</span> <span class="op">{</span></span>
+<span>    <span class="kw">if</span> <span class="op">(</span><span class="op">!</span><span class="fu"><a href="https://rdrr.io/r/base/ns-load.html" class="external-link">requireNamespace</a></span><span class="op">(</span><span class="st">"shiny"</span>, quietly <span class="op">=</span> <span class="cn">TRUE</span><span class="op">)</span><span class="op">)</span> <span class="op">{</span></span>
+<span>        <span class="kw"><a href="https://rdrr.io/r/base/stop.html" class="external-link">stop</a></span><span class="op">(</span><span class="st">"Package 'shiny' is required for app usage. Install with: "</span>,</span>
+<span>             <span class="st">"install.packages('shiny')"</span>, call. <span class="op">=</span> <span class="cn">FALSE</span><span class="op">)</span></span>
+<span>    <span class="op">}</span></span>
+<span>    <span class="kw">if</span> <span class="op">(</span><span class="op">!</span><span class="fu"><a href="https://rdrr.io/r/base/ns-load.html" class="external-link">requireNamespace</a></span><span class="op">(</span><span class="st">"bslib"</span>, quietly <span class="op">=</span> <span class="cn">TRUE</span><span class="op">)</span><span class="op">)</span> <span class="op">{</span></span>
+<span>        <span class="kw"><a href="https://rdrr.io/r/base/stop.html" class="external-link">stop</a></span><span class="op">(</span><span class="st">"Package 'bslib' is required for app usage. Install with: "</span>,</span>
+<span>             <span class="st">"install.packages('bslib')"</span>, call. <span class="op">=</span> <span class="cn">FALSE</span><span class="op">)</span></span>
+<span>    <span class="op">}</span></span>
+<span>    <span class="kw">if</span> <span class="op">(</span><span class="op">!</span><span class="fu"><a href="https://rdrr.io/r/base/ns-load.html" class="external-link">requireNamespace</a></span><span class="op">(</span><span class="st">"DT"</span>, quietly <span class="op">=</span> <span class="cn">TRUE</span><span class="op">)</span><span class="op">)</span> <span class="op">{</span></span>
+<span>        <span class="kw"><a href="https://rdrr.io/r/base/stop.html" class="external-link">stop</a></span><span class="op">(</span><span class="st">"Package 'DT' is required for app usage. Install with: "</span>,</span>
+<span>             <span class="st">"install.packages('DT')"</span>, call. <span class="op">=</span> <span class="cn">FALSE</span><span class="op">)</span></span>
 <span>    <span class="op">}</span></span>
 <span></span>
-<span>    <span class="kw">if</span> <span class="op">(</span><span class="op">!</span><span class="fu"><a href="https://rdrr.io/r/base/ns-load.html" class="external-link">requireNamespace</a></span><span class="op">(</span><span class="st">"airway"</span>, quietly <span class="op">=</span> <span class="cn">TRUE</span><span class="op">)</span><span class="op">)</span> <span class="op">{</span></span>
-<span>        <span class="kw"><a href="https://rdrr.io/r/base/stop.html" class="external-link">stop</a></span><span class="op">(</span></span>
-<span>            <span class="st">"Package 'airway' (Bioconductor) is required.\n"</span>,</span>
-<span>            <span class="st">"Install it with: BiocManager::install('airway')"</span>,</span>
-<span>            call. <span class="op">=</span> <span class="cn">FALSE</span></span>
-<span>        <span class="op">)</span></span>
+<span>    <span class="kw">if</span> <span class="op">(</span><span class="op">!</span><span class="fu"><a href="https://rdrr.io/r/methods/is.html" class="external-link">is</a></span><span class="op">(</span><span class="va">se</span>, <span class="st">"SummarizedExperiment"</span><span class="op">)</span><span class="op">)</span> <span class="op">{</span></span>
+<span>        <span class="kw"><a href="https://rdrr.io/r/base/stop.html" class="external-link">stop</a></span><span class="op">(</span><span class="st">"'se' must be a SummarizedExperiment object."</span>, call. <span class="op">=</span> <span class="cn">FALSE</span><span class="op">)</span></span>
 <span>    <span class="op">}</span></span>
 <span></span>
 <span>    <span class="co"># All dependencies confirmed — proceed</span></span>
-<span>    <span class="va">app</span> <span class="op">&lt;-</span> <span class="fu">shiny</span><span class="fu">::</span><span class="fu"><a href="https://rdrr.io/pkg/shiny/man/shinyApp.html" class="external-link">shinyApp</a></span><span class="op">(</span>ui <span class="op">=</span> <span class="fu">app_ui</span><span class="op">(</span><span class="op">)</span>, server <span class="op">=</span> <span class="va">app_server</span>, <span class="va">...</span><span class="op">)</span></span>
-<span>    <span class="fu">shiny</span><span class="fu">::</span><span class="fu"><a href="https://rdrr.io/pkg/shiny/man/runApp.html" class="external-link">runApp</a></span><span class="op">(</span><span class="va">app</span><span class="op">)</span></span>
+<span>    <span class="va">server</span> <span class="op">&lt;-</span> <span class="kw">function</span><span class="op">(</span><span class="va">input</span>, <span class="va">output</span>, <span class="va">session</span><span class="op">)</span> <span class="op">{</span></span>
+<span>        <span class="fu">app_server</span><span class="op">(</span><span class="va">input</span>, <span class="va">output</span>, <span class="va">session</span>, se <span class="op">=</span> <span class="va">se</span><span class="op">)</span></span>
+<span>    <span class="op">}</span></span>
+<span>    <span class="va">app</span> <span class="op">&lt;-</span> <span class="fu">shiny</span><span class="fu">::</span><span class="fu"><a href="https://rdrr.io/pkg/shiny/man/shinyApp.html" class="external-link">shinyApp</a></span><span class="op">(</span>ui <span class="op">=</span> <span class="fu">app_ui</span><span class="op">(</span><span class="op">)</span>, server <span class="op">=</span> <span class="va">server</span>, <span class="va">...</span><span class="op">)</span></span>
+<span></span>
+<span>    <span class="kw">if</span> <span class="op">(</span><span class="va">return_as_list</span><span class="op">)</span> <span class="op">{</span></span>
+<span>        <span class="kw"><a href="https://rdrr.io/r/base/function.html" class="external-link">return</a></span><span class="op">(</span><span class="fu"><a href="https://rdrr.io/r/base/list.html" class="external-link">list</a></span><span class="op">(</span>ui <span class="op">=</span> <span class="fu">app_ui</span><span class="op">(</span><span class="op">)</span>, server <span class="op">=</span> <span class="va">server</span><span class="op">)</span><span class="op">)</span></span>
+<span>    <span class="op">}</span> <span class="kw">else</span> <span class="op">{</span></span>
+<span>        <span class="va">app</span></span>
+<span>    <span class="op">}</span></span>
 <span><span class="op">}</span></span></code></pre></div>
 <p>This pattern is exactly what the <code><a href="../reference/run_app.html">ADS8192::run_app()</a></code>
 function uses.</p>
-</div>
-</div>
-<div class="section level3">
-<h3 id="graceful-fallbacks">Graceful Fallbacks<a class="anchor" aria-label="anchor" href="#graceful-fallbacks"></a>
-</h3>
-<p>What if DT isn’t installed? Handle it gracefully:</p>
-<div class="sourceCode" id="cb13"><pre class="downlit sourceCode r">
-<code class="sourceCode R"><span><span class="co"># In app_ui.R, instead of:</span></span>
-<span><span class="fu">DT</span><span class="fu">::</span><span class="fu"><a href="https://rdrr.io/pkg/DT/man/dataTableOutput.html" class="external-link">dataTableOutput</a></span><span class="op">(</span><span class="st">"table"</span><span class="op">)</span></span>
-<span></span>
-<span><span class="co"># Use:</span></span>
-<span><span class="kw">if</span> <span class="op">(</span><span class="fu"><a href="https://rdrr.io/r/base/ns-load.html" class="external-link">requireNamespace</a></span><span class="op">(</span><span class="st">"DT"</span>, quietly <span class="op">=</span> <span class="cn">TRUE</span><span class="op">)</span><span class="op">)</span> <span class="op">{</span></span>
-<span>    <span class="fu">DT</span><span class="fu">::</span><span class="fu"><a href="https://rdrr.io/pkg/DT/man/dataTableOutput.html" class="external-link">dataTableOutput</a></span><span class="op">(</span><span class="st">"table"</span><span class="op">)</span></span>
-<span><span class="op">}</span> <span class="kw">else</span> <span class="op">{</span></span>
-<span>    <span class="fu">shiny</span><span class="fu">::</span><span class="fu"><a href="https://rdrr.io/pkg/shiny/man/renderTable.html" class="external-link">tableOutput</a></span><span class="op">(</span><span class="st">"table"</span><span class="op">)</span>  <span class="co"># Basic fallback</span></span>
-<span><span class="op">}</span></span></code></pre></div>
 <blockquote>
 <p><strong>Exercise A:</strong> Ensure <code><a href="../reference/run_app.html">run_app()</a></code> works
 after installing from GitHub (no local relative paths). Test in a fresh
 R session.</p>
 </blockquote>
 <hr>
+</div>
 </div>
 </div>
 <div class="section level2">
@@ -635,60 +639,61 @@ R session.</p>
 <h3 id="document-run_app">Document run_app()<a class="anchor" aria-label="anchor" href="#document-run_app"></a>
 </h3>
 <p>We already added roxygen2 documentation. Run:</p>
-<div class="sourceCode" id="cb14"><pre class="downlit sourceCode r">
+<div class="sourceCode" id="cb12"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="fu">devtools</span><span class="fu">::</span><span class="fu">document</span><span class="op">(</span><span class="op">)</span></span></code></pre></div>
 <p>Verify:</p>
-<div class="sourceCode" id="cb15"><pre class="downlit sourceCode r">
+<div class="sourceCode" id="cb13"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="fu">devtools</span><span class="fu">::</span><span class="fu">load_all</span><span class="op">(</span><span class="op">)</span></span>
 <span><span class="op">?</span><span class="va">run_app</span></span></code></pre></div>
 </div>
 <div class="section level3">
 <h3 id="add-pkgdown-article">Add pkgdown Article<a class="anchor" aria-label="anchor" href="#add-pkgdown-article"></a>
 </h3>
-<div class="sourceCode" id="cb16"><pre class="downlit sourceCode r">
+<div class="sourceCode" id="cb14"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="fu">usethis</span><span class="fu">::</span><span class="fu">use_vignette</span><span class="op">(</span><span class="st">"shiny-app"</span>, title <span class="op">=</span> <span class="st">"Using the Shiny App"</span><span class="op">)</span></span></code></pre></div>
 <p>Edit <code>vignettes/shiny-app.Rmd</code>:</p>
-<div class="sourceCode" id="cb17"><pre class="sourceCode markdown"><code class="sourceCode markdown"><span id="cb17-1"><a href="#cb17-1" tabindex="-1"></a><span class="co">---</span></span>
-<span id="cb17-2"><a href="#cb17-2" tabindex="-1"></a><span class="an">title:</span><span class="co"> "Using the Shiny App"</span></span>
-<span id="cb17-3"><a href="#cb17-3" tabindex="-1"></a><span class="an">output:</span><span class="co"> rmarkdown::html_vignette</span></span>
-<span id="cb17-4"><a href="#cb17-4" tabindex="-1"></a><span class="an">vignette:</span><span class="co"> &gt;</span></span>
-<span id="cb17-5"><a href="#cb17-5" tabindex="-1"></a><span class="co">  %\VignetteIndexEntry{Using the Shiny App}</span></span>
-<span id="cb17-6"><a href="#cb17-6" tabindex="-1"></a><span class="co">  %\VignetteEngine{knitr::rmarkdown}</span></span>
-<span id="cb17-7"><a href="#cb17-7" tabindex="-1"></a><span class="co">  %\VignetteEncoding{UTF-8}</span></span>
-<span id="cb17-8"><a href="#cb17-8" tabindex="-1"></a><span class="co">---</span></span>
-<span id="cb17-9"><a href="#cb17-9" tabindex="-1"></a></span>
-<span id="cb17-10"><a href="#cb17-10" tabindex="-1"></a><span class="fu">## Launching the App</span></span>
-<span id="cb17-11"><a href="#cb17-11" tabindex="-1"></a></span>
-<span id="cb17-12"><a href="#cb17-12" tabindex="-1"></a>After installing ADS8192, launch the interactive PCA explorer:</span>
-<span id="cb17-13"><a href="#cb17-13" tabindex="-1"></a></span>
-<span id="cb17-14"><a href="#cb17-14" tabindex="-1"></a><span class="in">```r</span></span>
-<span id="cb17-15"><a href="#cb17-15" tabindex="-1"></a><span class="fu">library</span>(ADS8192)</span>
-<span id="cb17-16"><a href="#cb17-16" tabindex="-1"></a><span class="fu">run_app</span>()</span>
-<span id="cb17-17"><a href="#cb17-17" tabindex="-1"></a><span class="in">```</span></span>
-<span id="cb17-18"><a href="#cb17-18" tabindex="-1"></a></span>
-<span id="cb17-19"><a href="#cb17-19" tabindex="-1"></a><span class="fu">## Features</span></span>
-<span id="cb17-20"><a href="#cb17-20" tabindex="-1"></a></span>
-<span id="cb17-21"><a href="#cb17-21" tabindex="-1"></a><span class="fu">### Analysis Settings</span></span>
-<span id="cb17-22"><a href="#cb17-22" tabindex="-1"></a></span>
-<span id="cb17-23"><a href="#cb17-23" tabindex="-1"></a><span class="ss">- </span>**Top variable genes**: Number of most variable genes to include in PCA</span>
-<span id="cb17-24"><a href="#cb17-24" tabindex="-1"></a><span class="ss">- </span>**Log-transform**: Apply log2(x + 1) transformation to counts</span>
-<span id="cb17-25"><a href="#cb17-25" tabindex="-1"></a><span class="ss">- </span>**Scale features**: Center and scale genes before PCA</span>
-<span id="cb17-26"><a href="#cb17-26" tabindex="-1"></a></span>
-<span id="cb17-27"><a href="#cb17-27" tabindex="-1"></a><span class="fu">### Visualization Options</span></span>
-<span id="cb17-28"><a href="#cb17-28" tabindex="-1"></a></span>
-<span id="cb17-29"><a href="#cb17-29" tabindex="-1"></a><span class="ss">- </span>**Color by**: Choose a metadata column to color samples</span>
-<span id="cb17-30"><a href="#cb17-30" tabindex="-1"></a><span class="ss">- </span>**Shape by**: Optionally map a second variable to point shape</span>
-<span id="cb17-31"><a href="#cb17-31" tabindex="-1"></a><span class="ss">- </span>**Point size**: Adjust point size for visibility</span>
-<span id="cb17-32"><a href="#cb17-32" tabindex="-1"></a></span>
-<span id="cb17-33"><a href="#cb17-33" tabindex="-1"></a><span class="fu">### Outputs</span></span>
-<span id="cb17-34"><a href="#cb17-34" tabindex="-1"></a></span>
-<span id="cb17-35"><a href="#cb17-35" tabindex="-1"></a><span class="ss">1. </span>**PCA Plot**: Interactive scatter plot of principal components</span>
-<span id="cb17-36"><a href="#cb17-36" tabindex="-1"></a><span class="ss">2. </span>**Variance**: Bar chart showing variance explained by each PC</span>
-<span id="cb17-37"><a href="#cb17-37" tabindex="-1"></a><span class="ss">3. </span>**Sample Data**: Table of PCA scores merged with sample metadata</span>
-<span id="cb17-38"><a href="#cb17-38" tabindex="-1"></a></span>
-<span id="cb17-39"><a href="#cb17-39" tabindex="-1"></a><span class="fu">### Downloading Results</span></span>
-<span id="cb17-40"><a href="#cb17-40" tabindex="-1"></a></span>
-<span id="cb17-41"><a href="#cb17-41" tabindex="-1"></a>Click "Download Plot" to save the current PCA plot as a PNG file.</span></code></pre></div>
+<div class="sourceCode" id="cb15"><pre class="sourceCode markdown"><code class="sourceCode markdown"><span id="cb15-1"><a href="#cb15-1" tabindex="-1"></a><span class="co">---</span></span>
+<span id="cb15-2"><a href="#cb15-2" tabindex="-1"></a><span class="an">title:</span><span class="co"> "Using the Shiny App"</span></span>
+<span id="cb15-3"><a href="#cb15-3" tabindex="-1"></a><span class="an">output:</span><span class="co"> rmarkdown::html_vignette</span></span>
+<span id="cb15-4"><a href="#cb15-4" tabindex="-1"></a><span class="an">vignette:</span><span class="co"> &gt;</span></span>
+<span id="cb15-5"><a href="#cb15-5" tabindex="-1"></a><span class="co">  %\VignetteIndexEntry{Using the Shiny App}</span></span>
+<span id="cb15-6"><a href="#cb15-6" tabindex="-1"></a><span class="co">  %\VignetteEngine{knitr::rmarkdown}</span></span>
+<span id="cb15-7"><a href="#cb15-7" tabindex="-1"></a><span class="co">  %\VignetteEncoding{UTF-8}</span></span>
+<span id="cb15-8"><a href="#cb15-8" tabindex="-1"></a><span class="co">---</span></span>
+<span id="cb15-9"><a href="#cb15-9" tabindex="-1"></a></span>
+<span id="cb15-10"><a href="#cb15-10" tabindex="-1"></a><span class="fu">## Launching the App</span></span>
+<span id="cb15-11"><a href="#cb15-11" tabindex="-1"></a></span>
+<span id="cb15-12"><a href="#cb15-12" tabindex="-1"></a>After installing ADS8192, launch the interactive PCA explorer:</span>
+<span id="cb15-13"><a href="#cb15-13" tabindex="-1"></a></span>
+<span id="cb15-14"><a href="#cb15-14" tabindex="-1"></a><span class="in">```r</span></span>
+<span id="cb15-15"><a href="#cb15-15" tabindex="-1"></a><span class="fu">library</span>(ADS8192)</span>
+<span id="cb15-16"><a href="#cb15-16" tabindex="-1"></a><span class="fu">data</span>(<span class="st">"example_se"</span>)</span>
+<span id="cb15-17"><a href="#cb15-17" tabindex="-1"></a><span class="fu">run_app</span>(<span class="at">se =</span> example_se)</span>
+<span id="cb15-18"><a href="#cb15-18" tabindex="-1"></a><span class="in">```</span></span>
+<span id="cb15-19"><a href="#cb15-19" tabindex="-1"></a></span>
+<span id="cb15-20"><a href="#cb15-20" tabindex="-1"></a><span class="fu">## Features</span></span>
+<span id="cb15-21"><a href="#cb15-21" tabindex="-1"></a></span>
+<span id="cb15-22"><a href="#cb15-22" tabindex="-1"></a><span class="fu">### Analysis Settings</span></span>
+<span id="cb15-23"><a href="#cb15-23" tabindex="-1"></a></span>
+<span id="cb15-24"><a href="#cb15-24" tabindex="-1"></a><span class="ss">- </span>**Top variable genes**: Number of most variable genes to include in PCA</span>
+<span id="cb15-25"><a href="#cb15-25" tabindex="-1"></a><span class="ss">- </span>**Log-transform**: Apply log2(x + 1) transformation to counts</span>
+<span id="cb15-26"><a href="#cb15-26" tabindex="-1"></a><span class="ss">- </span>**Scale features**: Center and scale genes before PCA</span>
+<span id="cb15-27"><a href="#cb15-27" tabindex="-1"></a></span>
+<span id="cb15-28"><a href="#cb15-28" tabindex="-1"></a><span class="fu">### Visualization Options</span></span>
+<span id="cb15-29"><a href="#cb15-29" tabindex="-1"></a></span>
+<span id="cb15-30"><a href="#cb15-30" tabindex="-1"></a><span class="ss">- </span>**Color by**: Choose a metadata column to color samples</span>
+<span id="cb15-31"><a href="#cb15-31" tabindex="-1"></a><span class="ss">- </span>**Shape by**: Optionally map a second variable to point shape</span>
+<span id="cb15-32"><a href="#cb15-32" tabindex="-1"></a><span class="ss">- </span>**Point size**: Adjust point size for visibility</span>
+<span id="cb15-33"><a href="#cb15-33" tabindex="-1"></a></span>
+<span id="cb15-34"><a href="#cb15-34" tabindex="-1"></a><span class="fu">### Outputs</span></span>
+<span id="cb15-35"><a href="#cb15-35" tabindex="-1"></a></span>
+<span id="cb15-36"><a href="#cb15-36" tabindex="-1"></a><span class="ss">1. </span>**PCA Plot**: Interactive scatter plot of principal components</span>
+<span id="cb15-37"><a href="#cb15-37" tabindex="-1"></a><span class="ss">2. </span>**Variance**: Bar chart showing variance explained by each PC</span>
+<span id="cb15-38"><a href="#cb15-38" tabindex="-1"></a><span class="ss">3. </span>**Sample Data**: Table of PCA scores merged with sample metadata</span>
+<span id="cb15-39"><a href="#cb15-39" tabindex="-1"></a></span>
+<span id="cb15-40"><a href="#cb15-40" tabindex="-1"></a><span class="fu">### Downloading Results</span></span>
+<span id="cb15-41"><a href="#cb15-41" tabindex="-1"></a></span>
+<span id="cb15-42"><a href="#cb15-42" tabindex="-1"></a>Click "Download Plot" to save the current PCA plot as a PNG file.</span></code></pre></div>
 <blockquote>
 <p><strong>Exercise B:</strong> Add screenshots to your vignette to make
 it more visual.</p>
@@ -702,7 +707,7 @@ it more visual.</p>
 <div class="section level3">
 <h3 id="adding-tabs-with-multiple-views">Adding Tabs with Multiple Views<a class="anchor" aria-label="anchor" href="#adding-tabs-with-multiple-views"></a>
 </h3>
-<div class="sourceCode" id="cb18"><pre class="downlit sourceCode r">
+<div class="sourceCode" id="cb16"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="fu">bslib</span><span class="fu">::</span><span class="fu"><a href="https://rstudio.github.io/bslib/reference/navset.html" class="external-link">navset_card_tab</a></span><span class="op">(</span></span>
 <span>    <span class="fu">bslib</span><span class="fu">::</span><span class="fu"><a href="https://rstudio.github.io/bslib/reference/nav-items.html" class="external-link">nav_panel</a></span><span class="op">(</span><span class="st">"PCA Plot"</span>, <span class="fu"><a href="https://rdrr.io/pkg/shiny/man/plotOutput.html" class="external-link">plotOutput</a></span><span class="op">(</span><span class="st">"pca_plot"</span><span class="op">)</span><span class="op">)</span>,</span>
 <span>    <span class="fu">bslib</span><span class="fu">::</span><span class="fu"><a href="https://rstudio.github.io/bslib/reference/nav-items.html" class="external-link">nav_panel</a></span><span class="op">(</span><span class="st">"Loadings"</span>, <span class="fu"><a href="https://rdrr.io/pkg/shiny/man/plotOutput.html" class="external-link">plotOutput</a></span><span class="op">(</span><span class="st">"loadings_plot"</span><span class="op">)</span><span class="op">)</span>,</span>
@@ -714,7 +719,7 @@ it more visual.</p>
 <h3 id="interactive-brushing">Interactive Brushing<a class="anchor" aria-label="anchor" href="#interactive-brushing"></a>
 </h3>
 <p>Let users select points on the plot:</p>
-<div class="sourceCode" id="cb19"><pre class="downlit sourceCode r">
+<div class="sourceCode" id="cb17"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="co"># UI</span></span>
 <span><span class="fu"><a href="https://rdrr.io/pkg/shiny/man/plotOutput.html" class="external-link">plotOutput</a></span><span class="op">(</span><span class="st">"pca_plot"</span>, brush <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/pkg/shiny/man/brushOpts.html" class="external-link">brushOpts</a></span><span class="op">(</span>id <span class="op">=</span> <span class="st">"plot_brush"</span><span class="op">)</span><span class="op">)</span></span>
 <span></span>
@@ -731,7 +736,7 @@ it more visual.</p>
 <div class="section level4">
 <h4 id="download-plot">Download Plot<a class="anchor" aria-label="anchor" href="#download-plot"></a>
 </h4>
-<div class="sourceCode" id="cb20"><pre class="downlit sourceCode r">
+<div class="sourceCode" id="cb18"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="va">output</span><span class="op">$</span><span class="va">download_plot</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/pkg/shiny/man/downloadHandler.html" class="external-link">downloadHandler</a></span><span class="op">(</span></span>
 <span>    filename <span class="op">=</span> <span class="kw">function</span><span class="op">(</span><span class="op">)</span> <span class="fu"><a href="https://rdrr.io/r/base/paste.html" class="external-link">paste0</a></span><span class="op">(</span><span class="st">"pca_"</span>, <span class="fu"><a href="https://rdrr.io/r/base/Sys.time.html" class="external-link">Sys.Date</a></span><span class="op">(</span><span class="op">)</span>, <span class="st">".png"</span><span class="op">)</span>,</span>
 <span>    content <span class="op">=</span> <span class="kw">function</span><span class="op">(</span><span class="va">file</span><span class="op">)</span> <span class="op">{</span></span>
@@ -742,7 +747,7 @@ it more visual.</p>
 <div class="section level4">
 <h4 id="download-data-tsv">Download Data (TSV)<a class="anchor" aria-label="anchor" href="#download-data-tsv"></a>
 </h4>
-<div class="sourceCode" id="cb21"><pre class="downlit sourceCode r">
+<div class="sourceCode" id="cb19"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="va">output</span><span class="op">$</span><span class="va">download_scores</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/pkg/shiny/man/downloadHandler.html" class="external-link">downloadHandler</a></span><span class="op">(</span></span>
 <span>    filename <span class="op">=</span> <span class="kw">function</span><span class="op">(</span><span class="op">)</span> <span class="fu"><a href="https://rdrr.io/r/base/paste.html" class="external-link">paste0</a></span><span class="op">(</span><span class="st">"pca_scores_"</span>, <span class="fu"><a href="https://rdrr.io/r/base/Sys.time.html" class="external-link">Sys.Date</a></span><span class="op">(</span><span class="op">)</span>, <span class="st">".tsv"</span><span class="op">)</span>,</span>
 <span>    content <span class="op">=</span> <span class="kw">function</span><span class="op">(</span><span class="va">file</span><span class="op">)</span> <span class="op">{</span></span>
@@ -778,7 +783,7 @@ to prevent it.</p>
 <h4 id="test-the-logic-not-the-app">1. Test the Logic, Not the App<a class="anchor" aria-label="anchor" href="#test-the-logic-not-the-app"></a>
 </h4>
 <p>The best approach: keep logic in testable functions, test those:</p>
-<div class="sourceCode" id="cb22"><pre class="downlit sourceCode r">
+<div class="sourceCode" id="cb20"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="co"># The core logic is already tested</span></span>
 <span><span class="fu"><a href="https://testthat.r-lib.org/reference/test_that.html" class="external-link">test_that</a></span><span class="op">(</span><span class="st">"run_pca works"</span>, <span class="op">{</span> <span class="va">...</span> <span class="op">}</span><span class="op">)</span></span>
 <span><span class="fu"><a href="https://testthat.r-lib.org/reference/test_that.html" class="external-link">test_that</a></span><span class="op">(</span><span class="st">"plot_pca works"</span>, <span class="op">{</span> <span class="va">...</span> <span class="op">}</span><span class="op">)</span></span>
@@ -789,14 +794,14 @@ to prevent it.</p>
 <h4 id="smoke-tests-with-shinytest2">2. Smoke Tests with shinytest2<a class="anchor" aria-label="anchor" href="#smoke-tests-with-shinytest2"></a>
 </h4>
 <p>For end-to-end testing:</p>
-<div class="sourceCode" id="cb23"><pre class="downlit sourceCode r">
+<div class="sourceCode" id="cb21"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="co"># Install</span></span>
 <span><span class="fu"><a href="https://rdrr.io/r/utils/install.packages.html" class="external-link">install.packages</a></span><span class="op">(</span><span class="st">"shinytest2"</span><span class="op">)</span></span>
 <span></span>
 <span><span class="co"># Set up</span></span>
 <span><span class="fu">shinytest2</span><span class="fu">::</span><span class="fu">use_shinytest2</span><span class="op">(</span><span class="op">)</span></span></code></pre></div>
 <p>Create <code>tests/testthat/test-app.R</code>:</p>
-<div class="sourceCode" id="cb24"><pre class="downlit sourceCode r">
+<div class="sourceCode" id="cb22"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="fu"><a href="https://testthat.r-lib.org/reference/test_that.html" class="external-link">test_that</a></span><span class="op">(</span><span class="st">"app starts without error"</span>, <span class="op">{</span></span>
 <span>    <span class="fu"><a href="https://testthat.r-lib.org/reference/skip.html" class="external-link">skip_on_cran</a></span><span class="op">(</span><span class="op">)</span>  <span class="co"># Skip on CRAN (no display)</span></span>
 <span>    <span class="fu"><a href="https://testthat.r-lib.org/reference/skip.html" class="external-link">skip_if_not_installed</a></span><span class="op">(</span><span class="st">"shinytest2"</span><span class="op">)</span></span>
@@ -905,7 +910,7 @@ server (common in regulated environments like healthcare/research)</li>
 <li>St. Jude users: check with your IT department for institutional
 access</li>
 </ul>
-<div class="sourceCode" id="cb25"><pre class="downlit sourceCode r">
+<div class="sourceCode" id="cb23"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="co"># Deploy to Posit Connect using rsconnect</span></span>
 <span><span class="fu"><a href="https://rdrr.io/r/utils/install.packages.html" class="external-link">install.packages</a></span><span class="op">(</span><span class="st">"rsconnect"</span><span class="op">)</span></span>
 <span><span class="fu">rsconnect</span><span class="fu">::</span><span class="fu">deployApp</span><span class="op">(</span></span>
@@ -918,10 +923,10 @@ access</li>
 <h4 id="option-2-self-hosted-shiny-server-open-source">Option 2: Self-hosted Shiny Server (Open Source)<a class="anchor" aria-label="anchor" href="#option-2-self-hosted-shiny-server-open-source"></a>
 </h4>
 <p>Run Shiny Server on any Linux VM or HPC login node:</p>
-<div class="sourceCode" id="cb26"><pre class="sourceCode bash"><code class="sourceCode bash"><span id="cb26-1"><a href="#cb26-1" tabindex="-1"></a><span class="co"># On a Linux server</span></span>
-<span id="cb26-2"><a href="#cb26-2" tabindex="-1"></a><span class="fu">sudo</span> apt-get install r-base</span>
-<span id="cb26-3"><a href="#cb26-3" tabindex="-1"></a><span class="co"># Install Shiny Server: https://posit.co/download/shiny-server/</span></span>
-<span id="cb26-4"><a href="#cb26-4" tabindex="-1"></a><span class="co"># Place your app.R in /srv/shiny-server/</span></span></code></pre></div>
+<div class="sourceCode" id="cb24"><pre class="sourceCode bash"><code class="sourceCode bash"><span id="cb24-1"><a href="#cb24-1" tabindex="-1"></a><span class="co"># On a Linux server</span></span>
+<span id="cb24-2"><a href="#cb24-2" tabindex="-1"></a><span class="fu">sudo</span> apt-get install r-base</span>
+<span id="cb24-3"><a href="#cb24-3" tabindex="-1"></a><span class="co"># Install Shiny Server: https://posit.co/download/shiny-server/</span></span>
+<span id="cb24-4"><a href="#cb24-4" tabindex="-1"></a><span class="co"># Place your app.R in /srv/shiny-server/</span></span></code></pre></div>
 <p>Your app is then accessible at
 <code>http://your-server:3838/app-name/</code>.</p>
 <ul>
@@ -941,8 +946,8 @@ RStudio environment:</p>
 <li>Install your package:
 <code>remotes::install_github("you/ADS8192")</code>
 </li>
-<li>Create an <code>app.R</code> that calls
-<code><a href="../reference/run_app.html">ADS8192::run_app()</a></code>
+<li>Use <code>inst/app/app.R</code> (already in your repo) which calls
+<code>run_app(se = example_se, return_as_list = TRUE)</code>
 </li>
 <li>Click <strong>Publish</strong> → <strong>Shiny</strong>
 </li>
@@ -972,12 +977,14 @@ serve pipeline users better</li>
 <h3 id="record-the-url">Record the URL<a class="anchor" aria-label="anchor" href="#record-the-url"></a>
 </h3>
 <p>After deploying, add to your README:</p>
-<div class="sourceCode" id="cb27"><pre class="sourceCode markdown"><code class="sourceCode markdown"><span id="cb27-1"><a href="#cb27-1" tabindex="-1"></a><span class="fu">## Interactive App</span></span>
-<span id="cb27-2"><a href="#cb27-2" tabindex="-1"></a></span>
-<span id="cb27-3"><a href="#cb27-3" tabindex="-1"></a>Run locally:</span>
-<span id="cb27-4"><a href="#cb27-4" tabindex="-1"></a></span>
-<span id="cb27-5"><a href="#cb27-5" tabindex="-1"></a><span class="in">```r</span></span>
-<span id="cb27-6"><a href="#cb27-6" tabindex="-1"></a>ADS8192<span class="sc">::</span><span class="fu">run_app</span>()</span></code></pre></div>
+<div class="sourceCode" id="cb25"><pre class="sourceCode markdown"><code class="sourceCode markdown"><span id="cb25-1"><a href="#cb25-1" tabindex="-1"></a><span class="fu">## Interactive App</span></span>
+<span id="cb25-2"><a href="#cb25-2" tabindex="-1"></a></span>
+<span id="cb25-3"><a href="#cb25-3" tabindex="-1"></a>Run locally:</span>
+<span id="cb25-4"><a href="#cb25-4" tabindex="-1"></a></span>
+<span id="cb25-5"><a href="#cb25-5" tabindex="-1"></a><span class="in">```r</span></span>
+<span id="cb25-6"><a href="#cb25-6" tabindex="-1"></a><span class="fu">library</span>(ADS8192)</span>
+<span id="cb25-7"><a href="#cb25-7" tabindex="-1"></a><span class="fu">data</span>(<span class="st">"example_se"</span>)</span>
+<span id="cb25-8"><a href="#cb25-8" tabindex="-1"></a>ADS8192<span class="sc">::</span><span class="fu">run_app</span>(<span class="at">se =</span> example_se)</span></code></pre></div>
 <p>Or access the deployed version at: <a href="https://your-deployment-url/" class="external-link uri">https://your-deployment-url/</a></p>
 <pre><code>
 ---
@@ -1023,7 +1030,9 @@ From a fresh R session:
 remotes::install_github("you/ADS8192")
 
 # Run the app
-ADS8192::run_app()</code></pre>
+library(ADS8192)
+data("example_se")
+ADS8192::run_app(se = example_se)</code></pre>
 </div>
 <div class="section level3">
 <h3 id="micro-task-2-update-readme">Micro-task 2: Update README<a class="anchor" aria-label="anchor" href="#micro-task-2-update-readme"></a>
@@ -1034,12 +1043,6 @@ ADS8192::run_app()</code></pre>
 <li>Screenshot or GIF (optional but nice!)</li>
 <li>Link to deployed version (if you deployed)</li>
 </ul>
-</div>
-<div class="section level3">
-<h3 id="optional-deploy">Optional: Deploy<a class="anchor" aria-label="anchor" href="#optional-deploy"></a>
-</h3>
-<p>Deploy to Posit Connect or Posit Cloud and record the URL in your
-README.</p>
 <hr>
 </div>
 </div>
@@ -1083,7 +1086,7 @@ README.</p>
 <div class="section level2">
 <h2 id="session-info">Session Info<a class="anchor" aria-label="anchor" href="#session-info"></a>
 </h2>
-<div class="sourceCode" id="cb30"><pre class="downlit sourceCode r">
+<div class="sourceCode" id="cb28"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="fu"><a href="https://rdrr.io/r/utils/sessionInfo.html" class="external-link">sessionInfo</a></span><span class="op">(</span><span class="op">)</span></span></code></pre></div>
 <pre><code><span><span class="co">## R version 4.5.3 (2026-03-11)</span></span>
 <span><span class="co">## Platform: x86_64-pc-linux-gnu</span></span>
