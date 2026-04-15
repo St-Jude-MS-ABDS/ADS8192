@@ -649,8 +649,7 @@ equivalents.
 
     Package suggested but not available: 'foo'
 
-**Fix:** Wrap example code in `\dontrun{}` or add the package to
-Suggests.
+**Fix:** Add the package to Suggests.
 
 ------------------------------------------------------------------------
 
@@ -663,10 +662,10 @@ tracking the code properly.
 
 ``` r
 # Stage all files
-# git add -A
+# git add .
 
 # Commit
-# git commit -m "Initial package structure with core PCA functions"
+# git commit -m "Initial package structure with core functions"
 
 # Push
 # git push
@@ -682,7 +681,7 @@ Now we can try installing the package as an end-user would. Open a
 
 ``` r
 # Install from GitHub
-# remotes::install_github("your-username/ADS8192")
+# remotes::install_github("St-Jude-MS-ABDS/ADS8192")
 
 # Load and test your package, here's what mine looks like:
 library(ADS8192)

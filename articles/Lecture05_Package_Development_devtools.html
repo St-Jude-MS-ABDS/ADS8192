@@ -748,8 +748,7 @@ em-dashes) with ASCII equivalents.</p>
 <h4 id="missing-suggests-for-examples">4. Missing Suggests for Examples<a class="anchor" aria-label="anchor" href="#missing-suggests-for-examples"></a>
 </h4>
 <pre><code>Package suggested but not available: 'foo'</code></pre>
-<p><strong>Fix:</strong> Wrap example code in <code>\dontrun{}</code> or
-add the package to Suggests.</p>
+<p><strong>Fix:</strong> Add the package to Suggests.</p>
 <hr>
 </div>
 </div>
@@ -764,10 +763,10 @@ tracking the code properly.</p>
 </h3>
 <div class="sourceCode" id="cb30"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="co"># Stage all files</span></span>
-<span><span class="co"># git add -A</span></span>
+<span><span class="co"># git add .</span></span>
 <span></span>
 <span><span class="co"># Commit</span></span>
-<span><span class="co"># git commit -m "Initial package structure with core PCA functions"</span></span>
+<span><span class="co"># git commit -m "Initial package structure with core functions"</span></span>
 <span></span>
 <span><span class="co"># Push</span></span>
 <span><span class="co"># git push</span></span></code></pre></div>
@@ -781,7 +780,7 @@ for Git.</p>
 <strong>fresh R session</strong> and try:</p>
 <div class="sourceCode" id="cb31"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="co"># Install from GitHub</span></span>
-<span><span class="co"># remotes::install_github("your-username/ADS8192")</span></span>
+<span><span class="co"># remotes::install_github("St-Jude-MS-ABDS/ADS8192")</span></span>
 <span></span>
 <span><span class="co"># Load and test your package, here's what mine looks like:</span></span>
 <span><span class="kw"><a href="https://rdrr.io/r/base/library.html" class="external-link">library</a></span><span class="op">(</span><span class="va"><a href="https://github.com/St-Jude-MS-ABDS/ADS8192" class="external-link">ADS8192</a></span><span class="op">)</span></span>

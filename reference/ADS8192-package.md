@@ -5,7 +5,7 @@ Scientific Applications. Demonstrates separation of concerns and layered
 architecture: PCA analysis functions for SummarizedExperiment objects, a
 Shiny interactive explorer, and a command-line interface via Rapp.
 Includes lectures, quizzes, and a grading rubric. Students build their
-own packages following this model.
+own packages from simple raw project code following this model.
 
 Course materials and reference implementation for ADS 8192. Demonstrates
 separation of concerns and layered architecture: PCA analysis functions
