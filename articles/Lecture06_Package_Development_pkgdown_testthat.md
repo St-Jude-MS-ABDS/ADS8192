@@ -718,8 +718,8 @@ environment variables, and “steps” lists the individual steps to
 execute, such as checking out the code, setting up R and pandoc,
 installing dependencies, and running R CMD check.
 
-There are a whole host of pre-built general and language-task specific
-actions/workflows for R packages that you can find in the [usethis
+There are a whole host of pre-built general and language-specific
+actions/workflows that you can find in the [usethis
 documentation](https://usethis.r-lib.org/reference/use_github_action.html)
 and the [GitHub Actions
 Marketplace](https://github.com/marketplace?type=actions).
@@ -920,7 +920,7 @@ stress in the long run.
 
 ## Summary
 
-Today we:
+In this lab, we:
 
 1.  Set up testthat and wrote unit tests
 2.  Practiced test-driven development (TDD)
@@ -932,7 +932,7 @@ Today we:
 
 Package has tests and CI, and a pkgdown site built directly from GitHub.
 
-At this point, people could indepedently find, understand, and actually
+At this point, people could independently find, understand, and actually
 use your package. This is a point that many projects never hit, but it’s
 also the point at which software becomes a real product.
 
