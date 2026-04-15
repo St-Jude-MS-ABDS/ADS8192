@@ -1,57 +1,60 @@
 #' Shiny App UI
 #'
+#' @import shiny
+#' @importFrom bslib page_sidebar sidebar navset_card_tab nav_panel bs_theme
 #' @return A Shiny UI definition
 #' @noRd
 app_ui <- function() {
-    bslib::page_sidebar(
+    page_sidebar(
         title = "ADS 8192 PCA Explorer",
-        theme = bslib::bs_theme(bootswatch = "flatly"),
-        sidebar = bslib::sidebar(
-            shiny::h4(shiny::icon("cogs"), "Analysis Settings"),
-            shiny::numericInput(
+        theme = bs_theme(bootswatch = "flatly"),
+        sidebar = sidebar(
+            h4(icon("cogs"), "Analysis Settings"),
+            selectInput("assay_name", "Assay:", choices = NULL),
+            numericInput(
                 "n_top",
                 "Top variable genes:",
-                value = 500, min = 50, max = 10000, step = 50
+                value = 500, min = 5, step = 50
             ),
-            shiny::checkboxInput("log_transform", "Log-transform counts", TRUE),
-            shiny::checkboxInput("scale", "Scale features", TRUE),
-            shiny::hr(),
-            shiny::h4(shiny::icon("palette"), "Visualization"),
-            shiny::selectInput("color_by", "Color by:", choices = NULL),
-            shiny::selectInput("shape_by", "Shape by:", choices = NULL),
-            shiny::fluidRow(
-                shiny::column(
+            checkboxInput("log_transform", "Log-transform counts", TRUE),
+            checkboxInput("scale", "Scale features", TRUE),
+            hr(),
+            h4(icon("palette"), "Visualization"),
+            selectInput("color_by", "Color by:", choices = NULL),
+            selectInput("shape_by", "Shape by:", choices = NULL),
+            fluidRow(
+                column(
                     6,
-                    shiny::numericInput("pc_x", "PC X:",
+                    numericInput("pc_x", "PC X:",
                         value = 1,
                         min = 1, max = 8
                     )
                 ),
-                shiny::column(
+                column(
                     6,
-                    shiny::numericInput("pc_y", "PC Y:",
+                    numericInput("pc_y", "PC Y:",
                         value = 2,
                         min = 1, max = 8
                     )
                 )
             ),
-            shiny::sliderInput("point_size", "Point size:",
+            sliderInput("point_size", "Point size:",
                 value = 4,
                 min = 1, max = 10, step = 1
             ),
-            shiny::hr(),
-            shiny::downloadButton("download_plot", "Download Plot")
+            hr(),
+            downloadButton("download_plot", "Download Plot")
         ),
-        bslib::navset_card_tab(
-            bslib::nav_panel(
+        navset_card_tab(
+            nav_panel(
                 "PCA Plot",
-                shiny::plotOutput("pca_plot", height = "500px")
+                plotOutput("pca_plot", height = "500px")
             ),
-            bslib::nav_panel(
+            nav_panel(
                 "Variance",
-                shiny::plotOutput("variance_plot", height = "400px")
+                plotOutput("variance_plot", height = "400px")
             ),
-            bslib::nav_panel(
+            nav_panel(
                 "Sample Data",
                 DT::dataTableOutput("scores_table")
             )

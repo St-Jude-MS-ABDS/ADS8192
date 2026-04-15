@@ -1,12 +1,8 @@
-# Launch the ADS8192 PCA Explorer Shiny application.
-# This file exists for compatibility with shiny::runApp().
-# Preferred method: ADS8192::run_app()
+library(ADS8192)
+library(shiny)
 
-if (!requireNamespace("ADS8192", quietly = TRUE)) {
-    stop("Please install ADS8192 first: remotes::install_github('YOUR-USERNAME/ADS8192')")
-}
+data("example_se")
 
-shiny::shinyApp(
-    ui = ADS8192:::app_ui(),
-    server = ADS8192:::app_server
-)
+app <- run_app(se = example_se, return_as_list = TRUE)
+
+shinyApp(ui = app$ui, server = app$server)

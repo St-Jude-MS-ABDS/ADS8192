@@ -4,22 +4,32 @@
 \alias{run_app}
 \title{Run the PCA Explorer Shiny Application}
 \usage{
-run_app(...)
+run_app(se, return_as_list = FALSE, ...)
 }
 \arguments{
+\item{se}{A \code{\link[SummarizedExperiment]{SummarizedExperiment}} object
+to explore.}
+
+\item{return_as_list}{If \code{TRUE}, returns a list containing the UI and
+server functions instead of launching the app. Useful for certain deployment
+scenarios.}
+
 \item{...}{Additional arguments passed to \code{\link[shiny]{shinyApp}()}.}
 }
 \value{
-A Shiny app object (invisibly).
+A Shiny app object or a named list containing the UI and
+server functions if \code{return_as_list = TRUE}.
 }
 \description{
 Launches an interactive Shiny application for exploring PCA results
-on SummarizedExperiment data. The app uses the \code{airway} dataset
-by default and wraps the package's core analysis functions.
+on SummarizedExperiment data. The app allows users to select assays, adjust PCA parameters,
+and visualize results with customizable options.
 }
 \examples{
-\dontrun{
-run_app()
+if (interactive()) {
+  library(ADS8192)
+  data("example_se")
+  run_app(se = example_se)
 }
 }
 \author{
