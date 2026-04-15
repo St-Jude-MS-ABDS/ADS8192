@@ -41,7 +41,7 @@ script. But scripts have limitations:
 | Paths break when you move files | Installed; works anywhere                                                          |
 | No formal dependency management | Explicit dependency management                                                     |
 | No formal help documentation    | [`?run_pca`](https://st-jude-ms-abds.github.io/ADS8192/reference/run_pca.md) works |
-| Hard to share                   | `install_github("you/ADS8192")`                                                    |
+| Hard to share                   | `remotes::install_github("St-Jude-MS-ABDS/ADS8192")`                               |
 | No tests to ensure correctness  | Automated testing simple to implement                                              |
 
 An R package is barely more complicated than a script, but it provides
