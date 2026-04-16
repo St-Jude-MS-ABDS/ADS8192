@@ -553,9 +553,8 @@ Or access the deployed example at: <https://your-deployment-url/>
 
     1. Packaged the Shiny app with proper structure (`R/` for logic, `inst/app/` for deployed example)
     2. Added `run_app()` as a documented, exported function
-    3. Added interactive features (tabs, download handlers)
-    4. Discussed testing strategies
-    5. Discussed app deployment options
+    3. Discussed testing strategies
+    4. Discussed app deployment options
 
     ## Package Milestone
 
