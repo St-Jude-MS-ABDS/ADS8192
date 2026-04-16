@@ -12,7 +12,8 @@ package logic.
 By the end of this session, you will be able to:
 
 1.  Add a Shiny application to the package as a function and document it
-2.  Deploy the application to a hosting platform (Posit Cloud)
+2.  Describe how to deploy the application to a hosting platform and
+    when that is useful
 3.  Discuss basic testing strategies for Shiny apps
 
 ### Scientific Use Case
@@ -536,7 +537,7 @@ writeManifest(appDir = "inst/app", appFiles = c("app.r"))
 
 After deploying, add to your README:
 
-``` markdown
+```` markdown
 ## Interactive App
 
 Run locally:
@@ -547,40 +548,45 @@ data("example_se")
 ADS8192::run_app(se = example_se)
 ```
 
-Or access the deployed example at: <https://your-deployment-url/>
+Or access the deployed example at: https://your-deployment-url/
+````
 
-    ---
+------------------------------------------------------------------------
 
-    # Summary
+## Summary
 
-    This lab we:
+This lab we:
 
-    1. Packaged the Shiny app with proper structure (`R/` for logic, `inst/app/` for deployed example)
-    2. Added `run_app()` as a documented, exported function
-    3. Discussed testing strategies
-    4. Discussed app deployment options
+1.  Packaged the Shiny app with proper structure (`R/` for logic,
+    `inst/app/` for deployed example)
+2.  Added
+    [`run_app()`](https://st-jude-ms-abds.github.io/ADS8192/reference/run_app.md)
+    as a documented, exported function
+3.  Discussed testing strategies
+4.  Discussed app deployment options
 
-    ## Package Milestone
+### Package Milestone
 
-    The Shiny app is shipped inside the package and can be launched by users after installing from GitHub.
+The Shiny app is shipped inside the package and can be launched by users
+after installing from GitHub.
 
-    ---
+------------------------------------------------------------------------
 
-    # After-Class Tasks
+## After-Class Tasks
 
-    ## Micro-task 1: GitHub Test
+### Micro-task 1: GitHub Test
 
-    From a fresh R session:
+From a fresh R session:
 
+``` r
+# Install from GitHub
+remotes::install_github("St-Jude-MS-ABDS/ADS8192")
 
-    ``` r
-    # Install from GitHub
-    remotes::install_github("St-Jude-MS-ABDS/ADS8192")
-
-    # Run the app
-    library(ADS8192)
-    data("example_se")
-    run_app(se = example_se)
+# Run the app
+library(ADS8192)
+data("example_se")
+run_app(se = example_se)
+```
 
 ------------------------------------------------------------------------
 

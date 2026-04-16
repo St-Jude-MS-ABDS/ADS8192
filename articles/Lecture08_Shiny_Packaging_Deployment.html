@@ -95,7 +95,8 @@ code aligned with the core package logic.</p>
 <ol style="list-style-type: decimal">
 <li>Add a Shiny application to the package as a function and document
 it</li>
-<li>Deploy the application to a hosting platform (Posit Cloud)</li>
+<li>Describe how to deploy the application to a hosting platform and
+when that is useful</li>
 <li>Discuss basic testing strategies for Shiny apps</li>
 </ol>
 </div>
@@ -660,41 +661,47 @@ package:</p>
 <span id="cb13-5"><a href="#cb13-5" tabindex="-1"></a><span class="in">```r</span></span>
 <span id="cb13-6"><a href="#cb13-6" tabindex="-1"></a><span class="fu">library</span>(ADS8192)</span>
 <span id="cb13-7"><a href="#cb13-7" tabindex="-1"></a><span class="fu">data</span>(<span class="st">"example_se"</span>)</span>
-<span id="cb13-8"><a href="#cb13-8" tabindex="-1"></a>ADS8192<span class="sc">::</span><span class="fu">run_app</span>(<span class="at">se =</span> example_se)</span></code></pre></div>
-<p>Or access the deployed example at: <a href="https://your-deployment-url/" class="external-link uri">https://your-deployment-url/</a></p>
-<pre><code>
----
-
-# Summary
-
-This lab we:
-
-1. Packaged the Shiny app with proper structure (`R/` for logic, `inst/app/` for deployed example)
-2. Added `run_app()` as a documented, exported function
-3. Discussed testing strategies
-4. Discussed app deployment options
-
-## Package Milestone
-
-The Shiny app is shipped inside the package and can be launched by users after installing from GitHub.
-
----
-
-# After-Class Tasks
-
-## Micro-task 1: GitHub Test
-
-From a fresh R session:
-
-
-``` r
-# Install from GitHub
-remotes::install_github("St-Jude-MS-ABDS/ADS8192")
-
-# Run the app
-library(ADS8192)
-data("example_se")
-run_app(se = example_se)</code></pre>
+<span id="cb13-8"><a href="#cb13-8" tabindex="-1"></a>ADS8192<span class="sc">::</span><span class="fu">run_app</span>(<span class="at">se =</span> example_se)</span>
+<span id="cb13-9"><a href="#cb13-9" tabindex="-1"></a><span class="in">```</span></span>
+<span id="cb13-10"><a href="#cb13-10" tabindex="-1"></a></span>
+<span id="cb13-11"><a href="#cb13-11" tabindex="-1"></a>Or access the deployed example at: https://your-deployment-url/</span></code></pre></div>
+<hr>
+</div>
+</div>
+<div class="section level2">
+<h2 id="summary">Summary<a class="anchor" aria-label="anchor" href="#summary"></a>
+</h2>
+<p>This lab we:</p>
+<ol style="list-style-type: decimal">
+<li>Packaged the Shiny app with proper structure (<code>R/</code> for
+logic, <code>inst/app/</code> for deployed example)</li>
+<li>Added <code><a href="../reference/run_app.html">run_app()</a></code> as a documented, exported function</li>
+<li>Discussed testing strategies</li>
+<li>Discussed app deployment options</li>
+</ol>
+<div class="section level3">
+<h3 id="package-milestone">Package Milestone<a class="anchor" aria-label="anchor" href="#package-milestone"></a>
+</h3>
+<p>The Shiny app is shipped inside the package and can be launched by
+users after installing from GitHub.</p>
+<hr>
+</div>
+</div>
+<div class="section level2">
+<h2 id="after-class-tasks">After-Class Tasks<a class="anchor" aria-label="anchor" href="#after-class-tasks"></a>
+</h2>
+<div class="section level3">
+<h3 id="micro-task-1-github-test">Micro-task 1: GitHub Test<a class="anchor" aria-label="anchor" href="#micro-task-1-github-test"></a>
+</h3>
+<p>From a fresh R session:</p>
+<div class="sourceCode" id="cb14"><pre class="downlit sourceCode r">
+<code class="sourceCode R"><span><span class="co"># Install from GitHub</span></span>
+<span><span class="fu">remotes</span><span class="fu">::</span><span class="fu">install_github</span><span class="op">(</span><span class="st">"St-Jude-MS-ABDS/ADS8192"</span><span class="op">)</span></span>
+<span></span>
+<span><span class="co"># Run the app</span></span>
+<span><span class="kw"><a href="https://rdrr.io/r/base/library.html" class="external-link">library</a></span><span class="op">(</span><span class="va"><a href="https://github.com/St-Jude-MS-ABDS/ADS8192" class="external-link">ADS8192</a></span><span class="op">)</span></span>
+<span><span class="fu"><a href="https://rdrr.io/r/utils/data.html" class="external-link">data</a></span><span class="op">(</span><span class="st">"example_se"</span><span class="op">)</span></span>
+<span><span class="fu"><a href="../reference/run_app.html">run_app</a></span><span class="op">(</span>se <span class="op">=</span> <span class="va">example_se</span><span class="op">)</span></span></code></pre></div>
 <hr>
 </div>
 </div>

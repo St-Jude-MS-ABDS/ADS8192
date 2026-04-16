@@ -87,20 +87,41 @@ Andrews</h4>
 <p>Submit a public GitHub repository URL containing an R package for
 your chosen <a href="project-selection.html">project</a>.</p>
 <p>The README should include installation instructions, quick-start
-examples for usage of the package and CLI, a link to the deployed Shiny
-app, and a link to the pkgdown site.</p>
+examples for usage of the package and CLI, and a link to the pkgdown
+site.</p>
 <div class="section level3">
-<h3 id="due-date-monday-april-20th---1159-pm">Due Date: Monday, April 20th - 11:59 PM<a class="anchor" aria-label="anchor" href="#due-date-monday-april-20th---1159-pm"></a>
+<h3 id="initial-due-date-monday-april-20th---1159-pm">Initial Due Date: Monday, April 20th - 11:59 PM<a class="anchor" aria-label="anchor" href="#initial-due-date-monday-april-20th---1159-pm"></a>
 </h3>
 <p>Generally, you should be able to complete most of this assignment
 during the unit 1 lab sessions.</p>
 <p>There will be a review/help session on the Monday it is due for
 hands-on help from instructors.</p>
+</div>
+<div class="section level3">
+<h3 id="re-submission-policy">Re-Submission Policy<a class="anchor" aria-label="anchor" href="#re-submission-policy"></a>
+</h3>
+<ul>
+<li>
+<strong>Initial submission deadline:</strong> Monday, April 20th at
+11:59 PM</li>
+<li>
+<strong>Initial instructor feedback by:</strong> Tuesday, April 21st
+at 11:59 PM</li>
+<li>
+<strong>Re-submission deadline:</strong> Saturday, April 25th at
+11:59 PM (5 days after initial submission)</li>
+</ul>
+<blockquote>
+<p><strong>Note:</strong> Grading will only be performed on your final
+submission. If you do not re-submit, your initial submission will be
+graded. Use the instructor feedback to address any issues before the
+re-submission deadline.</p>
+</blockquote>
 <hr>
 </div>
 </div>
 <div class="section level2">
-<h2 id="package-structure-installation-4-pts">1. Package Structure &amp; Installation (4 pts)<a class="anchor" aria-label="anchor" href="#package-structure-installation-4-pts"></a>
+<h2 id="package-structure-installation-5-pts">1. Package Structure &amp; Installation (5 pts)<a class="anchor" aria-label="anchor" href="#package-structure-installation-5-pts"></a>
 </h2>
 <table class="table">
 <colgroup>
@@ -144,12 +165,25 @@ usable via <code><a href="https://rdrr.io/r/utils/data.html" class="external-lin
 <code>data(example_se)</code> or <code>data(example_sce)</code>
 works</td>
 </tr>
+<tr class="odd">
+<td>1</td>
+<td>
+<code>devtools::check()</code> completes with 0 errors</td>
+<td>
+<code>devtools::check()</code> — 0 errors</td>
+</tr>
 </tbody>
 </table>
+<blockquote>
+<p><strong>Note:</strong> Warnings and notes from
+<code>devtools::check()</code> should be minimized where possible, but
+they will not dock points. Only errors will result in lost points.</p>
+</blockquote>
 <p><strong>Checklist:</strong></p>
 <ul class="task-list">
 <li><label><input type="checkbox"><code>devtools::check()</code> — 0
-errors, 0 warnings</label></li>
+errors (warnings/notes should be minimized but are
+acceptable)</label></li>
 <li><label><input type="checkbox"><code>remotes::install_github()</code> succeeds from
 fresh session</label></li>
 <li><label><input type="checkbox"><code><a href="https://rdrr.io/r/utils/data.html" class="external-link">data()</a></code> loads bundled
@@ -163,7 +197,7 @@ etc</label></li>
 <hr>
 </div>
 <div class="section level2">
-<h2 id="core-analysis-functions-5-pts">2. Core Analysis Functions (5 pts)<a class="anchor" aria-label="anchor" href="#core-analysis-functions-5-pts"></a>
+<h2 id="core-analysis-functions-7-pts">2. Core Analysis Functions (7 pts)<a class="anchor" aria-label="anchor" href="#core-analysis-functions-7-pts"></a>
 </h2>
 <table class="table">
 <colgroup>
@@ -185,8 +219,7 @@ etc</label></li>
 </tr>
 <tr class="even">
 <td>1</td>
-<td>Plotting function returns a ggplot with appropriate aesthetics;
-supports at least 2 plot types or configurable output</td>
+<td>Plotting function returns a meaningful plot</td>
 <td>Returns ggplot object with informative labels</td>
 </tr>
 <tr class="odd">
@@ -198,15 +231,27 @@ independently</td>
 </tr>
 <tr class="even">
 <td>1</td>
-<td>Output parity with the original analysis</td>
-<td>Same data with same parameters produces same results (or similar for
-non-deterministic outputs)</td>
+<td>Results are comparable to the original analysis</td>
+<td>Same data with same parameters produces comparable results (slight
+variation is expected for non-deterministic algorithms)</td>
 </tr>
 <tr class="odd">
 <td>1</td>
 <td>Improper parameter values produce informative error messages</td>
-<td>graceful <code><a href="https://rdrr.io/r/base/stop.html" class="external-link">stop()</a></code> with informative message if user feeds
+<td>Graceful <code><a href="https://rdrr.io/r/base/stop.html" class="external-link">stop()</a></code> with informative message if user feeds
 invalid input</td>
+</tr>
+<tr class="even">
+<td>1</td>
+<td>An export/save function writes results to disk (e.g. CSV, TSV, or
+plot files)</td>
+<td>Function produces output files from analysis results</td>
+</tr>
+<tr class="odd">
+<td>1</td>
+<td>Functions chain together in a meaningful pipeline (e.g. filter →
+analyze → plot)</td>
+<td>Composability is demonstrated in examples or vignette</td>
 </tr>
 </tbody>
 </table>
@@ -222,10 +267,13 @@ error messages</label></li>
 <li><label><input type="checkbox">Functions decompose the analysis
 into reusable, composable steps (not one monolithic
 function)</label></li>
-<li><label><input type="checkbox">Output parity with the original
-analysis (same data + parameters produces same/similar results; there
-may be slight variation with non-deterministic algorithms like
-UMAP).</label></li>
+<li><label><input type="checkbox">Results are comparable to the
+original analysis (exact reproduction is not required; slight variation
+is expected with non-deterministic algorithms like UMAP)</label></li>
+<li><label><input type="checkbox">At least one function writes results
+to disk (CSV, TSV, plot file, etc.)</label></li>
+<li><label><input type="checkbox">Functions can be composed into a
+pipeline workflow</label></li>
 </ul>
 <hr>
 </div>
@@ -253,38 +301,47 @@ exist</td>
 </tr>
 <tr class="even">
 <td>1</td>
-<td>All exported functions tested</td>
-<td>
-<code>devtools::test()</code> shows pass count</td>
-</tr>
-<tr class="odd">
-<td>1</td>
 <td>Tests cover both “happy path” and error cases</td>
 <td>At least 1 <code><a href="https://testthat.r-lib.org/reference/expect_error.html" class="external-link">expect_error()</a></code> for invalid input</td>
 </tr>
-<tr class="even">
+<tr class="odd">
 <td>1</td>
 <td>All tests pass</td>
 <td>
 <code>devtools::test()</code> — 0 failures</td>
 </tr>
+<tr class="even">
+<td>1</td>
+<td>Tests are meaningful — they verify <em>what</em> the code should do,
+not just that it runs without error</td>
+<td>Tests check expected output values, dimensions, types, or error
+conditions</td>
+</tr>
 </tbody>
 </table>
+<blockquote>
+<p><strong>Note:</strong> We recommend that most exported functions have
+at least one test, but meaningful tests are more important than test
+count. A small number of thoughtful tests that verify correctness is
+preferred over many trivial assertions.</p>
+</blockquote>
 <p><strong>Checklist:</strong></p>
 <ul class="task-list">
 <li><label><input type="checkbox"><code>devtools::test()</code> passes
 with 0 failures</label></li>
-<li><label><input type="checkbox">Tests exist for core functions (not
-just trivial assertions)</label></li>
+<li><label><input type="checkbox">Tests are meaningful (not just
+trivial assertions like <code>expect_true(TRUE)</code>)</label></li>
 <li><label><input type="checkbox">At least one test for invalid input
-handling</label></li>
+handling (<code><a href="https://testthat.r-lib.org/reference/expect_error.html" class="external-link">expect_error()</a></code>)</label></li>
 <li><label><input type="checkbox">Tests don’t depend on global state
 or specific file paths</label></li>
+<li><label><input type="checkbox">Tests verify expected values,
+dimensions, types, or error conditions</label></li>
 </ul>
 <hr>
 </div>
 <div class="section level2">
-<h2 id="documentation-4-pts">4. Documentation (4 pts)<a class="anchor" aria-label="anchor" href="#documentation-4-pts"></a>
+<h2 id="documentation-5-pts">4. Documentation (5 pts)<a class="anchor" aria-label="anchor" href="#documentation-5-pts"></a>
 </h2>
 <table class="table">
 <colgroup>
@@ -311,12 +368,12 @@ or specific file paths</label></li>
 <td>No “Undocumented arguments” warnings</td>
 </tr>
 <tr class="odd">
-<td>0.5</td>
+<td>1</td>
 <td>README with installation instructions and quick-start example</td>
 <td>README renders on GitHub with working example</td>
 </tr>
 <tr class="even">
-<td>0.5</td>
+<td>1</td>
 <td>At least one vignette</td>
 <td>
 <code>vignettes/</code> contains at least one .Rmd with usage
@@ -344,7 +401,7 @@ renders on pkgdown site</label></li>
 <hr>
 </div>
 <div class="section level2">
-<h2 id="shiny-app-4-pts">5. Shiny App (4 pts)<a class="anchor" aria-label="anchor" href="#shiny-app-4-pts"></a>
+<h2 id="command-line-interface-4-pts">5. Command-Line Interface (4 pts)<a class="anchor" aria-label="anchor" href="#command-line-interface-4-pts"></a>
 </h2>
 <table class="table">
 <colgroup>
@@ -360,62 +417,7 @@ renders on pkgdown site</label></li>
 <tbody>
 <tr class="odd">
 <td>1</td>
-<td>App functions launches without error from a clean session</td>
-<td>App opens &amp; works</td>
-</tr>
-<tr class="even">
-<td>1</td>
-<td>App calls package core functions (not reimplemented logic)</td>
-<td>Analysis and plotting use your exported functions, not reimplemented
-code</td>
-</tr>
-<tr class="odd">
-<td>1</td>
-<td>At least 2 user-adjustable inputs change the outputs reactively with
-basic validation</td>
-<td>Changing parameters re-runs analysis; invalid values show
-user-friendly messages</td>
-</tr>
-<tr class="even">
-<td>1</td>
-<td>App is deployed and usable via Posit Connect</td>
-<td>App URL is accessible and functional</td>
-</tr>
-</tbody>
-</table>
-<p><strong>Checklist:</strong></p>
-<ul class="task-list">
-<li><label><input type="checkbox"><code><a href="https://rdrr.io/r/base/library.html" class="external-link">library(pkg); app_function()</a></code> works in
-fresh R session</label></li>
-<li><label><input type="checkbox">At least 2 user-adjustable inputs
-that affect output</label></li>
-<li><label><input type="checkbox">Visualization updates when
-parameters change</label></li>
-<li><label><input type="checkbox">No R console errors during normal
-use</label></li>
-<li><label><input type="checkbox">App deployed to Posit Connect and
-accessible via URL (provide URL in README)</label></li>
-</ul>
-<hr>
-</div>
-<div class="section level2">
-<h2 id="command-line-interface-4-pts">6. Command-Line Interface (4 pts)<a class="anchor" aria-label="anchor" href="#command-line-interface-4-pts"></a>
-</h2>
-<table class="table">
-<colgroup>
-<col width="30%">
-<col width="42%">
-<col width="26%">
-</colgroup>
-<thead><tr class="header">
-<th>Points</th>
-<th>Criterion</th>
-<th>Check</th>
-</tr></thead>
-<tbody>
-<tr class="odd">
-<td>1</td>
-<td>CLI entry point exists in <code>exec/</code>
+<td>CLI script exists in <code>exec/</code>
 </td>
 <td>Rapp app file present and functional</td>
 </tr>
@@ -473,11 +475,11 @@ installation and fallback usage</label></li>
 <tbody>
 <tr class="odd">
 <td>Package Structure &amp; Installation</td>
-<td>4</td>
+<td>5</td>
 </tr>
 <tr class="even">
 <td>Core Analysis Functions</td>
-<td>5</td>
+<td>7</td>
 </tr>
 <tr class="odd">
 <td>Testing</td>
@@ -485,17 +487,13 @@ installation and fallback usage</label></li>
 </tr>
 <tr class="even">
 <td>Documentation</td>
-<td>4</td>
+<td>5</td>
 </tr>
 <tr class="odd">
-<td>Shiny App</td>
-<td>4</td>
-</tr>
-<tr class="even">
 <td>Command-Line Interface</td>
 <td>4</td>
 </tr>
-<tr class="odd">
+<tr class="even">
 <td><strong>Total</strong></td>
 <td><strong>25</strong></td>
 </tr>
