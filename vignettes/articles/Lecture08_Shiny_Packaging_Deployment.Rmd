@@ -28,7 +28,7 @@ A standalone app using your data alone is useful. But *packaging* the app into y
 By the end of this session, you will be able to:
 
 1. Add a Shiny application to the package as a function and document it
-2. Deploy the application to a hosting platform (Posit Cloud)
+2. Describe how to deploy the application to a hosting platform and when that is useful
 3. Discuss basic testing strategies for Shiny apps
 
 ## Scientific Use Case
@@ -498,7 +498,7 @@ writeManifest(appDir = "inst/app", appFiles = c("app.r"))
 
 After deploying, add to your README:
 
-```markdown
+`````markdown
 ## Interactive App
 
 Run locally:
@@ -510,7 +510,7 @@ ADS8192::run_app(se = example_se)
 ```
 
 Or access the deployed example at: https://your-deployment-url/
-```
+`````
 
 ---
 
