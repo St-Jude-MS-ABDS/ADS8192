@@ -492,7 +492,8 @@ library(rsconnect)
 writeManifest(appDir = "inst/app", appFiles = c("app.r"))   
 ```
 
-6. Deploy to Posit Connect Cloud, pointing to the `inst/app/app.R` file as the entry point.
+6. Push the manifest and app files to GitHub.
+7. Deploy to Posit Connect Cloud, pointing to the `inst/app/app.R` file as the entry point.
 
 ## Record the URL
 
