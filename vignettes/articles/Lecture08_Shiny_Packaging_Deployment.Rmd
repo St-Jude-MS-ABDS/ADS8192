@@ -447,11 +447,13 @@ For HW1, a manual checklist is acceptable:
 
 ---
 
-# Part 5: Deployment
+# Part 5: Deployment (Optional)
 
 Allowing users to run your app locally is fine, but sometimes you may want to deploy the application with your own data for a collaborator to use, to serve as a companion app for a publication, or to serve as an example to show off its functionality without requiring users to install R or the package.
 
 In our case, we want want an example of our app so that potential users can test it out, for which we can use the example data.
+
+**Note, you do not need to deploy your app for HW1.** This is an optional step that can be done after the assignment is submitted (or not at all), but it is worth knowing about this aspect of Shiny development.
 
 ## Deployment Options
 
@@ -542,14 +544,6 @@ library(ADS8192)
 data("example_se")
 run_app(se = example_se)
 ```
-
-## Micro-task 2: Update README
-
-Add an "Interactive App" section to README with:
-
-- Instructions to launch
-- Screenshot or GIF (optional but nice!)
-- Link to deployed version
 
 ---
 
