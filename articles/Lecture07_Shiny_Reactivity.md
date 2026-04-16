@@ -86,8 +86,8 @@ But this requires:
 - Manual iteration to explore different parameters
 - No visual feedback during exploration
 
-**Shiny** lets us wrap our package’s functionality in an interactive web
-interface, enabling:
+**Shiny** lets us wrap our package’s functionality or results in an
+interactive web interface, enabling:
 
 - Point-and-click exploration
 - Immediate visual feedback
@@ -112,7 +112,6 @@ install.packages(c("shiny", "bslib", "DT", "plotly"))
 library(shiny)
 library(bslib)
 library(ADS8192)
-library(airway)
 library(plotly)
 ```
 
@@ -252,6 +251,35 @@ most use cases, but you are not limited to them:
 - **Custom inputs**: You can write your own input widgets using the
   `htmlwidgets` package or raw HTML/JavaScript — this is advanced but
   powerful for specialized scientific visualizations
+- There are many other packages that provides additional UI components
+  and input types.
+
+------------------------------------------------------------------------
+
+### Output Types
+
+Shiny has a variety of output types that you can render in the UI, the
+most common ones include:
+
+- [`textOutput()`](https://rdrr.io/pkg/shiny/man/textOutput.html) +
+  [`renderText()`](https://rdrr.io/pkg/shiny/man/renderPrint.html):
+  Display text
+- [`plotOutput()`](https://rdrr.io/pkg/shiny/man/plotOutput.html) +
+  [`renderPlot()`](https://rdrr.io/pkg/shiny/man/renderPlot.html):
+  Display static R plots
+- [`DT::dataTableOutput()`](https://rdrr.io/pkg/DT/man/dataTableOutput.html) +
+  [`DT::renderDataTable()`](https://rdrr.io/pkg/DT/man/dataTableOutput.html):
+  Display interactive tables
+- `plotlyOutput()` + `renderPlotly()`: Display interactive Plotly graphs
+- [`verbatimTextOutput()`](https://rdrr.io/pkg/shiny/man/textOutput.html) +
+  [`renderPrint()`](https://rdrr.io/pkg/shiny/man/renderPrint.html):
+  Display raw R output (e.g. from
+  [`summary()`](https://rdrr.io/r/base/summary.html))
+- [`uiOutput()`](https://rdrr.io/pkg/shiny/man/htmlOutput.html) +
+  [`renderUI()`](https://rdrr.io/pkg/shiny/man/renderUI.html):
+  Dynamically generate UI components based on inputs
+
+We’ll touch on a few of these below.
 
 ------------------------------------------------------------------------
 

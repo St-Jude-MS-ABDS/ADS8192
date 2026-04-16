@@ -167,8 +167,8 @@ and decent test coverage.</p>
 <li>Manual iteration to explore different parameters</li>
 <li>No visual feedback during exploration</li>
 </ul>
-<p><strong>Shiny</strong> lets us wrap our package’s functionality in an
-interactive web interface, enabling:</p>
+<p><strong>Shiny</strong> lets us wrap our package’s functionality or
+results in an interactive web interface, enabling:</p>
 <ul>
 <li>Point-and-click exploration</li>
 <li>Immediate visual feedback</li>
@@ -193,7 +193,6 @@ and display outputs.</p>
 <span><span class="kw"><a href="https://rdrr.io/r/base/library.html" class="external-link">library</a></span><span class="op">(</span><span class="va"><a href="https://shiny.posit.co/" class="external-link">shiny</a></span><span class="op">)</span></span>
 <span><span class="kw"><a href="https://rdrr.io/r/base/library.html" class="external-link">library</a></span><span class="op">(</span><span class="va"><a href="https://rstudio.github.io/bslib/" class="external-link">bslib</a></span><span class="op">)</span></span>
 <span><span class="kw"><a href="https://rdrr.io/r/base/library.html" class="external-link">library</a></span><span class="op">(</span><span class="va"><a href="https://github.com/St-Jude-MS-ABDS/ADS8192" class="external-link">ADS8192</a></span><span class="op">)</span></span>
-<span><span class="kw"><a href="https://rdrr.io/r/base/library.html" class="external-link">library</a></span><span class="op">(</span><span class="va">airway</span><span class="op">)</span></span>
 <span><span class="kw"><a href="https://rdrr.io/r/base/library.html" class="external-link">library</a></span><span class="op">(</span><span class="va"><a href="https://plotly-r.com" class="external-link">plotly</a></span><span class="op">)</span></span></code></pre></div>
 </div>
 <div class="section level3">
@@ -333,9 +332,39 @@ and other Bootstrap 5 components</li>
 <strong>Custom inputs</strong>: You can write your own input widgets
 using the <code>htmlwidgets</code> package or raw HTML/JavaScript — this
 is advanced but powerful for specialized scientific visualizations</li>
+<li>There are many other packages that provides additional UI components
+and input types.</li>
 </ul>
 <hr>
 </div>
+</div>
+<div class="section level3">
+<h3 id="output-types">Output Types<a class="anchor" aria-label="anchor" href="#output-types"></a>
+</h3>
+<p>Shiny has a variety of output types that you can render in the UI,
+the most common ones include:</p>
+<ul>
+<li>
+<code><a href="https://rdrr.io/pkg/shiny/man/textOutput.html" class="external-link">textOutput()</a></code> + <code><a href="https://rdrr.io/pkg/shiny/man/renderPrint.html" class="external-link">renderText()</a></code>: Display
+text</li>
+<li>
+<code><a href="https://rdrr.io/pkg/shiny/man/plotOutput.html" class="external-link">plotOutput()</a></code> + <code><a href="https://rdrr.io/pkg/shiny/man/renderPlot.html" class="external-link">renderPlot()</a></code>: Display
+static R plots</li>
+<li>
+<code><a href="https://rdrr.io/pkg/DT/man/dataTableOutput.html" class="external-link">DT::dataTableOutput()</a></code> +
+<code><a href="https://rdrr.io/pkg/DT/man/dataTableOutput.html" class="external-link">DT::renderDataTable()</a></code>: Display interactive tables</li>
+<li>
+<code>plotlyOutput()</code> + <code>renderPlotly()</code>: Display
+interactive Plotly graphs</li>
+<li>
+<code><a href="https://rdrr.io/pkg/shiny/man/textOutput.html" class="external-link">verbatimTextOutput()</a></code> + <code><a href="https://rdrr.io/pkg/shiny/man/renderPrint.html" class="external-link">renderPrint()</a></code>:
+Display raw R output (e.g. from <code><a href="https://rdrr.io/r/base/summary.html" class="external-link">summary()</a></code>)</li>
+<li>
+<code><a href="https://rdrr.io/pkg/shiny/man/htmlOutput.html" class="external-link">uiOutput()</a></code> + <code><a href="https://rdrr.io/pkg/shiny/man/renderUI.html" class="external-link">renderUI()</a></code>: Dynamically
+generate UI components based on inputs</li>
+</ul>
+<p>We’ll touch on a few of these below.</p>
+<hr>
 </div>
 <div class="section level3">
 <h3 id="the-first-wall-reactivity">The First Wall: Reactivity<a class="anchor" aria-label="anchor" href="#the-first-wall-reactivity"></a>
