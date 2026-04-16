@@ -6,13 +6,13 @@ For Homework 1, each student will create an R package derived from a raw
 analysis script. The package must provide the same core analysis and
 outputs as the raw script, but in a more modular, reusable form.
 
-Students will offer three interfaces to the same core functionality from
-the package:
+Students will offer up to three interfaces to the same core
+functionality from the package:
 
 1.  **R API** — exported functions with roxygen2 documentation
-2.  **Shiny app** — interactive analysis/visualization
-3.  **CLI** — command-line interface via
+2.  **CLI** — command-line interface via
     [Rapp](https://github.com/r-lib/Rapp)
+3.  **OPTIONAL** - **Shiny app** — interactive analysis/visualization
 
 All projects share the same
 [rubric](https://st-jude-ms-abds.github.io/ADS8192/articles/HW1_Rubric.html)
@@ -35,8 +35,6 @@ Generally, your package will at minimum contain:
 
 - A valid R package, installable from Github, with properly documented
   functions, example data, and tests
-- A Shiny app that allows users to interactively explore/analyze/plot
-  the data and results
 - A CLI that runs the analysis end-to-end with adjustable parameters and
   writes results to disk
 - A documentation website with a brief vignette describing how to use
@@ -46,22 +44,25 @@ See the [grading
 rubric](https://st-jude-ms-abds.github.io/ADS8192/articles/HW1_Rubric.html)
 for exact requirements.
 
+The course contains material related to packaging a Shiny application
+with your package, but this is optional for this assignment.
+
 ------------------------------------------------------------------------
 
 ## How to Read Each Project Description
 
-| Section                             | What it tells you                                                |
-|-------------------------------------|------------------------------------------------------------------|
-| **Rationale**                       | Why this analysis matters in genomics                            |
-| **Dataset**                         | The Bioconductor dataset you will use, with a `data-raw/` script |
-| **Data structure**                  | `SummarizedExperiment` or `SingleCellExperiment`                 |
-| **What users should be able to do** | The capabilities your package must provide                       |
-| **Key parameters**                  | User-facing arguments adjustable in all three interfaces         |
-| **CLI outputs**                     | The TSV files your CLI subcommand must produce                   |
-| **Shiny inputs**                    | What the user should be able to change interactively             |
+| Section                             | What it tells you                                                                             |
+|-------------------------------------|-----------------------------------------------------------------------------------------------|
+| **Rationale**                       | Why this analysis matters in genomics                                                         |
+| **Dataset**                         | The Bioconductor dataset you will use, with a `data-raw/` script                              |
+| **Data structure**                  | `SummarizedExperiment` or `SingleCellExperiment`                                              |
+| **What users should be able to do** | The capabilities your package must provide                                                    |
+| **Key parameters**                  | User-facing arguments adjustable in all three interfaces                                      |
+| **Potential CLI outputs**           | The TSV files your CLI subcommand must produce                                                |
+| **Potential Shiny inputs**          | What the user should be able to change interactively (if you choose to implement a Shiny app) |
 
 If you see function calls you aren’t familiar with in the raw code
-blocks, looking them on in R is your friend, e.g. `?prcomcp`.
+blocks, looking them up in R is your friend, e.g. `?prcomcp`.
 
 ------------------------------------------------------------------------
 
@@ -145,10 +146,10 @@ usethis::use_data(example_se, overwrite = TRUE)
 **Key parameters:** `n_top`, `log_transform`, `scale`, `color_by`,
 `shape_by`
 
-**CLI outputs:** `pca_scores.tsv`, `pca_variance.tsv`
+**Potential CLI outputs:** `pca_scores.tsv`, `pca_variance.tsv`
 
-**Shiny inputs:** Number of top genes, log-transform toggle, scale
-toggle, PC axes, color/shape by metadata column, point size
+**PotentialShiny inputs:** Number of top genes, log-transform toggle,
+scale toggle, PC axes, color/shape by metadata column, point size
 
 Raw analysis code
 
@@ -349,13 +350,13 @@ usethis::use_data(example_sce, overwrite = TRUE)
 input, default 30), `n_neighbors`, `min_dist`, `metric`
 (euclidean/cosine), `color_by`, `shape_by`
 
-**CLI outputs:** `umap_embeddings.tsv` (cell × UMAP1/UMAP2 + metadata +
-`knn_preserved` per-cell score), `umap_params.tsv` (parameter values +
-spread stats + global and per-cell-type quality scores)
+**Potential CLI outputs:** `umap_embeddings.tsv` (cell × UMAP1/UMAP2 +
+metadata + `knn_preserved` per-cell score), `umap_params.tsv` (parameter
+values + spread stats + global and per-cell-type quality scores)
 
-**Shiny inputs:** n_top slider, n_pcs slider (10–50), n_neighbors slider
-(5–50), min_dist slider (0.01–1.0), metric dropdown, color/shape by
-metadata, per-cell-type k-NN preservation violin plot
+**Potential Shiny inputs:** n_top slider, n_pcs slider (10–50),
+n_neighbors slider (5–50), min_dist slider (0.01–1.0), metric dropdown,
+color/shape by metadata, per-cell-type k-NN preservation violin plot
 
 **Dependencies:** `SingleCellExperiment`, `scuttle`, `uwot`, `scRNAseq`
 (data only)
@@ -575,12 +576,12 @@ usethis::use_data(gse, overwrite = TRUE)
 (ward.D2/complete/average), `k`, `n_bootstrap` (number of bootstrap
 iterations for stability)
 
-**CLI outputs:** `similarity_matrix.tsv`, `cluster_assignments.tsv`,
-`cluster_stability.tsv`
+**Potential CLI outputs:** `similarity_matrix.tsv`,
+`cluster_assignments.tsv`, `cluster_stability.tsv`
 
-**Shiny inputs:** Correlation method, linkage method, k slider, n_top
-slider, n_bootstrap slider, metadata columns for annotation bars,
-stability bar chart
+**Potential Shiny inputs:** Correlation method, linkage method, k
+slider, n_top slider, n_bootstrap slider, metadata columns for
+annotation bars, stability bar chart
 
 **Dependencies:** `SummarizedExperiment`, `macrophage` + `tximeta` (data
 only)
@@ -779,12 +780,13 @@ usethis::use_data(example_se, overwrite = TRUE)
 (volcano/ma), `min_count_per_group` (minimum mean count per group for
 gene filtering)
 
-**CLI outputs:** `de_results.tsv`, `de_summary.tsv`,
+**Potential CLI outputs:** `de_results.tsv`, `de_summary.tsv`,
 `filtering_diagnostics.tsv`
 
-**Shiny inputs:** Grouping column, reference level, FC threshold slider,
-p-value threshold slider, shrinkage method dropdown, volcano ↔︎ MA radio
-button, min count per group slider, filtering diagnostics plot
+**Potential Shiny inputs:** Grouping column, reference level, FC
+threshold slider, p-value threshold slider, shrinkage method dropdown,
+volcano ↔︎ MA radio button, min count per group slider, filtering
+diagnostics plot
 
 **Dependencies:** `SummarizedExperiment`, `DESeq2`, `ExperimentHub`
 (data retrieval)
@@ -966,12 +968,12 @@ usethis::use_data(example_sce, overwrite = TRUE)
 **Key parameters:** `n_top`, `max_k`, `n_starts`, `selected_k`,
 `reference_column` (metadata column for ARI, optional)
 
-**CLI outputs:** `cluster_assignments.tsv`, `kmeans_metrics.tsv`,
-`cluster_evaluation.tsv`
+**Potential CLI outputs:** `cluster_assignments.tsv`,
+`kmeans_metrics.tsv`, `cluster_evaluation.tsv`
 
-**Shiny inputs:** n_top slider, max_k slider, selected k slider, toggle
-between elbow plot and cluster scatter, color by cluster or cell_type
-metadata
+**Potential Shiny inputs:** n_top slider, max_k slider, selected k
+slider, toggle between elbow plot and cluster scatter, color by cluster
+or cell_type metadata
 
 **Dependencies:** `SingleCellExperiment`, `scuttle`, `cluster`,
 `scRNAseq` (data only)
@@ -1168,11 +1170,11 @@ usethis::use_data(example_sce, overwrite = TRUE)
 **Key parameters:** `mad_threshold`, `min_genes`, `min_library_size`,
 `max_spike_pct`, `max_mito_pct`, `min_novelty`
 
-**CLI outputs:** `qc_metrics.tsv`, `qc_flags.tsv`
+**Potential CLI outputs:** `qc_metrics.tsv`, `qc_flags.tsv`
 
-**Shiny inputs:** MAD threshold slider, minimum genes input, max
-spike-in % slider, max mito % slider, min novelty slider; panels update
-to reflect pass/fail counts
+**PotentialShiny inputs:** MAD threshold slider, minimum genes input,
+max spike-in % slider, max mito % slider, min novelty slider; panels
+update to reflect pass/fail counts
 
 **Dependencies:** `SingleCellExperiment`, `scRNAseq` (data only)
 
@@ -1363,12 +1365,12 @@ usethis::use_data(example_se, overwrite = TRUE)
 **Key parameters:** `gene_sets` (list or GMT path), `score_method`
 (mean_z, rank_based, or both), `group_column`
 
-**CLI outputs:** `geneset_scores.tsv`, `scoring_summary.tsv`,
+**Potential CLI outputs:** `geneset_scores.tsv`, `scoring_summary.tsv`,
 `gene_contributions.tsv`
 
-**Shiny inputs:** Select built-in sets or upload GMT, score method
-dropdown, grouping variable dropdown (dex treatment, cell line), gene
-set selector, boxplot ↔︎ violin toggle
+**Potential Shiny inputs:** Select built-in sets or upload GMT, score
+method dropdown, grouping variable dropdown (dex treatment, cell line),
+gene set selector, boxplot ↔︎ violin toggle
 
 **Dependencies:** `SummarizedExperiment`, `airway` (data only),
 `msigdbr` (gene sets)
@@ -1558,11 +1560,13 @@ usethis::use_data(example_sce, overwrite = TRUE)
 `min_detection` (minimum fraction of cells detecting a gene in at least
 one group to include it in results)
 
-**CLI outputs:** `expression_stats.tsv`, `gene_specificity.tsv`
+**Potential CLI outputs:** `expression_stats.tsv`,
+`gene_specificity.tsv`
 
-**Shiny inputs:** Gene name text input (comma-separated), grouping
-variable dropdown, plot type toggle (violin / co-expression scatter),
-gene pair selectors for scatter view, detection threshold slider
+**Potential Shiny inputs:** Gene name text input (comma-separated),
+grouping variable dropdown, plot type toggle (violin / co-expression
+scatter), gene pair selectors for scatter view, detection threshold
+slider
 
 **Dependencies:** `SingleCellExperiment`, `scuttle`, `scRNAseq` (data
 only)
@@ -1795,12 +1799,13 @@ usethis::use_data(example_se, overwrite = TRUE)
 **Key parameters:** `n_top`, `cor_method` (pearson/spearman),
 `cor_threshold`, `community_method` (louvain/walktrap)
 
-**CLI outputs:** `gene_correlations.tsv`, `network_summary.tsv`,
-`hub_genes.tsv`, `module_assignments.tsv`, `node_stats.tsv`,
-`module_summary.tsv`
+**Potential CLI outputs:** `gene_correlations.tsv`,
+`network_summary.tsv`, `hub_genes.tsv`, `module_assignments.tsv`,
+`node_stats.tsv`, `module_summary.tsv`
 
-**Shiny inputs:** Correlation threshold slider, method dropdown, n_top
-slider, hub gene table, heatmap redraws on threshold change
+**Potential Shiny inputs:** Correlation threshold slider, method
+dropdown, n_top slider, hub gene table, heatmap redraws on threshold
+change
 
 **Dependencies:** `SummarizedExperiment`, `igraph` (Suggests, for
 force-directed layout), `recount3` (data only)
@@ -2065,12 +2070,12 @@ usethis::use_data(example_se, overwrite = TRUE)
 **Key parameters:** `n_top`, `scale_method` (zscore/minmax/none),
 `gene_k`, `column_split_by` (metadata column)
 
-**CLI outputs:** `scaled_expression.tsv`, `gene_modules.tsv`,
+**Potential CLI outputs:** `scaled_expression.tsv`, `gene_modules.tsv`,
 `module_gene_lists.tsv`
 
-**Shiny inputs:** n_top slider, scale method dropdown, gene_k slider,
-metadata column selector for annotation and column splitting, heatmap
-updates reactively
+**Potential Shiny inputs:** n_top slider, scale method dropdown, gene_k
+slider, metadata column selector for annotation and column splitting,
+heatmap updates reactively
 
 **Dependencies:** `SummarizedExperiment`, `ComplexHeatmap` (Suggests),
 `fission` (data only)
@@ -2243,10 +2248,10 @@ usethis::use_data(example_sce, overwrite = TRUE)
 **Key parameters:** `n_top`, `methods` (broken_stick/kaiser/elbow),
 `max_pcs`
 
-**CLI outputs:** `eigenvalues.tsv`, `dimension_estimates.tsv`
+**Potential CLI outputs:** `eigenvalues.tsv`, `dimension_estimates.tsv`
 
-**Shiny inputs:** n_top slider, checkboxes to toggle overlay of each
-method, max_pcs slider, summary table of recommendations
+**Potential Shiny inputs:** n_top slider, checkboxes to toggle overlay
+of each method, max_pcs slider, summary table of recommendations
 
 **Dependencies:** `SingleCellExperiment`, `scuttle`, `TENxPBMCData`
 (data only)
@@ -2474,11 +2479,12 @@ usethis::use_data(example_sce, overwrite = TRUE)
 **Key parameters:** `batch_column`, `n_top`, `correct` (logical),
 `bio_column`
 
-**CLI outputs:** `batch_variance.tsv`, `corrected_embedding.tsv`
+**Potential CLI outputs:** `batch_variance.tsv`,
+`corrected_embedding.tsv`
 
-**Shiny inputs:** Batch column dropdown, biological column dropdown,
-n_top slider, correction toggle, before/after scatter panels, R² bar
-chart
+**Potential Shiny inputs:** Batch column dropdown, biological column
+dropdown, n_top slider, correction toggle, before/after scatter panels,
+R² bar chart
 
 **Dependencies:** `SingleCellExperiment`, `batchelor`, `scran`,
 `scuttle`, `scRNAseq` (data only)
@@ -2731,11 +2737,11 @@ usethis::use_data(example_sce, overwrite = TRUE)
 **Key parameters:** `group_column`, `n_markers`, `fc_threshold`,
 `detection_threshold`
 
-**CLI outputs:** `marker_genes.tsv`, `marker_summary.tsv`
+**Potential CLI outputs:** `marker_genes.tsv`, `marker_summary.tsv`
 
-**Shiny inputs:** Grouping variable dropdown, n_markers slider, FC
-threshold slider, detection threshold slider, dot plot + filterable gene
-table
+**Potential Shiny inputs:** Grouping variable dropdown, n_markers
+slider, FC threshold slider, detection threshold slider, dot plot +
+filterable gene table
 
 **Dependencies:** `SingleCellExperiment`, `scuttle`, `scRNAseq` (data
 only)
@@ -2900,8 +2906,8 @@ approved, your proposal must include:
     with the package (4–6 bullet points)
 4.  **At least one non-trivial visualization** (not just a base R
     [`plot()`](https://rdrr.io/r/graphics/plot.default.html) call)
-5.  **CLI outputs** — what TSV/plot files will be produced?
-6.  **Shiny inputs** — what will the user be able to adjust?
+5.  **Potential CLI outputs** — what TSV/plot files will be produced?
+6.  **Potential Shiny inputs** — what will the user be able to adjust?
 
 Submit your proposal as a GitHub Issue or by email **before starting
 implementation**. The instructor will respond within 48 hours with

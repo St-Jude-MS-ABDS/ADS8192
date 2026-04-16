@@ -87,17 +87,18 @@ Andrews</h4>
 <p>For Homework 1, each student will create an R package derived from a
 raw analysis script. The package must provide the same core analysis and
 outputs as the raw script, but in a more modular, reusable form.</p>
-<p>Students will offer three interfaces to the same core functionality
-from the package:</p>
+<p>Students will offer up to three interfaces to the same core
+functionality from the package:</p>
 <ol style="list-style-type: decimal">
 <li>
 <strong>R API</strong> — exported functions with roxygen2
 documentation</li>
 <li>
-<strong>Shiny app</strong> — interactive analysis/visualization</li>
-<li>
 <strong>CLI</strong> — command-line interface via <a href="https://github.com/r-lib/Rapp" class="external-link">Rapp</a>
 </li>
+<li>
+<strong>OPTIONAL</strong> - <strong>Shiny app</strong> — interactive
+analysis/visualization</li>
 </ol>
 <p>All projects share the same <a href="https://st-jude-ms-abds.github.io/ADS8192/articles/HW1_Rubric.html">rubric</a>
 (25 points) and structural requirements. What differs is the
@@ -115,8 +116,6 @@ a <strong>SummarizedExperiment</strong> (bulk experiments) or a
 <ul>
 <li>A valid R package, installable from Github, with properly documented
 functions, example data, and tests</li>
-<li>A Shiny app that allows users to interactively explore/analyze/plot
-the data and results</li>
 <li>A CLI that runs the analysis end-to-end with adjustable parameters
 and writes results to disk</li>
 <li>A documentation website with a brief vignette describing how to use
@@ -124,6 +123,8 @@ the package</li>
 </ul>
 <p>See the <a href="https://st-jude-ms-abds.github.io/ADS8192/articles/HW1_Rubric.html">grading
 rubric</a> for exact requirements.</p>
+<p>The course contains material related to packaging a Shiny application
+with your package, but this is optional for this assignment.</p>
 <hr>
 </div>
 <div class="section level2">
@@ -164,17 +165,18 @@ script</td>
 <td>User-facing arguments adjustable in all three interfaces</td>
 </tr>
 <tr class="even">
-<td><strong>CLI outputs</strong></td>
+<td><strong>Potential CLI outputs</strong></td>
 <td>The TSV files your CLI subcommand must produce</td>
 </tr>
 <tr class="odd">
-<td><strong>Shiny inputs</strong></td>
-<td>What the user should be able to change interactively</td>
+<td><strong>Potential Shiny inputs</strong></td>
+<td>What the user should be able to change interactively (if you choose
+to implement a Shiny app)</td>
 </tr>
 </tbody>
 </table>
 <p>If you see function calls you aren’t familiar with in the raw code
-blocks, looking them on in R is your friend,
+blocks, looking them up in R is your friend,
 e.g. <code>?prcomcp</code>.</p>
 <hr>
 </div>
@@ -259,11 +261,11 @@ columns</li>
 <p><strong>Key parameters:</strong> <code>n_top</code>,
 <code>log_transform</code>, <code>scale</code>, <code>color_by</code>,
 <code>shape_by</code></p>
-<p><strong>CLI outputs:</strong> <code>pca_scores.tsv</code>,
+<p><strong>Potential CLI outputs:</strong> <code>pca_scores.tsv</code>,
 <code>pca_variance.tsv</code></p>
-<p><strong>Shiny inputs:</strong> Number of top genes, log-transform
-toggle, scale toggle, PC axes, color/shape by metadata column, point
-size</p>
+<p><strong>PotentialShiny inputs:</strong> Number of top genes,
+log-transform toggle, scale toggle, PC axes, color/shape by metadata
+column, point size</p>
 <details><summary>
 Raw analysis code
 </summary><div class="sourceCode" id="cb2"><pre class="downlit sourceCode r">
@@ -458,13 +460,15 @@ TSV files</li>
 <code>n_pcs</code> (number of PCs to use as UMAP input, default 30),
 <code>n_neighbors</code>, <code>min_dist</code>, <code>metric</code>
 (euclidean/cosine), <code>color_by</code>, <code>shape_by</code></p>
-<p><strong>CLI outputs:</strong> <code>umap_embeddings.tsv</code> (cell
-× UMAP1/UMAP2 + metadata + <code>knn_preserved</code> per-cell score),
-<code>umap_params.tsv</code> (parameter values + spread stats + global
-and per-cell-type quality scores)</p>
-<p><strong>Shiny inputs:</strong> n_top slider, n_pcs slider (10–50),
-n_neighbors slider (5–50), min_dist slider (0.01–1.0), metric dropdown,
-color/shape by metadata, per-cell-type k-NN preservation violin plot</p>
+<p><strong>Potential CLI outputs:</strong>
+<code>umap_embeddings.tsv</code> (cell × UMAP1/UMAP2 + metadata +
+<code>knn_preserved</code> per-cell score), <code>umap_params.tsv</code>
+(parameter values + spread stats + global and per-cell-type quality
+scores)</p>
+<p><strong>Potential Shiny inputs:</strong> n_top slider, n_pcs slider
+(10–50), n_neighbors slider (5–50), min_dist slider (0.01–1.0), metric
+dropdown, color/shape by metadata, per-cell-type k-NN preservation
+violin plot</p>
 <p><strong>Dependencies:</strong> <code>SingleCellExperiment</code>,
 <code>scuttle</code>, <code>uwot</code>, <code>scRNAseq</code> (data
 only)</p>
@@ -682,11 +686,12 @@ results to TSV files</li>
 <code>method</code> (pearson/spearman), <code>linkage</code>
 (ward.D2/complete/average), <code>k</code>, <code>n_bootstrap</code>
 (number of bootstrap iterations for stability)</p>
-<p><strong>CLI outputs:</strong> <code>similarity_matrix.tsv</code>,
+<p><strong>Potential CLI outputs:</strong>
+<code>similarity_matrix.tsv</code>,
 <code>cluster_assignments.tsv</code>,
 <code>cluster_stability.tsv</code></p>
-<p><strong>Shiny inputs:</strong> Correlation method, linkage method, k
-slider, n_top slider, n_bootstrap slider, metadata columns for
+<p><strong>Potential Shiny inputs:</strong> Correlation method, linkage
+method, k slider, n_top slider, n_bootstrap slider, metadata columns for
 annotation bars, stability bar chart</p>
 <p><strong>Dependencies:</strong> <code>SummarizedExperiment</code>,
 <code>macrophage</code> + <code>tximeta</code> (data only)</p>
@@ -881,12 +886,12 @@ filtering diagnostics to TSV files</li>
 (apeglm/ashr/normal/none), <code>plot_type</code> (volcano/ma),
 <code>min_count_per_group</code> (minimum mean count per group for gene
 filtering)</p>
-<p><strong>CLI outputs:</strong> <code>de_results.tsv</code>,
+<p><strong>Potential CLI outputs:</strong> <code>de_results.tsv</code>,
 <code>de_summary.tsv</code>, <code>filtering_diagnostics.tsv</code></p>
-<p><strong>Shiny inputs:</strong> Grouping column, reference level, FC
-threshold slider, p-value threshold slider, shrinkage method dropdown,
-volcano ↔︎ MA radio button, min count per group slider, filtering
-diagnostics plot</p>
+<p><strong>Potential Shiny inputs:</strong> Grouping column, reference
+level, FC threshold slider, p-value threshold slider, shrinkage method
+dropdown, volcano ↔︎ MA radio button, min count per group slider,
+filtering diagnostics plot</p>
 <p><strong>Dependencies:</strong> <code>SummarizedExperiment</code>,
 <code>DESeq2</code>, <code>ExperimentHub</code> (data retrieval)</p>
 <details><summary>
@@ -1065,11 +1070,12 @@ to TSV files</li>
 <p><strong>Key parameters:</strong> <code>n_top</code>,
 <code>max_k</code>, <code>n_starts</code>, <code>selected_k</code>,
 <code>reference_column</code> (metadata column for ARI, optional)</p>
-<p><strong>CLI outputs:</strong> <code>cluster_assignments.tsv</code>,
-<code>kmeans_metrics.tsv</code>, <code>cluster_evaluation.tsv</code></p>
-<p><strong>Shiny inputs:</strong> n_top slider, max_k slider, selected k
-slider, toggle between elbow plot and cluster scatter, color by cluster
-or cell_type metadata</p>
+<p><strong>Potential CLI outputs:</strong>
+<code>cluster_assignments.tsv</code>, <code>kmeans_metrics.tsv</code>,
+<code>cluster_evaluation.tsv</code></p>
+<p><strong>Potential Shiny inputs:</strong> n_top slider, max_k slider,
+selected k slider, toggle between elbow plot and cluster scatter, color
+by cluster or cell_type metadata</p>
 <p><strong>Dependencies:</strong> <code>SingleCellExperiment</code>,
 <code>scuttle</code>, <code>cluster</code>, <code>scRNAseq</code> (data
 only)</p>
@@ -1263,11 +1269,11 @@ highlighted</li>
 <code>min_genes</code>, <code>min_library_size</code>,
 <code>max_spike_pct</code>, <code>max_mito_pct</code>,
 <code>min_novelty</code></p>
-<p><strong>CLI outputs:</strong> <code>qc_metrics.tsv</code>,
+<p><strong>Potential CLI outputs:</strong> <code>qc_metrics.tsv</code>,
 <code>qc_flags.tsv</code></p>
-<p><strong>Shiny inputs:</strong> MAD threshold slider, minimum genes
-input, max spike-in % slider, max mito % slider, min novelty slider;
-panels update to reflect pass/fail counts</p>
+<p><strong>PotentialShiny inputs:</strong> MAD threshold slider, minimum
+genes input, max spike-in % slider, max mito % slider, min novelty
+slider; panels update to reflect pass/fail counts</p>
 <p><strong>Dependencies:</strong> <code>SingleCellExperiment</code>,
 <code>scRNAseq</code> (data only)</p>
 <details><summary>
@@ -1457,12 +1463,12 @@ per-gene contributions to TSV files</li>
 <p><strong>Key parameters:</strong> <code>gene_sets</code> (list or GMT
 path), <code>score_method</code> (mean_z, rank_based, or both),
 <code>group_column</code></p>
-<p><strong>CLI outputs:</strong> <code>geneset_scores.tsv</code>,
-<code>scoring_summary.tsv</code>,
+<p><strong>Potential CLI outputs:</strong>
+<code>geneset_scores.tsv</code>, <code>scoring_summary.tsv</code>,
 <code>gene_contributions.tsv</code></p>
-<p><strong>Shiny inputs:</strong> Select built-in sets or upload GMT,
-score method dropdown, grouping variable dropdown (dex treatment, cell
-line), gene set selector, boxplot ↔︎ violin toggle</p>
+<p><strong>Potential Shiny inputs:</strong> Select built-in sets or
+upload GMT, score method dropdown, grouping variable dropdown (dex
+treatment, cell line), gene set selector, boxplot ↔︎ violin toggle</p>
 <p><strong>Dependencies:</strong> <code>SummarizedExperiment</code>,
 <code>airway</code> (data only), <code>msigdbr</code> (gene sets)</p>
 <details><summary>
@@ -1648,9 +1654,9 @@ of gene names to query), <code>group_column</code> (metadata column for
 grouping, default <code>"cell_type"</code>), <code>min_detection</code>
 (minimum fraction of cells detecting a gene in at least one group to
 include it in results)</p>
-<p><strong>CLI outputs:</strong> <code>expression_stats.tsv</code>,
-<code>gene_specificity.tsv</code></p>
-<p><strong>Shiny inputs:</strong> Gene name text input
+<p><strong>Potential CLI outputs:</strong>
+<code>expression_stats.tsv</code>, <code>gene_specificity.tsv</code></p>
+<p><strong>Potential Shiny inputs:</strong> Gene name text input
 (comma-separated), grouping variable dropdown, plot type toggle (violin
 / co-expression scatter), gene pair selectors for scatter view,
 detection threshold slider</p>
@@ -1882,13 +1888,13 @@ and per-module summaries to TSV files</li>
 <p><strong>Key parameters:</strong> <code>n_top</code>,
 <code>cor_method</code> (pearson/spearman), <code>cor_threshold</code>,
 <code>community_method</code> (louvain/walktrap)</p>
-<p><strong>CLI outputs:</strong> <code>gene_correlations.tsv</code>,
-<code>network_summary.tsv</code>, <code>hub_genes.tsv</code>,
-<code>module_assignments.tsv</code>, <code>node_stats.tsv</code>,
-<code>module_summary.tsv</code></p>
-<p><strong>Shiny inputs:</strong> Correlation threshold slider, method
-dropdown, n_top slider, hub gene table, heatmap redraws on threshold
-change</p>
+<p><strong>Potential CLI outputs:</strong>
+<code>gene_correlations.tsv</code>, <code>network_summary.tsv</code>,
+<code>hub_genes.tsv</code>, <code>module_assignments.tsv</code>,
+<code>node_stats.tsv</code>, <code>module_summary.tsv</code></p>
+<p><strong>Potential Shiny inputs:</strong> Correlation threshold
+slider, method dropdown, n_top slider, hub gene table, heatmap redraws
+on threshold change</p>
 <p><strong>Dependencies:</strong> <code>SummarizedExperiment</code>,
 <code>igraph</code> (Suggests, for force-directed layout),
 <code>recount3</code> (data only)</p>
@@ -2150,11 +2156,12 @@ to TSV files</li>
 <p><strong>Key parameters:</strong> <code>n_top</code>,
 <code>scale_method</code> (zscore/minmax/none), <code>gene_k</code>,
 <code>column_split_by</code> (metadata column)</p>
-<p><strong>CLI outputs:</strong> <code>scaled_expression.tsv</code>,
-<code>gene_modules.tsv</code>, <code>module_gene_lists.tsv</code></p>
-<p><strong>Shiny inputs:</strong> n_top slider, scale method dropdown,
-gene_k slider, metadata column selector for annotation and column
-splitting, heatmap updates reactively</p>
+<p><strong>Potential CLI outputs:</strong>
+<code>scaled_expression.tsv</code>, <code>gene_modules.tsv</code>,
+<code>module_gene_lists.tsv</code></p>
+<p><strong>Potential Shiny inputs:</strong> n_top slider, scale method
+dropdown, gene_k slider, metadata column selector for annotation and
+column splitting, heatmap updates reactively</p>
 <p><strong>Dependencies:</strong> <code>SummarizedExperiment</code>,
 <code>ComplexHeatmap</code> (Suggests), <code>fission</code> (data
 only)</p>
@@ -2324,10 +2331,10 @@ files</li>
 <p><strong>Key parameters:</strong> <code>n_top</code>,
 <code>methods</code> (broken_stick/kaiser/elbow),
 <code>max_pcs</code></p>
-<p><strong>CLI outputs:</strong> <code>eigenvalues.tsv</code>,
+<p><strong>Potential CLI outputs:</strong> <code>eigenvalues.tsv</code>,
 <code>dimension_estimates.tsv</code></p>
-<p><strong>Shiny inputs:</strong> n_top slider, checkboxes to toggle
-overlay of each method, max_pcs slider, summary table of
+<p><strong>Potential Shiny inputs:</strong> n_top slider, checkboxes to
+toggle overlay of each method, max_pcs slider, summary table of
 recommendations</p>
 <p><strong>Dependencies:</strong> <code>SingleCellExperiment</code>,
 <code>scuttle</code>, <code>TENxPBMCData</code> (data only)</p>
@@ -2551,11 +2558,12 @@ embedding to TSV files</li>
 <p><strong>Key parameters:</strong> <code>batch_column</code>,
 <code>n_top</code>, <code>correct</code> (logical),
 <code>bio_column</code></p>
-<p><strong>CLI outputs:</strong> <code>batch_variance.tsv</code>,
+<p><strong>Potential CLI outputs:</strong>
+<code>batch_variance.tsv</code>,
 <code>corrected_embedding.tsv</code></p>
-<p><strong>Shiny inputs:</strong> Batch column dropdown, biological
-column dropdown, n_top slider, correction toggle, before/after scatter
-panels, R² bar chart</p>
+<p><strong>Potential Shiny inputs:</strong> Batch column dropdown,
+biological column dropdown, n_top slider, correction toggle,
+before/after scatter panels, R² bar chart</p>
 <p><strong>Dependencies:</strong> <code>SingleCellExperiment</code>,
 <code>batchelor</code>, <code>scran</code>, <code>scuttle</code>,
 <code>scRNAseq</code> (data only)</p>
@@ -2803,11 +2811,11 @@ dot size encodes detection rate, dot color encodes mean expression</li>
 <p><strong>Key parameters:</strong> <code>group_column</code>,
 <code>n_markers</code>, <code>fc_threshold</code>,
 <code>detection_threshold</code></p>
-<p><strong>CLI outputs:</strong> <code>marker_genes.tsv</code>,
-<code>marker_summary.tsv</code></p>
-<p><strong>Shiny inputs:</strong> Grouping variable dropdown, n_markers
-slider, FC threshold slider, detection threshold slider, dot plot +
-filterable gene table</p>
+<p><strong>Potential CLI outputs:</strong>
+<code>marker_genes.tsv</code>, <code>marker_summary.tsv</code></p>
+<p><strong>Potential Shiny inputs:</strong> Grouping variable dropdown,
+n_markers slider, FC threshold slider, detection threshold slider, dot
+plot + filterable gene table</p>
 <p><strong>Dependencies:</strong> <code>SingleCellExperiment</code>,
 <code>scuttle</code>, <code>scRNAseq</code> (data only)</p>
 <details><summary>
@@ -3098,11 +3106,11 @@ able to do with the package (4–6 bullet points)</li>
 <strong>At least one non-trivial visualization</strong> (not just a
 base R <code><a href="https://rdrr.io/r/graphics/plot.default.html" class="external-link">plot()</a></code> call)</li>
 <li>
-<strong>CLI outputs</strong> — what TSV/plot files will be
+<strong>Potential CLI outputs</strong> — what TSV/plot files will be
 produced?</li>
 <li>
-<strong>Shiny inputs</strong> — what will the user be able to
-adjust?</li>
+<strong>Potential Shiny inputs</strong> — what will the user be able
+to adjust?</li>
 </ol>
 <p>Submit your proposal as a GitHub Issue or by email <strong>before
 starting implementation</strong>. The instructor will respond within 48
