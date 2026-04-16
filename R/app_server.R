@@ -11,8 +11,6 @@
 #' @import shiny
 #' @importFrom SummarizedExperiment colData assayNames
 #' @importFrom ggplot2 ggsave
-#' @importFrom rlang .data
-#' @importFrom utils data
 #' @author Jared Andrews
 app_server <- function(input, output, session, se) {
     se_data <- reactiveVal(se)

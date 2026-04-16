@@ -27,18 +27,6 @@
 #'   run_app(se = example_se)
 #' }
 run_app <- function(se, return_as_list = FALSE, ...) {
-    if (!requireNamespace("shiny", quietly = TRUE)) {
-        stop("Package 'shiny' is required for app usage. Install with: ",
-             "install.packages('shiny')", call. = FALSE)
-    }
-    if (!requireNamespace("bslib", quietly = TRUE)) {
-        stop("Package 'bslib' is required for app usage. Install with: ",
-             "install.packages('bslib')", call. = FALSE)
-    }
-    if (!requireNamespace("DT", quietly = TRUE)) {
-        stop("Package 'DT' is required for app usage. Install with: ",
-             "install.packages('DT')", call. = FALSE)
-    }
 
     if (!is(se, "SummarizedExperiment")) {
         stop("'se' must be a SummarizedExperiment object.", call. = FALSE)
@@ -48,15 +36,17 @@ run_app <- function(se, return_as_list = FALSE, ...) {
         app_server(input, output, session, se = se)
     }
 
-    app <- shiny::shinyApp(
+    app <- shinyApp(
         ui = app_ui(),
         server = server,
         ...
     )
 
     if (return_as_list) {
-        return(list(ui = app_ui(), server = server))
+        out <- list(ui = app_ui(), server = server)
     } else {
-        app
+        out <- app
     }
+
+    out
 }
