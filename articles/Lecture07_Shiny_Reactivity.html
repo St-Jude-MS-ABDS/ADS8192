@@ -242,15 +242,21 @@ area for outputs:</p>
 <span>    <span class="fu"><a href="https://rdrr.io/pkg/shiny/man/titlePanel.html" class="external-link">titlePanel</a></span><span class="op">(</span><span class="st">"My App"</span><span class="op">)</span>,</span>
 <span>    <span class="fu"><a href="https://rdrr.io/pkg/shiny/man/sidebarLayout.html" class="external-link">sidebarLayout</a></span><span class="op">(</span></span>
 <span>        <span class="fu"><a href="https://rdrr.io/pkg/shiny/man/sidebarLayout.html" class="external-link">sidebarPanel</a></span><span class="op">(</span></span>
-<span>            <span class="co"># Controls here</span></span>
 <span>            <span class="fu"><a href="https://rdrr.io/pkg/shiny/man/sliderInput.html" class="external-link">sliderInput</a></span><span class="op">(</span><span class="st">"n"</span>, <span class="st">"N:"</span>, min <span class="op">=</span> <span class="fl">1</span>, max <span class="op">=</span> <span class="fl">100</span>, value <span class="op">=</span> <span class="fl">50</span><span class="op">)</span></span>
 <span>        <span class="op">)</span>,</span>
 <span>        <span class="fu"><a href="https://rdrr.io/pkg/shiny/man/sidebarLayout.html" class="external-link">mainPanel</a></span><span class="op">(</span></span>
-<span>            <span class="co"># Outputs here</span></span>
-<span>            <span class="fu"><a href="https://rdrr.io/pkg/shiny/man/plotOutput.html" class="external-link">plotOutput</a></span><span class="op">(</span><span class="st">"plot"</span><span class="op">)</span></span>
+<span>            <span class="fu"><a href="https://rdrr.io/pkg/shiny/man/textOutput.html" class="external-link">textOutput</a></span><span class="op">(</span><span class="st">"result"</span><span class="op">)</span></span>
 <span>        <span class="op">)</span></span>
 <span>    <span class="op">)</span></span>
-<span><span class="op">)</span></span></code></pre></div>
+<span><span class="op">)</span></span>
+<span></span>
+<span><span class="va">server</span> <span class="op">&lt;-</span> <span class="kw">function</span><span class="op">(</span><span class="va">input</span>, <span class="va">output</span>, <span class="va">session</span><span class="op">)</span> <span class="op">{</span></span>
+<span>    <span class="va">output</span><span class="op">$</span><span class="va">result</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/pkg/shiny/man/renderPrint.html" class="external-link">renderText</a></span><span class="op">(</span><span class="op">{</span></span>
+<span>        <span class="fu"><a href="https://rdrr.io/r/base/paste.html" class="external-link">paste</a></span><span class="op">(</span><span class="st">"You selected:"</span>, <span class="va">input</span><span class="op">$</span><span class="va">n</span><span class="op">)</span></span>
+<span>    <span class="op">}</span><span class="op">)</span></span>
+<span><span class="op">}</span></span>
+<span></span>
+<span><span class="fu"><a href="https://rdrr.io/pkg/shiny/man/shinyApp.html" class="external-link">shinyApp</a></span><span class="op">(</span><span class="va">ui</span>, <span class="va">server</span><span class="op">)</span></span></code></pre></div>
 </div>
 <div class="section level4">
 <h4 id="navbarpage-multi-page-navigation">
@@ -261,10 +267,21 @@ area for outputs:</p>
 <code class="sourceCode R"><span><span class="co"># Multi-page app with a navigation bar</span></span>
 <span><span class="va">ui</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/pkg/shiny/man/navbarPage.html" class="external-link">navbarPage</a></span><span class="op">(</span></span>
 <span>    title <span class="op">=</span> <span class="st">"My App"</span>,</span>
-<span>    <span class="fu"><a href="https://rdrr.io/pkg/shiny/man/tabPanel.html" class="external-link">tabPanel</a></span><span class="op">(</span><span class="st">"Analysis"</span>, <span class="fu"><a href="https://rdrr.io/pkg/shiny/man/plotOutput.html" class="external-link">plotOutput</a></span><span class="op">(</span><span class="st">"plot"</span><span class="op">)</span><span class="op">)</span>,</span>
-<span>    <span class="fu"><a href="https://rdrr.io/pkg/shiny/man/tabPanel.html" class="external-link">tabPanel</a></span><span class="op">(</span><span class="st">"Data"</span>, <span class="fu">DT</span><span class="fu">::</span><span class="fu"><a href="https://rdrr.io/pkg/DT/man/dataTableOutput.html" class="external-link">dataTableOutput</a></span><span class="op">(</span><span class="st">"table"</span><span class="op">)</span><span class="op">)</span>,</span>
+<span>    <span class="fu"><a href="https://rdrr.io/pkg/shiny/man/tabPanel.html" class="external-link">tabPanel</a></span><span class="op">(</span></span>
+<span>        <span class="st">"Analysis"</span>,</span>
+<span>        <span class="fu"><a href="https://rdrr.io/pkg/shiny/man/sliderInput.html" class="external-link">sliderInput</a></span><span class="op">(</span><span class="st">"n"</span>, <span class="st">"N:"</span>, min <span class="op">=</span> <span class="fl">1</span>, max <span class="op">=</span> <span class="fl">100</span>, value <span class="op">=</span> <span class="fl">50</span><span class="op">)</span>,</span>
+<span>        <span class="fu"><a href="https://rdrr.io/pkg/shiny/man/textOutput.html" class="external-link">textOutput</a></span><span class="op">(</span><span class="st">"result"</span><span class="op">)</span></span>
+<span>    <span class="op">)</span>,</span>
 <span>    <span class="fu"><a href="https://rdrr.io/pkg/shiny/man/tabPanel.html" class="external-link">tabPanel</a></span><span class="op">(</span><span class="st">"About"</span>, <span class="fu"><a href="https://rstudio.github.io/htmltools/reference/builder.html" class="external-link">p</a></span><span class="op">(</span><span class="st">"About this app..."</span><span class="op">)</span><span class="op">)</span></span>
-<span><span class="op">)</span></span></code></pre></div>
+<span><span class="op">)</span></span>
+<span></span>
+<span><span class="va">server</span> <span class="op">&lt;-</span> <span class="kw">function</span><span class="op">(</span><span class="va">input</span>, <span class="va">output</span>, <span class="va">session</span><span class="op">)</span> <span class="op">{</span></span>
+<span>    <span class="va">output</span><span class="op">$</span><span class="va">result</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/pkg/shiny/man/renderPrint.html" class="external-link">renderText</a></span><span class="op">(</span><span class="op">{</span></span>
+<span>        <span class="fu"><a href="https://rdrr.io/r/base/paste.html" class="external-link">paste</a></span><span class="op">(</span><span class="st">"You selected:"</span>, <span class="va">input</span><span class="op">$</span><span class="va">n</span><span class="op">)</span></span>
+<span>    <span class="op">}</span><span class="op">)</span></span>
+<span><span class="op">}</span></span>
+<span></span>
+<span><span class="fu"><a href="https://rdrr.io/pkg/shiny/man/shinyApp.html" class="external-link">shinyApp</a></span><span class="op">(</span><span class="va">ui</span>, <span class="va">server</span><span class="op">)</span></span></code></pre></div>
 </div>
 <div class="section level4">
 <h4 id="bslibpage_sidebar-modern-bootstrap-5">
@@ -282,24 +299,32 @@ area for outputs:</p>
 <span>    sidebar <span class="op">=</span> <span class="fu"><a href="https://rstudio.github.io/bslib/reference/sidebar.html" class="external-link">sidebar</a></span><span class="op">(</span></span>
 <span>        <span class="fu"><a href="https://rdrr.io/pkg/shiny/man/sliderInput.html" class="external-link">sliderInput</a></span><span class="op">(</span><span class="st">"n"</span>, <span class="st">"N:"</span>, min <span class="op">=</span> <span class="fl">1</span>, max <span class="op">=</span> <span class="fl">100</span>, value <span class="op">=</span> <span class="fl">50</span><span class="op">)</span></span>
 <span>    <span class="op">)</span>,</span>
-<span>    <span class="fu"><a href="https://rdrr.io/pkg/shiny/man/plotOutput.html" class="external-link">plotOutput</a></span><span class="op">(</span><span class="st">"plot"</span><span class="op">)</span></span>
-<span><span class="op">)</span></span></code></pre></div>
+<span>    <span class="fu"><a href="https://rdrr.io/pkg/shiny/man/textOutput.html" class="external-link">textOutput</a></span><span class="op">(</span><span class="st">"result"</span><span class="op">)</span></span>
+<span><span class="op">)</span></span>
+<span></span>
+<span><span class="va">server</span> <span class="op">&lt;-</span> <span class="kw">function</span><span class="op">(</span><span class="va">input</span>, <span class="va">output</span>, <span class="va">session</span><span class="op">)</span> <span class="op">{</span></span>
+<span>    <span class="va">output</span><span class="op">$</span><span class="va">result</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/pkg/shiny/man/renderPrint.html" class="external-link">renderText</a></span><span class="op">(</span><span class="op">{</span></span>
+<span>        <span class="fu"><a href="https://rdrr.io/r/base/paste.html" class="external-link">paste</a></span><span class="op">(</span><span class="st">"You selected:"</span>, <span class="va">input</span><span class="op">$</span><span class="va">n</span><span class="op">)</span></span>
+<span>    <span class="op">}</span><span class="op">)</span></span>
+<span><span class="op">}</span></span>
+<span></span>
+<span><span class="fu"><a href="https://rdrr.io/pkg/shiny/man/shinyApp.html" class="external-link">shinyApp</a></span><span class="op">(</span><span class="va">ui</span>, <span class="va">server</span><span class="op">)</span></span></code></pre></div>
 <blockquote>
 <p><strong>Note:</strong> <code><a href="https://rstudio.github.io/bslib/reference/page_sidebar.html" class="external-link">bslib::page_sidebar()</a></code> is what the
 packaged ADS8192 Shiny app uses (<code><a href="../reference/run_app.html">run_app()</a></code>). It provides a
-cleaner API and full Bootstrap 5 support.</p>
+cleaner API and full Bootstrap 5s support.</p>
 </blockquote>
 </div>
 <div class="section level4">
 <h4 id="other-packages-and-custom-inputs">Other Packages and Custom Inputs<a class="anchor" aria-label="anchor" href="#other-packages-and-custom-inputs"></a>
 </h4>
-<p>The base Shiny inputs cover most use cases, but you are not limited
-to them:</p>
+<p>The <a href="https://shiny.posit.co/r/getstarted/shiny-basics/lesson3/" class="external-link">base
+Shiny inputs</a> cover most use cases, but you are not limited to
+them:</p>
 <ul>
 <li>
-<strong><code>shinydashboard</code></strong> and
-<strong><code>bs4Dash</code></strong>: Provide dashboard-style layouts
-with cards, value boxes, and sidebars</li>
+<strong><code>shinydashboard</code></strong>: Provide
+dashboard-style layouts with cards, value boxes, and sidebars</li>
 <li>
 <strong><code>bslib</code></strong>: Offers
 <code><a href="https://rstudio.github.io/bslib/reference/accordion.html" class="external-link">accordion()</a></code>, <code><a href="https://rstudio.github.io/bslib/reference/card.html" class="external-link">card()</a></code>, <code><a href="https://rstudio.github.io/bslib/reference/value_box.html" class="external-link">value_box()</a></code>,
@@ -308,12 +333,7 @@ and other Bootstrap 5 components</li>
 <strong>Custom inputs</strong>: You can write your own input widgets
 using the <code>htmlwidgets</code> package or raw HTML/JavaScript — this
 is advanced but powerful for specialized scientific visualizations</li>
-<li>Other packages in the ecosystem (e.g., <code>plotly</code>,
-<code>leaflet</code>) provide their own output widgets that integrate
-seamlessly with Shiny’s reactive system</li>
 </ul>
-<p>For most scientific apps, the built-in Shiny inputs plus
-<code>bslib</code> components will cover all your needs.</p>
 <hr>
 </div>
 </div>
@@ -456,6 +476,176 @@ Verify that changing shape doesn’t re-run PCA.</p>
 <hr>
 </div>
 <div class="section level3">
+<h3 id="reactive-contexts-in-depth">Reactive Contexts in Depth<a class="anchor" aria-label="anchor" href="#reactive-contexts-in-depth"></a>
+</h3>
+<p>All reactive code in Shiny must run inside a <strong>reactive
+context</strong> — a special execution environment that tracks which
+reactive sources were read so that Shiny knows what to invalidate when
+those sources change. If you try to read <code>input$x</code> outside a
+reactive context, you will get an error. This is by design: Shiny can
+only manage the invalidation graph for code it controls.</p>
+<p>The five most important reactive contexts are summarized below.</p>
+<div class="section level4">
+<h4 id="render-outputs-that-display-results">
+<code>render*()</code> — Outputs that display results<a class="anchor" aria-label="anchor" href="#render-outputs-that-display-results"></a>
+</h4>
+<p>The <code>render*()</code> functions (e.g. <code><a href="https://rdrr.io/pkg/shiny/man/renderPlot.html" class="external-link">renderPlot()</a></code>,
+<code><a href="https://rdrr.io/pkg/shiny/man/renderPrint.html" class="external-link">renderText()</a></code>, <code><a href="https://rdrr.io/pkg/shiny/man/renderDataTable.html" class="external-link">renderDataTable()</a></code>) create
+reactive contexts that produce output values. They are the most common
+way to display results in a Shiny app. Inside a <code>render*()</code>
+block, you can read inputs and call reactive expressions, and Shiny will
+automatically update the output whenever any of those dependencies
+change.</p>
+<div class="sourceCode" id="cb10"><pre class="downlit sourceCode r">
+<code class="sourceCode R"><span><span class="va">output</span><span class="op">$</span><span class="va">pca_plot</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/pkg/shiny/man/renderPlot.html" class="external-link">renderPlot</a></span><span class="op">(</span><span class="op">{</span></span>
+<span>    <span class="fu"><a href="../reference/plot_pca.html">plot_pca</a></span><span class="op">(</span><span class="fu">pca_result</span><span class="op">(</span><span class="op">)</span>, color_by <span class="op">=</span> <span class="va">input</span><span class="op">$</span><span class="va">color_by</span><span class="op">)</span></span>
+<span><span class="op">}</span><span class="op">)</span></span></code></pre></div>
+</div>
+<div class="section level4">
+<h4 id="reactive-cached-computations">
+<code>reactive()</code> — Cached computations<a class="anchor" aria-label="anchor" href="#reactive-cached-computations"></a>
+</h4>
+<p>You have already seen <code><a href="https://rdrr.io/pkg/shiny/man/reactive.html" class="external-link">reactive()</a></code>. It creates a reactive
+expression: a value that is computed lazily, cached, and recomputed only
+when its dependencies change. Call it like a function
+(<code>pca_result()</code>) inside other reactive contexts.</p>
+<p>Use <code><a href="https://rdrr.io/pkg/shiny/man/reactive.html" class="external-link">reactive()</a></code> when you have a computation that:</p>
+<ul>
+<li>Takes time (or has meaningful cost)</li>
+<li>Is consumed by more than one output</li>
+<li>Should not run more often than its inputs actually change</li>
+</ul>
+<div class="sourceCode" id="cb11"><pre class="downlit sourceCode r">
+<code class="sourceCode R"><span><span class="co"># Computed once; reused by multiple render functions</span></span>
+<span><span class="va">filtered_data</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/pkg/shiny/man/reactive.html" class="external-link">reactive</a></span><span class="op">(</span><span class="op">{</span></span>
+<span>    <span class="va">example_se</span><span class="op">[</span>, <span class="va">example_se</span><span class="op">$</span><span class="va">dex</span> <span class="op">==</span> <span class="va">input</span><span class="op">$</span><span class="va">dex_filter</span><span class="op">]</span></span>
+<span><span class="op">}</span><span class="op">)</span></span></code></pre></div>
+</div>
+<div class="section level4">
+<h4 id="observe-side-effects-without-a-return-value">
+<code>observe()</code> — Side effects without a return value<a class="anchor" aria-label="anchor" href="#observe-side-effects-without-a-return-value"></a>
+</h4>
+<p><code><a href="https://rdrr.io/pkg/shiny/man/observe.html" class="external-link">observe()</a></code> runs a block of code whenever its reactive
+dependencies change, but it does <strong>not</strong> produce a value.
+Use it for side effects that don’t need to generate output: writing to a
+file, logging, or calling <code><a href="https://rdrr.io/pkg/shiny/man/updateSelectInput.html" class="external-link">updateSelectInput()</a></code> to
+synchronize one input with another.</p>
+<div class="sourceCode" id="cb12"><pre class="downlit sourceCode r">
+<code class="sourceCode R"><span><span class="co"># Update shape_by choices whenever color_by changes</span></span>
+<span><span class="fu"><a href="https://rdrr.io/pkg/shiny/man/observe.html" class="external-link">observe</a></span><span class="op">(</span><span class="op">{</span></span>
+<span>    <span class="va">current_color</span> <span class="op">&lt;-</span> <span class="va">input</span><span class="op">$</span><span class="va">color_by</span></span>
+<span>    <span class="va">remaining</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://generics.r-lib.org/reference/setops.html" class="external-link">setdiff</a></span><span class="op">(</span><span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="st">"None"</span>, <span class="st">"dex"</span>, <span class="st">"cell"</span><span class="op">)</span>, <span class="va">current_color</span><span class="op">)</span></span>
+<span>    <span class="fu"><a href="https://rdrr.io/pkg/shiny/man/updateSelectInput.html" class="external-link">updateSelectInput</a></span><span class="op">(</span><span class="va">session</span>, <span class="st">"shape_by"</span>, choices <span class="op">=</span> <span class="va">remaining</span><span class="op">)</span></span>
+<span><span class="op">}</span><span class="op">)</span></span></code></pre></div>
+<p><code><a href="https://rdrr.io/pkg/shiny/man/observe.html" class="external-link">observe()</a></code> runs <strong>eagerly</strong> — as soon as any
+dependency changes — whereas <code><a href="https://rdrr.io/pkg/shiny/man/reactive.html" class="external-link">reactive()</a></code> is
+<strong>lazy</strong> and only runs when something downstream requests
+its value.</p>
+</div>
+<div class="section level4">
+<h4 id="observeevent-and-eventreactive-event-driven-reactivity">
+<code>observeEvent()</code> and <code>eventReactive()</code> —
+Event-driven reactivity<a class="anchor" aria-label="anchor" href="#observeevent-and-eventreactive-event-driven-reactivity"></a>
+</h4>
+<p>Sometimes you want reactivity to fire only on a specific trigger (a
+button click, a file upload) rather than every time any input changes.
+The <code>...Event()</code> variants let you declare that
+explicitly.</p>
+<table class="table">
+<colgroup>
+<col width="25%">
+<col width="25%">
+<col width="25%">
+<col width="25%">
+</colgroup>
+<thead><tr class="header">
+<th>Function</th>
+<th>Returns</th>
+<th>Triggered by</th>
+<th>Use when</th>
+</tr></thead>
+<tbody>
+<tr class="odd">
+<td><code>observeEvent(trigger, {...})</code></td>
+<td>nothing</td>
+<td>
+<code>trigger</code> only</td>
+<td>side effects on a specific event</td>
+</tr>
+<tr class="even">
+<td><code>eventReactive(trigger, {...})</code></td>
+<td>a value</td>
+<td>
+<code>trigger</code> only</td>
+<td>expensive computation gated on a button</td>
+</tr>
+</tbody>
+</table>
+<div class="sourceCode" id="cb13"><pre class="downlit sourceCode r">
+<code class="sourceCode R"><span><span class="co"># Only rerun PCA when the user clicks "Run"</span></span>
+<span><span class="va">pca_result</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/pkg/shiny/man/observeEvent.html" class="external-link">eventReactive</a></span><span class="op">(</span><span class="va">input</span><span class="op">$</span><span class="va">run_button</span>, <span class="op">{</span></span>
+<span>    <span class="fu"><a href="../reference/run_pca.html">run_pca</a></span><span class="op">(</span><span class="va">example_se</span>, n_top <span class="op">=</span> <span class="va">input</span><span class="op">$</span><span class="va">n_top</span><span class="op">)</span></span>
+<span><span class="op">}</span><span class="op">)</span></span>
+<span></span>
+<span><span class="co"># Log every time a plot is downloaded</span></span>
+<span><span class="fu"><a href="https://rdrr.io/pkg/shiny/man/observeEvent.html" class="external-link">observeEvent</a></span><span class="op">(</span><span class="va">input</span><span class="op">$</span><span class="va">download_plot</span>, <span class="op">{</span></span>
+<span>    <span class="fu"><a href="https://rdrr.io/r/base/message.html" class="external-link">message</a></span><span class="op">(</span><span class="st">"Plot downloaded at "</span>, <span class="fu"><a href="https://rdrr.io/r/base/Sys.time.html" class="external-link">Sys.time</a></span><span class="op">(</span><span class="op">)</span><span class="op">)</span></span>
+<span><span class="op">}</span><span class="op">)</span></span></code></pre></div>
+<p>This is particularly useful for expensive computations — you can let
+the user configure several parameters and only trigger the analysis when
+they explicitly click a button, rather than re-running on every
+keystroke.</p>
+</div>
+<div class="section level4">
+<h4 id="isolate-reading-without-creating-a-dependency">
+<code>isolate()</code> — Reading without creating a dependency<a class="anchor" aria-label="anchor" href="#isolate-reading-without-creating-a-dependency"></a>
+</h4>
+<p><code><a href="https://rdrr.io/pkg/shiny/man/isolate.html" class="external-link">isolate()</a></code> lets you read a reactive value inside a
+reactive context <em>without</em> registering a dependency on it. The
+surrounding context will not be invalidated when that value changes.
+This is useful when you want to capture the current value of an input at
+the moment a computation runs, but you don’t want that input to trigger
+recomputation.</p>
+<p>This app has two inputs. Move the slider — the output updates
+immediately. Change the label — nothing happens. The label is only
+captured when the slider moves, via <code><a href="https://rdrr.io/pkg/shiny/man/isolate.html" class="external-link">isolate()</a></code>:</p>
+<div class="sourceCode" id="cb14"><pre class="downlit sourceCode r">
+<code class="sourceCode R"><span><span class="kw"><a href="https://rdrr.io/r/base/library.html" class="external-link">library</a></span><span class="op">(</span><span class="va"><a href="https://shiny.posit.co/" class="external-link">shiny</a></span><span class="op">)</span></span>
+<span></span>
+<span><span class="va">ui</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/pkg/shiny/man/fluidPage.html" class="external-link">fluidPage</a></span><span class="op">(</span></span>
+<span>    <span class="fu"><a href="https://rdrr.io/pkg/shiny/man/sliderInput.html" class="external-link">sliderInput</a></span><span class="op">(</span><span class="st">"n"</span>, <span class="st">"Number:"</span>, min <span class="op">=</span> <span class="fl">1</span>, max <span class="op">=</span> <span class="fl">10</span>, value <span class="op">=</span> <span class="fl">5</span><span class="op">)</span>,</span>
+<span>    <span class="fu"><a href="https://rdrr.io/pkg/shiny/man/textInput.html" class="external-link">textInput</a></span><span class="op">(</span><span class="st">"label"</span>, <span class="st">"Label:"</span>, value <span class="op">=</span> <span class="st">"Result"</span><span class="op">)</span>,</span>
+<span>    <span class="fu"><a href="https://rdrr.io/pkg/shiny/man/textOutput.html" class="external-link">textOutput</a></span><span class="op">(</span><span class="st">"result"</span><span class="op">)</span></span>
+<span><span class="op">)</span></span>
+<span></span>
+<span><span class="va">server</span> <span class="op">&lt;-</span> <span class="kw">function</span><span class="op">(</span><span class="va">input</span>, <span class="va">output</span>, <span class="va">session</span><span class="op">)</span> <span class="op">{</span></span>
+<span>    <span class="va">output</span><span class="op">$</span><span class="va">result</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/pkg/shiny/man/renderPrint.html" class="external-link">renderText</a></span><span class="op">(</span><span class="op">{</span></span>
+<span>        <span class="co"># input$n    → dependency: output rerenders when slider changes</span></span>
+<span>        <span class="co"># input$label → NOT a dependency: changing the text box does nothing</span></span>
+<span>        <span class="fu"><a href="https://rdrr.io/r/base/paste.html" class="external-link">paste0</a></span><span class="op">(</span><span class="fu"><a href="https://rdrr.io/pkg/shiny/man/isolate.html" class="external-link">isolate</a></span><span class="op">(</span><span class="va">input</span><span class="op">$</span><span class="va">label</span><span class="op">)</span>, <span class="st">": "</span>, <span class="va">input</span><span class="op">$</span><span class="va">n</span><span class="op">)</span></span>
+<span>    <span class="op">}</span><span class="op">)</span></span>
+<span><span class="op">}</span></span>
+<span></span>
+<span><span class="fu"><a href="https://rdrr.io/pkg/shiny/man/shinyApp.html" class="external-link">shinyApp</a></span><span class="op">(</span><span class="va">ui</span>, <span class="va">server</span><span class="op">)</span></span></code></pre></div>
+<p><code><a href="https://rdrr.io/pkg/shiny/man/isolate.html" class="external-link">isolate()</a></code> is a precision tool. Overusing it defeats the
+purpose of the reactive graph, but it is invaluable when you need to
+capture contextual state at the moment a computation runs without making
+that state a trigger for recomputation.</p>
+</div>
+<div class="section level4">
+<h4 id="choosing-the-right-context">Choosing the right context<a class="anchor" aria-label="anchor" href="#choosing-the-right-context"></a>
+</h4>
+<pre><code>Need a value returned?  ──Yes──→  reactive() / eventReactive()
+        │ No
+        ↓
+Triggered by one event? ──Yes──→  observeEvent()
+        │ No
+        ↓
+        observe()</code></pre>
+<hr>
+</div>
+</div>
+<div class="section level3">
 <h3 id="step-3-more-controls">Step 3: More Controls<a class="anchor" aria-label="anchor" href="#step-3-more-controls"></a>
 </h3>
 <p>Shiny has tons of <a href="https://mastering-shiny.org/basic-ui.html#inputs" class="external-link">different types
@@ -470,7 +660,7 @@ input and make the app more intuitive.</p>
 inputs.</p>
 <details><summary>
 App with more controls
-</summary><div class="sourceCode" id="cb10"><pre class="downlit sourceCode r">
+</summary><div class="sourceCode" id="cb16"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="co"># Full PCA Explorer app — Step 3 (UI + server with tabs, reactive caching, and multiple outputs)</span></span>
 <span><span class="va">ui</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/pkg/shiny/man/fluidPage.html" class="external-link">fluidPage</a></span><span class="op">(</span></span>
 <span>    theme <span class="op">=</span> <span class="fu">bslib</span><span class="fu">::</span><span class="fu"><a href="https://rstudio.github.io/bslib/reference/bs_theme.html" class="external-link">bs_theme</a></span><span class="op">(</span>bootswatch <span class="op">=</span> <span class="st">"flatly"</span><span class="op">)</span>,</span>
@@ -625,7 +815,7 @@ i.e. inside a <code><a href="https://rdrr.io/pkg/shiny/man/reactive.html" class
 which means you can inspect the current values of inputs and any
 intermediate variables to see why something isn’t updating as
 expected.</p>
-<div class="sourceCode" id="cb11"><pre class="downlit sourceCode r">
+<div class="sourceCode" id="cb17"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="va">ui</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/pkg/shiny/man/fluidPage.html" class="external-link">fluidPage</a></span><span class="op">(</span></span>
 <span>    <span class="fu"><a href="https://rdrr.io/pkg/shiny/man/titlePanel.html" class="external-link">titlePanel</a></span><span class="op">(</span><span class="st">"PCA Explorer"</span><span class="op">)</span>,</span>
 <span>    <span class="fu"><a href="https://rdrr.io/pkg/shiny/man/sidebarLayout.html" class="external-link">sidebarLayout</a></span><span class="op">(</span></span>
@@ -659,7 +849,7 @@ Remove the <code><a href="https://rdrr.io/r/base/browser.html" class="external-l
 <p>The <code>reactlog</code> package provides a way to visualize the
 reactive graph of a Shiny app. This can help identify where things are
 not updating as expected.</p>
-<div class="sourceCode" id="cb12"><pre class="downlit sourceCode r">
+<div class="sourceCode" id="cb18"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="kw"><a href="https://rdrr.io/r/base/library.html" class="external-link">library</a></span><span class="op">(</span><span class="va"><a href="https://rstudio.github.io/reactlog/" class="external-link">reactlog</a></span><span class="op">)</span></span>
 <span></span>
 <span><span class="va">ui</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/pkg/shiny/man/fluidPage.html" class="external-link">fluidPage</a></span><span class="op">(</span></span>
@@ -691,8 +881,11 @@ not updating as expected.</p>
 <span><span class="fu"><a href="https://rdrr.io/pkg/shiny/man/shinyApp.html" class="external-link">shinyApp</a></span><span class="op">(</span><span class="va">ui</span>, <span class="va">server</span><span class="op">)</span></span>
 <span></span>
 <span><span class="co"># After interacting with the app, view the reactive graph</span></span>
-<span><span class="fu"><a href="https://rdrr.io/pkg/shiny/man/reactlog.html" class="external-link">reactlogShow</a></span><span class="op">(</span><span class="op">)</span></span></code></pre></div>
-<p>The graph shows every reactive source, conductor, and endpoint, and
+<span><span class="fu"><a href="https://rdrr.io/pkg/shiny/man/reactlog.html" class="external-link">reactlogShow</a></span><span class="op">(</span><span class="op">)</span></span>
+<span></span>
+<span><span class="co"># Turn off the reactlog once done</span></span>
+<span><span class="fu"><a href="https://rstudio.github.io/reactlog/reference/setReactLog.html" class="external-link">reactlog_disable</a></span><span class="op">(</span><span class="op">)</span></span></code></pre></div>
+<p>The graph shows every reactive input, conductor, and output, and
 highlights which dependencies triggered a recomputation. Nodes that are
 grayed out were not invalidated; highlighted nodes were re-executed.
 This makes it easy to spot cases where a reactive expression is running
@@ -700,8 +893,6 @@ more often than expected — or not running when it should.</p>
 <p>This graph can get very large and complex for larger apps, but it can
 be useful for tricky reactivity issues, especially when you can extract
 a minimal reproducible example that isolates the problem.</p>
-<p>Turn off <code>reactlog</code> with <code><a href="https://rstudio.github.io/reactlog/reference/setReactLog.html" class="external-link">reactlog_disable()</a></code>
-once you are done debugging.</p>
 <p>Troubleshooting Shiny apps is somewhere between an art and voodoo,
 but you get better at it with practice and experience, much like art
 (and presumably voodoo). Read more about debugging Shiny apps <a href="https://mastering-shiny.org/action-workflow.html#debugging" class="external-link">here</a>.</p>
@@ -759,34 +950,24 @@ helpful feedback to users. The <code><a href="https://rdrr.io/pkg/shiny/man/vali
 check conditions and display messages when they are not met. You can use
 it inside any reactive context (reactive expressions, render functions)
 to ensure that inputs are valid before proceeding.</p>
-<div class="sourceCode" id="cb13"><pre class="downlit sourceCode r">
-<code class="sourceCode R"><span><span class="va">server</span> <span class="op">&lt;-</span> <span class="kw">function</span><span class="op">(</span><span class="va">input</span>, <span class="va">output</span>, <span class="va">session</span><span class="op">)</span> <span class="op">{</span></span>
-<span>    <span class="va">pca_result</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/pkg/shiny/man/reactive.html" class="external-link">reactive</a></span><span class="op">(</span><span class="op">{</span></span>
-<span>        <span class="co"># Validate inputs before computing</span></span>
-<span>        <span class="fu"><a href="https://rdrr.io/pkg/shiny/man/validate.html" class="external-link">validate</a></span><span class="op">(</span></span>
-<span>            <span class="fu"><a href="https://rdrr.io/pkg/shiny/man/validate.html" class="external-link">need</a></span><span class="op">(</span><span class="va">input</span><span class="op">$</span><span class="va">n_top</span> <span class="op">&gt;=</span> <span class="fl">10</span>, <span class="st">"Please select at least 10 genes"</span><span class="op">)</span>,</span>
-<span>            <span class="fu"><a href="https://rdrr.io/pkg/shiny/man/validate.html" class="external-link">need</a></span><span class="op">(</span><span class="va">input</span><span class="op">$</span><span class="va">n_top</span> <span class="op">&lt;=</span> <span class="fu"><a href="https://rdrr.io/r/base/nrow.html" class="external-link">nrow</a></span><span class="op">(</span><span class="va">example_se</span><span class="op">)</span>, <span class="st">"Cannot select more genes than available"</span><span class="op">)</span></span>
-<span>        <span class="op">)</span></span>
+<div class="sourceCode" id="cb19"><pre class="downlit sourceCode r">
+<code class="sourceCode R"><span><span class="va">ui</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/pkg/shiny/man/fluidPage.html" class="external-link">fluidPage</a></span><span class="op">(</span></span>
+<span>  <span class="fu"><a href="https://rdrr.io/pkg/shiny/man/checkboxGroupInput.html" class="external-link">checkboxGroupInput</a></span><span class="op">(</span><span class="st">'in1'</span>, <span class="st">'Check some letters'</span>, choices <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/utils/head.html" class="external-link">head</a></span><span class="op">(</span><span class="va">LETTERS</span><span class="op">)</span><span class="op">)</span>,</span>
+<span>  <span class="fu"><a href="https://rdrr.io/pkg/shiny/man/selectInput.html" class="external-link">selectizeInput</a></span><span class="op">(</span><span class="st">'in2'</span>, <span class="st">'Select a state'</span>, choices <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="st">""</span>, <span class="va">state.name</span><span class="op">)</span><span class="op">)</span>,</span>
+<span>  <span class="fu"><a href="https://rdrr.io/pkg/shiny/man/plotOutput.html" class="external-link">plotOutput</a></span><span class="op">(</span><span class="st">'plot'</span><span class="op">)</span></span>
+<span><span class="op">)</span></span>
 <span></span>
-<span>        <span class="fu"><a href="../reference/run_pca.html">run_pca</a></span><span class="op">(</span><span class="va">example_se</span>, n_top <span class="op">=</span> <span class="va">input</span><span class="op">$</span><span class="va">n_top</span><span class="op">)</span></span>
-<span>    <span class="op">}</span><span class="op">)</span></span>
+<span><span class="va">server</span> <span class="op">&lt;-</span> <span class="kw">function</span><span class="op">(</span><span class="va">input</span>, <span class="va">output</span><span class="op">)</span> <span class="op">{</span></span>
+<span>  <span class="va">output</span><span class="op">$</span><span class="va">plot</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/pkg/shiny/man/renderPlot.html" class="external-link">renderPlot</a></span><span class="op">(</span><span class="op">{</span></span>
+<span>    <span class="fu"><a href="https://rdrr.io/pkg/shiny/man/validate.html" class="external-link">validate</a></span><span class="op">(</span></span>
+<span>      <span class="fu"><a href="https://rdrr.io/pkg/shiny/man/validate.html" class="external-link">need</a></span><span class="op">(</span><span class="va">input</span><span class="op">$</span><span class="va">in1</span>, <span class="st">'Check at least one letter!'</span><span class="op">)</span>,</span>
+<span>      <span class="fu"><a href="https://rdrr.io/pkg/shiny/man/validate.html" class="external-link">need</a></span><span class="op">(</span><span class="va">input</span><span class="op">$</span><span class="va">in2</span> <span class="op">!=</span> <span class="st">''</span>, <span class="st">'Please choose a state.'</span><span class="op">)</span></span>
+<span>    <span class="op">)</span></span>
+<span>    <span class="fu"><a href="https://rdrr.io/r/graphics/plot.default.html" class="external-link">plot</a></span><span class="op">(</span><span class="fl">1</span><span class="op">:</span><span class="fl">10</span>, main <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/paste.html" class="external-link">paste</a></span><span class="op">(</span><span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="va">input</span><span class="op">$</span><span class="va">in1</span>, <span class="va">input</span><span class="op">$</span><span class="va">in2</span><span class="op">)</span>, collapse <span class="op">=</span> <span class="st">', '</span><span class="op">)</span><span class="op">)</span></span>
+<span>  <span class="op">}</span><span class="op">)</span></span>
+<span><span class="op">}</span></span>
 <span></span>
-<span>    <span class="va">output</span><span class="op">$</span><span class="va">pca_plot</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/pkg/shiny/man/renderPlot.html" class="external-link">renderPlot</a></span><span class="op">(</span><span class="op">{</span></span>
-<span>        <span class="co"># Validate PC selection</span></span>
-<span>        <span class="va">n_samples</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/base/nrow.html" class="external-link">ncol</a></span><span class="op">(</span><span class="va">example_se</span><span class="op">)</span></span>
-<span>        <span class="fu"><a href="https://rdrr.io/pkg/shiny/man/validate.html" class="external-link">validate</a></span><span class="op">(</span></span>
-<span>            <span class="fu"><a href="https://rdrr.io/pkg/shiny/man/validate.html" class="external-link">need</a></span><span class="op">(</span><span class="va">input</span><span class="op">$</span><span class="va">pc_x</span> <span class="op">&lt;=</span> <span class="va">n_samples</span>, <span class="fu"><a href="https://rdrr.io/r/base/paste.html" class="external-link">paste</a></span><span class="op">(</span><span class="st">"PC X must be ≤"</span>, <span class="va">n_samples</span><span class="op">)</span><span class="op">)</span>,</span>
-<span>            <span class="fu"><a href="https://rdrr.io/pkg/shiny/man/validate.html" class="external-link">need</a></span><span class="op">(</span><span class="va">input</span><span class="op">$</span><span class="va">pc_y</span> <span class="op">&lt;=</span> <span class="va">n_samples</span>, <span class="fu"><a href="https://rdrr.io/r/base/paste.html" class="external-link">paste</a></span><span class="op">(</span><span class="st">"PC Y must be ≤"</span>, <span class="va">n_samples</span><span class="op">)</span><span class="op">)</span>,</span>
-<span>            <span class="fu"><a href="https://rdrr.io/pkg/shiny/man/validate.html" class="external-link">need</a></span><span class="op">(</span><span class="va">input</span><span class="op">$</span><span class="va">pc_x</span> <span class="op">!=</span> <span class="va">input</span><span class="op">$</span><span class="va">pc_y</span>, <span class="st">"Please select different PCs for X and Y"</span><span class="op">)</span></span>
-<span>        <span class="op">)</span></span>
-<span></span>
-<span>        <span class="fu"><a href="../reference/plot_pca.html">plot_pca</a></span><span class="op">(</span></span>
-<span>            <span class="fu">pca_result</span><span class="op">(</span><span class="op">)</span>,</span>
-<span>            color_by <span class="op">=</span> <span class="va">input</span><span class="op">$</span><span class="va">color_by</span>,</span>
-<span>            pcs <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="va">input</span><span class="op">$</span><span class="va">pc_x</span>, <span class="va">input</span><span class="op">$</span><span class="va">pc_y</span><span class="op">)</span></span>
-<span>        <span class="op">)</span></span>
-<span>    <span class="op">}</span><span class="op">)</span></span>
-<span><span class="op">}</span></span></code></pre></div>
+<span><span class="fu"><a href="https://rdrr.io/pkg/shiny/man/shinyApp.html" class="external-link">shinyApp</a></span><span class="op">(</span><span class="va">ui</span>, <span class="va">server</span><span class="op">)</span></span></code></pre></div>
 <p>When validation fails, Shiny displays a helpful message instead of an
 error.</p>
 <p>This keeps the user from breaking stuff.</p>
@@ -892,7 +1073,7 @@ stay as direct rendering code?</li>
 <p>Add one additional visualization output (e.g., a loadings plot or
 sample distance heatmap) and one download handler to export the current
 plot or data.</p>
-<div class="sourceCode" id="cb14"><pre class="downlit sourceCode r">
+<div class="sourceCode" id="cb20"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="co"># Add to UI</span></span>
 <span><span class="fu"><a href="https://rdrr.io/pkg/shiny/man/downloadButton.html" class="external-link">downloadButton</a></span><span class="op">(</span><span class="st">"download_plot"</span>, <span class="st">"Download Plot"</span><span class="op">)</span></span>
 <span></span>
@@ -919,7 +1100,7 @@ rely on objects in the global environment.</p>
 <div class="section level2">
 <h2 id="session-info">Session Info<a class="anchor" aria-label="anchor" href="#session-info"></a>
 </h2>
-<div class="sourceCode" id="cb15"><pre class="downlit sourceCode r">
+<div class="sourceCode" id="cb21"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="fu"><a href="https://rdrr.io/r/utils/sessionInfo.html" class="external-link">sessionInfo</a></span><span class="op">(</span><span class="op">)</span></span></code></pre></div>
 <pre><code><span><span class="co">## R version 4.5.3 (2026-03-11)</span></span>
 <span><span class="co">## Platform: x86_64-pc-linux-gnu</span></span>

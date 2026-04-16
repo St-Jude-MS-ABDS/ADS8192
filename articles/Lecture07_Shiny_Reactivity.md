@@ -162,15 +162,21 @@ ui <- fluidPage(
     titlePanel("My App"),
     sidebarLayout(
         sidebarPanel(
-            # Controls here
             sliderInput("n", "N:", min = 1, max = 100, value = 50)
         ),
         mainPanel(
-            # Outputs here
-            plotOutput("plot")
+            textOutput("result")
         )
     )
 )
+
+server <- function(input, output, session) {
+    output$result <- renderText({
+        paste("You selected:", input$n)
+    })
+}
+
+shinyApp(ui, server)
 ```
 
 #### `navbarPage` — Multi-page Navigation
@@ -181,10 +187,21 @@ For apps with multiple distinct sections:
 # Multi-page app with a navigation bar
 ui <- navbarPage(
     title = "My App",
-    tabPanel("Analysis", plotOutput("plot")),
-    tabPanel("Data", DT::dataTableOutput("table")),
+    tabPanel(
+        "Analysis",
+        sliderInput("n", "N:", min = 1, max = 100, value = 50),
+        textOutput("result")
+    ),
     tabPanel("About", p("About this app..."))
 )
+
+server <- function(input, output, session) {
+    output$result <- renderText({
+        paste("You selected:", input$n)
+    })
+}
+
+shinyApp(ui, server)
 ```
 
 #### `bslib::page_sidebar()` — Modern Bootstrap 5
@@ -201,23 +218,32 @@ ui <- page_sidebar(
     sidebar = sidebar(
         sliderInput("n", "N:", min = 1, max = 100, value = 50)
     ),
-    plotOutput("plot")
+    textOutput("result")
 )
+
+server <- function(input, output, session) {
+    output$result <- renderText({
+        paste("You selected:", input$n)
+    })
+}
+
+shinyApp(ui, server)
 ```
 
 > **Note:**
 > [`bslib::page_sidebar()`](https://rstudio.github.io/bslib/reference/page_sidebar.html)
 > is what the packaged ADS8192 Shiny app uses
 > ([`run_app()`](https://st-jude-ms-abds.github.io/ADS8192/reference/run_app.md)).
-> It provides a cleaner API and full Bootstrap 5 support.
+> It provides a cleaner API and full Bootstrap 5s support.
 
 #### Other Packages and Custom Inputs
 
-The base Shiny inputs cover most use cases, but you are not limited to
-them:
+The [base Shiny
+inputs](https://shiny.posit.co/r/getstarted/shiny-basics/lesson3/) cover
+most use cases, but you are not limited to them:
 
-- **`shinydashboard`** and **`bs4Dash`**: Provide dashboard-style
-  layouts with cards, value boxes, and sidebars
+- **`shinydashboard`**: Provide dashboard-style layouts with cards,
+  value boxes, and sidebars
 - **`bslib`**: Offers
   [`accordion()`](https://rstudio.github.io/bslib/reference/accordion.html),
   [`card()`](https://rstudio.github.io/bslib/reference/card.html),
@@ -226,12 +252,6 @@ them:
 - **Custom inputs**: You can write your own input widgets using the
   `htmlwidgets` package or raw HTML/JavaScript — this is advanced but
   powerful for specialized scientific visualizations
-- Other packages in the ecosystem (e.g., `plotly`, `leaflet`) provide
-  their own output widgets that integrate seamlessly with Shiny’s
-  reactive system
-
-For most scientific apps, the built-in Shiny inputs plus `bslib`
-components will cover all your needs.
 
 ------------------------------------------------------------------------
 
@@ -371,6 +391,159 @@ Now the reactive graph looks like:
 > **Exercise A:** Add a second `selectInput` for `shape_by` and update
 > the plot to use both aesthetics. Verify that changing shape doesn’t
 > re-run PCA.
+
+------------------------------------------------------------------------
+
+### Reactive Contexts in Depth
+
+All reactive code in Shiny must run inside a **reactive context** — a
+special execution environment that tracks which reactive sources were
+read so that Shiny knows what to invalidate when those sources change.
+If you try to read `input$x` outside a reactive context, you will get an
+error. This is by design: Shiny can only manage the invalidation graph
+for code it controls.
+
+The five most important reactive contexts are summarized below.
+
+#### `render*()` — Outputs that display results
+
+The `render*()` functions
+(e.g. [`renderPlot()`](https://rdrr.io/pkg/shiny/man/renderPlot.html),
+[`renderText()`](https://rdrr.io/pkg/shiny/man/renderPrint.html),
+[`renderDataTable()`](https://rdrr.io/pkg/shiny/man/renderDataTable.html))
+create reactive contexts that produce output values. They are the most
+common way to display results in a Shiny app. Inside a `render*()`
+block, you can read inputs and call reactive expressions, and Shiny will
+automatically update the output whenever any of those dependencies
+change.
+
+``` r
+output$pca_plot <- renderPlot({
+    plot_pca(pca_result(), color_by = input$color_by)
+})
+```
+
+#### `reactive()` — Cached computations
+
+You have already seen
+[`reactive()`](https://rdrr.io/pkg/shiny/man/reactive.html). It creates
+a reactive expression: a value that is computed lazily, cached, and
+recomputed only when its dependencies change. Call it like a function
+(`pca_result()`) inside other reactive contexts.
+
+Use [`reactive()`](https://rdrr.io/pkg/shiny/man/reactive.html) when you
+have a computation that:
+
+- Takes time (or has meaningful cost)
+- Is consumed by more than one output
+- Should not run more often than its inputs actually change
+
+``` r
+# Computed once; reused by multiple render functions
+filtered_data <- reactive({
+    example_se[, example_se$dex == input$dex_filter]
+})
+```
+
+#### `observe()` — Side effects without a return value
+
+[`observe()`](https://rdrr.io/pkg/shiny/man/observe.html) runs a block
+of code whenever its reactive dependencies change, but it does **not**
+produce a value. Use it for side effects that don’t need to generate
+output: writing to a file, logging, or calling
+[`updateSelectInput()`](https://rdrr.io/pkg/shiny/man/updateSelectInput.html)
+to synchronize one input with another.
+
+``` r
+# Update shape_by choices whenever color_by changes
+observe({
+    current_color <- input$color_by
+    remaining <- setdiff(c("None", "dex", "cell"), current_color)
+    updateSelectInput(session, "shape_by", choices = remaining)
+})
+```
+
+[`observe()`](https://rdrr.io/pkg/shiny/man/observe.html) runs
+**eagerly** — as soon as any dependency changes — whereas
+[`reactive()`](https://rdrr.io/pkg/shiny/man/reactive.html) is **lazy**
+and only runs when something downstream requests its value.
+
+#### `observeEvent()` and `eventReactive()` — Event-driven reactivity
+
+Sometimes you want reactivity to fire only on a specific trigger (a
+button click, a file upload) rather than every time any input changes.
+The `...Event()` variants let you declare that explicitly.
+
+| Function                        | Returns | Triggered by   | Use when                                |
+|---------------------------------|---------|----------------|-----------------------------------------|
+| `observeEvent(trigger, {...})`  | nothing | `trigger` only | side effects on a specific event        |
+| `eventReactive(trigger, {...})` | a value | `trigger` only | expensive computation gated on a button |
+
+``` r
+# Only rerun PCA when the user clicks "Run"
+pca_result <- eventReactive(input$run_button, {
+    run_pca(example_se, n_top = input$n_top)
+})
+
+# Log every time a plot is downloaded
+observeEvent(input$download_plot, {
+    message("Plot downloaded at ", Sys.time())
+})
+```
+
+This is particularly useful for expensive computations — you can let the
+user configure several parameters and only trigger the analysis when
+they explicitly click a button, rather than re-running on every
+keystroke.
+
+#### `isolate()` — Reading without creating a dependency
+
+[`isolate()`](https://rdrr.io/pkg/shiny/man/isolate.html) lets you read
+a reactive value inside a reactive context *without* registering a
+dependency on it. The surrounding context will not be invalidated when
+that value changes. This is useful when you want to capture the current
+value of an input at the moment a computation runs, but you don’t want
+that input to trigger recomputation.
+
+This app has two inputs. Move the slider — the output updates
+immediately. Change the label — nothing happens. The label is only
+captured when the slider moves, via
+[`isolate()`](https://rdrr.io/pkg/shiny/man/isolate.html):
+
+``` r
+library(shiny)
+
+ui <- fluidPage(
+    sliderInput("n", "Number:", min = 1, max = 10, value = 5),
+    textInput("label", "Label:", value = "Result"),
+    textOutput("result")
+)
+
+server <- function(input, output, session) {
+    output$result <- renderText({
+        # input$n    → dependency: output rerenders when slider changes
+        # input$label → NOT a dependency: changing the text box does nothing
+        paste0(isolate(input$label), ": ", input$n)
+    })
+}
+
+shinyApp(ui, server)
+```
+
+[`isolate()`](https://rdrr.io/pkg/shiny/man/isolate.html) is a precision
+tool. Overusing it defeats the purpose of the reactive graph, but it is
+invaluable when you need to capture contextual state at the moment a
+computation runs without making that state a trigger for recomputation.
+
+#### Choosing the right context
+
+    Need a value returned?  ──Yes──→  reactive() / eventReactive()
+            │ No
+            ↓
+    Triggered by one event? ──Yes──→  observeEvent()
+            │ No
+            ↓
+            observe()
 
 ------------------------------------------------------------------------
 
@@ -624,9 +797,12 @@ shinyApp(ui, server)
 
 # After interacting with the app, view the reactive graph
 reactlogShow()
+
+# Turn off the reactlog once done
+reactlog_disable()
 ```
 
-The graph shows every reactive source, conductor, and endpoint, and
+The graph shows every reactive input, conductor, and output, and
 highlights which dependencies triggered a recomputation. Nodes that are
 grayed out were not invalidated; highlighted nodes were re-executed.
 This makes it easy to spot cases where a reactive expression is running
@@ -635,10 +811,6 @@ more often than expected — or not running when it should.
 This graph can get very large and complex for larger apps, but it can be
 useful for tricky reactivity issues, especially when you can extract a
 minimal reproducible example that isolates the problem.
-
-Turn off `reactlog` with
-[`reactlog_disable()`](https://rstudio.github.io/reactlog/reference/setReactLog.html)
-once you are done debugging.
 
 Troubleshooting Shiny apps is somewhere between an art and voodoo, but
 you get better at it with practice and experience, much like art (and
@@ -704,33 +876,23 @@ You can use it inside any reactive context (reactive expressions, render
 functions) to ensure that inputs are valid before proceeding.
 
 ``` r
-server <- function(input, output, session) {
-    pca_result <- reactive({
-        # Validate inputs before computing
-        validate(
-            need(input$n_top >= 10, "Please select at least 10 genes"),
-            need(input$n_top <= nrow(example_se), "Cannot select more genes than available")
-        )
+ui <- fluidPage(
+  checkboxGroupInput('in1', 'Check some letters', choices = head(LETTERS)),
+  selectizeInput('in2', 'Select a state', choices = c("", state.name)),
+  plotOutput('plot')
+)
 
-        run_pca(example_se, n_top = input$n_top)
-    })
-
-    output$pca_plot <- renderPlot({
-        # Validate PC selection
-        n_samples <- ncol(example_se)
-        validate(
-            need(input$pc_x <= n_samples, paste("PC X must be ≤", n_samples)),
-            need(input$pc_y <= n_samples, paste("PC Y must be ≤", n_samples)),
-            need(input$pc_x != input$pc_y, "Please select different PCs for X and Y")
-        )
-
-        plot_pca(
-            pca_result(),
-            color_by = input$color_by,
-            pcs = c(input$pc_x, input$pc_y)
-        )
-    })
+server <- function(input, output) {
+  output$plot <- renderPlot({
+    validate(
+      need(input$in1, 'Check at least one letter!'),
+      need(input$in2 != '', 'Please choose a state.')
+    )
+    plot(1:10, main = paste(c(input$in1, input$in2), collapse = ', '))
+  })
 }
+
+shinyApp(ui, server)
 ```
 
 When validation fails, Shiny displays a helpful message instead of an

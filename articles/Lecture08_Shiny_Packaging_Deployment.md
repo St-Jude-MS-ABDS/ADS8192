@@ -2,15 +2,10 @@
 
 ## Motivation
 
-An app is only useful scientific software if other people can install
-it, launch it, and trust that it behaves the same way outside your own
-machine. Packaging and deployment turn an interesting interface into a
-reproducible tool.
-
-This lecture matters because deployment decisions shape maintainability.
-Stable entry points, optional dependencies, and clean file lookup rules
-save time for collaborators, reduce environment-specific failures, and
-keep the app aligned with the same package core used everywhere else.
+A standalone app using your data alone is useful. But *packaging* the
+app into your R package makes it easier to maintain, share, and deploy.
+It also makes it simple to keep the app code aligned with the core
+package logic.
 
 ### Learning Objectives
 
@@ -18,30 +13,13 @@ By the end of this session, you will be able to:
 
 1.  Add a Shiny application to the package as a function and document it
 2.  Deploy the application to a hosting platform (Posit Cloud)
-3.  Explain why packaging, optional dependencies, and deployment are
-    reproducibility decisions as much as UI decisions
-4.  Discuss basic testing strategies for Shiny apps
-
-### Evaluation Checklist
-
-Before packaging or deploying an app, ask:
-
-- Is the app truly a thin layer over tested package functions?
-- Which dependencies are essential, and which should stay optional?
-- Can a user install and launch the app from a clean session?
-- What interface failures need friendly validation or graceful fallback?
-- Does the deployment choice fit the intended audience and maintenance
-  model?
-- Would packaging this app reduce manual setup more than another custom
-  distribution method?
+3.  Discuss basic testing strategies for Shiny apps
 
 ### Scientific Use Case
 
 Your lab wants to share a small QC dashboard with collaborators at
 another institution. Some users will explore the app interactively,
-while others only want the package functions in scripts. How do you
-package the app so both audiences are supported without forcing every
-user into the same workflow?
+while others only want the package functions in scripts.
 
 ------------------------------------------------------------------------
 
@@ -82,7 +60,7 @@ Benefits:
 - **Version-controlled** — users get consistent behavior
 - **Documented** —
   [`?run_app`](https://st-jude-ms-abds.github.io/ADS8192/reference/run_app.md)
-  shows how to use it
+  shows how to use it, parameters, etc
 
 ------------------------------------------------------------------------
 
@@ -347,19 +325,6 @@ app_server <- function(input, output, session, se) {
 #'   run_app(se = example_se)
 #' }
 run_app <- function(se, return_as_list = FALSE, ...) {
-    if (!requireNamespace("shiny", quietly = TRUE)) {
-        stop("Package 'shiny' is required for app usage. Install with: ",
-             "install.packages('shiny')", call. = FALSE)
-    }
-    if (!requireNamespace("bslib", quietly = TRUE)) {
-        stop("Package 'bslib' is required for app usage. Install with: ",
-             "install.packages('bslib')", call. = FALSE)
-    }
-    if (!requireNamespace("DT", quietly = TRUE)) {
-        stop("Package 'DT' is required for app usage. Install with: ",
-             "install.packages('DT')", call. = FALSE)
-    }
-
     if (!is(se, "SummarizedExperiment")) {
         stop("'se' must be a SummarizedExperiment object.", call. = FALSE)
     }
@@ -409,28 +374,22 @@ shinyApp(ui = app$ui, server = app$server)
 
 ### Updating DESCRIPTION
 
-The Shiny app needs additional packages. Add them as Suggests (not
-Imports) so the core package works without them:
+The Shiny app needs additional packages. If we wanted to, we could make
+these packages optional by putting them in `Suggests` instead of
+`Imports`. This way, users who only want the R API don’t need to install
+Shiny and its dependencies. If we did that, we’d also need to check for
+those packages at runtime in
+[`run_app()`](https://st-jude-ms-abds.github.io/ADS8192/reference/run_app.md)
+and give a helpful error message if they’re missing.
 
 ``` r
 library(usethis)
 
 # Shiny app dependencies
-use_package("shiny", type = "Suggests")
-use_package("bslib", type = "Suggests")
-use_package("DT", type = "Suggests")
+use_package("shiny")
+use_package("bslib")
+use_package("DT")
 use_package("rlang")  # For .data pronoun in ggplot2 aes()
-```
-
-Your DESCRIPTION now includes:
-
-``` yaml
-Suggests:
-    bslib,
-    DT,
-    knitr,
-    shiny,
-    testthat (>= 3.0.0)
 ```
 
 ### Why Suggests?
@@ -550,56 +509,15 @@ devtools::load_all()
 
 ### Add pkgdown Article
 
+You can either add to your existing vignette or create a new one focused
+on the app, e.g.:
+
 ``` r
 usethis::use_vignette("shiny-app", title = "Using the Shiny App")
 ```
 
-Edit `vignettes/shiny-app.Rmd`:
-
-```` markdown
----
-title: "Using the Shiny App"
-output: rmarkdown::html_vignette
-vignette: >
-  %\VignetteIndexEntry{Using the Shiny App}
-  %\VignetteEngine{knitr::rmarkdown}
-  %\VignetteEncoding{UTF-8}
----
-
-## Launching the App
-
-After installing ADS8192, launch the interactive PCA explorer:
-
-```r
-library(ADS8192)
-data("example_se")
-run_app(se = example_se)
-```
-
-## Features
-
-### Analysis Settings
-
-- **Top variable genes**: Number of most variable genes to include in PCA
-- **Log-transform**: Apply log2(x + 1) transformation to counts
-- **Scale features**: Center and scale genes before PCA
-
-### Visualization Options
-
-- **Color by**: Choose a metadata column to color samples
-- **Shape by**: Optionally map a second variable to point shape
-- **Point size**: Adjust point size for visibility
-
-### Outputs
-
-1. **PCA Plot**: Interactive scatter plot of principal components
-2. **Variance**: Bar chart showing variance explained by each PC
-3. **Sample Data**: Table of PCA scores merged with sample metadata
-
-### Downloading Results
-
-Click "Download Plot" to save the current PCA plot as a PNG file.
-````
+At minimum, how to launch the app and what features it has. A screenshot
+or GIF is a nice touch!
 
 ------------------------------------------------------------------------
 
@@ -842,27 +760,16 @@ Or access the deployed version at: <https://your-deployment-url/>
 
     # Summary
 
-    Today we:
+    This lab we:
 
-    1. Packaged the Shiny app with proper structure (`R/` for logic, `inst/app/` for entry point)
+    1. Packaged the Shiny app with proper structure (`R/` for logic, `inst/app/` for deployed example)
     2. Added `run_app()` as a documented, exported function
-    3. Used Suggests for optional Shiny dependencies
-    4. Added interactive features (tabs, download handlers)
-    5. Discussed testing strategies
+    3. Added interactive features (tabs, download handlers)
+    4. Discussed testing strategies
 
     ## Package Milestone
 
-    ✅ The Shiny app is shipped inside the package and can be launched by users after installing from GitHub.
-
-    ---
-
-    ## Debrief & Reflection
-
-    Before moving on, make sure you can answer:
-
-    - Why is packaging the app part of the reproducibility story, not just a convenience feature?
-    - Which app dependencies should be mandatory, and which should remain optional with graceful fallback?
-    - If a collaborator never opens the app and only uses the R API, how does your package design still serve them well?
+    The Shiny app is shipped inside the package and can be launched by users after installing from GitHub.
 
     ---
 
@@ -874,16 +781,13 @@ Or access the deployed version at: <https://your-deployment-url/>
 
 
     ``` r
-    # Start clean
-    .rs.restartR()
-
     # Install from GitHub
     remotes::install_github("you/ADS8192")
 
     # Run the app
     library(ADS8192)
     data("example_se")
-    ADS8192::run_app(se = example_se)
+    run_app(se = example_se)
 
 ### Micro-task 2: Update README
 
@@ -891,7 +795,7 @@ Add an “Interactive App” section to README with:
 
 - Instructions to launch
 - Screenshot or GIF (optional but nice!)
-- Link to deployed version (if you deployed)
+- Link to deployed version
 
 ------------------------------------------------------------------------
 
