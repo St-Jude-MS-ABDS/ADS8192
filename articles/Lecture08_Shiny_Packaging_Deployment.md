@@ -79,7 +79,7 @@ The conventional location is `inst/app/`:
     │   ├── app_server.R     # Server logic
     ├── inst/
     │   └── app/
-    │       └── app.R        # App entry point (calls run_app)
+    │       └── app.R        # App entry point (calls run_app), for deployment/examples
     └── ...
 
 Why `inst/`?
@@ -201,6 +201,8 @@ app_server <- function(input, output, session, se) {
                                  choices = assayNames(se))
         updateNumericInput(session, "n_top",
                                   max = nrow(se))
+        updateNumericInput(session, "pc_x", max = ncol(se))
+        updateNumericInput(session, "pc_y", max = ncol(se))
     })
 
     # Compute PCA (cached; only re-runs when analysis params change)

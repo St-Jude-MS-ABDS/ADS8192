@@ -175,7 +175,7 @@ it, parameters, etc</li>
 │   ├── app_server.R     # Server logic
 ├── inst/
 │   └── app/
-│       └── app.R        # App entry point (calls run_app)
+│       └── app.R        # App entry point (calls run_app), for deployment/examples
 └── ...</code></pre>
 <p>Why <code>inst/</code>?</p>
 <ul>
@@ -302,6 +302,8 @@ testing</li>
 <span>                                 choices <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/pkg/SummarizedExperiment/man/SummarizedExperiment-class.html" class="external-link">assayNames</a></span><span class="op">(</span><span class="va">se</span><span class="op">)</span><span class="op">)</span></span>
 <span>        <span class="fu"><a href="https://rdrr.io/pkg/shiny/man/updateNumericInput.html" class="external-link">updateNumericInput</a></span><span class="op">(</span><span class="va">session</span>, <span class="st">"n_top"</span>,</span>
 <span>                                  max <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/nrow.html" class="external-link">nrow</a></span><span class="op">(</span><span class="va">se</span><span class="op">)</span><span class="op">)</span></span>
+<span>        <span class="fu"><a href="https://rdrr.io/pkg/shiny/man/updateNumericInput.html" class="external-link">updateNumericInput</a></span><span class="op">(</span><span class="va">session</span>, <span class="st">"pc_x"</span>, max <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/nrow.html" class="external-link">ncol</a></span><span class="op">(</span><span class="va">se</span><span class="op">)</span><span class="op">)</span></span>
+<span>        <span class="fu"><a href="https://rdrr.io/pkg/shiny/man/updateNumericInput.html" class="external-link">updateNumericInput</a></span><span class="op">(</span><span class="va">session</span>, <span class="st">"pc_y"</span>, max <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/nrow.html" class="external-link">ncol</a></span><span class="op">(</span><span class="va">se</span><span class="op">)</span><span class="op">)</span></span>
 <span>    <span class="op">}</span><span class="op">)</span></span>
 <span></span>
 <span>    <span class="co"># Compute PCA (cached; only re-runs when analysis params change)</span></span>
