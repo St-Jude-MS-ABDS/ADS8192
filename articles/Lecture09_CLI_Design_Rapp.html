@@ -82,8 +82,20 @@ Andrews</h4>
     
     
 <div class="section level2">
-<h2 id="learning-objectives">Learning Objectives<a class="anchor" aria-label="anchor" href="#learning-objectives"></a>
+<h2 id="motivation">Motivation<a class="anchor" aria-label="anchor" href="#motivation"></a>
 </h2>
+<p>Scientific software often needs to run without a human sitting at the
+keyboard. Command-line interfaces matter because they make analysis
+tools usable in pipelines, schedulers, shared compute environments, and
+repeatable scripts.</p>
+<p>This lecture is important for robust software design because a good
+CLI forces you to make the interface contract explicit: inputs, outputs,
+defaults, error behavior, and file formats all become visible. That
+clarity saves time for automation users and reduces drift between the
+command line and the underlying package logic.</p>
+<div class="section level3">
+<h3 id="learning-objectives">Learning Objectives<a class="anchor" aria-label="anchor" href="#learning-objectives"></a>
+</h3>
 <p>By the end of this session, you will be able to:</p>
 <ol style="list-style-type: decimal">
 <li>Implement a simple CLI using Rapp that calls package functions</li>
@@ -96,45 +108,14 @@ package logic</li>
 <li>Explain why CLIs improve interoperability and pipeline
 integration</li>
 </ol>
-<p><strong>Course Learning Outcomes (CLOs):</strong> CLO 1, 2, 3, 5,
-6</p>
-<div class="section level3">
-<h3 id="motivation">Motivation<a class="anchor" aria-label="anchor" href="#motivation"></a>
-</h3>
-<p>Scientific software often needs to run without a human sitting at the
-keyboard. Command-line interfaces matter because they make analysis
-tools usable in pipelines, schedulers, shared compute environments, and
-repeatable scripts.</p>
-<p>This lecture is important for robust software design because a good
-CLI forces you to make the interface contract explicit: inputs, outputs,
-defaults, error behavior, and file formats all become visible. That
-clarity saves time for automation users and reduces drift between the
-command line and the underlying package logic.</p>
-</div>
-<div class="section level3">
-<h3 id="evaluation-checklist">Evaluation Checklist<a class="anchor" aria-label="anchor" href="#evaluation-checklist"></a>
-</h3>
-<p>Before adding a CLI, ask:</p>
-<ul>
-<li>Who needs it: pipeline users, HPC workflows, collaborators, or only
-interactive analysts?</li>
-<li>What explicit inputs and outputs must remain stable over time?</li>
-<li>Does the CLI call the same package functions as the R API and Shiny
-app?</li>
-<li>Are error messages and exit codes useful to scripts, not just
-humans?</li>
-<li>Would a thin wrapper over the existing package be enough?</li>
-<li>Are you adding a CLI because users need automation, or because it
-seems impressive?</li>
-</ul>
 </div>
 <div class="section level3">
 <h3 id="scientific-use-case">Scientific Use Case<a class="anchor" aria-label="anchor" href="#scientific-use-case"></a>
 </h3>
 <p>A bioinformatics core wants to run your analysis across 40 cohorts in
 a nightly workflow. They do not want a web app and they do not want to
-source R files by hand. What contract does a good CLI need to offer so
-that automation users can trust it?</p>
+source R files by hand. How can this be done in a way that is robust,
+reproducible, and easy to maintain?</p>
 <hr>
 </div>
 </div>

@@ -162,46 +162,26 @@ it, parameters, etc</li>
 <div class="section level2">
 <h2 id="part-1-package-structure-for-shiny-apps">Part 1: Package Structure for Shiny Apps<a class="anchor" aria-label="anchor" href="#part-1-package-structure-for-shiny-apps"></a>
 </h2>
+<p>Functionizing a Shiny app and adding it to a package requires a few
+adjustments to the typical Shiny app structure. The key is to separate
+the UI and server logic into functions that can be called from a wrapper
+function (e.g., <code><a href="../reference/run_app.html">run_app()</a></code>) that returns the app.</p>
+<p>We will also make a tweak to the directory structure to accommodate
+deployment platforms that expect a standalone <code>app.R</code>
+file.</p>
 <div class="section level3">
-<h3 id="where-does-the-app-go">Where Does the App Go?<a class="anchor" aria-label="anchor" href="#where-does-the-app-go"></a>
-</h3>
-<p>The conventional location is <code>inst/app/</code>:</p>
-<pre><code>ADS8192/
-├── DESCRIPTION
-├── NAMESPACE
-├── R/
-│   ├── run_app.R        # Exported function to launch app
-│   ├── app_ui.R         # UI definition
-│   ├── app_server.R     # Server logic
-├── inst/
-│   └── app/
-│       └── app.R        # App entry point (calls run_app), for deployment/examples
-└── ...</code></pre>
-<p>Why <code>inst/</code>?</p>
-<ul>
-<li>Files in <code>inst/</code> are copied as-is when the package is
-installed</li>
-<li>They’re accessible via
-<code>system.file("app", package = "ADS8192")</code>
-</li>
-<li>The actual app logic lives in <code>R/</code> for documentation and
-testing</li>
-</ul>
-</div>
-<div class="section level3">
-<h3 id="step-1-create-the-directory-structure">Step 1: Create the Directory Structure<a class="anchor" aria-label="anchor" href="#step-1-create-the-directory-structure"></a>
-</h3>
-<div class="sourceCode" id="cb3"><pre class="downlit sourceCode r">
-<code class="sourceCode R"><span><span class="co"># In your package directory</span></span>
-<span><span class="fu"><a href="https://rdrr.io/r/base/files2.html" class="external-link">dir.create</a></span><span class="op">(</span><span class="st">"inst/app"</span>, recursive <span class="op">=</span> <span class="cn">TRUE</span><span class="op">)</span></span></code></pre></div>
-</div>
-<div class="section level3">
-<h3 id="step-2-create-app-files-in-r">Step 2: Create App Files in R/<a class="anchor" aria-label="anchor" href="#step-2-create-app-files-in-r"></a>
+<h3 id="step-1-create-app-files-in-r">Step 1: Create App Files in R/<a class="anchor" aria-label="anchor" href="#step-1-create-app-files-in-r"></a>
 </h3>
 <div class="section level4">
 <h4 id="rapp_ui-r">R/app_ui.R<a class="anchor" aria-label="anchor" href="#rapp_ui-r"></a>
 </h4>
-<div class="sourceCode" id="cb4"><pre class="downlit sourceCode r">
+<p>Now create <code>R/app_ui.R</code> with the UI definition. This is a
+standard Shiny UI function, but it’s wrapped in a function that can be
+called from <code><a href="../reference/run_app.html">run_app()</a></code>.</p>
+<p>This should largely just require copy-pasting your existing UI code,
+but it may require adjustments to your server logic to update the
+available choices for some of the inputs based on the data provided.</p>
+<div class="sourceCode" id="cb2"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="co">#' Shiny App UI</span></span>
 <span><span class="co">#'</span></span>
 <span><span class="co">#' @import shiny</span></span>
@@ -269,8 +249,13 @@ testing</li>
 <div class="section level4">
 <h4 id="rapp_server-r">R/app_server.R<a class="anchor" aria-label="anchor" href="#rapp_server-r"></a>
 </h4>
+<p>Now create <code>R/app_server.R</code> with the server logic. This
+function takes the Shiny <code>input</code>, <code>output</code>, and
+<code>session</code> objects, as well as the
+<code>SummarizedExperiment</code> data, and contains all the reactive
+logic for the app.</p>
 <details><summary><strong>R/app_server.R</strong> (click to expand)
-</summary><div class="sourceCode" id="cb5"><pre class="downlit sourceCode r">
+</summary><div class="sourceCode" id="cb3"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="co">#' Shiny App Server</span></span>
 <span><span class="co">#'</span></span>
 <span><span class="co">#' @param input Shiny input</span></span>
@@ -284,8 +269,6 @@ testing</li>
 <span><span class="co">#' @import shiny</span></span>
 <span><span class="co">#' @importFrom SummarizedExperiment colData assayNames</span></span>
 <span><span class="co">#' @importFrom ggplot2 ggsave</span></span>
-<span><span class="co">#' @importFrom rlang .data</span></span>
-<span><span class="co">#' @importFrom utils data</span></span>
 <span><span class="co">#' @author Jared Andrews</span></span>
 <span><span class="va">app_server</span> <span class="op">&lt;-</span> <span class="kw">function</span><span class="op">(</span><span class="va">input</span>, <span class="va">output</span>, <span class="va">session</span>, <span class="va">se</span><span class="op">)</span> <span class="op">{</span></span>
 <span>    <span class="va">se_data</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/pkg/shiny/man/reactiveVal.html" class="external-link">reactiveVal</a></span><span class="op">(</span><span class="va">se</span><span class="op">)</span></span>
@@ -399,7 +382,7 @@ testing</li>
 <h4 id="rrun_app-r">R/run_app.R<a class="anchor" aria-label="anchor" href="#rrun_app-r"></a>
 </h4>
 <details><summary><strong>R/run_app.R</strong> (click to expand)
-</summary><div class="sourceCode" id="cb6"><pre class="downlit sourceCode r">
+</summary><div class="sourceCode" id="cb4"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="co">#' Run the PCA Explorer Shiny Application</span></span>
 <span><span class="co">#'</span></span>
 <span><span class="co">#' Launches an interactive Shiny application for exploring PCA results</span></span>
@@ -448,29 +431,19 @@ testing</li>
 <span>        <span class="va">app</span></span>
 <span>    <span class="op">}</span></span>
 <span><span class="op">}</span></span></code></pre></div>
-</details>
-</div>
-</div>
-<div class="section level3">
-<h3 id="step-3-create-instappapp-r">Step 3: Create inst/app/app.R<a class="anchor" aria-label="anchor" href="#step-3-create-instappapp-r"></a>
-</h3>
-<p>This file exists for deployment platforms like Posit Cloud that
-expect a standalone <code>app.R</code> entry point. Rather than calling
-internal package functions directly (which requires <code>:::</code> and
-is bad practice), it uses <code>return_as_list = TRUE</code> to get the
-UI and server back as a plain list, then passes them to
-<code><a href="https://rdrr.io/pkg/shiny/man/shinyApp.html" class="external-link">shinyApp()</a></code>.</p>
-<div class="sourceCode" id="cb7"><pre class="downlit sourceCode r">
-<code class="sourceCode R"><span><span class="co"># inst/app/app.R</span></span>
-<span><span class="kw"><a href="https://rdrr.io/r/base/library.html" class="external-link">library</a></span><span class="op">(</span><span class="va"><a href="https://github.com/St-Jude-MS-ABDS/ADS8192" class="external-link">ADS8192</a></span><span class="op">)</span></span>
-<span><span class="kw"><a href="https://rdrr.io/r/base/library.html" class="external-link">library</a></span><span class="op">(</span><span class="va"><a href="https://shiny.posit.co/" class="external-link">shiny</a></span><span class="op">)</span></span>
-<span></span>
+</details><p>At this point, you should be able to run your app using this
+function, and it should work with arbitrary data:</p>
+<div class="sourceCode" id="cb5"><pre class="downlit sourceCode r">
+<code class="sourceCode R"><span><span class="kw"><a href="https://rdrr.io/r/base/library.html" class="external-link">library</a></span><span class="op">(</span><span class="va"><a href="https://github.com/St-Jude-MS-ABDS/ADS8192" class="external-link">ADS8192</a></span><span class="op">)</span></span>
 <span><span class="fu"><a href="https://rdrr.io/r/utils/data.html" class="external-link">data</a></span><span class="op">(</span><span class="st">"example_se"</span><span class="op">)</span></span>
+<span><span class="fu"><a href="../reference/run_app.html">run_app</a></span><span class="op">(</span>se <span class="op">=</span> <span class="va">example_se</span><span class="op">)</span></span>
 <span></span>
-<span><span class="va">app</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/run_app.html">run_app</a></span><span class="op">(</span>se <span class="op">=</span> <span class="va">example_se</span>, return_as_list <span class="op">=</span> <span class="cn">TRUE</span><span class="op">)</span></span>
-<span></span>
-<span><span class="fu"><a href="https://rdrr.io/pkg/shiny/man/shinyApp.html" class="external-link">shinyApp</a></span><span class="op">(</span>ui <span class="op">=</span> <span class="va">app</span><span class="op">$</span><span class="va">ui</span>, server <span class="op">=</span> <span class="va">app</span><span class="op">$</span><span class="va">server</span><span class="op">)</span></span></code></pre></div>
+<span><span class="co"># Should also work with other SummarizedExperiment objects</span></span>
+<span><span class="kw"><a href="https://rdrr.io/r/base/library.html" class="external-link">library</a></span><span class="op">(</span><span class="va">airway</span><span class="op">)</span></span>
+<span><span class="fu"><a href="https://rdrr.io/r/utils/data.html" class="external-link">data</a></span><span class="op">(</span><span class="st">"airway"</span><span class="op">)</span></span>
+<span><span class="fu"><a href="../reference/run_app.html">run_app</a></span><span class="op">(</span>se <span class="op">=</span> <span class="va">airway</span><span class="op">)</span></span></code></pre></div>
 <hr>
+</div>
 </div>
 </div>
 <div class="section level2">
@@ -486,111 +459,19 @@ don’t need to install Shiny and its dependencies. If we did that, we’d
 also need to check for those packages at runtime in
 <code><a href="../reference/run_app.html">run_app()</a></code> and give a helpful error message if they’re
 missing.</p>
-<div class="sourceCode" id="cb8"><pre class="downlit sourceCode r">
+<div class="sourceCode" id="cb6"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="kw"><a href="https://rdrr.io/r/base/library.html" class="external-link">library</a></span><span class="op">(</span><span class="va"><a href="https://usethis.r-lib.org" class="external-link">usethis</a></span><span class="op">)</span></span>
 <span></span>
 <span><span class="co"># Shiny app dependencies</span></span>
 <span><span class="fu">use_package</span><span class="op">(</span><span class="st">"shiny"</span><span class="op">)</span></span>
 <span><span class="fu">use_package</span><span class="op">(</span><span class="st">"bslib"</span><span class="op">)</span></span>
-<span><span class="fu">use_package</span><span class="op">(</span><span class="st">"DT"</span><span class="op">)</span></span>
-<span><span class="fu">use_package</span><span class="op">(</span><span class="st">"rlang"</span><span class="op">)</span>  <span class="co"># For .data pronoun in ggplot2 aes()</span></span></code></pre></div>
-</div>
-<div class="section level3">
-<h3 id="why-suggests">Why Suggests?<a class="anchor" aria-label="anchor" href="#why-suggests"></a>
-</h3>
-<ul>
-<li>Users who only want the R API don’t need shiny</li>
-<li>Keeps the core package lightweight</li>
-<li>
-<code><a href="../reference/run_app.html">run_app()</a></code> checks for packages at runtime</li>
-<li>The app works on any <code>SummarizedExperiment</code> — no extra
-data packages required</li>
-</ul>
-</div>
-<div class="section level3">
-<h3 id="checking-for-optional-dependencies">Checking for Optional Dependencies<a class="anchor" aria-label="anchor" href="#checking-for-optional-dependencies"></a>
-</h3>
-<p>When your function requires a package that is in
-<code>Suggests</code>, you must check for it at runtime and give a
-helpful error message if it’s missing. Two approaches:</p>
-<div class="section level4">
-<h4 id="requirenamespace-lightweight-check">
-<code>requireNamespace()</code> — Lightweight Check<a class="anchor" aria-label="anchor" href="#requirenamespace-lightweight-check"></a>
-</h4>
-<p>Best for checking inside a function body before using the
-package:</p>
-<div class="sourceCode" id="cb9"><pre class="downlit sourceCode r">
-<code class="sourceCode R"><span><span class="co"># In run_app() — checks happen before any work is done</span></span>
-<span><span class="va">run_app</span> <span class="op">&lt;-</span> <span class="kw">function</span><span class="op">(</span><span class="va">se</span>, <span class="va">return_as_list</span> <span class="op">=</span> <span class="cn">FALSE</span>, <span class="va">...</span><span class="op">)</span> <span class="op">{</span></span>
-<span>    <span class="kw">if</span> <span class="op">(</span><span class="op">!</span><span class="fu"><a href="https://rdrr.io/r/base/ns-load.html" class="external-link">requireNamespace</a></span><span class="op">(</span><span class="st">"shiny"</span>, quietly <span class="op">=</span> <span class="cn">TRUE</span><span class="op">)</span><span class="op">)</span> <span class="op">{</span></span>
-<span>        <span class="kw"><a href="https://rdrr.io/r/base/stop.html" class="external-link">stop</a></span><span class="op">(</span><span class="st">"Package 'shiny' is required for app usage. Install with: "</span>,</span>
-<span>             <span class="st">"install.packages('shiny')"</span>, call. <span class="op">=</span> <span class="cn">FALSE</span><span class="op">)</span></span>
-<span>    <span class="op">}</span></span>
-<span>    <span class="kw">if</span> <span class="op">(</span><span class="op">!</span><span class="fu"><a href="https://rdrr.io/r/base/ns-load.html" class="external-link">requireNamespace</a></span><span class="op">(</span><span class="st">"bslib"</span>, quietly <span class="op">=</span> <span class="cn">TRUE</span><span class="op">)</span><span class="op">)</span> <span class="op">{</span></span>
-<span>        <span class="kw"><a href="https://rdrr.io/r/base/stop.html" class="external-link">stop</a></span><span class="op">(</span><span class="st">"Package 'bslib' is required for app usage. Install with: "</span>,</span>
-<span>             <span class="st">"install.packages('bslib')"</span>, call. <span class="op">=</span> <span class="cn">FALSE</span><span class="op">)</span></span>
-<span>    <span class="op">}</span></span>
-<span>    <span class="kw">if</span> <span class="op">(</span><span class="op">!</span><span class="fu"><a href="https://rdrr.io/r/base/ns-load.html" class="external-link">requireNamespace</a></span><span class="op">(</span><span class="st">"DT"</span>, quietly <span class="op">=</span> <span class="cn">TRUE</span><span class="op">)</span><span class="op">)</span> <span class="op">{</span></span>
-<span>        <span class="kw"><a href="https://rdrr.io/r/base/stop.html" class="external-link">stop</a></span><span class="op">(</span><span class="st">"Package 'DT' is required for app usage. Install with: "</span>,</span>
-<span>             <span class="st">"install.packages('DT')"</span>, call. <span class="op">=</span> <span class="cn">FALSE</span><span class="op">)</span></span>
-<span>    <span class="op">}</span></span>
-<span></span>
-<span>    <span class="co"># Validate user-supplied data</span></span>
-<span>    <span class="kw">if</span> <span class="op">(</span><span class="op">!</span><span class="fu">methods</span><span class="fu">::</span><span class="fu"><a href="https://rdrr.io/r/methods/is.html" class="external-link">is</a></span><span class="op">(</span><span class="va">se</span>, <span class="st">"SummarizedExperiment"</span><span class="op">)</span><span class="op">)</span> <span class="op">{</span></span>
-<span>        <span class="kw"><a href="https://rdrr.io/r/base/stop.html" class="external-link">stop</a></span><span class="op">(</span><span class="st">"'se' must be a SummarizedExperiment object."</span>, call. <span class="op">=</span> <span class="cn">FALSE</span><span class="op">)</span></span>
-<span>    <span class="op">}</span></span>
-<span></span>
-<span>    <span class="co"># ... rest of function</span></span>
-<span><span class="op">}</span></span></code></pre></div>
-</div>
-<div class="section level4">
-<h4 id="best-practice-check-once-at-the-entry-point">Best Practice: Check Once at the Entry Point<a class="anchor" aria-label="anchor" href="#best-practice-check-once-at-the-entry-point"></a>
-</h4>
-<p>For functions where an entire block of functionality depends on
-optional packages (like <code><a href="../reference/run_app.html">run_app()</a></code>), check all required
-packages <strong>once at the top</strong> of the function. Don’t scatter
-checks throughout the code — it leads to confusing partial failures:</p>
-<div class="sourceCode" id="cb10"><pre class="downlit sourceCode r">
-<code class="sourceCode R"><span><span class="co"># The actual ADS8192::run_app() — three focused checks, then proceed</span></span>
-<span><span class="va">run_app</span> <span class="op">&lt;-</span> <span class="kw">function</span><span class="op">(</span><span class="va">se</span>, <span class="va">return_as_list</span> <span class="op">=</span> <span class="cn">FALSE</span>, <span class="va">...</span><span class="op">)</span> <span class="op">{</span></span>
-<span>    <span class="kw">if</span> <span class="op">(</span><span class="op">!</span><span class="fu"><a href="https://rdrr.io/r/base/ns-load.html" class="external-link">requireNamespace</a></span><span class="op">(</span><span class="st">"shiny"</span>, quietly <span class="op">=</span> <span class="cn">TRUE</span><span class="op">)</span><span class="op">)</span> <span class="op">{</span></span>
-<span>        <span class="kw"><a href="https://rdrr.io/r/base/stop.html" class="external-link">stop</a></span><span class="op">(</span><span class="st">"Package 'shiny' is required for app usage. Install with: "</span>,</span>
-<span>             <span class="st">"install.packages('shiny')"</span>, call. <span class="op">=</span> <span class="cn">FALSE</span><span class="op">)</span></span>
-<span>    <span class="op">}</span></span>
-<span>    <span class="kw">if</span> <span class="op">(</span><span class="op">!</span><span class="fu"><a href="https://rdrr.io/r/base/ns-load.html" class="external-link">requireNamespace</a></span><span class="op">(</span><span class="st">"bslib"</span>, quietly <span class="op">=</span> <span class="cn">TRUE</span><span class="op">)</span><span class="op">)</span> <span class="op">{</span></span>
-<span>        <span class="kw"><a href="https://rdrr.io/r/base/stop.html" class="external-link">stop</a></span><span class="op">(</span><span class="st">"Package 'bslib' is required for app usage. Install with: "</span>,</span>
-<span>             <span class="st">"install.packages('bslib')"</span>, call. <span class="op">=</span> <span class="cn">FALSE</span><span class="op">)</span></span>
-<span>    <span class="op">}</span></span>
-<span>    <span class="kw">if</span> <span class="op">(</span><span class="op">!</span><span class="fu"><a href="https://rdrr.io/r/base/ns-load.html" class="external-link">requireNamespace</a></span><span class="op">(</span><span class="st">"DT"</span>, quietly <span class="op">=</span> <span class="cn">TRUE</span><span class="op">)</span><span class="op">)</span> <span class="op">{</span></span>
-<span>        <span class="kw"><a href="https://rdrr.io/r/base/stop.html" class="external-link">stop</a></span><span class="op">(</span><span class="st">"Package 'DT' is required for app usage. Install with: "</span>,</span>
-<span>             <span class="st">"install.packages('DT')"</span>, call. <span class="op">=</span> <span class="cn">FALSE</span><span class="op">)</span></span>
-<span>    <span class="op">}</span></span>
-<span></span>
-<span>    <span class="kw">if</span> <span class="op">(</span><span class="op">!</span><span class="fu"><a href="https://rdrr.io/r/methods/is.html" class="external-link">is</a></span><span class="op">(</span><span class="va">se</span>, <span class="st">"SummarizedExperiment"</span><span class="op">)</span><span class="op">)</span> <span class="op">{</span></span>
-<span>        <span class="kw"><a href="https://rdrr.io/r/base/stop.html" class="external-link">stop</a></span><span class="op">(</span><span class="st">"'se' must be a SummarizedExperiment object."</span>, call. <span class="op">=</span> <span class="cn">FALSE</span><span class="op">)</span></span>
-<span>    <span class="op">}</span></span>
-<span></span>
-<span>    <span class="co"># All dependencies confirmed — proceed</span></span>
-<span>    <span class="va">server</span> <span class="op">&lt;-</span> <span class="kw">function</span><span class="op">(</span><span class="va">input</span>, <span class="va">output</span>, <span class="va">session</span><span class="op">)</span> <span class="op">{</span></span>
-<span>        <span class="fu">app_server</span><span class="op">(</span><span class="va">input</span>, <span class="va">output</span>, <span class="va">session</span>, se <span class="op">=</span> <span class="va">se</span><span class="op">)</span></span>
-<span>    <span class="op">}</span></span>
-<span>    <span class="va">app</span> <span class="op">&lt;-</span> <span class="fu">shiny</span><span class="fu">::</span><span class="fu"><a href="https://rdrr.io/pkg/shiny/man/shinyApp.html" class="external-link">shinyApp</a></span><span class="op">(</span>ui <span class="op">=</span> <span class="fu">app_ui</span><span class="op">(</span><span class="op">)</span>, server <span class="op">=</span> <span class="va">server</span>, <span class="va">...</span><span class="op">)</span></span>
-<span></span>
-<span>    <span class="kw">if</span> <span class="op">(</span><span class="va">return_as_list</span><span class="op">)</span> <span class="op">{</span></span>
-<span>        <span class="kw"><a href="https://rdrr.io/r/base/function.html" class="external-link">return</a></span><span class="op">(</span><span class="fu"><a href="https://rdrr.io/r/base/list.html" class="external-link">list</a></span><span class="op">(</span>ui <span class="op">=</span> <span class="fu">app_ui</span><span class="op">(</span><span class="op">)</span>, server <span class="op">=</span> <span class="va">server</span><span class="op">)</span><span class="op">)</span></span>
-<span>    <span class="op">}</span> <span class="kw">else</span> <span class="op">{</span></span>
-<span>        <span class="va">app</span></span>
-<span>    <span class="op">}</span></span>
-<span><span class="op">}</span></span></code></pre></div>
-<p>This pattern is exactly what the <code><a href="../reference/run_app.html">ADS8192::run_app()</a></code>
-function uses.</p>
+<span><span class="fu">use_package</span><span class="op">(</span><span class="st">"DT"</span><span class="op">)</span></span></code></pre></div>
 <blockquote>
 <p><strong>Exercise A:</strong> Ensure <code><a href="../reference/run_app.html">run_app()</a></code> works
 after installing from GitHub (no local relative paths). Test in a fresh
 R session.</p>
 </blockquote>
 <hr>
-</div>
 </div>
 </div>
 <div class="section level2">
@@ -600,10 +481,10 @@ R session.</p>
 <h3 id="document-run_app">Document run_app()<a class="anchor" aria-label="anchor" href="#document-run_app"></a>
 </h3>
 <p>We already added roxygen2 documentation. Run:</p>
-<div class="sourceCode" id="cb11"><pre class="downlit sourceCode r">
+<div class="sourceCode" id="cb7"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="fu">devtools</span><span class="fu">::</span><span class="fu">document</span><span class="op">(</span><span class="op">)</span></span></code></pre></div>
 <p>Verify:</p>
-<div class="sourceCode" id="cb12"><pre class="downlit sourceCode r">
+<div class="sourceCode" id="cb8"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="fu">devtools</span><span class="fu">::</span><span class="fu">load_all</span><span class="op">(</span><span class="op">)</span></span>
 <span><span class="op">?</span><span class="va">run_app</span></span></code></pre></div>
 </div>
@@ -612,7 +493,7 @@ R session.</p>
 </h3>
 <p>You can either add to your existing vignette or create a new one
 focused on the app, e.g.:</p>
-<div class="sourceCode" id="cb13"><pre class="downlit sourceCode r">
+<div class="sourceCode" id="cb9"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="fu">usethis</span><span class="fu">::</span><span class="fu">use_vignette</span><span class="op">(</span><span class="st">"shiny-app"</span>, title <span class="op">=</span> <span class="st">"Using the Shiny App"</span><span class="op">)</span></span></code></pre></div>
 <p>At minimum, how to launch the app and what features it has. A
 screenshot or GIF is a nice touch!</p>
@@ -620,64 +501,7 @@ screenshot or GIF is a nice touch!</p>
 </div>
 </div>
 <div class="section level2">
-<h2 id="part-4-advanced-interactions">Part 4: Advanced Interactions<a class="anchor" aria-label="anchor" href="#part-4-advanced-interactions"></a>
-</h2>
-<div class="section level3">
-<h3 id="adding-tabs-with-multiple-views">Adding Tabs with Multiple Views<a class="anchor" aria-label="anchor" href="#adding-tabs-with-multiple-views"></a>
-</h3>
-<div class="sourceCode" id="cb14"><pre class="downlit sourceCode r">
-<code class="sourceCode R"><span><span class="fu">bslib</span><span class="fu">::</span><span class="fu"><a href="https://rstudio.github.io/bslib/reference/navset.html" class="external-link">navset_card_tab</a></span><span class="op">(</span></span>
-<span>    <span class="fu">bslib</span><span class="fu">::</span><span class="fu"><a href="https://rstudio.github.io/bslib/reference/nav-items.html" class="external-link">nav_panel</a></span><span class="op">(</span><span class="st">"PCA Plot"</span>, <span class="fu"><a href="https://rdrr.io/pkg/shiny/man/plotOutput.html" class="external-link">plotOutput</a></span><span class="op">(</span><span class="st">"pca_plot"</span><span class="op">)</span><span class="op">)</span>,</span>
-<span>    <span class="fu">bslib</span><span class="fu">::</span><span class="fu"><a href="https://rstudio.github.io/bslib/reference/nav-items.html" class="external-link">nav_panel</a></span><span class="op">(</span><span class="st">"Loadings"</span>, <span class="fu"><a href="https://rdrr.io/pkg/shiny/man/plotOutput.html" class="external-link">plotOutput</a></span><span class="op">(</span><span class="st">"loadings_plot"</span><span class="op">)</span><span class="op">)</span>,</span>
-<span>    <span class="fu">bslib</span><span class="fu">::</span><span class="fu"><a href="https://rstudio.github.io/bslib/reference/nav-items.html" class="external-link">nav_panel</a></span><span class="op">(</span><span class="st">"Heatmap"</span>, <span class="fu"><a href="https://rdrr.io/pkg/shiny/man/plotOutput.html" class="external-link">plotOutput</a></span><span class="op">(</span><span class="st">"heatmap"</span><span class="op">)</span><span class="op">)</span>,</span>
-<span>    <span class="fu">bslib</span><span class="fu">::</span><span class="fu"><a href="https://rstudio.github.io/bslib/reference/nav-items.html" class="external-link">nav_panel</a></span><span class="op">(</span><span class="st">"Data"</span>, <span class="fu">DT</span><span class="fu">::</span><span class="fu"><a href="https://rdrr.io/pkg/DT/man/dataTableOutput.html" class="external-link">dataTableOutput</a></span><span class="op">(</span><span class="st">"scores_table"</span><span class="op">)</span><span class="op">)</span></span>
-<span><span class="op">)</span></span></code></pre></div>
-</div>
-<div class="section level3">
-<h3 id="interactive-brushing">Interactive Brushing<a class="anchor" aria-label="anchor" href="#interactive-brushing"></a>
-</h3>
-<p>Let users select points on the plot:</p>
-<div class="sourceCode" id="cb15"><pre class="downlit sourceCode r">
-<code class="sourceCode R"><span><span class="co"># UI</span></span>
-<span><span class="fu"><a href="https://rdrr.io/pkg/shiny/man/plotOutput.html" class="external-link">plotOutput</a></span><span class="op">(</span><span class="st">"pca_plot"</span>, brush <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/pkg/shiny/man/brushOpts.html" class="external-link">brushOpts</a></span><span class="op">(</span>id <span class="op">=</span> <span class="st">"plot_brush"</span><span class="op">)</span><span class="op">)</span></span>
-<span></span>
-<span><span class="co"># Server</span></span>
-<span><span class="va">output</span><span class="op">$</span><span class="va">selected_samples</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/pkg/shiny/man/renderTable.html" class="external-link">renderTable</a></span><span class="op">(</span><span class="op">{</span></span>
-<span>    <span class="fu"><a href="https://rdrr.io/pkg/shiny/man/req.html" class="external-link">req</a></span><span class="op">(</span><span class="va">input</span><span class="op">$</span><span class="va">plot_brush</span><span class="op">)</span></span>
-<span>    <span class="va">scores</span> <span class="op">&lt;-</span> <span class="fu">pca_result</span><span class="op">(</span><span class="op">)</span><span class="op">$</span><span class="va">scores</span></span>
-<span>    <span class="fu"><a href="https://rdrr.io/pkg/shiny/man/brushedPoints.html" class="external-link">brushedPoints</a></span><span class="op">(</span><span class="va">scores</span>, <span class="va">input</span><span class="op">$</span><span class="va">plot_brush</span>, xvar <span class="op">=</span> <span class="st">"PC1"</span>, yvar <span class="op">=</span> <span class="st">"PC2"</span><span class="op">)</span></span>
-<span><span class="op">}</span><span class="op">)</span></span></code></pre></div>
-</div>
-<div class="section level3">
-<h3 id="download-handlers">Download Handlers<a class="anchor" aria-label="anchor" href="#download-handlers"></a>
-</h3>
-<div class="section level4">
-<h4 id="download-plot">Download Plot<a class="anchor" aria-label="anchor" href="#download-plot"></a>
-</h4>
-<div class="sourceCode" id="cb16"><pre class="downlit sourceCode r">
-<code class="sourceCode R"><span><span class="va">output</span><span class="op">$</span><span class="va">download_plot</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/pkg/shiny/man/downloadHandler.html" class="external-link">downloadHandler</a></span><span class="op">(</span></span>
-<span>    filename <span class="op">=</span> <span class="kw">function</span><span class="op">(</span><span class="op">)</span> <span class="fu"><a href="https://rdrr.io/r/base/paste.html" class="external-link">paste0</a></span><span class="op">(</span><span class="st">"pca_"</span>, <span class="fu"><a href="https://rdrr.io/r/base/Sys.time.html" class="external-link">Sys.Date</a></span><span class="op">(</span><span class="op">)</span>, <span class="st">".png"</span><span class="op">)</span>,</span>
-<span>    content <span class="op">=</span> <span class="kw">function</span><span class="op">(</span><span class="va">file</span><span class="op">)</span> <span class="op">{</span></span>
-<span>        <span class="fu">ggplot2</span><span class="fu">::</span><span class="fu"><a href="https://ggplot2.tidyverse.org/reference/ggsave.html" class="external-link">ggsave</a></span><span class="op">(</span><span class="va">file</span>, <span class="fu">current_plot</span><span class="op">(</span><span class="op">)</span>, width <span class="op">=</span> <span class="fl">8</span>, height <span class="op">=</span> <span class="fl">6</span><span class="op">)</span></span>
-<span>    <span class="op">}</span></span>
-<span><span class="op">)</span></span></code></pre></div>
-</div>
-<div class="section level4">
-<h4 id="download-data-tsv">Download Data (TSV)<a class="anchor" aria-label="anchor" href="#download-data-tsv"></a>
-</h4>
-<div class="sourceCode" id="cb17"><pre class="downlit sourceCode r">
-<code class="sourceCode R"><span><span class="va">output</span><span class="op">$</span><span class="va">download_scores</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/pkg/shiny/man/downloadHandler.html" class="external-link">downloadHandler</a></span><span class="op">(</span></span>
-<span>    filename <span class="op">=</span> <span class="kw">function</span><span class="op">(</span><span class="op">)</span> <span class="fu"><a href="https://rdrr.io/r/base/paste.html" class="external-link">paste0</a></span><span class="op">(</span><span class="st">"pca_scores_"</span>, <span class="fu"><a href="https://rdrr.io/r/base/Sys.time.html" class="external-link">Sys.Date</a></span><span class="op">(</span><span class="op">)</span>, <span class="st">".tsv"</span><span class="op">)</span>,</span>
-<span>    content <span class="op">=</span> <span class="kw">function</span><span class="op">(</span><span class="va">file</span><span class="op">)</span> <span class="op">{</span></span>
-<span>        <span class="fu"><a href="https://rdrr.io/r/utils/write.table.html" class="external-link">write.table</a></span><span class="op">(</span><span class="fu">pca_result</span><span class="op">(</span><span class="op">)</span><span class="op">$</span><span class="va">scores</span>, <span class="va">file</span>, sep <span class="op">=</span> <span class="st">"\t"</span>, row.names <span class="op">=</span> <span class="cn">FALSE</span><span class="op">)</span></span>
-<span>    <span class="op">}</span></span>
-<span><span class="op">)</span></span></code></pre></div>
-<hr>
-</div>
-</div>
-</div>
-<div class="section level2">
-<h2 id="part-5-testing-shiny-apps">Part 5: Testing Shiny Apps<a class="anchor" aria-label="anchor" href="#part-5-testing-shiny-apps"></a>
+<h2 id="part-4-testing-shiny-apps">Part 4: Testing Shiny Apps<a class="anchor" aria-label="anchor" href="#part-4-testing-shiny-apps"></a>
 </h2>
 <div class="section level3">
 <h3 id="the-challenge">The Challenge<a class="anchor" aria-label="anchor" href="#the-challenge"></a>
@@ -695,8 +519,9 @@ screenshot or GIF is a nice touch!</p>
 <div class="section level4">
 <h4 id="test-the-logic-not-the-app">1. Test the Logic, Not the App<a class="anchor" aria-label="anchor" href="#test-the-logic-not-the-app"></a>
 </h4>
-<p>The best approach: keep logic in testable functions, test those:</p>
-<div class="sourceCode" id="cb18"><pre class="downlit sourceCode r">
+<p>The simplest approach is to keep logic in testable functions and test
+those:</p>
+<div class="sourceCode" id="cb10"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="co"># The core logic is already tested</span></span>
 <span><span class="fu"><a href="https://testthat.r-lib.org/reference/test_that.html" class="external-link">test_that</a></span><span class="op">(</span><span class="st">"run_pca works"</span>, <span class="op">{</span> <span class="va">...</span> <span class="op">}</span><span class="op">)</span></span>
 <span><span class="fu"><a href="https://testthat.r-lib.org/reference/test_that.html" class="external-link">test_that</a></span><span class="op">(</span><span class="st">"plot_pca works"</span>, <span class="op">{</span> <span class="va">...</span> <span class="op">}</span><span class="op">)</span></span>
@@ -706,38 +531,10 @@ screenshot or GIF is a nice touch!</p>
 <div class="section level4">
 <h4 id="smoke-tests-with-shinytest2">2. Smoke Tests with shinytest2<a class="anchor" aria-label="anchor" href="#smoke-tests-with-shinytest2"></a>
 </h4>
-<p>For end-to-end testing:</p>
-<div class="sourceCode" id="cb19"><pre class="downlit sourceCode r">
-<code class="sourceCode R"><span><span class="co"># Install</span></span>
-<span><span class="fu"><a href="https://rdrr.io/r/utils/install.packages.html" class="external-link">install.packages</a></span><span class="op">(</span><span class="st">"shinytest2"</span><span class="op">)</span></span>
-<span></span>
-<span><span class="co"># Set up</span></span>
-<span><span class="fu">shinytest2</span><span class="fu">::</span><span class="fu">use_shinytest2</span><span class="op">(</span><span class="op">)</span></span></code></pre></div>
-<p>Create <code>tests/testthat/test-app.R</code>:</p>
-<div class="sourceCode" id="cb20"><pre class="downlit sourceCode r">
-<code class="sourceCode R"><span><span class="fu"><a href="https://testthat.r-lib.org/reference/test_that.html" class="external-link">test_that</a></span><span class="op">(</span><span class="st">"app starts without error"</span>, <span class="op">{</span></span>
-<span>    <span class="fu"><a href="https://testthat.r-lib.org/reference/skip.html" class="external-link">skip_on_cran</a></span><span class="op">(</span><span class="op">)</span>  <span class="co"># Skip on CRAN (no display)</span></span>
-<span>    <span class="fu"><a href="https://testthat.r-lib.org/reference/skip.html" class="external-link">skip_if_not_installed</a></span><span class="op">(</span><span class="st">"shinytest2"</span><span class="op">)</span></span>
-<span></span>
-<span>    <span class="va">app</span> <span class="op">&lt;-</span> <span class="fu">shinytest2</span><span class="fu">::</span><span class="va">AppDriver</span><span class="op">$</span><span class="fu">new</span><span class="op">(</span></span>
-<span>        app_dir <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/system.file.html" class="external-link">system.file</a></span><span class="op">(</span><span class="st">"app"</span>, package <span class="op">=</span> <span class="st">"ADS8192"</span><span class="op">)</span>,</span>
-<span>        name <span class="op">=</span> <span class="st">"pca-app"</span></span>
-<span>    <span class="op">)</span></span>
-<span></span>
-<span>    <span class="co"># Check initial state</span></span>
-<span>    <span class="fu"><a href="https://testthat.r-lib.org/reference/equality-expectations.html" class="external-link">expect_equal</a></span><span class="op">(</span><span class="va">app</span><span class="op">$</span><span class="fu">get_value</span><span class="op">(</span>input <span class="op">=</span> <span class="st">"n_top"</span><span class="op">)</span>, <span class="fl">500</span><span class="op">)</span></span>
-<span></span>
-<span>    <span class="co"># Change an input</span></span>
-<span>    <span class="va">app</span><span class="op">$</span><span class="fu">set_inputs</span><span class="op">(</span>n_top <span class="op">=</span> <span class="fl">1000</span><span class="op">)</span></span>
-<span></span>
-<span>    <span class="co"># Wait for outputs to update</span></span>
-<span>    <span class="va">app</span><span class="op">$</span><span class="fu">wait_for_idle</span><span class="op">(</span><span class="op">)</span></span>
-<span></span>
-<span>    <span class="co"># Take a snapshot (optional)</span></span>
-<span>    <span class="va">app</span><span class="op">$</span><span class="fu">expect_screenshot</span><span class="op">(</span><span class="op">)</span></span>
-<span></span>
-<span>    <span class="va">app</span><span class="op">$</span><span class="kw">stop</span><span class="op">(</span><span class="op">)</span></span>
-<span><span class="op">}</span><span class="op">)</span></span></code></pre></div>
+<p>For more thorough testing, you can use <a href="https://rstudio.github.io/shinytest2/index.html" class="external-link">shinytest2</a> to
+simulate user interactions and verify outputs. This is more complex to
+set up and maintain, but it can catch issues that unit tests miss,
+particularly when you have complex reactive logic.</p>
 </div>
 <div class="section level4">
 <h4 id="manual-testing-checklist">3. Manual Testing Checklist<a class="anchor" aria-label="anchor" href="#manual-testing-checklist"></a>
@@ -746,10 +543,8 @@ screenshot or GIF is a nice touch!</p>
 <ul class="task-list">
 <li><label><input type="checkbox">App launches without
 error</label></li>
-<li><label><input type="checkbox">Changing n_top updates the
-plot</label></li>
-<li><label><input type="checkbox">Changing color_by updates
-colors</label></li>
+<li><label><input type="checkbox">Changing inputs updates
+things</label></li>
 <li><label><input type="checkbox">Download button produces a
 file</label></li>
 <li><label><input type="checkbox">No errors in the R console during
@@ -760,11 +555,15 @@ use</label></li>
 </div>
 </div>
 <div class="section level2">
-<h2 id="part-6-deployment">Part 6: Deployment<a class="anchor" aria-label="anchor" href="#part-6-deployment"></a>
+<h2 id="part-5-deployment">Part 5: Deployment<a class="anchor" aria-label="anchor" href="#part-5-deployment"></a>
 </h2>
-<p>After packaging the app inside your R package, you can make it
-available to others in several ways. The right choice depends on your
-audience, infrastructure, and maintenance capacity.</p>
+<p>Allowing users to run your app locally is fine, but sometimes you may
+want to deploy the application with your own data for a collaborator to
+use, to serve as a companion app for a publication, or to serve as an
+example to show off its functionality without requiring users to install
+R or the package.</p>
+<p>In our case, we want want an example of our app so that potential
+users can test it out, for which we can use the example data.</p>
 <div class="section level3">
 <h3 id="deployment-options">Deployment Options<a class="anchor" aria-label="anchor" href="#deployment-options"></a>
 </h3>
@@ -795,110 +594,70 @@ audience, infrastructure, and maintenance capacity.</p>
 <td>Your own server</td>
 </tr>
 <tr class="odd">
-<td>Posit Cloud</td>
-<td>Teaching/demos</td>
+<td>Posit Connect Cloud</td>
+<td>Any</td>
 <td>Free tier available</td>
 <td>Posit-managed</td>
 </tr>
 </tbody>
 </table>
-<blockquote>
-<p><strong>Note:</strong> shinyapps.io has been deprecated and should
-not be used for new deployments.</p>
-</blockquote>
+<p>We’ll be deploying to <a href="https://connect.posit.cloud/" class="external-link">Posit
+Connect Cloud</a>, which is a simple way to deploy a Shiny application
+directly from a Github repository. It handles all the infrastructure and
+scaling for you, and it integrates well with R packages.</p>
+<p>It also has a free tier that is sufficient for lightweight apps.</p>
 <div class="section level4">
-<h4 id="option-1-posit-connect-recommended-for-institutions">Option 1: Posit Connect (Recommended for Institutions)<a class="anchor" aria-label="anchor" href="#option-1-posit-connect-recommended-for-institutions"></a>
+<h4 id="deployment-steps">Deployment Steps<a class="anchor" aria-label="anchor" href="#deployment-steps"></a>
 </h4>
-<p><a href="https://posit.co/products/enterprise/connect/" class="external-link">Posit
-Connect</a> is a publishing platform for R (and Python) content. It can
-host Shiny apps, R Markdown reports, APIs, and more.</p>
-<ul>
-<li>
-<strong>Posit-managed hosting</strong>: Posit offers a hosted
-version — no server to maintain</li>
-<li>
-<strong>Self-hosted</strong>: Deploy on your institution’s own
-server (common in regulated environments like healthcare/research)</li>
-<li>Supports authentication, scheduled reports, and access control</li>
-<li>St. Jude users: check with your IT department for institutional
-access</li>
-</ul>
-<div class="sourceCode" id="cb21"><pre class="downlit sourceCode r">
-<code class="sourceCode R"><span><span class="co"># Deploy to Posit Connect using rsconnect</span></span>
-<span><span class="fu"><a href="https://rdrr.io/r/utils/install.packages.html" class="external-link">install.packages</a></span><span class="op">(</span><span class="st">"rsconnect"</span><span class="op">)</span></span>
-<span><span class="fu">rsconnect</span><span class="fu">::</span><span class="fu">deployApp</span><span class="op">(</span></span>
-<span>    appDir <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/system.file.html" class="external-link">system.file</a></span><span class="op">(</span><span class="st">"app"</span>, package <span class="op">=</span> <span class="st">"ADS8192"</span><span class="op">)</span>,</span>
-<span>    appName <span class="op">=</span> <span class="st">"ads8192-pca-explorer"</span>,</span>
-<span>    server <span class="op">=</span> <span class="st">"your-connect-server.example.com"</span></span>
-<span><span class="op">)</span></span></code></pre></div>
-</div>
-<div class="section level4">
-<h4 id="option-2-self-hosted-shiny-server-open-source">Option 2: Self-hosted Shiny Server (Open Source)<a class="anchor" aria-label="anchor" href="#option-2-self-hosted-shiny-server-open-source"></a>
-</h4>
-<p>Run Shiny Server on any Linux VM or HPC login node:</p>
-<div class="sourceCode" id="cb22"><pre class="sourceCode bash"><code class="sourceCode bash"><span id="cb22-1"><a href="#cb22-1" tabindex="-1"></a><span class="co"># On a Linux server</span></span>
-<span id="cb22-2"><a href="#cb22-2" tabindex="-1"></a><span class="fu">sudo</span> apt-get install r-base</span>
-<span id="cb22-3"><a href="#cb22-3" tabindex="-1"></a><span class="co"># Install Shiny Server: https://posit.co/download/shiny-server/</span></span>
-<span id="cb22-4"><a href="#cb22-4" tabindex="-1"></a><span class="co"># Place your app.R in /srv/shiny-server/</span></span></code></pre></div>
-<p>Your app is then accessible at
-<code>http://your-server:3838/app-name/</code>.</p>
-<ul>
-<li>Free, open source</li>
-<li>Full control over the environment</li>
-<li>Requires server administration (updates, security, SSL)</li>
-<li>Good option for HPC environments or institutional clusters</li>
-</ul>
-</div>
-<div class="section level4">
-<h4 id="option-3-posit-cloud-teaching-and-demos">Option 3: Posit Cloud (Teaching and Demos)<a class="anchor" aria-label="anchor" href="#option-3-posit-cloud-teaching-and-demos"></a>
-</h4>
-<p><a href="https://posit.cloud/" class="external-link">Posit Cloud</a> is a browser-based
-RStudio environment:</p>
 <ol style="list-style-type: decimal">
-<li>Create a new project from Git</li>
-<li>Install your package:
-<code>remotes::install_github("you/ADS8192")</code>
-</li>
-<li>Use <code>inst/app/app.R</code> (already in your repo) which calls
-<code>run_app(se = example_se, return_as_list = TRUE)</code>
-</li>
-<li>Click <strong>Publish</strong> → <strong>Shiny</strong>
-</li>
+<li>Sign in to Posit Connect Cloud with your Github</li>
+<li>Push your package to GitHub (make sure <code><a href="../reference/run_app.html">run_app()</a></code> works
+without local paths)</li>
+<li>Install your package in a fresh session locally,
+e.g. <code>remotes::install_github("St-Jude-MS-ABDS/ADS8192")</code> and
+verify <code><a href="../reference/run_app.html">run_app()</a></code> works.</li>
+<li>Create an <code>app.r</code> file in <code>inst/app/</code> that
+calls <code>run_app(return_as_list = TRUE)</code> and passes the example
+data:</li>
 </ol>
-<p>Best for course demonstrations and quick sharing. The free tier has
-compute limitations that make it unsuitable for production use.</p>
-</div>
-<div class="section level4">
-<h4 id="choosing-a-deployment-strategy">Choosing a Deployment Strategy<a class="anchor" aria-label="anchor" href="#choosing-a-deployment-strategy"></a>
-</h4>
-<p>For scientific software in a research institution:</p>
-<ul>
-<li>
-<strong>Internal tool for your lab</strong>: Posit Connect on
-institutional infrastructure is the most maintainable option</li>
-<li>
-<strong>Public-facing demo</strong>: Posit Cloud is fast to set
-up</li>
-<li>
-<strong>Pipeline-adjacent tool</strong> on an HPC cluster: consider
-whether a Shiny app is the right interface at all — a CLI or R API may
-serve pipeline users better</li>
-</ul>
+<div class="sourceCode" id="cb11"><pre class="downlit sourceCode r">
+<code class="sourceCode R"><span><span class="kw"><a href="https://rdrr.io/r/base/library.html" class="external-link">library</a></span><span class="op">(</span><span class="va"><a href="https://github.com/St-Jude-MS-ABDS/ADS8192" class="external-link">ADS8192</a></span><span class="op">)</span></span>
+<span><span class="fu"><a href="https://rdrr.io/r/utils/data.html" class="external-link">data</a></span><span class="op">(</span><span class="st">"example_se"</span><span class="op">)</span></span>
+<span><span class="va">app</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/run_app.html">run_app</a></span><span class="op">(</span>se <span class="op">=</span> <span class="va">example_se</span>, return_as_list <span class="op">=</span> <span class="cn">TRUE</span><span class="op">)</span></span>
+<span><span class="fu">shiny</span><span class="fu">::</span><span class="fu"><a href="https://rdrr.io/pkg/shiny/man/shinyApp.html" class="external-link">shinyApp</a></span><span class="op">(</span>ui <span class="op">=</span> <span class="va">app</span><span class="op">$</span><span class="va">ui</span>, server <span class="op">=</span> <span class="va">app</span><span class="op">$</span><span class="va">server</span><span class="op">)</span></span></code></pre></div>
+<p>Using <code>return_as_list = TRUE</code> allows us to return the UI
+and server functions without launching the app, which is necessary for
+deployment platforms that expect a standalone <code>app.R</code>
+file.</p>
+<ol start="5" style="list-style-type: decimal">
+<li>Create a <code>manifest.json</code> file in <code>inst/app/</code>
+that specifies the dependencies for the app. This is required for Posit
+Connect Cloud to know which packages to install.</li>
+</ol>
+<p>This can be generated easily with the <code>rsconnect</code>
+package:</p>
+<div class="sourceCode" id="cb12"><pre class="downlit sourceCode r">
+<code class="sourceCode R"><span><span class="kw"><a href="https://rdrr.io/r/base/library.html" class="external-link">library</a></span><span class="op">(</span><span class="va"><a href="https://rstudio.github.io/rsconnect/" class="external-link">rsconnect</a></span><span class="op">)</span></span>
+<span><span class="fu">writeManifest</span><span class="op">(</span>appDir <span class="op">=</span> <span class="st">"inst/app"</span>, appFiles <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="st">"app.r"</span><span class="op">)</span><span class="op">)</span>   </span></code></pre></div>
+<ol start="6" style="list-style-type: decimal">
+<li>Deploy to Posit Connect Cloud, pointing to the
+<code>inst/app/app.R</code> file as the entry point.</li>
+</ol>
 </div>
 </div>
 <div class="section level3">
 <h3 id="record-the-url">Record the URL<a class="anchor" aria-label="anchor" href="#record-the-url"></a>
 </h3>
 <p>After deploying, add to your README:</p>
-<div class="sourceCode" id="cb23"><pre class="sourceCode markdown"><code class="sourceCode markdown"><span id="cb23-1"><a href="#cb23-1" tabindex="-1"></a><span class="fu">## Interactive App</span></span>
-<span id="cb23-2"><a href="#cb23-2" tabindex="-1"></a></span>
-<span id="cb23-3"><a href="#cb23-3" tabindex="-1"></a>Run locally:</span>
-<span id="cb23-4"><a href="#cb23-4" tabindex="-1"></a></span>
-<span id="cb23-5"><a href="#cb23-5" tabindex="-1"></a><span class="in">```r</span></span>
-<span id="cb23-6"><a href="#cb23-6" tabindex="-1"></a><span class="fu">library</span>(ADS8192)</span>
-<span id="cb23-7"><a href="#cb23-7" tabindex="-1"></a><span class="fu">data</span>(<span class="st">"example_se"</span>)</span>
-<span id="cb23-8"><a href="#cb23-8" tabindex="-1"></a>ADS8192<span class="sc">::</span><span class="fu">run_app</span>(<span class="at">se =</span> example_se)</span></code></pre></div>
-<p>Or access the deployed version at: <a href="https://your-deployment-url/" class="external-link uri">https://your-deployment-url/</a></p>
+<div class="sourceCode" id="cb13"><pre class="sourceCode markdown"><code class="sourceCode markdown"><span id="cb13-1"><a href="#cb13-1" tabindex="-1"></a><span class="fu">## Interactive App</span></span>
+<span id="cb13-2"><a href="#cb13-2" tabindex="-1"></a></span>
+<span id="cb13-3"><a href="#cb13-3" tabindex="-1"></a>Run locally:</span>
+<span id="cb13-4"><a href="#cb13-4" tabindex="-1"></a></span>
+<span id="cb13-5"><a href="#cb13-5" tabindex="-1"></a><span class="in">```r</span></span>
+<span id="cb13-6"><a href="#cb13-6" tabindex="-1"></a><span class="fu">library</span>(ADS8192)</span>
+<span id="cb13-7"><a href="#cb13-7" tabindex="-1"></a><span class="fu">data</span>(<span class="st">"example_se"</span>)</span>
+<span id="cb13-8"><a href="#cb13-8" tabindex="-1"></a>ADS8192<span class="sc">::</span><span class="fu">run_app</span>(<span class="at">se =</span> example_se)</span></code></pre></div>
+<p>Or access the deployed example at: <a href="https://your-deployment-url/" class="external-link uri">https://your-deployment-url/</a></p>
 <pre><code>
 ---
 
@@ -910,6 +669,7 @@ This lab we:
 2. Added `run_app()` as a documented, exported function
 3. Added interactive features (tabs, download handlers)
 4. Discussed testing strategies
+5. Discussed app deployment options
 
 ## Package Milestone
 
@@ -926,7 +686,7 @@ From a fresh R session:
 
 ``` r
 # Install from GitHub
-remotes::install_github("you/ADS8192")
+remotes::install_github("St-Jude-MS-ABDS/ADS8192")
 
 # Run the app
 library(ADS8192)
@@ -985,7 +745,7 @@ run_app(se = example_se)</code></pre>
 <div class="section level2">
 <h2 id="session-info">Session Info<a class="anchor" aria-label="anchor" href="#session-info"></a>
 </h2>
-<div class="sourceCode" id="cb26"><pre class="downlit sourceCode r">
+<div class="sourceCode" id="cb16"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="fu"><a href="https://rdrr.io/r/utils/sessionInfo.html" class="external-link">sessionInfo</a></span><span class="op">(</span><span class="op">)</span></span></code></pre></div>
 <pre><code><span><span class="co">## R version 4.5.3 (2026-03-11)</span></span>
 <span><span class="co">## Platform: x86_64-pc-linux-gnu</span></span>

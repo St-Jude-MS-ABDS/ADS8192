@@ -66,38 +66,27 @@ Benefits:
 
 ## Part 1: Package Structure for Shiny Apps
 
-### Where Does the App Go?
+Functionizing a Shiny app and adding it to a package requires a few
+adjustments to the typical Shiny app structure. The key is to separate
+the UI and server logic into functions that can be called from a wrapper
+function (e.g.,
+[`run_app()`](https://st-jude-ms-abds.github.io/ADS8192/reference/run_app.md))
+that returns the app.
 
-The conventional location is `inst/app/`:
+We will also make a tweak to the directory structure to accommodate
+deployment platforms that expect a standalone `app.R` file.
 
-    ADS8192/
-    ├── DESCRIPTION
-    ├── NAMESPACE
-    ├── R/
-    │   ├── run_app.R        # Exported function to launch app
-    │   ├── app_ui.R         # UI definition
-    │   ├── app_server.R     # Server logic
-    ├── inst/
-    │   └── app/
-    │       └── app.R        # App entry point (calls run_app), for deployment/examples
-    └── ...
-
-Why `inst/`?
-
-- Files in `inst/` are copied as-is when the package is installed
-- They’re accessible via `system.file("app", package = "ADS8192")`
-- The actual app logic lives in `R/` for documentation and testing
-
-### Step 1: Create the Directory Structure
-
-``` r
-# In your package directory
-dir.create("inst/app", recursive = TRUE)
-```
-
-### Step 2: Create App Files in R/
+### Step 1: Create App Files in R/
 
 #### R/app_ui.R
+
+Now create `R/app_ui.R` with the UI definition. This is a standard Shiny
+UI function, but it’s wrapped in a function that can be called from
+[`run_app()`](https://st-jude-ms-abds.github.io/ADS8192/reference/run_app.md).
+
+This should largely just require copy-pasting your existing UI code, but
+it may require adjustments to your server logic to update the available
+choices for some of the inputs based on the data provided.
 
 ``` r
 #' Shiny App UI
@@ -167,6 +156,11 @@ app_ui <- function() {
 
 #### R/app_server.R
 
+Now create `R/app_server.R` with the server logic. This function takes
+the Shiny `input`, `output`, and `session` objects, as well as the
+`SummarizedExperiment` data, and contains all the reactive logic for the
+app.
+
 **R/app_server.R** (click to expand)
 
 ``` r
@@ -183,8 +177,6 @@ app_ui <- function() {
 #' @import shiny
 #' @importFrom SummarizedExperiment colData assayNames
 #' @importFrom ggplot2 ggsave
-#' @importFrom rlang .data
-#' @importFrom utils data
 #' @author Jared Andrews
 app_server <- function(input, output, session, se) {
     se_data <- reactiveVal(se)
@@ -349,25 +341,18 @@ run_app <- function(se, return_as_list = FALSE, ...) {
 }
 ```
 
-### Step 3: Create inst/app/app.R
-
-This file exists for deployment platforms like Posit Cloud that expect a
-standalone `app.R` entry point. Rather than calling internal package
-functions directly (which requires `:::` and is bad practice), it uses
-`return_as_list = TRUE` to get the UI and server back as a plain list,
-then passes them to
-[`shinyApp()`](https://rdrr.io/pkg/shiny/man/shinyApp.html).
+At this point, you should be able to run your app using this function,
+and it should work with arbitrary data:
 
 ``` r
-# inst/app/app.R
 library(ADS8192)
-library(shiny)
-
 data("example_se")
+run_app(se = example_se)
 
-app <- run_app(se = example_se, return_as_list = TRUE)
-
-shinyApp(ui = app$ui, server = app$server)
+# Should also work with other SummarizedExperiment objects
+library(airway)
+data("airway")
+run_app(se = airway)
 ```
 
 ------------------------------------------------------------------------
@@ -391,99 +376,7 @@ library(usethis)
 use_package("shiny")
 use_package("bslib")
 use_package("DT")
-use_package("rlang")  # For .data pronoun in ggplot2 aes()
 ```
-
-### Why Suggests?
-
-- Users who only want the R API don’t need shiny
-- Keeps the core package lightweight
-- [`run_app()`](https://st-jude-ms-abds.github.io/ADS8192/reference/run_app.md)
-  checks for packages at runtime
-- The app works on any `SummarizedExperiment` — no extra data packages
-  required
-
-### Checking for Optional Dependencies
-
-When your function requires a package that is in `Suggests`, you must
-check for it at runtime and give a helpful error message if it’s
-missing. Two approaches:
-
-#### `requireNamespace()` — Lightweight Check
-
-Best for checking inside a function body before using the package:
-
-``` r
-# In run_app() — checks happen before any work is done
-run_app <- function(se, return_as_list = FALSE, ...) {
-    if (!requireNamespace("shiny", quietly = TRUE)) {
-        stop("Package 'shiny' is required for app usage. Install with: ",
-             "install.packages('shiny')", call. = FALSE)
-    }
-    if (!requireNamespace("bslib", quietly = TRUE)) {
-        stop("Package 'bslib' is required for app usage. Install with: ",
-             "install.packages('bslib')", call. = FALSE)
-    }
-    if (!requireNamespace("DT", quietly = TRUE)) {
-        stop("Package 'DT' is required for app usage. Install with: ",
-             "install.packages('DT')", call. = FALSE)
-    }
-
-    # Validate user-supplied data
-    if (!methods::is(se, "SummarizedExperiment")) {
-        stop("'se' must be a SummarizedExperiment object.", call. = FALSE)
-    }
-
-    # ... rest of function
-}
-```
-
-#### Best Practice: Check Once at the Entry Point
-
-For functions where an entire block of functionality depends on optional
-packages (like
-[`run_app()`](https://st-jude-ms-abds.github.io/ADS8192/reference/run_app.md)),
-check all required packages **once at the top** of the function. Don’t
-scatter checks throughout the code — it leads to confusing partial
-failures:
-
-``` r
-# The actual ADS8192::run_app() — three focused checks, then proceed
-run_app <- function(se, return_as_list = FALSE, ...) {
-    if (!requireNamespace("shiny", quietly = TRUE)) {
-        stop("Package 'shiny' is required for app usage. Install with: ",
-             "install.packages('shiny')", call. = FALSE)
-    }
-    if (!requireNamespace("bslib", quietly = TRUE)) {
-        stop("Package 'bslib' is required for app usage. Install with: ",
-             "install.packages('bslib')", call. = FALSE)
-    }
-    if (!requireNamespace("DT", quietly = TRUE)) {
-        stop("Package 'DT' is required for app usage. Install with: ",
-             "install.packages('DT')", call. = FALSE)
-    }
-
-    if (!is(se, "SummarizedExperiment")) {
-        stop("'se' must be a SummarizedExperiment object.", call. = FALSE)
-    }
-
-    # All dependencies confirmed — proceed
-    server <- function(input, output, session) {
-        app_server(input, output, session, se = se)
-    }
-    app <- shiny::shinyApp(ui = app_ui(), server = server, ...)
-
-    if (return_as_list) {
-        return(list(ui = app_ui(), server = server))
-    } else {
-        app
-    }
-}
-```
-
-This pattern is exactly what the
-[`ADS8192::run_app()`](https://st-jude-ms-abds.github.io/ADS8192/reference/run_app.md)
-function uses.
 
 > **Exercise A:** Ensure
 > [`run_app()`](https://st-jude-ms-abds.github.io/ADS8192/reference/run_app.md)
@@ -523,62 +416,7 @@ or GIF is a nice touch!
 
 ------------------------------------------------------------------------
 
-## Part 4: Advanced Interactions
-
-### Adding Tabs with Multiple Views
-
-``` r
-bslib::navset_card_tab(
-    bslib::nav_panel("PCA Plot", plotOutput("pca_plot")),
-    bslib::nav_panel("Loadings", plotOutput("loadings_plot")),
-    bslib::nav_panel("Heatmap", plotOutput("heatmap")),
-    bslib::nav_panel("Data", DT::dataTableOutput("scores_table"))
-)
-```
-
-### Interactive Brushing
-
-Let users select points on the plot:
-
-``` r
-# UI
-plotOutput("pca_plot", brush = brushOpts(id = "plot_brush"))
-
-# Server
-output$selected_samples <- renderTable({
-    req(input$plot_brush)
-    scores <- pca_result()$scores
-    brushedPoints(scores, input$plot_brush, xvar = "PC1", yvar = "PC2")
-})
-```
-
-### Download Handlers
-
-#### Download Plot
-
-``` r
-output$download_plot <- downloadHandler(
-    filename = function() paste0("pca_", Sys.Date(), ".png"),
-    content = function(file) {
-        ggplot2::ggsave(file, current_plot(), width = 8, height = 6)
-    }
-)
-```
-
-#### Download Data (TSV)
-
-``` r
-output$download_scores <- downloadHandler(
-    filename = function() paste0("pca_scores_", Sys.Date(), ".tsv"),
-    content = function(file) {
-        write.table(pca_result()$scores, file, sep = "\t", row.names = FALSE)
-    }
-)
-```
-
-------------------------------------------------------------------------
-
-## Part 5: Testing Shiny Apps
+## Part 4: Testing Shiny Apps
 
 ### The Challenge
 
@@ -592,7 +430,8 @@ Testing Shiny apps is harder than testing regular functions:
 
 #### 1. Test the Logic, Not the App
 
-The best approach: keep logic in testable functions, test those:
+The simplest approach is to keep logic in testable functions and test
+those:
 
 ``` r
 # The core logic is already tested
@@ -604,43 +443,11 @@ test_that("plot_pca works", { ... })
 
 #### 2. Smoke Tests with shinytest2
 
-For end-to-end testing:
-
-``` r
-# Install
-install.packages("shinytest2")
-
-# Set up
-shinytest2::use_shinytest2()
-```
-
-Create `tests/testthat/test-app.R`:
-
-``` r
-test_that("app starts without error", {
-    skip_on_cran()  # Skip on CRAN (no display)
-    skip_if_not_installed("shinytest2")
-
-    app <- shinytest2::AppDriver$new(
-        app_dir = system.file("app", package = "ADS8192"),
-        name = "pca-app"
-    )
-
-    # Check initial state
-    expect_equal(app$get_value(input = "n_top"), 500)
-
-    # Change an input
-    app$set_inputs(n_top = 1000)
-
-    # Wait for outputs to update
-    app$wait_for_idle()
-
-    # Take a snapshot (optional)
-    app$expect_screenshot()
-
-    app$stop()
-})
-```
+For more thorough testing, you can use
+[shinytest2](https://rstudio.github.io/shinytest2/index.html) to
+simulate user interactions and verify outputs. This is more complex to
+set up and maintain, but it can catch issues that unit tests miss,
+particularly when you have complex reactive logic.
 
 #### 3. Manual Testing Checklist
 
@@ -648,9 +455,7 @@ For HW1, a manual checklist is acceptable:
 
 App launches without error
 
-Changing n_top updates the plot
-
-Changing color_by updates colors
+Changing inputs updates things
 
 Download button produces a file
 
@@ -658,11 +463,16 @@ No errors in the R console during use
 
 ------------------------------------------------------------------------
 
-## Part 6: Deployment
+## Part 5: Deployment
 
-After packaging the app inside your R package, you can make it available
-to others in several ways. The right choice depends on your audience,
-infrastructure, and maintenance capacity.
+Allowing users to run your app locally is fine, but sometimes you may
+want to deploy the application with your own data for a collaborator to
+use, to serve as a companion app for a publication, or to serve as an
+example to show off its functionality without requiring users to install
+R or the package.
+
+In our case, we want want an example of our app so that potential users
+can test it out, for which we can use the example data.
 
 ### Deployment Options
 
@@ -670,76 +480,53 @@ infrastructure, and maintenance capacity.
 |--------------------------|------------------------|---------------------|------------------------------|
 | Posit Connect            | Internal/institutional | Subscription        | Posit-managed or self-hosted |
 | Self-hosted Shiny Server | Any                    | Free (open source)  | Your own server              |
-| Posit Cloud              | Teaching/demos         | Free tier available | Posit-managed                |
+| Posit Connect Cloud      | Any                    | Free tier available | Posit-managed                |
 
-> **Note:** shinyapps.io has been deprecated and should not be used for
-> new deployments.
+We’ll be deploying to [Posit Connect
+Cloud](https://connect.posit.cloud/), which is a simple way to deploy a
+Shiny application directly from a Github repository. It handles all the
+infrastructure and scaling for you, and it integrates well with R
+packages.
 
-#### Option 1: Posit Connect (Recommended for Institutions)
+It also has a free tier that is sufficient for lightweight apps.
 
-[Posit Connect](https://posit.co/products/enterprise/connect/) is a
-publishing platform for R (and Python) content. It can host Shiny apps,
-R Markdown reports, APIs, and more.
+#### Deployment Steps
 
-- **Posit-managed hosting**: Posit offers a hosted version — no server
-  to maintain
-- **Self-hosted**: Deploy on your institution’s own server (common in
-  regulated environments like healthcare/research)
-- Supports authentication, scheduled reports, and access control
-- St. Jude users: check with your IT department for institutional access
+1.  Sign in to Posit Connect Cloud with your Github
+2.  Push your package to GitHub (make sure
+    [`run_app()`](https://st-jude-ms-abds.github.io/ADS8192/reference/run_app.md)
+    works without local paths)
+3.  Install your package in a fresh session locally,
+    e.g. `remotes::install_github("St-Jude-MS-ABDS/ADS8192")` and verify
+    [`run_app()`](https://st-jude-ms-abds.github.io/ADS8192/reference/run_app.md)
+    works.
+4.  Create an `app.r` file in `inst/app/` that calls
+    `run_app(return_as_list = TRUE)` and passes the example data:
 
 ``` r
-# Deploy to Posit Connect using rsconnect
-install.packages("rsconnect")
-rsconnect::deployApp(
-    appDir = system.file("app", package = "ADS8192"),
-    appName = "ads8192-pca-explorer",
-    server = "your-connect-server.example.com"
-)
+library(ADS8192)
+data("example_se")
+app <- run_app(se = example_se, return_as_list = TRUE)
+shiny::shinyApp(ui = app$ui, server = app$server)
 ```
 
-#### Option 2: Self-hosted Shiny Server (Open Source)
+Using `return_as_list = TRUE` allows us to return the UI and server
+functions without launching the app, which is necessary for deployment
+platforms that expect a standalone `app.R` file.
 
-Run Shiny Server on any Linux VM or HPC login node:
+5.  Create a `manifest.json` file in `inst/app/` that specifies the
+    dependencies for the app. This is required for Posit Connect Cloud
+    to know which packages to install.
 
-``` bash
-# On a Linux server
-sudo apt-get install r-base
-# Install Shiny Server: https://posit.co/download/shiny-server/
-# Place your app.R in /srv/shiny-server/
+This can be generated easily with the `rsconnect` package:
+
+``` r
+library(rsconnect)
+writeManifest(appDir = "inst/app", appFiles = c("app.r"))   
 ```
 
-Your app is then accessible at `http://your-server:3838/app-name/`.
-
-- Free, open source
-- Full control over the environment
-- Requires server administration (updates, security, SSL)
-- Good option for HPC environments or institutional clusters
-
-#### Option 3: Posit Cloud (Teaching and Demos)
-
-[Posit Cloud](https://posit.cloud/) is a browser-based RStudio
-environment:
-
-1.  Create a new project from Git
-2.  Install your package: `remotes::install_github("you/ADS8192")`
-3.  Use `inst/app/app.R` (already in your repo) which calls
-    `run_app(se = example_se, return_as_list = TRUE)`
-4.  Click **Publish** → **Shiny**
-
-Best for course demonstrations and quick sharing. The free tier has
-compute limitations that make it unsuitable for production use.
-
-#### Choosing a Deployment Strategy
-
-For scientific software in a research institution:
-
-- **Internal tool for your lab**: Posit Connect on institutional
-  infrastructure is the most maintainable option
-- **Public-facing demo**: Posit Cloud is fast to set up
-- **Pipeline-adjacent tool** on an HPC cluster: consider whether a Shiny
-  app is the right interface at all — a CLI or R API may serve pipeline
-  users better
+6.  Deploy to Posit Connect Cloud, pointing to the `inst/app/app.R` file
+    as the entry point.
 
 ### Record the URL
 
@@ -756,7 +543,7 @@ data("example_se")
 ADS8192::run_app(se = example_se)
 ```
 
-Or access the deployed version at: <https://your-deployment-url/>
+Or access the deployed example at: <https://your-deployment-url/>
 
     ---
 
@@ -768,6 +555,7 @@ Or access the deployed version at: <https://your-deployment-url/>
     2. Added `run_app()` as a documented, exported function
     3. Added interactive features (tabs, download handlers)
     4. Discussed testing strategies
+    5. Discussed app deployment options
 
     ## Package Milestone
 
@@ -784,7 +572,7 @@ Or access the deployed version at: <https://your-deployment-url/>
 
     ``` r
     # Install from GitHub
-    remotes::install_github("you/ADS8192")
+    remotes::install_github("St-Jude-MS-ABDS/ADS8192")
 
     # Run the app
     library(ADS8192)

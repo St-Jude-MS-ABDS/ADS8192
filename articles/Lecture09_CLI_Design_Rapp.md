@@ -1,19 +1,6 @@
 # Lecture 9: Lab – CLI Tool Development (R) – CLI Design and Rapp Basics
 
-## Learning Objectives
-
-By the end of this session, you will be able to:
-
-1.  Implement a simple CLI using Rapp that calls package functions
-2.  Write usage/help text and define clear inputs/outputs for commands
-3.  Test CLI functionality from the terminal and interpret exit behavior
-4.  Decide when a CLI is worth adding and keep it a thin wrapper over
-    package logic
-5.  Explain why CLIs improve interoperability and pipeline integration
-
-**Course Learning Outcomes (CLOs):** CLO 1, 2, 3, 5, 6
-
-### Motivation
+## Motivation
 
 Scientific software often needs to run without a human sitting at the
 keyboard. Command-line interfaces matter because they make analysis
@@ -26,26 +13,23 @@ defaults, error behavior, and file formats all become visible. That
 clarity saves time for automation users and reduces drift between the
 command line and the underlying package logic.
 
-### Evaluation Checklist
+### Learning Objectives
 
-Before adding a CLI, ask:
+By the end of this session, you will be able to:
 
-- Who needs it: pipeline users, HPC workflows, collaborators, or only
-  interactive analysts?
-- What explicit inputs and outputs must remain stable over time?
-- Does the CLI call the same package functions as the R API and Shiny
-  app?
-- Are error messages and exit codes useful to scripts, not just humans?
-- Would a thin wrapper over the existing package be enough?
-- Are you adding a CLI because users need automation, or because it
-  seems impressive?
+1.  Implement a simple CLI using Rapp that calls package functions
+2.  Write usage/help text and define clear inputs/outputs for commands
+3.  Test CLI functionality from the terminal and interpret exit behavior
+4.  Decide when a CLI is worth adding and keep it a thin wrapper over
+    package logic
+5.  Explain why CLIs improve interoperability and pipeline integration
 
 ### Scientific Use Case
 
 A bioinformatics core wants to run your analysis across 40 cohorts in a
 nightly workflow. They do not want a web app and they do not want to
-source R files by hand. What contract does a good CLI need to offer so
-that automation users can trust it?
+source R files by hand. How can this be done in a way that is robust,
+reproducible, and easy to maintain?
 
 ------------------------------------------------------------------------
 
