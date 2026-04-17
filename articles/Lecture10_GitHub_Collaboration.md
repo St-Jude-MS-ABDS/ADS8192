@@ -1,0 +1,363 @@
+# Lecture 10: GitHub as a Collaboration Platform
+
+## Motivation
+
+Git tracks history. GitHub adds tooling around that history: a place to
+discuss what should change, propose a change, review it, and remember
+why it happened after the fact.
+
+Earlier lectures already had you push code to GitHub, wire up CI, and
+publish a pkgdown site. Those are the mechanical parts. This session is
+about the collaboration features built on top: **issues**, **pull
+requests**, and **code review**. Even if you never work on a team, these
+features are some of the most useful things GitHub offers a solo
+developer. Future-you is a collaborator too.
+
+### Learning Objectives
+
+By the end of this session, you will be able to:
+
+1.  Explain what issues, pull requests, and code review are for, and
+    when each is worth the overhead
+2.  Use these features on your own package to keep notes, propose
+    changes, and self-review before merging
+3.  Participate in a code review as either author or reviewer with
+    reasonable norms
+4.  Decide when a lightweight process (direct commit) is appropriate
+    versus when a heavier process (branch + PR + review) is worth it
+
+### Scientific Use Case
+
+A collaborator tries your package and their CLI run crashes on a TSV
+with an empty column. They file an issue with the exact command and the
+error. You reproduce it on a branch, fix the input validation, and open
+a pull request. A labmate reviews the diff and notices that your fix
+*also* silently changed the default behavior when the column is present
+but all-zero. You split that second change into its own issue rather
+than sneaking it into the bugfix. The bug is fixed, the behavior change
+is discussed openly, and the history records why both happened.
+
+Every piece of that workflow - the filed issue, the branch, the PR, the
+review, the split - exists because of GitHub’s collaboration features,
+not Git itself.
+
+------------------------------------------------------------------------
+
+## Where We Are
+
+By this point in the course you have:
+
+- A valid R package on GitHub with documentation, examples, and tests
+- CI (GitHub Actions) running `R CMD check` and deploying a pkgdown site
+  on pushes
+- A CLI included in the package that is documented and easily installed
+
+What you **haven’t** done yet is use the GitHub features that exist
+around the code: issues, branches as proposals, pull requests, and
+review. That’s the gap this lecture fills.
+
+------------------------------------------------------------------------
+
+## Part 1: Issues — The Project’s Shared Memory
+
+An **issue** is generally a single-purpose thread: one bug, one feature
+request, one question, one design note. It has a title, a description,
+optional labels, optional assignees, and a conversation.
+
+The useful mental model is that issues are the project’s shared memory.
+Anything worth remembering that isn’t code belongs in one.
+
+### What Belongs in an Issue
+
+- **Bugs** — what you did, what happened, what you expected,
+  environment.
+- **Feature requests** — what you want and (ideally) why.
+- **Questions** — “how should this behave when the input has no
+  samples?”
+- **Design notes** — “we should think about whether
+  [`run_pca()`](https://st-jude-ms-abds.github.io/ADS8192/reference/run_pca.md)
+  should center by default.”
+
+A good issue title reads like a sentence you could put on a TODO list.
+“Bug” is a bad title;
+“[`run_pca()`](https://st-jude-ms-abds.github.io/ADS8192/reference/run_pca.md)
+errors on all-zero rows” is a good one.
+
+### Benefit for Solo Work
+
+Using issues can also be useful for solo work.On your own package,
+issues replace three worse things:
+
+- TODO comments in code (invisible once the file is closed)
+- Sticky notes and text files (unsearchable, ungrouped)
+- Your memory (unreliable at 2am)
+
+Every time you notice “huh, I should fix that someday,” file an issue in
+30 seconds. A month later you have a searchable, dated list of
+everything-you-noticed, potentially grouped, linked to the specific code
+in question if you so desire.
+
+### Benefit for Teams
+
+The benefits for teams are many. Two people won’t unknowingly work on
+the same bug if it is assigned. A new collaborator can scan open issues
+to get a sense of what the project is wrestling with. A maintainer
+triaging a burst of bug reports can close duplicates and merge threads.
+
+### Cross-Linking
+
+Mentioning `#123` anywhere on GitHub — a commit message, a PR
+description, another issue — creates a link. Writing `Fixes #123` in a
+pull request description automatically closes the issue when the PR
+merges. Use this liberally; it is how you turn issues from a pile of
+notes into a connected history.
+
+An example PR description that links an issue (and automatically closes
+it when merged):
+
+    Fix input validation for all-zero rows
+
+    Filters zero-variance features before PCA and adds a test.
+
+    Fixes #47.
+
+This would let you track both the issue and the resolution from either
+side as they’ll be linked.
+
+------------------------------------------------------------------------
+
+## Part 2: Branches and Pull Requests — Proposing Change, Not Just Pushing It
+
+A **pull request** is a proposal to merge one branch into another.
+Mechanically it’s a diff, but collaboratively, it’s a place to discuss
+that diff before it lands.
+
+### Why Branch + PR Is Better Than Committing to `main`
+
+Even alone:
+
+- **Reversible.** A branch can be abandoned or force-pushed freely.
+  `main` can’t.
+- **Reviewable.** The PR page is a diff viewer that scales better than
+  `git diff` on 40 files.
+- **CI-gated.** Your GitHub Actions workflow (from Lecture 6) runs on
+  the PR. You find out about a broken test *before* `main` is broken,
+  not after.
+- **Linked.** The PR ties the change to the issue it resolves and to any
+  follow-up discussion.
+
+### Anatomy of a Good PR
+
+- **Scoped.** One logical change per PR. A bugfix and a refactor should
+  be two PRs.
+- **Titled like a commit.** Short, imperative, specific. “Fix crash on
+  all-zero rows” beats “bugfix”.
+- **Description says *why*.** The diff shows *what*. The description is
+  where you explain the motivation, the alternatives you considered, and
+  anything a reviewer should watch for.
+- **Links the issue.** `Fixes #47` at the bottom.
+
+### Draft PRs
+
+Open a **draft PR** when you want CI to run and the conversation to
+start but you aren’t asking for a merge yet. It’s the right place for
+“does this approach look reasonable?” questions — earlier is cheaper
+than later.
+
+### CI as the First Reviewer
+
+Your `R-CMD-check.yaml` workflow runs automatically on every PR. Treat
+it as an automated first reviewer: if CI is red, the human reviewers
+shouldn’t have to look yet. Fix it, push again, let CI settle, then ask
+for review.
+
+------------------------------------------------------------------------
+
+## Part 3: Code Review — The Highest-Leverage Habit
+
+A **code review** is one person reading another person’s proposed diff
+and leaving comments. On GitHub this happens on the PR’s “Files changed”
+tab.
+
+Review is the single highest-leverage habit in collaborative software.
+It isn’t just about catching bugs.
+
+### What Reviewers Actually Look For
+
+Roughly in order:
+
+1.  **Correctness.** Does it do what the description claims? Are there
+    obvious edge cases it misses?
+2.  **Scope.** Does the diff match the stated goal, or is there extra
+    stuff hiding in it?
+3.  **Clarity.** Will someone reading this in six months understand it
+    without the author present?
+4.  **Tests.** Is there enough coverage that a future change would
+    notice if it broke this?
+5.  **Surprises.** Anything a user of this function would not expect —
+    silent behavior changes, new dependencies, changed defaults.
+
+Style and formatting are the *least* important category. A good reviewer
+flags blockers, not nits.
+
+### How to Give a Good Review
+
+- **Ask before demanding.** “Is there a reason we aren’t using `X`
+  here?” beats “use `X`.”
+- **Separate blockers from suggestions.** Prefix non-blocking comments
+  with “nit:” or “optional:” so the author knows what must change before
+  merge.
+- **Be specific.** “This is confusing” is not useful; “I expected
+  `n_top` to default to all features, not 500” is.
+- **Approve when the remaining items are nits.** Don’t hold up a merge
+  over taste.
+
+### How to Receive a Good Review
+
+- **Assume good faith.** The reviewer is trying to help, not attack your
+  code.
+- **Push follow-up commits.** Don’t squash away the review conversation
+  mid-flight.
+- **Resolve threads you address.** Leave threads you disagree with open
+  and reply with why.
+- **Separate follow-ups into new issues.** “Good point, that’s a bigger
+  change — filed as \#58” is a legitimate response.
+
+### Benefits Beyond Bug Catching
+
+Bugs caught is the easiest benefit to see, but not the biggest. The
+deeper wins:
+
+- **Knowledge diffusion.** After a review, at least two people
+  understand that code.
+- **Onboarding.** Reviewing is how new contributors learn the codebase
+  without being handed an artificial starter task.
+- **Shared ownership.** Code reviewed by the team belongs to the team.
+- **Durable rationale.** The review conversation is attached to the diff
+  forever — future archaeologists reading `git blame` can click through
+  and see *why*.
+
+### Self-Review: The Solo Dev’s Version
+
+On your own repo, open the PR, then read the diff yourself before
+merging. Pretend you didn’t write it. You’ll find a surprising number of
+leftover [`print()`](https://rdrr.io/r/base/print.html) calls,
+half-renamed variables, and changes you didn’t mean to commit.
+Self-review catches a meaningful fraction of what a second reviewer
+would, at zero coordination cost.
+
+------------------------------------------------------------------------
+
+## Part 4: Supporting Features, Briefly
+
+These aren’t the main event, but they’re worth knowing exist.
+
+**Protected `main` branch.** A repo setting that requires PRs (not
+direct pushes) and optionally requires passing CI and approving reviews
+before merge. Turn this on as soon as you have even one collaborator.
+
+**CODEOWNERS.** A file that auto-requests reviews from specific people
+when paths they own are touched. Useful once the project is big enough
+that “who should review this?” is a non-obvious question.
+
+**Releases and tags.** A GitHub release is a human-readable wrapper
+around a Git tag. Tagged releases are the stable handle collaborators
+install — `remotes::install_github("you/ADS8192@v0.1.0")` pins to a tag,
+not a moving branch. Write release notes that list what changed;
+pipeline users scan them before upgrading.
+
+**Discussions.** A forum-style space for open-ended questions that
+aren’t bugs or feature requests. Keeps the issue tracker focused on
+actionable work.
+
+**Projects.** Kanban-style boards over issues and PRs. Useful when you
+have enough in flight that a list view stops helping.
+
+------------------------------------------------------------------------
+
+## Part 5: When to Use What
+
+Process should match stakes. Use the lightest workflow that gives you
+the benefits you need.
+
+| Situation                                 | Workflow                                       |
+|-------------------------------------------|------------------------------------------------|
+| Typo or one-line doc fix on your own repo | Direct commit to `main` is fine                |
+| Real change on your own repo              | Branch + PR + self-review + merge              |
+| Collaborator contribution                 | Issue first, then branch + PR + review + merge |
+| Anything touching a released interface    | PR + review, always — even solo                |
+| Exploratory work nobody should depend on  | Branch, no PR needed until you want feedback   |
+
+The mistake in both directions is worth avoiding. Over-processing a
+one-line typo is theater. Under-processing a change that ships to users
+is how silent behavior changes leak into releases.
+
+------------------------------------------------------------------------
+
+## Summary
+
+Today we covered, at a high level:
+
+1.  **Issues** as the project’s shared memory — useful solo,
+    indispensable on a team
+2.  **Branches and pull requests** as proposals, with CI as an automated
+    first reviewer
+3.  **Code review** as the highest-leverage collaboration habit,
+    including self-review for solo work
+4.  **Supporting features** — protected branches, CODEOWNERS, releases,
+    discussions, projects
+5.  **Matching process to stakes** — neither over- nor under-engineering
+    the workflow
+
+None of this is technically hard. It’s a set of norms, and the payoff is
+that your code stays understandable by more than one person and your
+project’s history stays legible after you stop paying attention to it.
+
+------------------------------------------------------------------------
+
+### Debrief & Reflection
+
+Before moving on, make sure you can answer:
+
+- Why do issues matter on a project where you are the only contributor?
+- What does a pull request give you that a direct commit to `main` does
+  not?
+- What is the biggest benefit of code review, and why isn’t it “catching
+  bugs”?
+
+------------------------------------------------------------------------
+
+## Session Info
+
+``` r
+sessionInfo()
+```
+
+    ## R version 4.5.3 (2026-03-11)
+    ## Platform: x86_64-pc-linux-gnu
+    ## Running under: Ubuntu 24.04.4 LTS
+    ## 
+    ## Matrix products: default
+    ## BLAS:   /usr/lib/x86_64-linux-gnu/openblas-pthread/libblas.so.3 
+    ## LAPACK: /usr/lib/x86_64-linux-gnu/openblas-pthread/libopenblasp-r0.3.26.so;  LAPACK version 3.12.0
+    ## 
+    ## locale:
+    ##  [1] LC_CTYPE=C.UTF-8       LC_NUMERIC=C           LC_TIME=C.UTF-8       
+    ##  [4] LC_COLLATE=C.UTF-8     LC_MONETARY=C.UTF-8    LC_MESSAGES=C.UTF-8   
+    ##  [7] LC_PAPER=C.UTF-8       LC_NAME=C              LC_ADDRESS=C          
+    ## [10] LC_TELEPHONE=C         LC_MEASUREMENT=C.UTF-8 LC_IDENTIFICATION=C   
+    ## 
+    ## time zone: UTC
+    ## tzcode source: system (glibc)
+    ## 
+    ## attached base packages:
+    ## [1] stats     graphics  grDevices utils     datasets  methods   base     
+    ## 
+    ## loaded via a namespace (and not attached):
+    ##  [1] digest_0.6.39     desc_1.4.3        R6_2.6.1          fastmap_1.2.0    
+    ##  [5] xfun_0.57         cachem_1.1.0      knitr_1.51        htmltools_0.5.9  
+    ##  [9] rmarkdown_2.31    lifecycle_1.0.5   cli_3.6.6         sass_0.4.10      
+    ## [13] pkgdown_2.2.0     textshaping_1.0.5 jquerylib_0.1.4   systemfonts_1.3.2
+    ## [17] compiler_4.5.3    tools_4.5.3       ragg_1.5.2        bslib_0.10.0     
+    ## [21] evaluate_1.0.5    yaml_2.3.12       otel_0.2.0        jsonlite_2.0.0   
+    ## [25] rlang_1.2.0       fs_2.0.1          htmlwidgets_1.6.4

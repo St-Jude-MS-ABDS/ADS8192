@@ -486,8 +486,8 @@ navbar:
         href: articles/Lecture08_Shiny_Packaging_Deployment.html
       - text: 'Lecture 09: CLI Design & Development (Rapp)'
         href: articles/Lecture09_CLI_Design_Rapp.html
-      - text: 'Lecture 10: CLI Packaging & Installation'
-        href: articles/Lecture10_CLI_Packaging_Installation.html
+      - text: 'Lecture 10: GitHub Collaboration'
+        href: articles/Lecture10_GitHub_Collaboration.html
       - text: 'Lecture 11: Review & Q/A'
         href: articles/Lecture11_Review_QA.html
 reference:
@@ -531,7 +531,7 @@ articles:
   - "`articles/Lecture07_Shiny_Reactivity`"
   - "`articles/Lecture08_Shiny_Packaging_Deployment`"
   - "`articles/Lecture09_CLI_Design_Rapp`"
-  - "`articles/Lecture10_CLI_Packaging_Installation`"
+  - "`articles/Lecture10_GitHub_Collaboration`"
   - "`articles/Lecture11_Review_QA`"
 ```
 
