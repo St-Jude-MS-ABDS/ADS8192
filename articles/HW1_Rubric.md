@@ -22,7 +22,7 @@ help from instructors.
 
 - **Initial submission deadline:** Monday, April 20th at 11:59 PM
 - **Initial instructor feedback by:** Tuesday, April 21st at 11:59 PM
-- **Re-submission deadline:** Friday, April 24th at 11:59 PM (5 days
+- **Re-submission deadline:** Friday, April 24th at 11:59 PM (4 days
   after initial submission)
 
 > **Note:** Grading will only be performed on your final submission. If
