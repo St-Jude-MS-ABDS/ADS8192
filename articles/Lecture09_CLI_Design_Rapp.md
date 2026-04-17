@@ -428,7 +428,36 @@ the CLI is failing the way a pipeline expects.
 
 ------------------------------------------------------------------------
 
-## Part 4: The CLI Is a Contract
+## Part 4: Installing a Launcher
+
+After installing your package, you want users to run the CLI directly
+from the terminal without invoking `Rapp` or specifying the script path.
+To do that, you need to install a *launcher*. We already did this
+previous with `Rapp::install_pkg_cli_apps("Rapp")`, which adds the
+`Rapp` command to your PATH. Now we need to add a launcher for our
+specific app.
+
+After package installation, we can instruct users to run this same
+command to add the launcher for our app:
+
+``` r
+Rapp::install_pkg_cli_apps("ADS8192")
+```
+
+This adds the `Rapp` command to your terminal, which you can use to run
+Rapp scripts during development. After running the launcher installer,
+the CLI works cleanly directly from the terminal:
+
+``` bash
+ADS8192 pca --help
+```
+
+Instructions for this process should be added to your README CLI
+section.
+
+------------------------------------------------------------------------
+
+## Part 5: The CLI Is a Contract
 
 Once anyone automates against your CLI, **argument names, output file
 names, and output column names become a contract**. Pipeline users
@@ -467,15 +496,14 @@ Today we:
 2.  Introduced Rapp and its `switch("")` subcommand idiom
 3.  Added a Rapp app to the existing ADS8192 package (`exec/ADS8192.R`,
     `Rapp` in `DESCRIPTION`)
-4.  Exported a launcher installer (`install_ADS8192_cli()`)
+4.  Demonstrated how a CLI launcher can be easily installed with
+    [`Rapp::install_pkg_cli_apps()`](https://rdrr.io/pkg/Rapp/man/install_pkg_cli_apps.html)
 5.  Ran the CLI during development and checked error behavior
-6.  Treated argument and output names as a stability contract
 
 ### Package Milestone
 
-**The ADS8192 package now has a working CLI in `exec/` and an exported
-launcher installer.** Users can call `Rapp exec/ADS8192.R pca` today;
-Lecture 10 covers installed use, clean-room testing, and output parity.
+**The ADS8192 package now has a working CLI in `exec/` that is easily
+installed as an executable on the user’s PATH.**
 
 ------------------------------------------------------------------------
 
@@ -485,8 +513,6 @@ Before moving on, make sure you can answer:
 
 - When is a CLI genuinely useful, and when is it an unnecessary extra
   interface?
-- Which parts of the CLI are stable user contract, and which are
-  replaceable implementation details?
 - How does `Rapp` let you avoid reinventing plumbing so you can focus on
   I/O contracts and DRY reuse of the package core?
 
@@ -494,10 +520,10 @@ Before moving on, make sure you can answer:
 
 ## After-Class Tasks
 
-### Micro-task 1: Add a `validate` Subcommand
+### Micro-task 1: Consider a `validate` Subcommand
 
-Add a second subcommand that checks inputs without running PCA — useful
-for pipeline pre-flight checks. It should:
+Consider a second subcommand that checks inputs without running PCA —
+useful for pipeline pre-flight checks. It could:
 
 1.  Check that `--counts` and `--meta` exist and parse
 2.  Report dimensions
@@ -505,36 +531,6 @@ for pipeline pre-flight checks. It should:
 
 Add it as a second case in the same
 [`switch()`](https://rdrr.io/r/base/switch.html) call alongside `pca`.
-
-### Micro-task 2: Snapshot Test for Output Stability
-
-Add a `testthat` snapshot test that captures the column names of
-`result$scores`. Future changes to output structure will fail the test
-until you deliberately review the snapshot:
-
-``` r
-test_that("pca output columns are stable", {
-    data(example_se, package = "ADS8192")
-    result <- run_pca(example_se, n_top = 50)
-    expect_snapshot(colnames(result$scores))
-})
-```
-
-### Micro-task 3: Read Ahead — Preventing Interface Drift
-
-Before Lecture 10, skim the Rapp documentation section on how snake_case
-→ kebab-case conversion works, and think about which of *your*
-function’s defaults might be risky to change later. For reference when
-revisiting later:
-
-- Use literal output file names (`"pca_scores.tsv"`), never derive them
-  from inputs.
-- Column names in output files are part of the contract. Adding columns
-  is usually safe; renaming them is not.
-- When you intentionally change output structure, update the snapshot
-  with
-  [`testthat::snapshot_review()`](https://testthat.r-lib.org/reference/snapshot_accept.html)
-  and bump the version.
 
 ------------------------------------------------------------------------
 
