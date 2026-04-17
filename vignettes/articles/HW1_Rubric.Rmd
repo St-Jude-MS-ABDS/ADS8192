@@ -29,7 +29,7 @@ There will be a review/help session on the Monday it is due for hands-on help fr
 
 - **Initial submission deadline:** Monday, April 20th at 11:59 PM
 - **Initial instructor feedback by:** Tuesday, April 21st at 11:59 PM
-- **Re-submission deadline:** Friday, April 24th at 11:59 PM (5 days after initial submission)
+- **Re-submission deadline:** Friday, April 24th at 11:59 PM (4 days after initial submission)
 
 > **Note:** Grading will only be performed on your final submission. If you do not re-submit, your initial submission will be graded. Use the instructor feedback to address any issues before the re-submission deadline.
 
