@@ -284,8 +284,8 @@ Shiny web application
 
 - [Project Selection
   Guide](https://st-jude-ms-abds.github.io/ADS8192/articles/project-selection.md):
-- [Homework 1 Grading Rubric (25
-  points)](https://st-jude-ms-abds.github.io/ADS8192/articles/HW1_Rubric.md):
+- [Homework 1
+  Rubric](https://st-jude-ms-abds.github.io/ADS8192/articles/HW1_Rubric.md):
 
 ### Lectures
 

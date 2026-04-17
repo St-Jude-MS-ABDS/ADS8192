@@ -2,76 +2,54 @@
 
 ## Motivation
 
-Scientific software often needs to run without a human sitting at the
-keyboard. Command-line interfaces matter because they make analysis
-tools usable in pipelines, schedulers, shared compute environments, and
-repeatable scripts.
+Scientific software often needs to run without a human at the keyboard.
+A command-line interface (CLI) makes your analysis tool usable in
+pipelines, schedulers, shared compute environments, and repeatable
+scripts.
 
-This lecture is important for robust software design because a good CLI
-forces you to make the interface contract explicit: inputs, outputs,
-defaults, error behavior, and file formats all become visible. That
-clarity saves time for automation users and reduces drift between the
-command line and the underlying package logic.
+A good CLI forces you to make the interface contract explicit: inputs,
+outputs, defaults, and error behavior all become visible. That clarity
+saves time for automation users and reduces drift between the command
+line and the underlying package logic.
 
 ### Learning Objectives
 
 By the end of this session, you will be able to:
 
-1.  Implement a simple CLI using Rapp that calls package functions
+1.  Add a Rapp-based CLI directly to your existing package
 2.  Write usage/help text and define clear inputs/outputs for commands
 3.  Test CLI functionality from the terminal and interpret exit behavior
 4.  Decide when a CLI is worth adding and keep it a thin wrapper over
     package logic
-5.  Explain why CLIs improve interoperability and pipeline integration
 
 ### Scientific Use Case
 
 A bioinformatics core wants to run your analysis across 40 cohorts in a
 nightly workflow. They do not want a web app and they do not want to
-source R files by hand. How can this be done in a way that is robust,
-reproducible, and easy to maintain?
+source R files by hand. The CLI is the interface that lets them treat
+your package as a reliable step in an automated pipeline.
 
 ------------------------------------------------------------------------
 
 ## Why Build a CLI?
 
-### The Three Interfaces
+We’ve already shown how to build two interfaces around the package core:
 
-We’ve built:
+- **R API**: for users working interactively in R
+- **Shiny app**: for point-and-click exploration
 
-- **R API**: For users working interactively in R
-- **Shiny App**: For point-and-click exploration
+The CLI adds a third:
 
-Now we add:
-
-- **CLI**: For pipeline integration and non-interactive use
-
-### CLI Use Cases
+- **CLI**: for pipeline integration and non-interactive use
 
 ``` bash
-# Run analysis in a pipeline
-snakemake_rule:
-    ADS8192 pca --counts counts.csv --meta samples.csv --output results/
-
-# Process multiple datasets
-for dataset in data/*; do
-    ADS8192 pca --counts "$dataset/counts.csv" --meta "$dataset/meta.csv" \
-        --output "results/$(basename $dataset)/"
-done
-
-# Reproducible scripts
-#!/bin/bash
-ADS8192 pca --counts $1 --meta $2 --n-top 1000 --output pca_results/
+# Typical pipeline use
+ADS8192 pca --counts counts.tsv --meta samples.tsv --output results/
 ```
 
-Benefits:
-
-- **Pipeline integration**: Works with Snakemake, Nextflow, Make
-- **Scriptable**: Easy to automate many runs
-- **Reproducible**: Command line is self-documenting
-- **No IDE required**: Run on servers, HPC clusters
-
-------------------------------------------------------------------------
+Benefits: pipeline integration (Snakemake, Nextflow, etc),
+scriptability, reproducibility, and no IDE required on servers or
+clusters.
 
 ### When Should You Add a CLI?
 
@@ -81,19 +59,17 @@ manager. Do not add one just because a terminal interface looks
 advanced. A CLI is worthwhile when it exposes a clear contract around
 existing package logic.
 
-### Why Use Rapp Instead of Parsing Arguments Yourself?
-
-Argument parsing is infrastructure, not the scientific problem. `Rapp`
-lets you describe commands, help text, and argument types without
-hand-writing a parser, which leaves your time for the design work that
-matters: stable flags, explicit file formats, and DRY delegation to the
-package core.
+------------------------------------------------------------------------
 
 ## Part 1: CLI Design Principles
 
-### Good CLI Design
+A good CLI behaves predictably under automation. Five principles keep it
+that way.
 
 #### 1. Clear Help Text
+
+Help text *is* the interface for CLI users. Make it complete enough that
+someone can use the tool without reading your R docs.
 
 ``` bash
 $ ADS8192 pca --help
@@ -108,41 +84,32 @@ Options:
   --output DIR        Output directory [required]
   --n-top INT         Number of top variable genes [default: 500]
   --log-transform     Log-transform counts [default: true]
-  --no-log-transform  Don't log-transform counts
   --color-by COL      Metadata column for plot coloring
   -h, --help          Show this message and exit
-
-Examples:
-  ADS8192 pca --counts counts.tsv --meta samples.tsv --output results/
-  ADS8192 pca --counts counts.tsv --meta samples.tsv --output results/ --n-top 1000
 ```
 
 #### 2. Explicit Inputs and Outputs
 
-Don’t read from stdin/write to stdout for data (only for messages):
+Use flags for data paths; do not read data from stdin or write data to
+stdout. Reserve stdout/stderr for messages.
 
 ``` bash
 # Good: explicit file arguments
 ADS8192 pca --counts data.tsv --output results/
 
-# Bad: implicit stdin/stdout
+# Bad: implicit stdin/stdout for data
 cat data.tsv | ADS8192 pca > results.tsv
 ```
 
 #### 3. Reproducible Defaults
 
-- Document all defaults in help text
-- Same inputs → same outputs (deterministic)
+Document every default in help text. Same inputs should produce the same
+outputs across runs.
 
 #### 4. Meaningful Exit Codes
 
-``` bash
-$ ADS8192 pca --counts missing.tsv --meta meta.tsv --output out/
-Error: File not found: missing.tsv
-
-$ echo $?
-1  # Non-zero = error
-```
+A non-zero exit code is how pipelines know something failed. Let errors
+fail loudly, and return zero only on success.
 
 | Code | Meaning           |
 |------|-------------------|
@@ -152,47 +119,8 @@ $ echo $?
 
 #### 5. Machine-Readable Outputs
 
-``` bash
-# Good: TSV for data
-ADS8192 pca ... --output results/
-# Creates: results/pca_scores.tsv, results/pca_variance.tsv
-
-# Good: JSON for complex structured data
-ADS8192 info --json > info.json
-```
-
-------------------------------------------------------------------------
-
-### Exercise A: Design First
-
-Before implementing, design the help output you want:
-
-    Usage: ADS8192 pca [OPTIONS]
-
-    Run PCA analysis on gene expression data.
-
-    Required Arguments:
-      --counts FILE      Path to counts matrix (genes × samples, TSV/CSV)
-      --meta FILE        Path to sample metadata (TSV/CSV, row names = sample IDs)
-      --output DIR       Directory for output files
-
-    Optional Arguments:
-      --n-top INT        Number of top variable genes [default: 500]
-      --log-transform    Log2-transform counts (add pseudocount of 1) [default]
-      --no-log-transform Skip log transformation
-      --color-by COL     Metadata column for coloring (for plot)
-      --assay NAME       Assay name in SE [default: "counts"]
-      --help             Show this help message
-
-    Outputs:
-      {output}/pca_scores.tsv      PCA scores with sample metadata
-      {output}/pca_variance.tsv    Variance explained by each PC
-      {output}/pca_plot.png        PCA scatter plot (if --color-by specified)
-
-    Examples:
-      ADS8192 pca --counts counts.tsv --meta samples.tsv --output results/
-      ADS8192 pca --counts counts.tsv --meta samples.tsv --output results/ \
-          --n-top 1000 --color-by treatment
+TSV for tabular data, JSON for structured output. Avoid clever
+formatting that a script would have to parse around.
 
 ------------------------------------------------------------------------
 
@@ -201,24 +129,14 @@ Before implementing, design the help output you want:
 ### What is Rapp?
 
 **Rapp** (R application) is a lightweight framework for building
-command-line tools in R. It provides:
-
-- Argument parsing and type coercion
-- Help text generation (including `--help-yaml`)
-- Subcommand support
-- A clean path from script -\> CLI
-
-Alternative options include `optparse`, `argparse`, and `docopt`, but in
-this course we will use Rapp.
+command-line tools in R. It provides argument parsing, type coercion,
+help text generation (including `--help-yaml`), subcommand support, and
+a clean path from script to CLI.
 
 ### Installation
 
 ``` r
-# Install Rapp
 install.packages("Rapp")
-
-# Or from GitHub for the latest version
-# remotes::install_github("r-lib/Rapp")
 ```
 
 ### How Rapp Declares a CLI
@@ -228,8 +146,8 @@ Rapp infers CLI structure from normal R code:
 - `n_top <- 500L` becomes `--n-top 500`
 - `log_transform <- TRUE` becomes `--log-transform` /
   `--no-log-transform`
-- `path <- NULL` becomes a positional argument
-- `switch("", cmd1 = { ... }, cmd2 = { ... })` declares commands
+- `counts <- ""` becomes `--counts VALUE`
+- `switch("", cmd1 = { ... }, cmd2 = { ... })` declares subcommands
 
 You can add help metadata using `#|` annotations:
 
@@ -239,118 +157,105 @@ You can add help metadata using `#|` annotations:
 n_top <- 500L
 ```
 
-**Note:** snake_case names automatically map to kebab-case flags
-(`n_top` -\> `--n-top`).
+**Key rule:** snake_case variable names automatically become kebab-case
+flags (`n_top` → `--n-top`). Do not rename variables to shape the flag
+name — pick the variable name and the flag follows.
 
-Rapp provides built-in help:
+### Rapp Script Structure
 
-- `--help` shows usage and options
-- `--help-yaml` prints machine-readable metadata
-
-### Rapp Variable → CLI Flag Mapping
-
-Rapp infers CLI flags directly from how you declare variables in R. Here
-is a complete reference:
-
-| R Declaration           | CLI Flag                                 | Type    | Notes                                          |
-|-------------------------|------------------------------------------|---------|------------------------------------------------|
-| `n_top <- 500L`         | `--n-top 500`                            | Integer | `L` suffix = integer; snake_case → kebab-case  |
-| `log_transform <- TRUE` | `--log-transform` / `--no-log-transform` | Boolean | Logical creates a flag pair                    |
-| `color_by <- ""`        | `--color-by VALUE`                       | String  | Empty string = required or optional string arg |
-| `counts <- ""`          | `--counts FILE`                          | String  | Provide a description annotation for clarity   |
-| `scale <- 1.5`          | `--scale 1.5`                            | Double  | Plain numeric = double                         |
-| `path <- NULL`          | positional arg                           | Any     | `NULL` default = positional (no `--` prefix)   |
-
-> **Key rule:** snake_case variable names automatically become
-> kebab-case flags. `n_top` → `--n-top`, `log_transform` →
-> `--log-transform`. Do NOT manually rename variables to match your
-> desired flag name — let Rapp handle the conversion.
-
-### Rapp Script Structure and Workflow
-
-A complete Rapp script has this overall structure:
+A complete Rapp script has this overall shape:
 
 ``` r
-#!/usr/bin/env Rapp         # Shebang: marks this as a Rapp executable
-#| name: ADS8192            # CLI name (used in --help output)
-#| title: ADS8192 PCA Tool  # Short title
-#| description: ...         # Longer description shown in --help
+#!/usr/bin/env Rapp         # Shebang marking this a Rapp executable
+#| name: ADS8192            # CLI name (shown in --help)
+#| title: ADS8192 PCA Tool
+#| description: PCA analysis for SummarizedExperiment data.
 
-# Package loading (runs before any command)
+# Load packages explicitly (runs before any command)
 suppressPackageStartupMessages({
     library(ADS8192)
     library(utils)
     library(stats)
 })
 
-# Optional helper functions (not exposed as CLI args)
+# Optional helpers not exposed as CLI args
 read_data_file <- function(path) { ... }
 
-# Global arguments (available to ALL subcommands)
-# (declare them here if needed, otherwise omit)
-
 switch(
-    "",           # Rapp replaces this "" with the subcommand name at runtime
+    "",           # Rapp substitutes the subcommand name at runtime
 
-    #| title: Subcommand title
-    #| description: What this subcommand does
-    my_command = {
-        # Arguments for this subcommand
+    #| title: Run PCA analysis
+    #| description: Run PCA on counts + metadata, export results.
+    pca = {
         #| description: Input file path
-        input <- ""
+        counts <- ""
 
         #| description: Number of features
         n_top <- 500L
 
         # Command logic here
-        result <- run_pca(...)
-    },
-
-    another_command = {
-        # Arguments for another subcommand
-        ...
     }
 )
 ```
 
-Key structural points: - **Shebang** (`#!/usr/bin/env Rapp`): makes the
-file directly executable on Unix/Mac after `chmod +x` -
-**`switch("")`**: the Rapp idiom for declaring subcommands — Rapp
-substitutes the actual subcommand name at runtime - **Variable
-declarations inside each `case`**: become the subcommand’s CLI
-arguments - **`#|` annotations**: parsed as YAML by Rapp; provide help
-text, short flags, etc. - **Type coercion**: Rapp reads command-line
-strings and converts them to the declared R type (`500L` → integer,
-`TRUE` → logical, `""` → character)
+Key structural points:
 
-### Rapp vs Other CLI Packages in R
-
-Several R packages support building CLIs. Here is a brief comparison:
-
-| Package      | Approach                                                       | Pros                                                        | Cons                                                        |
-|--------------|----------------------------------------------------------------|-------------------------------------------------------------|-------------------------------------------------------------|
-| **Rapp**     | Infers from normal R variable declarations + `#\|` annotations | Minimal boilerplate; integrates naturally with package code | Newer, fewer ecosystem examples                             |
-| **optparse** | Explicit `make_option()` calls in a list                       | Widely used, well-documented, very explicit                 | Verbose; must declare everything manually                   |
-| **argparse** | Python-argparse style via reticulate                           | Powerful, familiar to Python users                          | Requires Python; heavier dependency                         |
-| **docopt**   | Parses a usage string you write by hand                        | Elegant for simple CLIs; self-documenting                   | Usage string can be brittle; less flexible for complex CLIs |
-
-In this course we use **Rapp** because it lets you describe a CLI with
-minimal overhead and integrates naturally with the package architecture
-we’ve been building. The core design principle — declare variables, add
-annotations, let the framework generate the parser — keeps CLI code DRY
-and close to the R functions it wraps.
+- **`switch("")`** is the Rapp idiom for declaring subcommands; Rapp
+  substitutes the subcommand name at runtime.
+- **Variable declarations inside each case** become that subcommand’s
+  CLI arguments.
+- **`#|` annotations** are YAML-parsed by Rapp and provide help text and
+  short flags.
+- **Type coercion** is automatic: `500L` → integer, `TRUE` → logical,
+  `""` → character.
 
 ------------------------------------------------------------------------
 
-## Part 3: Implementing the CLI
+## Part 3: Add the CLI to Your Package
 
-### Step 1: Create the Rapp App in `exec/`
+You already have a package — the ADS8192 package you built in Lectures
+5–8. The CLI lives inside that package from the start. No separate
+script directory, no “move it in later” step.
 
-The full CLI script lives at `exec/ADS8192`. Let’s walk through it in
-three parts to understand its structure.
+### Step 1: Declare Rapp as a Dependency
+
+From the package root, in R:
 
 ``` r
-# exec/ADS8192 — Part 1: Header, package loading, and helper functions
+usethis::use_package("Rapp")
+```
+
+This adds `Rapp` to `DESCRIPTION` under `Imports:`.
+
+### Step 2: Create the Rapp App in `exec/`
+
+Rapp CLI apps live in the package’s top-level `exec/` directory. Files
+in `exec/` are installed with the package, so the CLI travels with it.
+
+``` r
+dir.create("exec")
+```
+
+Now create `exec/ADS8192` — the full Rapp script. Two things about this
+file matter before you write anything else:
+
+- **Explicit namespacing.** Even with
+  [`library(ADS8192)`](https://github.com/St-Jude-MS-ABDS/ADS8192), the
+  Rapp script runs in a minimal environment. Load base-R helper packages
+  explicitly at the top
+  ([`library(utils)`](https://rdrr.io/r/base/library.html),
+  [`library(stats)`](https://rdrr.io/r/base/library.html)), and use
+  [`utils::write.table()`](https://rdrr.io/r/utils/write.table.html) /
+  [`utils::read.table()`](https://rdrr.io/r/utils/read.table.html) in
+  the body.
+- **Trailing newline required.** Rapp needs `exec/ADS8192` to end with a
+  blank line. Most editors handle this by default — just verify. Without
+  it, Rapp may fail to parse the last command.
+
+Write the header and shared helpers first:
+
+``` r
+# exec/ADS8192 — header and helpers
 #!/usr/bin/env Rapp
 #| name: ADS8192
 #| title: ADS8192 PCA Tool
@@ -366,7 +271,7 @@ suppressPackageStartupMessages({
 read_data_file <- function(path) {
     ext <- tolower(tools::file_ext(path))
     if (ext == "csv") {
-        read.csv(path, row.names = 1, check.names = FALSE)
+        utils::read.csv(path, row.names = 1, check.names = FALSE)
     } else {
         utils::read.table(path, sep = "\t", header = TRUE, row.names = 1,
                           check.names = FALSE)
@@ -374,12 +279,13 @@ read_data_file <- function(path) {
 }
 ```
 
+### Step 3: Add the `pca` Subcommand
+
 The `pca` subcommand declares its arguments as R variables, validates
-inputs, reads files, calls the package core functions, and writes
+inputs, reads files, calls the **package core functions**, and writes
 output:
 
 ``` r
-# exec/ADS8192 — Part 2: pca subcommand
 switch(
     "",
 
@@ -413,17 +319,15 @@ switch(
             stop("--counts, --meta, and --output are required", call. = FALSE)
         }
         if (!file.exists(counts)) stop("File not found: ", counts, call. = FALSE)
-        if (!file.exists(meta)) stop("File not found: ", meta, call. = FALSE)
+        if (!file.exists(meta))   stop("File not found: ", meta, call. = FALSE)
 
         if (!dir.exists(output)) dir.create(output, recursive = TRUE)
 
-        # Read inputs
         counts_df <- read_data_file(counts)
-        meta_df <- read_data_file(meta)
+        meta_df   <- read_data_file(meta)
 
-        # Build SE and run analysis using package core functions
         se <- SummarizedExperiment::SummarizedExperiment(
-            assays = list(counts = as.matrix(counts_df)),
+            assays  = list(counts = as.matrix(counts_df)),
             colData = meta_df
         )
         result <- run_pca(se, n_top = n_top, log_transform = log_transform)
@@ -438,122 +342,41 @@ switch(
         }
 
         message("Done.")
-    },
-```
-
-The `validate` subcommand checks inputs without running PCA — useful for
-pipeline pre-flight checks:
-
-``` r
-# exec/ADS8192 — Part 3: validate subcommand
-    #| title: Validate input files
-    #| description: Check that input files exist, parse correctly, and report dimensions.
-    validate = {
-        #| description: Path to counts matrix (TSV/CSV)
-        #| short: c
-        counts <- ""
-
-        #| description: Path to sample metadata (TSV/CSV)
-        #| short: m
-        meta <- ""
-
-        if (counts == "" || meta == "") {
-            stop("--counts and --meta are required", call. = FALSE)
-        }
-        if (!file.exists(counts)) stop("File not found: ", counts, call. = FALSE)
-        if (!file.exists(meta)) stop("File not found: ", meta, call. = FALSE)
-
-        counts_df <- read_data_file(counts)
-        meta_df <- read_data_file(meta)
-
-        message("Counts dimensions: ", nrow(counts_df), " genes x ",
-                ncol(counts_df), " samples")
-        message("Metadata rows: ", nrow(meta_df))
-        message("Metadata columns: ",
-                paste(colnames(meta_df), collapse = ", "))
-
-        if (!all(colnames(counts_df) %in% rownames(meta_df))) {
-            stop("Sample IDs in counts do not match metadata row names",
-                 call. = FALSE)
-        }
-
-        message("All sample IDs match. Inputs look valid.")
     }
 )
 ```
 
-> **Note:** The `switch("")` structure spans blocks 2 and 3 — in the
-> actual `exec/ADS8192` file, the `validate` case is inside the same
-> [`switch()`](https://rdrr.io/r/base/switch.html) call as `pca`, and
-> the closing `)` is at the very end of the file. The three sections
-> above show the logical structure.
+Note how thin this is: the CLI reads files, builds an SE, calls
+[`run_pca()`](https://st-jude-ms-abds.github.io/ADS8192/reference/run_pca.md)
+and
+[`plot_pca()`](https://st-jude-ms-abds.github.io/ADS8192/reference/plot_pca.md)
+from the package, and writes output. No analysis logic lives in the CLI
+script.
 
-### Step 2: Run During Development
-
-``` bash
-# Show top-level help
-Rapp exec/ADS8192 --help
-
-# Command-specific help
-Rapp exec/ADS8192 pca --help
-
-# Run PCA
-Rapp exec/ADS8192 pca     --counts tests/testdata/counts.tsv     --meta tests/testdata/meta.tsv     --output tests/testdata/output/
-```
-
-### Step 3: Interactive Testing from R
-
-``` r
-# Run from an R session (useful for debugging)
-Rapp::run("exec/ADS8192", c(
-    "pca",
-    "--counts", "tests/testdata/counts.tsv",
-    "--meta", "tests/testdata/meta.tsv",
-    "--output", "tests/testdata/output/",
-    "--n-top", "500"
-))
-```
-
-------------------------------------------------------------------------
+**DRY check:** the CLI calls
+[`run_pca()`](https://st-jude-ms-abds.github.io/ADS8192/reference/run_pca.md)
+and
+[`plot_pca()`](https://st-jude-ms-abds.github.io/ADS8192/reference/plot_pca.md)
+— it does not call [`prcomp()`](https://rdrr.io/r/stats/prcomp.html)
+directly. If you find yourself duplicating analysis logic here, move it
+into the package and call it from both places.
 
 ### Step 4: Export a Launcher Installer
 
 Running `Rapp exec/ADS8192 pca --help` works during development, but
-after a user installs your package from GitHub, the `exec/` directory is
-buried inside the R library tree. Rapp solves this with **launchers** —
-lightweight shell scripts (`.bat` on Windows) that live on `PATH` and
-forward to the installed Rapp app.
+after a user installs your package, the `exec/` directory lives inside
+the R library tree. Rapp solves this with **launchers** — lightweight
+shell scripts (`.bat` on Windows) that live on `PATH` and forward to the
+installed Rapp app.
 
-#### How It Works
-
-``` r
-# One-liner: install launchers for every Rapp in a package's exec/
-Rapp::install_pkg_cli_apps("ADS8192")
-```
-
-After this, users can invoke the CLI directly:
-
-``` bash
-ADS8192 pca --help
-ADS8192 pca --counts counts.tsv --meta meta.tsv --output results/
-```
-
-On Windows, `install_pkg_cli_apps()` creates `.bat` wrappers in
-`%LOCALAPPDATA%\Programs\R\Rapp\bin` and adds that directory to `PATH`.
-On macOS / Linux, launchers land in `~/.local/bin` (usually already on
-`PATH`).
-
-#### Export a Thin Wrapper
-
-Rather than asking users to remember the
-[`Rapp::install_pkg_cli_apps()`](https://rdrr.io/pkg/Rapp/man/install_pkg_cli_apps.html)
-call, export your own convenience function. Create `R/install_cli.R`:
+Create `R/install_cli.R`:
 
 ``` r
 #' Install ADS8192 CLI launchers
 #'
 #' Places lightweight launcher scripts on the user's `PATH` so the
-#' ADS8192 CLI can be invoked directly from a terminal (e.g. `ADS8192 pca --help`).
+#' ADS8192 CLI can be invoked directly from a terminal
+#' (e.g. `ADS8192 pca --help`).
 #'
 #' @inheritDotParams Rapp::install_pkg_cli_apps -package -lib.loc
 #' @export
@@ -562,245 +385,93 @@ install_ADS8192_cli <- function(...) {
 }
 ```
 
-Then document it, `devtools::document()`, and users get:
+Then `devtools::document()` to generate the Rd and export entry. Users
+will later run:
 
 ``` r
 remotes::install_github("you/ADS8192")
 ADS8192::install_ADS8192_cli()
 ```
 
-…followed by seamless terminal usage.
+…and then invoke the CLI directly from a terminal. Installation
+logistics are the focus of Lecture 10.
 
-#### Try It Now
+### Step 5: Run It and Check Errors
 
-``` bash
-# Install launchers for ADS8192 (run once after installation)
-Rscript -e "Rapp::install_pkg_cli_apps('ADS8192')"
-
-# Now use the CLI directly
-ADS8192 --help
-ADS8192 pca --help
-```
-
-Add the install instructions to your README so users know about it.
-
-------------------------------------------------------------------------
-
-## Part 4: Testing the CLI
-
-### Manual Testing
-
-#### Create Test Data
-
-``` r
-# Create small test files
-library(SummarizedExperiment)
-library(airway)
-data(airway)
-
-# Extract and save counts
-counts <- assay(airway, "counts")[1:1000, ]  # First 1000 genes
-write.table(
-    counts,
-    "tests/testdata/counts.tsv",
-    sep = "\t",
-    quote = FALSE
-)
-
-# Save metadata
-meta <- as.data.frame(colData(airway))
-write.table(
-    meta,
-    "tests/testdata/meta.tsv",
-    sep = "\t",
-    quote = FALSE
-)
-```
-
-#### Run from Terminal
+During development, run the CLI directly via `Rapp` (launchers come in
+Lecture 10):
 
 ``` bash
-# Navigate to package directory
-cd ADS8192
-
-# Test help
+# Show top-level and subcommand help
 Rapp exec/ADS8192 --help
-
-# Test PCA command help
 Rapp exec/ADS8192 pca --help
+```
 
-# Run PCA
+Create tiny test inputs from R so your command has something to chew on:
+
+``` r
+dir.create("tests/testdata", recursive = TRUE, showWarnings = FALSE)
+
+counts <- data.frame(
+    sample1 = c(100L, 50L, 200L, 30L, 80L),
+    sample2 = c(150L, 75L, 180L, 45L, 100L),
+    sample3 = c(120L, 60L, 210L, 35L, 90L),
+    sample4 = c(180L, 90L, 240L, 55L, 110L),
+    row.names = paste0("gene", 1:5)
+)
+utils::write.table(counts, "tests/testdata/counts.tsv",
+                   sep = "\t", quote = FALSE)
+
+meta <- data.frame(
+    treatment = c("control", "control", "treated", "treated"),
+    batch     = c("A", "B", "A", "B"),
+    row.names = paste0("sample", 1:4)
+)
+utils::write.table(meta, "tests/testdata/meta.tsv",
+                   sep = "\t", quote = FALSE)
+```
+
+Happy path:
+
+``` bash
 Rapp exec/ADS8192 pca \
     --counts tests/testdata/counts.tsv \
     --meta tests/testdata/meta.tsv \
-    --output tests/testdata/output/
-
-# Check outputs
-ls tests/testdata/output/
-cat tests/testdata/output/pca_variance.tsv
-
-# Test with plot
-Rapp exec/ADS8192 pca \
-    --counts tests/testdata/counts.tsv \
-    --meta tests/testdata/meta.tsv \
-    --output tests/testdata/output2/ \
-    --color-by dex
+    --output tests/testdata/output/ \
+    --n-top 5
 ```
 
-### Testing Error Handling
+Error path (missing file) — confirm a non-zero exit code:
 
 ``` bash
-# Missing required argument
-Rapp exec/ADS8192 pca --counts counts.tsv
-# Should error: --counts, --meta, and --output are required
+Rapp exec/ADS8192 pca --counts nope.tsv --meta meta.tsv --output out/
+echo %ERRORLEVEL%    # Windows: should print 1
+```
 
-# Missing file
-Rapp exec/ADS8192 pca \
-    --counts nonexistent.tsv \
-    --meta meta.tsv \
-    --output out/
-# Should error: File not found: nonexistent.tsv
+If you see `Error: File not found: nope.tsv` and a non-zero exit code,
+the CLI is failing the way a pipeline expects.
 
-# Check exit code
-Rapp exec/ADS8192 pca --counts nonexistent.tsv --meta meta.tsv --output out/
-echo $?  # Should be 1
+You can also drive the CLI from an R session while iterating — it avoids
+spawning a new R process on every run:
+
+``` r
+Rapp::run("exec/ADS8192", c(
+    "pca",
+    "--counts", "tests/testdata/counts.tsv",
+    "--meta",   "tests/testdata/meta.tsv",
+    "--output", "tests/testdata/output/",
+    "--n-top",  "5"
+))
 ```
 
 ------------------------------------------------------------------------
 
-### Exercise B: Enhance Validate Command
+## Part 4: The CLI Is a Contract
 
-Improve the `validate` subcommand so it:
-
-1.  Checks if input files exist
-2.  Checks if they can be parsed
-3.  Reports dimensions
-4.  Checks for sample ID matches
-
-Example output:
-
-``` bash
-$ Rapp exec/ADS8192 validate --counts counts.tsv --meta meta.tsv
-
-Validating counts file: counts.tsv
-  ✓ File exists
-  ✓ Can be parsed
-  ✓ Dimensions: 10000 genes × 8 samples
-
-Validating metadata file: meta.tsv
-  ✓ File exists
-  ✓ Can be parsed
-  ✓ Rows: 8
-
-Checking consistency:
-  ✓ Sample IDs match
-  ✓ Metadata columns: cell, dex, albut, Run, avgLength, Experiment, Sample, BioSample
-
-Ready for analysis!
-```
-
-------------------------------------------------------------------------
-
-### Exercise C: DRY Check
-
-Verify that your CLI calls
-[`run_pca()`](https://st-jude-ms-abds.github.io/ADS8192/reference/run_pca.md)
-from your package rather than re-implementing the PCA logic.
-
-Look for:
-
-- `run_pca(...)` call inside the `pca` command in `exec/ADS8192`
-- `plot_pca(...)` call for plotting when `--color-by` is set
-- No direct calls to [`prcomp()`](https://rdrr.io/r/stats/prcomp.html)
-  in the CLI script
-
-------------------------------------------------------------------------
-
-## Part 5: Versioning and Stability
-
-### The Contract
-
-CLI users depend on:
-
-- **Argument names**: `--n-top` shouldn’t become `--ntop`
-- **Output file names**: `pca_scores.tsv` shouldn’t become `scores.tsv`
-- **Output format**: TSV columns shouldn’t change unexpectedly
-
-### Preventing Common Formatting Errors
-
-#### Argument Names
-
-Rapp converts snake_case to kebab-case automatically. Never manually
-rename a variable to match the flag name you want:
-
-``` r
-# CORRECT: let Rapp handle the conversion
-n_top <- 500L       # → --n-top
-log_transform <- TRUE  # → --log-transform / --no-log-transform
-color_by <- ""      # → --color-by
-
-# WRONG: manually using a different variable name to get a different flag
-nTop <- 500L        # → --nTop (camelCase not converted to kebab-case by Rapp)
-```
-
-If you need a specific flag name, use the snake_case form that maps to
-it. `--n-top` comes from `n_top`; `--ntop` would come from `ntop`. Pick
-the variable name, and the flag name follows.
-
-#### Output File Names
-
-Always use literal string names for output files — never derive them
-from user input or parameter values:
-
-``` r
-# CORRECT: literal, stable names
-scores_file <- file.path(output, "pca_scores.tsv")
-var_file    <- file.path(output, "pca_variance.tsv")
-
-# WRONG: names derived from inputs
-scores_file <- file.path(output, paste0(prefix, "_scores.tsv"))  # prefix could be anything
-```
-
-Stable output names let pipeline users hard-code the expected files.
-Changing `pca_scores.tsv` to `scores.tsv` in a future version is a
-breaking change.
-
-#### Output Format and Column Names
-
-Column names in output files are part of the user contract. If
-`result$scores` has columns `PC1`, `PC2`, …, `sample_id`, `treatment`,
-those column names are what pipeline users depend on.
-
-- **Adding new columns**: generally backward-compatible (minor version
-  bump)
-- **Renaming existing columns**: breaking change (major version bump)
-- **Changing column order**: avoid it; use column names in downstream
-  code, not positional indexing
-
-#### Testing for Stability
-
-Use snapshot tests to protect output structure:
-
-``` r
-# tests/testthat/test-cli-stability.R
-test_that("pca output columns are stable", {
-    data(example_se, package = "ADS8192")
-    result <- run_pca(example_se, n_top = 50)
-
-    # Snapshot the column names — this will fail if columns change
-    expect_snapshot(colnames(result$scores))
-    expect_snapshot(colnames(pca_variance_explained(result)))
-})
-```
-
-When you intentionally change output structure, update the snapshot with
-[`testthat::snapshot_review()`](https://testthat.r-lib.org/reference/snapshot_accept.html).
-
-### Semantic Versioning
-
-- **MAJOR** (1.0.0 → 2.0.0): Breaking changes to CLI interface
-- **MINOR** (1.0.0 → 1.1.0): New features, backward compatible
-- **PATCH** (1.0.0 → 1.0.1): Bug fixes
+Once anyone automates against your CLI, **argument names, output file
+names, and output column names become a contract**. Pipeline users
+hard-code those strings, and renaming them breaks downstream work
+silently.
 
 ### What’s Breaking?
 
@@ -813,7 +484,15 @@ When you intentionally change output structure, update the snapshot with
 | Add new output columns        | Usually no |
 | Change default value          | Maybe      |
 
-Document changes in a CHANGELOG!
+### Semantic Versioning
+
+- **MAJOR** (1.0.0 → 2.0.0): breaking CLI interface changes
+- **MINOR** (1.0.0 → 1.1.0): new features, backward compatible
+- **PATCH** (1.0.0 → 1.0.1): bug fixes
+
+Document every interface change in `NEWS.md`. If you have to break
+something, do it in a major bump with a clear migration note — not
+quietly in a patch.
 
 ------------------------------------------------------------------------
 
@@ -821,19 +500,20 @@ Document changes in a CHANGELOG!
 
 Today we:
 
-1.  Learned CLI design principles (help text, explicit I/O, exit codes)
-2.  Built a CLI using Rapp with commands and options
-3.  Implemented the `pca` command that calls our package functions
-4.  Exported a launcher installer (`install_ADS8192_cli()`) for seamless
-    terminal use
-5.  Tested error handling and exit codes
-6.  Discussed versioning and stability
+1.  Learned five CLI design principles: help text, explicit I/O,
+    reproducible defaults, exit codes, machine-readable output
+2.  Introduced Rapp and its `switch("")` subcommand idiom
+3.  Added a Rapp app to the existing ADS8192 package (`exec/ADS8192`,
+    `Rapp` in `DESCRIPTION`)
+4.  Exported a launcher installer (`install_ADS8192_cli()`)
+5.  Ran the CLI during development and checked error behavior
+6.  Treated argument and output names as a stability contract
 
 ### Package Milestone
 
-✅ A working CLI prototype with an exported launcher installer — users
-can run `ADS8192 pca --help` directly from the terminal after installing
-your package.
+**The ADS8192 package now has a working CLI in `exec/` and an exported
+launcher installer.** Users can call `Rapp exec/ADS8192 pca` today;
+Lecture 10 covers installed use, clean-room testing, and output parity.
 
 ------------------------------------------------------------------------
 
@@ -841,9 +521,9 @@ your package.
 
 Before moving on, make sure you can answer:
 
-- When is a CLI genuinely useful, and when is it just an unnecessary
-  extra interface?
-- Which parts of the CLI are stable user contract, and which parts are
+- When is a CLI genuinely useful, and when is it an unnecessary extra
+  interface?
+- Which parts of the CLI are stable user contract, and which are
   replaceable implementation details?
 - How does `Rapp` let you avoid reinventing plumbing so you can focus on
   I/O contracts and DRY reuse of the package core?
@@ -852,58 +532,66 @@ Before moving on, make sure you can answer:
 
 ## After-Class Tasks
 
-### Micro-task 1: Add a Flag
+### Micro-task 1: Add a `validate` Subcommand
 
-Add one additional CLI flag (e.g., `--pcs 1,2` or `--n-top 500`) and
-ensure it changes outputs appropriately.
+Add a second subcommand that checks inputs without running PCA — useful
+for pipeline pre-flight checks. It should:
 
-### Micro-task 2: Document CLI + Launcher in README
+1.  Check that `--counts` and `--meta` exist and parse
+2.  Report dimensions
+3.  Check that counts column names match metadata row names
 
-Add a “Command Line Interface” section to README with:
+Add it as a second case in the same
+[`switch()`](https://rdrr.io/r/base/switch.html) call alongside `pca`.
 
-- Launcher installation command (`yourpkg::install_yourpkg_cli()`)
-- Basic usage example using the launcher (e.g., `ADS8192 pca --help`)
-- List of available commands
-- Fallback instructions (`Rapp exec/ADS8192 pca --help`) for users who
-  skip the launcher
+### Micro-task 2: Snapshot Test for Output Stability
 
-### Micro-task 3: pkgdown Article
-
-Add a vignette/article for CLI usage:
+Add a `testthat` snapshot test that captures the column names of
+`result$scores`. Future changes to output structure will fail the test
+until you deliberately review the snapshot:
 
 ``` r
-usethis::use_vignette("cli", title = "Command Line Interface")
+test_that("pca output columns are stable", {
+    data(example_se, package = "ADS8192")
+    result <- run_pca(example_se, n_top = 50)
+    expect_snapshot(colnames(result$scores))
+})
 ```
+
+### Micro-task 3: Read Ahead — Preventing Interface Drift
+
+Before Lecture 10, skim the Rapp documentation section on how snake_case
+→ kebab-case conversion works, and think about which of *your*
+function’s defaults might be risky to change later. For reference when
+revisiting later:
+
+- Use literal output file names (`"pca_scores.tsv"`), never derive them
+  from inputs.
+- Column names in output files are part of the contract. Adding columns
+  is usually safe; renaming them is not.
+- When you intentionally change output structure, update the snapshot
+  with
+  [`testthat::snapshot_review()`](https://testthat.r-lib.org/reference/snapshot_accept.html)
+  and bump the version.
 
 ------------------------------------------------------------------------
 
 ## CLI Quick Reference
 
 ``` bash
-# Install launchers (one-time, after package installation)
-Rscript -e "ADS8192::install_ADS8192_cli()"
-# Or equivalently:
-Rscript -e "Rapp::install_pkg_cli_apps('ADS8192')"
+# During development
+Rapp exec/ADS8192 --help
+Rapp exec/ADS8192 pca --help
 
-# After installing launchers — the primary way to use the CLI
-ADS8192 --help
-ADS8192 pca --help
-ADS8192 pca \
+Rapp exec/ADS8192 pca \
     --counts counts.tsv \
     --meta samples.tsv \
     --output results/ \
     --n-top 500 \
     --color-by treatment
 
-# During development (before launchers are installed)
-Rapp exec/ADS8192 --help
-Rapp exec/ADS8192 pca --help
-
-# Check exit code
-echo $?
-
-# Redirect stderr (messages) vs stdout (none in our design)
-ADS8192 pca ... 2> log.txt
+# Check exit code (Windows)
+echo %ERRORLEVEL%
 ```
 
 ------------------------------------------------------------------------

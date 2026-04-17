@@ -1,4 +1,4 @@
-# Homework 1 Grading Rubric (25 points)
+# Homework 1 Rubric
 
 ## Overview
 
@@ -22,7 +22,7 @@ help from instructors.
 
 - **Initial submission deadline:** Monday, April 20th at 11:59 PM
 - **Initial instructor feedback by:** Tuesday, April 21st at 11:59 PM
-- **Re-submission deadline:** Saturday, April 25th at 11:59 PM (5 days
+- **Re-submission deadline:** Friday, April 24th at 11:59 PM (5 days
   after initial submission)
 
 > **Note:** Grading will only be performed on your final submission. If

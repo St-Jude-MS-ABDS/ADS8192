@@ -82,32 +82,29 @@ Andrews</h4>
     
     
 <div class="section level2">
-<h2 id="learning-objectives">Learning Objectives<a class="anchor" aria-label="anchor" href="#learning-objectives"></a>
+<h2 id="motivation">Motivation<a class="anchor" aria-label="anchor" href="#motivation"></a>
 </h2>
+<p>For automated scientific tools, installation and release quality are
+part of the user experience. If a CLI only works in development mode on
+the author’s machine, it is not yet robust software.</p>
+<p>Clean installs, output parity checks, and release discipline save
+other people time. They catch hidden assumptions early, prevent
+interface drift, and make it much more likely that a pipeline user or
+collaborator will get the same result you saw during development.</p>
+<div class="section level3">
+<h3 id="learning-objectives">Learning Objectives<a class="anchor" aria-label="anchor" href="#learning-objectives"></a>
+</h3>
 <p>By the end of this session, you will be able to:</p>
 <ol style="list-style-type: decimal">
-<li>Add the CLI entry point to the package so it works after
-installation</li>
-<li>Update the GitHub repository and verify installation and CLI
-execution in a clean session</li>
+<li>Install your package from GitHub and verify the CLI runs in a clean
+R session</li>
+<li>Document the CLI in the package README and the Getting Started
+vignette</li>
 <li>Confirm that CLI outputs match the package’s R function outputs for
 the same inputs</li>
 <li>Explain why clean-room testing, release discipline, and backward
 compatibility matter for automation users</li>
 </ol>
-<p><strong>Course Learning Outcomes (CLOs):</strong> CLO 1, 2, 3, 5,
-6</p>
-<div class="section level3">
-<h3 id="motivation">Motivation<a class="anchor" aria-label="anchor" href="#motivation"></a>
-</h3>
-<p>For automated scientific tools, installation and release quality are
-part of the user experience. If a CLI only works in development mode or
-only on the author’s machine, it is not yet robust software.</p>
-<p>This lecture matters because clean installs, output parity checks,
-and release discipline save other people time. They catch hidden
-assumptions early, prevent interface drift, and make it much more likely
-that a pipeline user or collaborator will get the same result you saw
-during development.</p>
 </div>
 <div class="section level3">
 <h3 id="evaluation-checklist">Evaluation Checklist<a class="anchor" aria-label="anchor" href="#evaluation-checklist"></a>
@@ -121,8 +118,6 @@ version?</li>
 <li>Do CLI outputs match the package core for the same inputs?</li>
 <li>Which file names, flags, and output columns now form part of the
 user contract?</li>
-<li>What would break if you changed those interfaces in the next
-release?</li>
 <li>Are release steps reproducible enough for someone else in the lab to
 repeat?</li>
 </ul>
@@ -140,95 +135,57 @@ refactors, and which ones break their pipeline contract?</p>
 <div class="section level2">
 <h2 id="where-we-are">Where We Are<a class="anchor" aria-label="anchor" href="#where-we-are"></a>
 </h2>
-<p>In Lecture 9, we built CLI functions that work during development and
-<strong>exported a launcher installer</strong>
-(<code>install_ADS8192_cli()</code>) so users can run the CLI directly
-from the terminal:</p>
-<div class="sourceCode" id="cb1"><pre class="sourceCode bash"><code class="sourceCode bash"><span id="cb1-1"><a href="#cb1-1" tabindex="-1"></a><span class="co"># Works in development mode</span></span>
-<span id="cb1-2"><a href="#cb1-2" tabindex="-1"></a><span class="ex">Rapp</span> exec/ADS8192 pca <span class="at">--help</span></span>
-<span id="cb1-3"><a href="#cb1-3" tabindex="-1"></a></span>
-<span id="cb1-4"><a href="#cb1-4" tabindex="-1"></a><span class="co"># Works after installing launchers (Lecture 9)</span></span>
-<span id="cb1-5"><a href="#cb1-5" tabindex="-1"></a><span class="ex">ADS8192</span> pca <span class="at">--help</span></span></code></pre></div>
-<p><strong>Goal:</strong> Verify that the full install-from-GitHub
-workflow works end-to-end — package installation, launcher installation,
-and CLI execution — in a clean R session.</p>
-<hr>
-<div class="section level3">
-<h3 id="design-principle-installation-is-part-of-the-product">Design Principle: Installation Is Part of the Product<a class="anchor" aria-label="anchor" href="#design-principle-installation-is-part-of-the-product"></a>
-</h3>
-<p>If a tool only works on the developer’s machine, it is not ready for
-scientific use. Clean-room testing and output parity checks matter
-because they reveal hidden assumptions, missing dependencies, and
-accidental drift between interfaces before users discover them the hard
-way.</p>
-</div>
-</div>
-<div class="section level2">
-<h2 id="part-1-package-the-cli-entry-point">Part 1: Package the CLI Entry Point<a class="anchor" aria-label="anchor" href="#part-1-package-the-cli-entry-point"></a>
-</h2>
-<div class="section level3">
-<h3 id="use-rapps-exec-directory">Use Rapp’s <code>exec/</code> Directory<a class="anchor" aria-label="anchor" href="#use-rapps-exec-directory"></a>
-</h3>
-<p>Rapp CLI apps live in a top-level <code>exec/</code> directory. Files
-in <code>exec/</code> are installed with the package.</p>
-<div class="section level4">
-<h4 id="create-the-directory-if-needed">Create the Directory (if needed)<a class="anchor" aria-label="anchor" href="#create-the-directory-if-needed"></a>
-</h4>
-<div class="sourceCode" id="cb2"><pre class="downlit sourceCode r">
-<code class="sourceCode R"><span><span class="fu"><a href="https://rdrr.io/r/base/files2.html" class="external-link">dir.create</a></span><span class="op">(</span><span class="st">"exec"</span>, recursive <span class="op">=</span> <span class="cn">TRUE</span><span class="op">)</span></span></code></pre></div>
-</div>
-<div class="section level4">
-<h4 id="add-the-rapp-app">Add the Rapp App<a class="anchor" aria-label="anchor" href="#add-the-rapp-app"></a>
-</h4>
-<p>Create <code>exec/ADS8192</code> (from Lecture 9). On Unix/Mac, mark
-it executable:</p>
-<div class="sourceCode" id="cb3"><pre class="sourceCode bash"><code class="sourceCode bash"><span id="cb3-1"><a href="#cb3-1" tabindex="-1"></a><span class="fu">chmod</span> +x exec/ADS8192</span></code></pre></div>
-<blockquote>
-<p><strong>Mac/Linux users:</strong> You only need to run
-<code>chmod +x</code> once when you first create the file. If you clone
-the repo fresh on another machine, Git preserves the executable bit (if
-you committed it), so collaborators won’t need to repeat this step.
-Check with <code>git ls-files --stage exec/ADS8192</code> — you should
-see mode <code>100755</code>, not <code>100644</code>.</p>
-</blockquote>
-<blockquote>
-<p><strong>Required: trailing newline.</strong> Rapp requires the script
-file to end with a blank newline. Make sure <code>exec/ADS8192</code>
-has an extra blank line at the very end of the file. Without it, Rapp
-may fail to parse the last command correctly. In most editors this is
-the default behavior, but it’s worth verifying.</p>
-</blockquote>
-</div>
-<div class="section level4">
-<h4 id="declare-the-dependency">Declare the Dependency<a class="anchor" aria-label="anchor" href="#declare-the-dependency"></a>
-</h4>
-<p>Add Rapp to DESCRIPTION so users have the runner available:</p>
-<div class="sourceCode" id="cb4"><pre class="downlit sourceCode r">
-<code class="sourceCode R"><span><span class="fu">usethis</span><span class="fu">::</span><span class="fu">use_package</span><span class="op">(</span><span class="st">"Rapp"</span><span class="op">)</span></span></code></pre></div>
+<p>In Lecture 9 we built the CLI <strong>inside</strong> the
+package:</p>
+<ul>
+<li>
+<code>exec/ADS8192</code> — the Rapp app</li>
+<li>
+<code>Rapp</code> declared in <code>DESCRIPTION</code>
+</li>
+<li>
+<code>R/install_cli.R</code> — the exported
+<code>install_ADS8192_cli()</code> wrapper</li>
+</ul>
+<p>Everything worked through <code>Rapp exec/ADS8192</code> during
+development. The question now is: <strong>does it still work after
+<code>remotes::install_github()</code> on a clean machine?</strong> That
+is what makes it real software rather than a local script.</p>
 <hr>
 </div>
-</div>
-</div>
 <div class="section level2">
-<h2 id="part-2-make-the-cli-discoverable">Part 2: Make the CLI Discoverable<a class="anchor" aria-label="anchor" href="#part-2-make-the-cli-discoverable"></a>
+<h2 id="part-1-installation-and-discoverability">Part 1: Installation and Discoverability<a class="anchor" aria-label="anchor" href="#part-1-installation-and-discoverability"></a>
 </h2>
+<div class="section level3">
+<h3 id="package-entry-point-recap">Package Entry Point (Recap)<a class="anchor" aria-label="anchor" href="#package-entry-point-recap"></a>
+</h3>
+<p>Because you already created <code>exec/ADS8192</code> inside the
+package and added <code>Rapp</code> to <code>DESCRIPTION</code> in
+Lecture 9, the entry point is already packaged. Files in
+<code>exec/</code> are installed along with everything else when someone
+runs <code>remotes::install_github("you/ADS8192")</code>. No relocation
+step is needed.</p>
+<p>One quick sanity check: <code>exec/ADS8192</code> must end with a
+blank newline or Rapp will fail to parse the last command. Open it and
+verify.</p>
+</div>
 <div class="section level3">
 <h3 id="install-cli-launchers">Install CLI Launchers<a class="anchor" aria-label="anchor" href="#install-cli-launchers"></a>
 </h3>
-<p>In Lecture 9 we exported an <code>install_ADS8192_cli()</code>
-function that wraps <code><a href="https://rdrr.io/pkg/Rapp/man/install_pkg_cli_apps.html" class="external-link">Rapp::install_pkg_cli_apps()</a></code>. Verify it
-works after a fresh install:</p>
-<div class="sourceCode" id="cb5"><pre class="downlit sourceCode r">
-<code class="sourceCode R"><span><span class="co"># Your exported wrapper (preferred)</span></span>
-<span><span class="fu">ADS8192</span><span class="fu">::</span><span class="fu">install_ADS8192_cli</span><span class="op">(</span><span class="op">)</span></span>
-<span></span>
-<span><span class="co"># Or the direct Rapp call</span></span>
+<p>After installation, the <code>exec/</code> directory lives inside the
+R library tree. Users should not have to type
+<code>Rapp /path/to/library/ADS8192/exec/ADS8192 pca</code> every time.
+Rapp provides <strong>launchers</strong> — lightweight wrapper scripts
+placed on <code>PATH</code> — for exactly this.</p>
+<p>Your <code>install_ADS8192_cli()</code> wrapper from Lecture 9 does
+the work:</p>
+<div class="sourceCode" id="cb1"><pre class="downlit sourceCode r">
+<code class="sourceCode R"><span><span class="fu">ADS8192</span><span class="fu">::</span><span class="fu">install_ADS8192_cli</span><span class="op">(</span><span class="op">)</span></span>
+<span><span class="co"># or the direct Rapp call</span></span>
 <span><span class="fu">Rapp</span><span class="fu">::</span><span class="fu"><a href="https://rdrr.io/pkg/Rapp/man/install_pkg_cli_apps.html" class="external-link">install_pkg_cli_apps</a></span><span class="op">(</span><span class="st">"ADS8192"</span><span class="op">)</span></span></code></pre></div>
-</div>
-<div class="section level3">
-<h3 id="where-rapp-installs-launchers">Where Rapp Installs Launchers<a class="anchor" aria-label="anchor" href="#where-rapp-installs-launchers"></a>
-</h3>
-<p>The launchers are placed in a platform-specific directory:</p>
+<div class="section level4">
+<h4 id="where-launchers-land">Where Launchers Land<a class="anchor" aria-label="anchor" href="#where-launchers-land"></a>
+</h4>
 <table class="table">
 <thead><tr class="header">
 <th>Platform</th>
@@ -236,242 +193,93 @@ works after a fresh install:</p>
 </tr></thead>
 <tbody>
 <tr class="odd">
-<td>macOS / Linux</td>
-<td><code>~/.local/bin/</code></td>
-</tr>
-<tr class="even">
 <td>Windows</td>
 <td><code>%LOCALAPPDATA%\Programs\R\Rapp\bin\</code></td>
 </tr>
+<tr class="even">
+<td>macOS / Linux</td>
+<td><code>~/.local/bin/</code></td>
+</tr>
 </tbody>
 </table>
-<p>These directories should already be on your <code>PATH</code> after
-<code><a href="https://rdrr.io/pkg/Rapp/man/install_pkg_cli_apps.html" class="external-link">Rapp::install_pkg_cli_apps()</a></code> runs — it handles
-<code>PATH</code> configuration automatically on first use. If the
-command is not found after installation, check:</p>
-<div class="sourceCode" id="cb6"><pre class="sourceCode bash"><code class="sourceCode bash"><span id="cb6-1"><a href="#cb6-1" tabindex="-1"></a><span class="co"># Unix/Mac: verify the launcher exists</span></span>
-<span id="cb6-2"><a href="#cb6-2" tabindex="-1"></a><span class="fu">ls</span> ~/.local/bin/ADS8192</span>
-<span id="cb6-3"><a href="#cb6-3" tabindex="-1"></a></span>
-<span id="cb6-4"><a href="#cb6-4" tabindex="-1"></a><span class="co"># Windows (PowerShell)</span></span>
-<span id="cb6-5"><a href="#cb6-5" tabindex="-1"></a><span class="ex">Get-Command</span> ADS8192</span>
-<span id="cb6-6"><a href="#cb6-6" tabindex="-1"></a></span>
-<span id="cb6-7"><a href="#cb6-7" tabindex="-1"></a><span class="co"># Check which ADS8192 is on PATH (Unix/Mac)</span></span>
-<span id="cb6-8"><a href="#cb6-8" tabindex="-1"></a><span class="fu">which</span> ADS8192</span>
-<span id="cb6-9"><a href="#cb6-9" tabindex="-1"></a></span>
-<span id="cb6-10"><a href="#cb6-10" tabindex="-1"></a><span class="co"># Check which ADS8192 is on PATH (Windows)</span></span>
-<span id="cb6-11"><a href="#cb6-11" tabindex="-1"></a><span class="ex">where</span> ADS8192</span></code></pre></div>
-<p>If multiple versions are installed or the wrong one is found, check
-that <code>~/.local/bin</code> (Unix) or the Rapp bin directory
-(Windows) appears before any other <code>ADS8192</code> on
-<code>PATH</code>. You can verify the Rapp install path with:</p>
-<div class="sourceCode" id="cb7"><pre class="downlit sourceCode r">
-<code class="sourceCode R"><span><span class="co"># See where Rapp would install launchers</span></span>
-<span><span class="fu">Rapp</span><span class="fu">::</span><span class="fu">pkg_cli_apps_dir</span><span class="op">(</span><span class="op">)</span></span></code></pre></div>
-<p>After this, users can run:</p>
-<div class="sourceCode" id="cb8"><pre class="sourceCode bash"><code class="sourceCode bash"><span id="cb8-1"><a href="#cb8-1" tabindex="-1"></a><span class="ex">ADS8192</span> pca <span class="at">--help</span></span></code></pre></div>
+<p>Rapp handles <code>PATH</code> configuration automatically on first
+use. If the command is not found after installation, verify:</p>
+<div class="sourceCode" id="cb2"><pre class="sourceCode powershell"><code class="sourceCode powershell"><span id="cb2-1"><a href="#cb2-1" tabindex="-1"></a><span class="co"># Windows (PowerShell): confirm the launcher exists and PATH resolves it</span></span>
+<span id="cb2-2"><a href="#cb2-2" tabindex="-1"></a><span class="fu">Get-Command</span> ADS8192</span>
+<span id="cb2-3"><a href="#cb2-3" tabindex="-1"></a><span class="fu">where</span><span class="op">.</span><span class="fu">exe</span> ADS8192</span></code></pre></div>
+<p>You can also ask Rapp directly where it would install:</p>
+<div class="sourceCode" id="cb3"><pre class="downlit sourceCode r">
+<code class="sourceCode R"><span><span class="fu">Rapp</span><span class="fu">::</span><span class="fu">pkg_cli_apps_dir</span><span class="op">(</span><span class="op">)</span></span></code></pre></div>
+<p>Once installed, users can run:</p>
+<div class="sourceCode" id="cb4"><pre class="sourceCode bash"><code class="sourceCode bash"><span id="cb4-1"><a href="#cb4-1" tabindex="-1"></a><span class="ex">ADS8192</span> pca <span class="at">--help</span></span></code></pre></div>
 </div>
-<div class="section level3">
-<h3 id="fallback-run-directly-from-exec">Fallback: Run Directly from <code>exec/</code><a class="anchor" aria-label="anchor" href="#fallback-run-directly-from-exec"></a>
-</h3>
-<p>If launchers are not installed, you can still run the app
-directly:</p>
-<div class="sourceCode" id="cb9"><pre class="sourceCode bash"><code class="sourceCode bash"><span id="cb9-1"><a href="#cb9-1" tabindex="-1"></a><span class="ex">Rapp</span> exec/ADS8192 pca <span class="at">--help</span></span></code></pre></div>
-<p>Or from R:</p>
-<div class="sourceCode" id="cb10"><pre class="downlit sourceCode r">
-<code class="sourceCode R"><span><span class="fu">Rapp</span><span class="fu">::</span><span class="fu"><a href="https://rdrr.io/pkg/Rapp/man/run.html" class="external-link">run</a></span><span class="op">(</span><span class="fu"><a href="https://rdrr.io/r/base/system.file.html" class="external-link">system.file</a></span><span class="op">(</span><span class="st">"exec"</span>, <span class="st">"ADS8192"</span>, package <span class="op">=</span> <span class="st">"ADS8192"</span><span class="op">)</span>, <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="st">"pca"</span>, <span class="st">"--help"</span><span class="op">)</span><span class="op">)</span></span></code></pre></div>
 <div class="section level4">
-<h4 id="required-export-the-launcher-installer">Required: Export the Launcher Installer<a class="anchor" aria-label="anchor" href="#required-export-the-launcher-installer"></a>
+<h4 id="fallback-run-from-exec">Fallback: Run From <code>exec/</code><a class="anchor" aria-label="anchor" href="#fallback-run-from-exec"></a>
 </h4>
-<p>In Lecture 9 you created <code>R/install_cli.R</code> with an
-exported wrapper. Make sure it is present and documented — this is a
-<strong>rubric requirement</strong>:</p>
-<div class="sourceCode" id="cb11"><pre class="downlit sourceCode r">
-<code class="sourceCode R"><span><span class="co">#' Install ADS8192 CLI launchers</span></span>
-<span><span class="co">#'</span></span>
-<span><span class="co">#' Places lightweight launcher scripts on the user's `PATH` so the</span></span>
-<span><span class="co">#' ADS8192 CLI can be invoked directly from a terminal</span></span>
-<span><span class="co">#' (e.g. `ADS8192 pca --help`).</span></span>
-<span><span class="co">#'</span></span>
-<span><span class="co">#' @inheritDotParams Rapp::install_pkg_cli_apps -package -lib.loc</span></span>
-<span><span class="co">#' @export</span></span>
-<span><span class="va">install_ADS8192_cli</span> <span class="op">&lt;-</span> <span class="kw">function</span><span class="op">(</span><span class="va">...</span><span class="op">)</span> <span class="op">{</span></span>
-<span>    <span class="fu">Rapp</span><span class="fu">::</span><span class="fu"><a href="https://rdrr.io/pkg/Rapp/man/install_pkg_cli_apps.html" class="external-link">install_pkg_cli_apps</a></span><span class="op">(</span>package <span class="op">=</span> <span class="st">"ADS8192"</span>, lib.loc <span class="op">=</span> <span class="cn">NULL</span>, <span class="va">...</span><span class="op">)</span></span>
-<span><span class="op">}</span></span></code></pre></div>
+<p>If launchers are not installed, you can still invoke the app
+directly:</p>
+<div class="sourceCode" id="cb5"><pre class="sourceCode bash"><code class="sourceCode bash"><span id="cb5-1"><a href="#cb5-1" tabindex="-1"></a><span class="ex">Rapp</span> exec/ADS8192 pca <span class="at">--help</span></span></code></pre></div>
+<p>Or from R:</p>
+<div class="sourceCode" id="cb6"><pre class="downlit sourceCode r">
+<code class="sourceCode R"><span><span class="fu">Rapp</span><span class="fu">::</span><span class="fu"><a href="https://rdrr.io/pkg/Rapp/man/run.html" class="external-link">run</a></span><span class="op">(</span><span class="fu"><a href="https://rdrr.io/r/base/system.file.html" class="external-link">system.file</a></span><span class="op">(</span><span class="st">"exec"</span>, <span class="st">"ADS8192"</span>, package <span class="op">=</span> <span class="st">"ADS8192"</span><span class="op">)</span>, <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="st">"pca"</span>, <span class="st">"--help"</span><span class="op">)</span><span class="op">)</span></span></code></pre></div>
+</div>
+</div>
+<div class="section level3">
+<h3 id="document-the-cli">Document the CLI<a class="anchor" aria-label="anchor" href="#document-the-cli"></a>
+</h3>
+<p>Users should be able to find the CLI from your package’s front door.
+You only need two brief additions — no separate pkgdown article.</p>
+<div class="section level4">
+<h4 id="readme">README<a class="anchor" aria-label="anchor" href="#readme"></a>
+</h4>
+<p>Add a short <strong>Command Line Interface</strong> section to the
+package <code>README.Rmd</code> (or <code>README.md</code>) with a
+one-line install step, a minimal invocation, and the fallback:</p>
+<div class="sourceCode" id="cb7"><pre class="sourceCode markdown"><code class="sourceCode markdown"><span id="cb7-1"><a href="#cb7-1" tabindex="-1"></a><span class="fu">## Command Line Interface</span></span>
+<span id="cb7-2"><a href="#cb7-2" tabindex="-1"></a></span>
+<span id="cb7-3"><a href="#cb7-3" tabindex="-1"></a>ADS8192 includes a CLI for pipeline integration.</span>
+<span id="cb7-4"><a href="#cb7-4" tabindex="-1"></a></span>
+<span id="cb7-5"><a href="#cb7-5" tabindex="-1"></a><span class="in">```r</span></span>
+<span id="cb7-6"><a href="#cb7-6" tabindex="-1"></a><span class="co"># One-time launcher install</span></span>
+<span id="cb7-7"><a href="#cb7-7" tabindex="-1"></a>ADS8192<span class="sc">::</span><span class="fu">install_ADS8192_cli</span>()</span>
+<span id="cb7-8"><a href="#cb7-8" tabindex="-1"></a><span class="in">```</span></span>
+<span id="cb7-9"><a href="#cb7-9" tabindex="-1"></a></span>
+<span id="cb7-10"><a href="#cb7-10" tabindex="-1"></a><span class="in">```bash</span></span>
+<span id="cb7-11"><a href="#cb7-11" tabindex="-1"></a><span class="co"># Usage</span></span>
+<span id="cb7-12"><a href="#cb7-12" tabindex="-1"></a><span class="ex">ADS8192</span> pca <span class="at">--counts</span> counts.tsv <span class="at">--meta</span> samples.tsv <span class="at">--output</span> results/</span>
+<span id="cb7-13"><a href="#cb7-13" tabindex="-1"></a></span>
+<span id="cb7-14"><a href="#cb7-14" tabindex="-1"></a><span class="co"># Fallback (no launcher)</span></span>
+<span id="cb7-15"><a href="#cb7-15" tabindex="-1"></a><span class="ex">Rapp</span> exec/ADS8192 pca <span class="at">--help</span></span>
+<span id="cb7-16"><a href="#cb7-16" tabindex="-1"></a><span class="in">```</span></span></code></pre></div>
+<p>Knit the README (<code>devtools::build_readme()</code>) so the
+rendered <code>README.md</code> stays in sync.</p>
+</div>
+<div class="section level4">
+<h4 id="getting-started-vignette">Getting Started Vignette<a class="anchor" aria-label="anchor" href="#getting-started-vignette"></a>
+</h4>
+<p>In your existing <code>vignettes/getting-started.Rmd</code>, add a
+short “From the command line” subsection at the end — three or four
+lines showing the same install + one invocation. Pointing at the README
+is fine; the goal is that a reader of the vignette knows the CLI
+exists.</p>
 <hr>
 </div>
 </div>
 </div>
 <div class="section level2">
-<h2 id="part-3-documentation">Part 3: Documentation<a class="anchor" aria-label="anchor" href="#part-3-documentation"></a>
+<h2 id="part-2-clean-room-testing">Part 2: Clean-Room Testing<a class="anchor" aria-label="anchor" href="#part-2-clean-room-testing"></a>
 </h2>
+<p><code>devtools::load_all()</code> makes your code available during
+development, but users <strong>install</strong> the package. You have to
+verify the installed path works.</p>
 <div class="section level3">
-<h3 id="update-readme">Update README<a class="anchor" aria-label="anchor" href="#update-readme"></a>
-</h3>
-<p>Add a CLI section:</p>
-<div class="sourceCode" id="cb12"><pre class="sourceCode markdown"><code class="sourceCode markdown"><span id="cb12-1"><a href="#cb12-1" tabindex="-1"></a><span class="fu">## Command Line Interface</span></span>
-<span id="cb12-2"><a href="#cb12-2" tabindex="-1"></a></span>
-<span id="cb12-3"><a href="#cb12-3" tabindex="-1"></a>ADS8192 includes a command-line interface for pipeline integration.</span>
-<span id="cb12-4"><a href="#cb12-4" tabindex="-1"></a></span>
-<span id="cb12-5"><a href="#cb12-5" tabindex="-1"></a><span class="fu">### Quick Start</span></span>
-<span id="cb12-6"><a href="#cb12-6" tabindex="-1"></a></span>
-<span id="cb12-7"><a href="#cb12-7" tabindex="-1"></a><span class="in">```bash</span></span>
-<span id="cb12-8"><a href="#cb12-8" tabindex="-1"></a><span class="co"># Install the launcher (one-time)</span></span>
-<span id="cb12-9"><a href="#cb12-9" tabindex="-1"></a><span class="ex">Rscript</span> <span class="at">-e</span> <span class="st">"Rapp::install_pkg_cli_apps('ADS8192')"</span></span>
-<span id="cb12-10"><a href="#cb12-10" tabindex="-1"></a></span>
-<span id="cb12-11"><a href="#cb12-11" tabindex="-1"></a><span class="co"># Run PCA analysis</span></span>
-<span id="cb12-12"><a href="#cb12-12" tabindex="-1"></a><span class="ex">ADS8192</span> pca <span class="dt">\</span></span>
-<span id="cb12-13"><a href="#cb12-13" tabindex="-1"></a>    <span class="at">--counts</span> counts.tsv <span class="dt">\</span></span>
-<span id="cb12-14"><a href="#cb12-14" tabindex="-1"></a>    <span class="at">--meta</span> samples.tsv <span class="dt">\</span></span>
-<span id="cb12-15"><a href="#cb12-15" tabindex="-1"></a>    <span class="at">--output</span> results/ <span class="dt">\</span></span>
-<span id="cb12-16"><a href="#cb12-16" tabindex="-1"></a>    <span class="at">--n-top</span> 500 <span class="dt">\</span></span>
-<span id="cb12-17"><a href="#cb12-17" tabindex="-1"></a>    <span class="at">--color-by</span> treatment</span>
-<span id="cb12-18"><a href="#cb12-18" tabindex="-1"></a><span class="in">```</span></span>
-<span id="cb12-19"><a href="#cb12-19" tabindex="-1"></a></span>
-<span id="cb12-20"><a href="#cb12-20" tabindex="-1"></a><span class="fu">### Fallback (No Launcher)</span></span>
-<span id="cb12-21"><a href="#cb12-21" tabindex="-1"></a></span>
-<span id="cb12-22"><a href="#cb12-22" tabindex="-1"></a><span class="in">```bash</span></span>
-<span id="cb12-23"><a href="#cb12-23" tabindex="-1"></a><span class="ex">Rapp</span> exec/ADS8192 pca <span class="at">--help</span></span>
-<span id="cb12-24"><a href="#cb12-24" tabindex="-1"></a><span class="in">```</span></span>
-<span id="cb12-25"><a href="#cb12-25" tabindex="-1"></a></span>
-<span id="cb12-26"><a href="#cb12-26" tabindex="-1"></a><span class="fu">### Available Commands</span></span>
-<span id="cb12-27"><a href="#cb12-27" tabindex="-1"></a></span>
-<span id="cb12-28"><a href="#cb12-28" tabindex="-1"></a><span class="pp">|</span> Command <span class="pp">|</span> Description <span class="pp">|</span></span>
-<span id="cb12-29"><a href="#cb12-29" tabindex="-1"></a><span class="pp">|---------|-------------|</span></span>
-<span id="cb12-30"><a href="#cb12-30" tabindex="-1"></a><span class="pp">|</span> <span class="in">`pca`</span> <span class="pp">|</span> Run PCA analysis and export results <span class="pp">|</span></span>
-<span id="cb12-31"><a href="#cb12-31" tabindex="-1"></a><span class="pp">|</span> <span class="in">`validate`</span> <span class="pp">|</span> Validate input files <span class="pp">|</span></span>
-<span id="cb12-32"><a href="#cb12-32" tabindex="-1"></a></span>
-<span id="cb12-33"><a href="#cb12-33" tabindex="-1"></a>Run <span class="in">`ADS8192 &lt;command&gt; --help`</span> for detailed options.</span></code></pre></div>
-</div>
-<div class="section level3">
-<h3 id="add-pkgdown-article">Add pkgdown Article<a class="anchor" aria-label="anchor" href="#add-pkgdown-article"></a>
-</h3>
-<p>Create <code>vignettes/cli.Rmd</code>:</p>
-<div class="sourceCode" id="cb13"><pre class="sourceCode markdown"><code class="sourceCode markdown"><span id="cb13-1"><a href="#cb13-1" tabindex="-1"></a><span class="co">---</span></span>
-<span id="cb13-2"><a href="#cb13-2" tabindex="-1"></a><span class="an">title:</span><span class="co"> "Command Line Interface"</span></span>
-<span id="cb13-3"><a href="#cb13-3" tabindex="-1"></a><span class="an">output:</span><span class="co"> rmarkdown::html_vignette</span></span>
-<span id="cb13-4"><a href="#cb13-4" tabindex="-1"></a><span class="an">vignette:</span><span class="co"> &gt;</span></span>
-<span id="cb13-5"><a href="#cb13-5" tabindex="-1"></a><span class="co">  %\VignetteIndexEntry{Command Line Interface}</span></span>
-<span id="cb13-6"><a href="#cb13-6" tabindex="-1"></a><span class="co">  %\VignetteEngine{knitr::rmarkdown}</span></span>
-<span id="cb13-7"><a href="#cb13-7" tabindex="-1"></a><span class="co">  %\VignetteEncoding{UTF-8}</span></span>
-<span id="cb13-8"><a href="#cb13-8" tabindex="-1"></a><span class="co">---</span></span>
-<span id="cb13-9"><a href="#cb13-9" tabindex="-1"></a></span>
-<span id="cb13-10"><a href="#cb13-10" tabindex="-1"></a><span class="fu">## Overview</span></span>
-<span id="cb13-11"><a href="#cb13-11" tabindex="-1"></a></span>
-<span id="cb13-12"><a href="#cb13-12" tabindex="-1"></a>The ADS8192 CLI allows you to run PCA analysis from the command line,</span>
-<span id="cb13-13"><a href="#cb13-13" tabindex="-1"></a>making it easy to integrate into pipelines.</span>
-<span id="cb13-14"><a href="#cb13-14" tabindex="-1"></a></span>
-<span id="cb13-15"><a href="#cb13-15" tabindex="-1"></a><span class="fu">## Installation</span></span>
-<span id="cb13-16"><a href="#cb13-16" tabindex="-1"></a></span>
-<span id="cb13-17"><a href="#cb13-17" tabindex="-1"></a>After installing ADS8192, install the CLI launcher:</span>
-<span id="cb13-18"><a href="#cb13-18" tabindex="-1"></a></span>
-<span id="cb13-19"><a href="#cb13-19" tabindex="-1"></a><span class="in">```r</span></span>
-<span id="cb13-20"><a href="#cb13-20" tabindex="-1"></a>remotes<span class="sc">::</span><span class="fu">install_github</span>(<span class="st">"you/ADS8192"</span>)</span>
-<span id="cb13-21"><a href="#cb13-21" tabindex="-1"></a>Rapp<span class="sc">::</span><span class="fu">install_pkg_cli_apps</span>(<span class="st">"ADS8192"</span>)</span>
-<span id="cb13-22"><a href="#cb13-22" tabindex="-1"></a><span class="in">```</span></span>
-<span id="cb13-23"><a href="#cb13-23" tabindex="-1"></a></span>
-<span id="cb13-24"><a href="#cb13-24" tabindex="-1"></a><span class="fu">## Usage</span></span>
-<span id="cb13-25"><a href="#cb13-25" tabindex="-1"></a></span>
-<span id="cb13-26"><a href="#cb13-26" tabindex="-1"></a><span class="fu">### Basic PCA Analysis</span></span>
-<span id="cb13-27"><a href="#cb13-27" tabindex="-1"></a></span>
-<span id="cb13-28"><a href="#cb13-28" tabindex="-1"></a><span class="in">```bash</span></span>
-<span id="cb13-29"><a href="#cb13-29" tabindex="-1"></a><span class="ex">ADS8192</span> pca <span class="dt">\</span></span>
-<span id="cb13-30"><a href="#cb13-30" tabindex="-1"></a>    <span class="at">--counts</span> counts.tsv <span class="dt">\</span></span>
-<span id="cb13-31"><a href="#cb13-31" tabindex="-1"></a>    <span class="at">--meta</span> samples.tsv <span class="dt">\</span></span>
-<span id="cb13-32"><a href="#cb13-32" tabindex="-1"></a>    <span class="at">--output</span> results/</span>
-<span id="cb13-33"><a href="#cb13-33" tabindex="-1"></a><span class="in">```</span></span>
-<span id="cb13-34"><a href="#cb13-34" tabindex="-1"></a></span>
-<span id="cb13-35"><a href="#cb13-35" tabindex="-1"></a><span class="fu">### Input File Formats</span></span>
-<span id="cb13-36"><a href="#cb13-36" tabindex="-1"></a></span>
-<span id="cb13-37"><a href="#cb13-37" tabindex="-1"></a>**Counts matrix** (<span class="in">`--counts`</span>):</span>
-<span id="cb13-38"><a href="#cb13-38" tabindex="-1"></a><span class="ss">- </span>Tab-separated or comma-separated</span>
-<span id="cb13-39"><a href="#cb13-39" tabindex="-1"></a><span class="ss">- </span>First column: gene IDs (row names)</span>
-<span id="cb13-40"><a href="#cb13-40" tabindex="-1"></a><span class="ss">- </span>Subsequent columns: sample counts</span>
-<span id="cb13-41"><a href="#cb13-41" tabindex="-1"></a><span class="ss">- </span>Header row with sample IDs</span>
-<span id="cb13-42"><a href="#cb13-42" tabindex="-1"></a></span>
-<span id="cb13-43"><a href="#cb13-43" tabindex="-1"></a><span class="in">```</span></span>
-<span id="cb13-44"><a href="#cb13-44" tabindex="-1"></a><span class="in">gene_id    sample1    sample2    sample3</span></span>
-<span id="cb13-45"><a href="#cb13-45" tabindex="-1"></a><span class="in">ENSG001    100        150        120</span></span>
-<span id="cb13-46"><a href="#cb13-46" tabindex="-1"></a><span class="in">ENSG002    50         75         60</span></span>
-<span id="cb13-47"><a href="#cb13-47" tabindex="-1"></a><span class="in">```</span></span>
-<span id="cb13-48"><a href="#cb13-48" tabindex="-1"></a></span>
-<span id="cb13-49"><a href="#cb13-49" tabindex="-1"></a>**Metadata** (<span class="in">`--meta`</span>):</span>
-<span id="cb13-50"><a href="#cb13-50" tabindex="-1"></a><span class="ss">- </span>Tab-separated or comma-separated</span>
-<span id="cb13-51"><a href="#cb13-51" tabindex="-1"></a><span class="ss">- </span>First column: sample IDs (must match counts columns)</span>
-<span id="cb13-52"><a href="#cb13-52" tabindex="-1"></a><span class="ss">- </span>Additional columns: sample attributes</span>
-<span id="cb13-53"><a href="#cb13-53" tabindex="-1"></a></span>
-<span id="cb13-54"><a href="#cb13-54" tabindex="-1"></a><span class="in">```</span></span>
-<span id="cb13-55"><a href="#cb13-55" tabindex="-1"></a><span class="in">sample_id    treatment    batch</span></span>
-<span id="cb13-56"><a href="#cb13-56" tabindex="-1"></a><span class="in">sample1      control      A</span></span>
-<span id="cb13-57"><a href="#cb13-57" tabindex="-1"></a><span class="in">sample2      treated      A</span></span>
-<span id="cb13-58"><a href="#cb13-58" tabindex="-1"></a><span class="in">sample3      treated      B</span></span>
-<span id="cb13-59"><a href="#cb13-59" tabindex="-1"></a><span class="in">```</span></span>
-<span id="cb13-60"><a href="#cb13-60" tabindex="-1"></a></span>
-<span id="cb13-61"><a href="#cb13-61" tabindex="-1"></a><span class="fu">### Output Files</span></span>
-<span id="cb13-62"><a href="#cb13-62" tabindex="-1"></a></span>
-<span id="cb13-63"><a href="#cb13-63" tabindex="-1"></a><span class="pp">|</span> File <span class="pp">|</span> Description <span class="pp">|</span></span>
-<span id="cb13-64"><a href="#cb13-64" tabindex="-1"></a><span class="pp">|------|-------------|</span></span>
-<span id="cb13-65"><a href="#cb13-65" tabindex="-1"></a><span class="pp">|</span> <span class="in">`pca_scores.tsv`</span> <span class="pp">|</span> PCA scores merged with sample metadata <span class="pp">|</span></span>
-<span id="cb13-66"><a href="#cb13-66" tabindex="-1"></a><span class="pp">|</span> <span class="in">`pca_variance.tsv`</span> <span class="pp">|</span> Variance explained by each PC <span class="pp">|</span></span>
-<span id="cb13-67"><a href="#cb13-67" tabindex="-1"></a><span class="pp">|</span> <span class="in">`pca_plot.png`</span> <span class="pp">|</span> PCA scatter plot (if <span class="in">`--color-by`</span> specified) <span class="pp">|</span></span>
-<span id="cb13-68"><a href="#cb13-68" tabindex="-1"></a></span>
-<span id="cb13-69"><a href="#cb13-69" tabindex="-1"></a><span class="fu">### Full Options</span></span>
-<span id="cb13-70"><a href="#cb13-70" tabindex="-1"></a></span>
-<span id="cb13-71"><a href="#cb13-71" tabindex="-1"></a><span class="in">```</span></span>
-<span id="cb13-72"><a href="#cb13-72" tabindex="-1"></a><span class="in">ADS8192 pca --help</span></span>
-<span id="cb13-73"><a href="#cb13-73" tabindex="-1"></a><span class="in">```</span></span>
-<span id="cb13-74"><a href="#cb13-74" tabindex="-1"></a></span>
-<span id="cb13-75"><a href="#cb13-75" tabindex="-1"></a><span class="fu">## Pipeline Integration</span></span>
-<span id="cb13-76"><a href="#cb13-76" tabindex="-1"></a></span>
-<span id="cb13-77"><a href="#cb13-77" tabindex="-1"></a><span class="fu">### Snakemake</span></span>
-<span id="cb13-78"><a href="#cb13-78" tabindex="-1"></a></span>
-<span id="cb13-79"><a href="#cb13-79" tabindex="-1"></a><span class="in">```python</span></span>
-<span id="cb13-80"><a href="#cb13-80" tabindex="-1"></a>rule pca:</span>
-<span id="cb13-81"><a href="#cb13-81" tabindex="-1"></a>    <span class="bu">input</span>:</span>
-<span id="cb13-82"><a href="#cb13-82" tabindex="-1"></a>        counts <span class="op">=</span> <span class="st">"data/</span><span class="sc">{sample}</span><span class="st">/counts.tsv"</span>,</span>
-<span id="cb13-83"><a href="#cb13-83" tabindex="-1"></a>        meta <span class="op">=</span> <span class="st">"data/</span><span class="sc">{sample}</span><span class="st">/meta.tsv"</span></span>
-<span id="cb13-84"><a href="#cb13-84" tabindex="-1"></a>    output:</span>
-<span id="cb13-85"><a href="#cb13-85" tabindex="-1"></a>        directory(<span class="st">"results/</span><span class="sc">{sample}</span><span class="st">/pca/"</span>)</span>
-<span id="cb13-86"><a href="#cb13-86" tabindex="-1"></a>    shell:</span>
-<span id="cb13-87"><a href="#cb13-87" tabindex="-1"></a>        <span class="co">"""</span></span>
-<span id="cb13-88"><a href="#cb13-88" tabindex="-1"></a><span class="co">        ADS8192 pca </span><span class="ch">\</span></span>
-<span id="cb13-89"><a href="#cb13-89" tabindex="-1"></a><span class="co">            --counts {input.counts} </span><span class="ch">\</span></span>
-<span id="cb13-90"><a href="#cb13-90" tabindex="-1"></a><span class="co">            --meta {input.meta} </span><span class="ch">\</span></span>
-<span id="cb13-91"><a href="#cb13-91" tabindex="-1"></a><span class="co">            --output {output}</span></span>
-<span id="cb13-92"><a href="#cb13-92" tabindex="-1"></a><span class="co">        """</span></span>
-<span id="cb13-93"><a href="#cb13-93" tabindex="-1"></a><span class="in">```</span></span>
-<span id="cb13-94"><a href="#cb13-94" tabindex="-1"></a></span>
-<span id="cb13-95"><a href="#cb13-95" tabindex="-1"></a><span class="fu">### Bash Loop</span></span>
-<span id="cb13-96"><a href="#cb13-96" tabindex="-1"></a></span>
-<span id="cb13-97"><a href="#cb13-97" tabindex="-1"></a><span class="in">```bash</span></span>
-<span id="cb13-98"><a href="#cb13-98" tabindex="-1"></a><span class="cf">for</span> dataset <span class="kw">in</span> data/<span class="pp">*</span><span class="kw">;</span> <span class="cf">do</span></span>
-<span id="cb13-99"><a href="#cb13-99" tabindex="-1"></a>    <span class="va">name</span><span class="op">=</span><span class="va">$(</span><span class="fu">basename</span> <span class="st">"</span><span class="va">$dataset</span><span class="st">"</span><span class="va">)</span></span>
-<span id="cb13-100"><a href="#cb13-100" tabindex="-1"></a>    <span class="ex">ADS8192</span> pca <span class="dt">\</span></span>
-<span id="cb13-101"><a href="#cb13-101" tabindex="-1"></a>        <span class="at">--counts</span> <span class="st">"</span><span class="va">$dataset</span><span class="st">/counts.tsv"</span> <span class="dt">\</span></span>
-<span id="cb13-102"><a href="#cb13-102" tabindex="-1"></a>        <span class="at">--meta</span> <span class="st">"</span><span class="va">$dataset</span><span class="st">/meta.tsv"</span> <span class="dt">\</span></span>
-<span id="cb13-103"><a href="#cb13-103" tabindex="-1"></a>        <span class="at">--output</span> <span class="st">"results/</span><span class="va">$name</span><span class="st">/"</span></span>
-<span id="cb13-104"><a href="#cb13-104" tabindex="-1"></a><span class="cf">done</span></span>
-<span id="cb13-105"><a href="#cb13-105" tabindex="-1"></a><span class="in">```</span></span></code></pre></div>
-<hr>
-</div>
-</div>
-<div class="section level2">
-<h2 id="part-4-clean-room-testing">Part 4: Clean Room Testing<a class="anchor" aria-label="anchor" href="#part-4-clean-room-testing"></a>
-</h2>
-<div class="section level3">
-<h3 id="the-importance-of-clean-testing">The Importance of Clean Testing<a class="anchor" aria-label="anchor" href="#the-importance-of-clean-testing"></a>
-</h3>
-<p>During development, <code>devtools::load_all()</code> makes your code
-available. But users install the package — we need to verify that works
-too.</p>
-</div>
-<div class="section level3">
-<h3 id="exercise-a-clean-room-test">Exercise A: Clean Room Test<a class="anchor" aria-label="anchor" href="#exercise-a-clean-room-test"></a>
+<h3 id="exercise-a-clean-room-install">Exercise A: Clean-Room Install<a class="anchor" aria-label="anchor" href="#exercise-a-clean-room-install"></a>
 </h3>
 <div class="section level4">
 <h4 id="step-1-install-from-github">Step 1: Install from GitHub<a class="anchor" aria-label="anchor" href="#step-1-install-from-github"></a>
 </h4>
-<p>In a fresh R session (restart R first!):</p>
-<div class="sourceCode" id="cb14"><pre class="downlit sourceCode r">
+<p>Restart R first so nothing is loaded, then:</p>
+<div class="sourceCode" id="cb8"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="co"># Remove any existing installation</span></span>
 <span><span class="fu"><a href="https://rdrr.io/r/utils/remove.packages.html" class="external-link">remove.packages</a></span><span class="op">(</span><span class="st">"ADS8192"</span><span class="op">)</span></span>
 <span></span>
@@ -479,338 +287,226 @@ too.</p>
 <span><span class="fu">remotes</span><span class="fu">::</span><span class="fu">install_github</span><span class="op">(</span><span class="st">"you/ADS8192"</span><span class="op">)</span></span></code></pre></div>
 </div>
 <div class="section level4">
-<h4 id="step-2-verify-package-works">Step 2: Verify Package Works<a class="anchor" aria-label="anchor" href="#step-2-verify-package-works"></a>
+<h4 id="step-2-verify-the-package-loads">Step 2: Verify the Package Loads<a class="anchor" aria-label="anchor" href="#step-2-verify-the-package-loads"></a>
 </h4>
-<div class="sourceCode" id="cb15"><pre class="downlit sourceCode r">
+<div class="sourceCode" id="cb9"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="kw"><a href="https://rdrr.io/r/base/library.html" class="external-link">library</a></span><span class="op">(</span><span class="va"><a href="https://github.com/St-Jude-MS-ABDS/ADS8192" class="external-link">ADS8192</a></span><span class="op">)</span></span>
 <span></span>
-<span><span class="co"># Test core functions</span></span>
+<span><span class="co"># Core functions</span></span>
 <span><span class="fu"><a href="https://rdrr.io/r/utils/data.html" class="external-link">data</a></span><span class="op">(</span><span class="va">example_se</span><span class="op">)</span></span>
 <span><span class="va">result</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/run_pca.html">run_pca</a></span><span class="op">(</span><span class="va">example_se</span><span class="op">)</span></span>
 <span><span class="fu"><a href="../reference/plot_pca.html">plot_pca</a></span><span class="op">(</span><span class="va">result</span>, color_by <span class="op">=</span> <span class="st">"treatment"</span><span class="op">)</span></span>
 <span></span>
-<span><span class="co"># Test Shiny app launches (close it after)</span></span>
-<span><span class="co"># run_app()</span></span>
-<span></span>
-<span><span class="co"># Install CLI launcher</span></span>
-<span><span class="fu">Rapp</span><span class="fu">::</span><span class="fu"><a href="https://rdrr.io/pkg/Rapp/man/install_pkg_cli_apps.html" class="external-link">install_pkg_cli_apps</a></span><span class="op">(</span><span class="st">"ADS8192"</span><span class="op">)</span></span></code></pre></div>
+<span><span class="co"># Install launchers</span></span>
+<span><span class="fu">ADS8192</span><span class="fu">::</span><span class="fu">install_ADS8192_cli</span><span class="op">(</span><span class="op">)</span></span></code></pre></div>
 </div>
 <div class="section level4">
-<h4 id="cli-script-namespace-and-trailing-newline">CLI Script: Namespace and Trailing Newline<a class="anchor" aria-label="anchor" href="#cli-script-namespace-and-trailing-newline"></a>
+<h4 id="step-3-run-the-cli-from-a-terminal">Step 3: Run the CLI from a Terminal<a class="anchor" aria-label="anchor" href="#step-3-run-the-cli-from-a-terminal"></a>
 </h4>
-<p>Two common issues when testing the installed CLI for the first
-time:</p>
-<p><strong>Namespace issues:</strong> Even though
-<code><a href="https://github.com/St-Jude-MS-ABDS/ADS8192" class="external-link">library(ADS8192)</a></code> loads the package, some base R functions
-may not be found if the search path is not fully set up in the Rapp
-environment. Always use explicit namespacing in your CLI script:</p>
-<div class="sourceCode" id="cb16"><pre class="downlit sourceCode r">
-<code class="sourceCode R"><span><span class="co"># In exec/ADS8192, load packages explicitly at the top</span></span>
-<span><span class="fu"><a href="https://rdrr.io/r/base/message.html" class="external-link">suppressPackageStartupMessages</a></span><span class="op">(</span><span class="op">{</span></span>
-<span>    <span class="kw"><a href="https://rdrr.io/r/base/library.html" class="external-link">library</a></span><span class="op">(</span><span class="va"><a href="https://github.com/St-Jude-MS-ABDS/ADS8192" class="external-link">ADS8192</a></span><span class="op">)</span></span>
-<span>    <span class="kw"><a href="https://rdrr.io/r/base/library.html" class="external-link">library</a></span><span class="op">(</span><span class="va">utils</span><span class="op">)</span>    <span class="co"># for write.table, read.table</span></span>
-<span>    <span class="kw"><a href="https://rdrr.io/r/base/library.html" class="external-link">library</a></span><span class="op">(</span><span class="va">stats</span><span class="op">)</span>    <span class="co"># for stats::var (used internally)</span></span>
-<span><span class="op">}</span><span class="op">)</span></span>
-<span></span>
-<span><span class="co"># And use fully-qualified calls for base functions where needed:</span></span>
-<span><span class="fu">utils</span><span class="fu">::</span><span class="fu"><a href="https://rdrr.io/r/utils/write.table.html" class="external-link">write.table</a></span><span class="op">(</span><span class="va">result</span><span class="op">$</span><span class="va">scores</span>, <span class="va">scores_file</span>, sep <span class="op">=</span> <span class="st">"\t"</span>,</span>
-<span>                   row.names <span class="op">=</span> <span class="cn">FALSE</span>, quote <span class="op">=</span> <span class="cn">FALSE</span><span class="op">)</span></span></code></pre></div>
-<p><strong>Trailing newline:</strong> Rapp requires the
-<code>exec/ADS8192</code> file to end with a blank line. If you see a
-parsing error on the last command, add an extra newline at the end of
-the file.</p>
-</div>
-<div class="section level4">
-<h4 id="step-3-test-cli-from-terminal">Step 3: Test CLI from Terminal<a class="anchor" aria-label="anchor" href="#step-3-test-cli-from-terminal"></a>
-</h4>
-<p>First, create the test input files using R (this avoids tab/spacing
-issues with shell heredocs):</p>
-<div class="sourceCode" id="cb17"><pre class="downlit sourceCode r">
-<code class="sourceCode R"><span><span class="co"># Create test inputs using R (cross-platform reliable)</span></span>
-<span><span class="fu"><a href="https://rdrr.io/r/base/files2.html" class="external-link">dir.create</a></span><span class="op">(</span><span class="st">"/tmp/cli_test"</span>, recursive <span class="op">=</span> <span class="cn">TRUE</span>, showWarnings <span class="op">=</span> <span class="cn">FALSE</span><span class="op">)</span></span>
+<p>Create test inputs from R (cross-platform and avoids tab/spacing
+surprises):</p>
+<div class="sourceCode" id="cb10"><pre class="downlit sourceCode r">
+<code class="sourceCode R"><span><span class="fu"><a href="https://rdrr.io/r/base/files2.html" class="external-link">dir.create</a></span><span class="op">(</span><span class="st">"cli_test"</span>, recursive <span class="op">=</span> <span class="cn">TRUE</span>, showWarnings <span class="op">=</span> <span class="cn">FALSE</span><span class="op">)</span></span>
 <span></span>
 <span><span class="va">counts</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/base/data.frame.html" class="external-link">data.frame</a></span><span class="op">(</span></span>
-<span>  sample1 <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="fl">100L</span>, <span class="fl">50L</span>, <span class="fl">200L</span>, <span class="fl">30L</span>, <span class="fl">80L</span><span class="op">)</span>,</span>
-<span>  sample2 <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="fl">150L</span>, <span class="fl">75L</span>, <span class="fl">180L</span>, <span class="fl">45L</span>, <span class="fl">100L</span><span class="op">)</span>,</span>
-<span>  sample3 <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="fl">120L</span>, <span class="fl">60L</span>, <span class="fl">210L</span>, <span class="fl">35L</span>, <span class="fl">90L</span><span class="op">)</span>,</span>
-<span>  sample4 <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="fl">180L</span>, <span class="fl">90L</span>, <span class="fl">240L</span>, <span class="fl">55L</span>, <span class="fl">110L</span><span class="op">)</span>,</span>
-<span>  row.names <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/paste.html" class="external-link">paste0</a></span><span class="op">(</span><span class="st">"gene"</span>, <span class="fl">1</span><span class="op">:</span><span class="fl">5</span><span class="op">)</span></span>
+<span>    sample1 <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="fl">100L</span>, <span class="fl">50L</span>, <span class="fl">200L</span>, <span class="fl">30L</span>, <span class="fl">80L</span><span class="op">)</span>,</span>
+<span>    sample2 <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="fl">150L</span>, <span class="fl">75L</span>, <span class="fl">180L</span>, <span class="fl">45L</span>, <span class="fl">100L</span><span class="op">)</span>,</span>
+<span>    sample3 <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="fl">120L</span>, <span class="fl">60L</span>, <span class="fl">210L</span>, <span class="fl">35L</span>, <span class="fl">90L</span><span class="op">)</span>,</span>
+<span>    sample4 <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="fl">180L</span>, <span class="fl">90L</span>, <span class="fl">240L</span>, <span class="fl">55L</span>, <span class="fl">110L</span><span class="op">)</span>,</span>
+<span>    row.names <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/paste.html" class="external-link">paste0</a></span><span class="op">(</span><span class="st">"gene"</span>, <span class="fl">1</span><span class="op">:</span><span class="fl">5</span><span class="op">)</span></span>
 <span><span class="op">)</span></span>
-<span><span class="fu">utils</span><span class="fu">::</span><span class="fu"><a href="https://rdrr.io/r/utils/write.table.html" class="external-link">write.table</a></span><span class="op">(</span><span class="va">counts</span>, <span class="st">"/tmp/cli_test/counts.tsv"</span>,</span>
+<span><span class="fu">utils</span><span class="fu">::</span><span class="fu"><a href="https://rdrr.io/r/utils/write.table.html" class="external-link">write.table</a></span><span class="op">(</span><span class="va">counts</span>, <span class="st">"cli_test/counts.tsv"</span>,</span>
 <span>                   sep <span class="op">=</span> <span class="st">"\t"</span>, quote <span class="op">=</span> <span class="cn">FALSE</span><span class="op">)</span></span>
 <span></span>
 <span><span class="va">meta</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/base/data.frame.html" class="external-link">data.frame</a></span><span class="op">(</span></span>
-<span>  treatment <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="st">"control"</span>, <span class="st">"control"</span>, <span class="st">"treated"</span>, <span class="st">"treated"</span><span class="op">)</span>,</span>
-<span>  batch     <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="st">"A"</span>, <span class="st">"B"</span>, <span class="st">"A"</span>, <span class="st">"B"</span><span class="op">)</span>,</span>
-<span>  row.names <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/paste.html" class="external-link">paste0</a></span><span class="op">(</span><span class="st">"sample"</span>, <span class="fl">1</span><span class="op">:</span><span class="fl">4</span><span class="op">)</span></span>
+<span>    treatment <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="st">"control"</span>, <span class="st">"control"</span>, <span class="st">"treated"</span>, <span class="st">"treated"</span><span class="op">)</span>,</span>
+<span>    batch     <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="st">"A"</span>, <span class="st">"B"</span>, <span class="st">"A"</span>, <span class="st">"B"</span><span class="op">)</span>,</span>
+<span>    row.names <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/paste.html" class="external-link">paste0</a></span><span class="op">(</span><span class="st">"sample"</span>, <span class="fl">1</span><span class="op">:</span><span class="fl">4</span><span class="op">)</span></span>
 <span><span class="op">)</span></span>
-<span><span class="fu">utils</span><span class="fu">::</span><span class="fu"><a href="https://rdrr.io/r/utils/write.table.html" class="external-link">write.table</a></span><span class="op">(</span><span class="va">meta</span>, <span class="st">"/tmp/cli_test/meta.tsv"</span>,</span>
+<span><span class="fu">utils</span><span class="fu">::</span><span class="fu"><a href="https://rdrr.io/r/utils/write.table.html" class="external-link">write.table</a></span><span class="op">(</span><span class="va">meta</span>, <span class="st">"cli_test/meta.tsv"</span>,</span>
 <span>                   sep <span class="op">=</span> <span class="st">"\t"</span>, quote <span class="op">=</span> <span class="cn">FALSE</span><span class="op">)</span></span></code></pre></div>
-<p>Then run the CLI from the terminal:</p>
-<div class="sourceCode" id="cb18"><pre class="sourceCode bash"><code class="sourceCode bash"><span id="cb18-1"><a href="#cb18-1" tabindex="-1"></a><span class="co"># Run CLI</span></span>
-<span id="cb18-2"><a href="#cb18-2" tabindex="-1"></a><span class="ex">ADS8192</span> pca <span class="dt">\</span></span>
-<span id="cb18-3"><a href="#cb18-3" tabindex="-1"></a>    <span class="at">--counts</span> /tmp/cli_test/counts.tsv <span class="dt">\</span></span>
-<span id="cb18-4"><a href="#cb18-4" tabindex="-1"></a>    <span class="at">--meta</span> /tmp/cli_test/meta.tsv <span class="dt">\</span></span>
-<span id="cb18-5"><a href="#cb18-5" tabindex="-1"></a>    <span class="at">--output</span> /tmp/cli_test/output/ <span class="dt">\</span></span>
-<span id="cb18-6"><a href="#cb18-6" tabindex="-1"></a>    <span class="at">--n-top</span> 5</span>
-<span id="cb18-7"><a href="#cb18-7" tabindex="-1"></a></span>
-<span id="cb18-8"><a href="#cb18-8" tabindex="-1"></a><span class="co"># Check outputs</span></span>
-<span id="cb18-9"><a href="#cb18-9" tabindex="-1"></a><span class="fu">cat</span> /tmp/cli_test/output/pca_scores.tsv</span>
-<span id="cb18-10"><a href="#cb18-10" tabindex="-1"></a><span class="fu">cat</span> /tmp/cli_test/output/pca_variance.tsv</span></code></pre></div>
+<p>Then from a terminal:</p>
+<div class="sourceCode" id="cb11"><pre class="sourceCode bash"><code class="sourceCode bash"><span id="cb11-1"><a href="#cb11-1" tabindex="-1"></a><span class="ex">ADS8192</span> pca <span class="dt">\</span></span>
+<span id="cb11-2"><a href="#cb11-2" tabindex="-1"></a>    <span class="at">--counts</span> cli_test/counts.tsv <span class="dt">\</span></span>
+<span id="cb11-3"><a href="#cb11-3" tabindex="-1"></a>    <span class="at">--meta</span> cli_test/meta.tsv <span class="dt">\</span></span>
+<span id="cb11-4"><a href="#cb11-4" tabindex="-1"></a>    <span class="at">--output</span> cli_test/output/ <span class="dt">\</span></span>
+<span id="cb11-5"><a href="#cb11-5" tabindex="-1"></a>    <span class="at">--n-top</span> 5</span>
+<span id="cb11-6"><a href="#cb11-6" tabindex="-1"></a></span>
+<span id="cb11-7"><a href="#cb11-7" tabindex="-1"></a><span class="co"># Inspect outputs</span></span>
+<span id="cb11-8"><a href="#cb11-8" tabindex="-1"></a><span class="bu">type</span> cli_test<span class="dt">\o</span>utput<span class="dt">\p</span>ca_scores.tsv</span>
+<span id="cb11-9"><a href="#cb11-9" tabindex="-1"></a><span class="bu">type</span> cli_test<span class="dt">\o</span>utput<span class="dt">\p</span>ca_variance.tsv</span></code></pre></div>
+<p>If the launcher is not yet on <code>PATH</code>, use the
+<code>Rapp exec/ADS8192 ...</code> fallback instead.</p>
+<p><strong>This single end-to-end run — install from GitHub, install
+launcher, run CLI on small inputs — is the core clean-room
+test.</strong> If this passes, a collaborator who follows your README
+has a real chance of getting the same result.</p>
 <hr>
 </div>
 </div>
 </div>
 <div class="section level2">
-<h2 id="part-5-output-parity-testing">Part 5: Output Parity Testing<a class="anchor" aria-label="anchor" href="#part-5-output-parity-testing"></a>
+<h2 id="part-3-output-parity">Part 3: Output Parity<a class="anchor" aria-label="anchor" href="#part-3-output-parity"></a>
 </h2>
+<p>A CLI is supposed to be a thin wrapper. That means: the same inputs
+should produce the same results whether you call <code><a href="../reference/run_pca.html">run_pca()</a></code>
+in R or invoke the CLI.</p>
 <div class="section level3">
-<h3 id="what-is-output-parity">What is Output Parity?<a class="anchor" aria-label="anchor" href="#what-is-output-parity"></a>
+<h3 id="manual-parity-check">Manual Parity Check<a class="anchor" aria-label="anchor" href="#manual-parity-check"></a>
 </h3>
-<p>The CLI should produce the same results as calling the R functions
-directly.</p>
-</div>
-<div class="section level3">
-<h3 id="exercise-b-verify-output-parity">Exercise B: Verify Output Parity<a class="anchor" aria-label="anchor" href="#exercise-b-verify-output-parity"></a>
-</h3>
-<div class="section level4">
-<h4 id="step-1-run-analysis-via-r">Step 1: Run Analysis via R<a class="anchor" aria-label="anchor" href="#step-1-run-analysis-via-r"></a>
-</h4>
-<div class="sourceCode" id="cb19"><pre class="downlit sourceCode r">
+<p>You do not need to write automated parity tests for this class — a
+manual comparison is enough to catch most regressions.</p>
+<p>Run the analysis via R:</p>
+<div class="sourceCode" id="cb12"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="kw"><a href="https://rdrr.io/r/base/library.html" class="external-link">library</a></span><span class="op">(</span><span class="va"><a href="https://github.com/St-Jude-MS-ABDS/ADS8192" class="external-link">ADS8192</a></span><span class="op">)</span></span>
 <span></span>
-<span><span class="co"># Load sample data</span></span>
-<span><span class="va">counts</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/utils/read.table.html" class="external-link">read.table</a></span><span class="op">(</span><span class="st">"/tmp/cli_test/counts.tsv"</span>, header <span class="op">=</span> <span class="cn">TRUE</span>, row.names <span class="op">=</span> <span class="fl">1</span>, sep <span class="op">=</span> <span class="st">"\t"</span><span class="op">)</span></span>
-<span><span class="va">meta</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/utils/read.table.html" class="external-link">read.table</a></span><span class="op">(</span><span class="st">"/tmp/cli_test/meta.tsv"</span>, header <span class="op">=</span> <span class="cn">TRUE</span>, row.names <span class="op">=</span> <span class="fl">1</span>, sep <span class="op">=</span> <span class="st">"\t"</span><span class="op">)</span></span>
+<span><span class="va">counts</span> <span class="op">&lt;-</span> <span class="fu">utils</span><span class="fu">::</span><span class="fu"><a href="https://rdrr.io/r/utils/read.table.html" class="external-link">read.table</a></span><span class="op">(</span><span class="st">"cli_test/counts.tsv"</span>,</span>
+<span>                            header <span class="op">=</span> <span class="cn">TRUE</span>, row.names <span class="op">=</span> <span class="fl">1</span>, sep <span class="op">=</span> <span class="st">"\t"</span><span class="op">)</span></span>
+<span><span class="va">meta</span>   <span class="op">&lt;-</span> <span class="fu">utils</span><span class="fu">::</span><span class="fu"><a href="https://rdrr.io/r/utils/read.table.html" class="external-link">read.table</a></span><span class="op">(</span><span class="st">"cli_test/meta.tsv"</span>,</span>
+<span>                            header <span class="op">=</span> <span class="cn">TRUE</span>, row.names <span class="op">=</span> <span class="fl">1</span>, sep <span class="op">=</span> <span class="st">"\t"</span><span class="op">)</span></span>
 <span></span>
-<span><span class="co"># Create SE and run PCA</span></span>
 <span><span class="va">se</span> <span class="op">&lt;-</span> <span class="fu">SummarizedExperiment</span><span class="fu">::</span><span class="fu"><a href="https://rdrr.io/pkg/SummarizedExperiment/man/SummarizedExperiment-class.html" class="external-link">SummarizedExperiment</a></span><span class="op">(</span></span>
-<span>    assays <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/list.html" class="external-link">list</a></span><span class="op">(</span>counts <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/matrix.html" class="external-link">as.matrix</a></span><span class="op">(</span><span class="va">counts</span><span class="op">)</span><span class="op">)</span>,</span>
+<span>    assays  <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/list.html" class="external-link">list</a></span><span class="op">(</span>counts <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/matrix.html" class="external-link">as.matrix</a></span><span class="op">(</span><span class="va">counts</span><span class="op">)</span><span class="op">)</span>,</span>
 <span>    colData <span class="op">=</span> <span class="va">meta</span></span>
 <span><span class="op">)</span></span>
-<span><span class="va">result</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/run_pca.html">run_pca</a></span><span class="op">(</span><span class="va">se</span>, n_top <span class="op">=</span> <span class="fl">5</span><span class="op">)</span></span>
-<span></span>
-<span><span class="co"># Get scores</span></span>
-<span><span class="va">r_scores</span> <span class="op">&lt;-</span> <span class="va">result</span><span class="op">$</span><span class="va">scores</span></span></code></pre></div>
-</div>
-<div class="section level4">
-<h4 id="step-2-compare-with-cli-output">Step 2: Compare with CLI Output<a class="anchor" aria-label="anchor" href="#step-2-compare-with-cli-output"></a>
-</h4>
-<div class="sourceCode" id="cb20"><pre class="downlit sourceCode r">
-<code class="sourceCode R"><span><span class="co"># Load CLI output</span></span>
-<span><span class="va">cli_scores</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/utils/read.table.html" class="external-link">read.table</a></span><span class="op">(</span></span>
-<span>    <span class="st">"/tmp/cli_test/output/pca_scores.tsv"</span>,</span>
-<span>    header <span class="op">=</span> <span class="cn">TRUE</span>,</span>
-<span>    sep <span class="op">=</span> <span class="st">"\t"</span></span>
+<span><span class="va">r_result</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/run_pca.html">run_pca</a></span><span class="op">(</span><span class="va">se</span>, n_top <span class="op">=</span> <span class="fl">5</span><span class="op">)</span></span>
+<span><span class="va">r_scores</span> <span class="op">&lt;-</span> <span class="va">r_result</span><span class="op">$</span><span class="va">scores</span></span></code></pre></div>
+<p>Then load the CLI output and eyeball it:</p>
+<div class="sourceCode" id="cb13"><pre class="downlit sourceCode r">
+<code class="sourceCode R"><span><span class="va">cli_scores</span> <span class="op">&lt;-</span> <span class="fu">utils</span><span class="fu">::</span><span class="fu"><a href="https://rdrr.io/r/utils/read.table.html" class="external-link">read.table</a></span><span class="op">(</span></span>
+<span>    <span class="st">"cli_test/output/pca_scores.tsv"</span>,</span>
+<span>    header <span class="op">=</span> <span class="cn">TRUE</span>, sep <span class="op">=</span> <span class="st">"\t"</span></span>
 <span><span class="op">)</span></span>
 <span></span>
-<span><span class="co"># Compare structure</span></span>
+<span><span class="co"># Column names should match</span></span>
 <span><span class="fu"><a href="https://rdrr.io/r/base/print.html" class="external-link">print</a></span><span class="op">(</span><span class="fu"><a href="https://rdrr.io/r/base/names.html" class="external-link">names</a></span><span class="op">(</span><span class="va">r_scores</span><span class="op">)</span><span class="op">)</span></span>
 <span><span class="fu"><a href="https://rdrr.io/r/base/print.html" class="external-link">print</a></span><span class="op">(</span><span class="fu"><a href="https://rdrr.io/r/base/names.html" class="external-link">names</a></span><span class="op">(</span><span class="va">cli_scores</span><span class="op">)</span><span class="op">)</span></span>
 <span></span>
-<span><span class="co"># Compare values (allowing for floating point differences)</span></span>
+<span><span class="co"># Values should match within floating-point tolerance</span></span>
 <span><span class="fu"><a href="https://rdrr.io/r/base/all.equal.html" class="external-link">all.equal</a></span><span class="op">(</span><span class="va">r_scores</span><span class="op">$</span><span class="va">PC1</span>, <span class="va">cli_scores</span><span class="op">$</span><span class="va">PC1</span><span class="op">)</span></span>
 <span><span class="fu"><a href="https://rdrr.io/r/base/all.equal.html" class="external-link">all.equal</a></span><span class="op">(</span><span class="va">r_scores</span><span class="op">$</span><span class="va">PC2</span>, <span class="va">cli_scores</span><span class="op">$</span><span class="va">PC2</span><span class="op">)</span></span></code></pre></div>
-</div>
+<p>If <code><a href="https://rdrr.io/r/base/all.equal.html" class="external-link">all.equal()</a></code> prints <code>TRUE</code> and the column
+names agree, parity is fine.</p>
 </div>
 <div class="section level3">
-<h3 id="adding-an-automated-test">Adding an Automated Test<a class="anchor" aria-label="anchor" href="#adding-an-automated-test"></a>
+<h3 id="what-an-automated-test-would-look-like">What an Automated Test Would Look Like<a class="anchor" aria-label="anchor" href="#what-an-automated-test-would-look-like"></a>
 </h3>
-<p>Create <code>tests/testthat/test-cli.R</code>:</p>
-<div class="sourceCode" id="cb21"><pre class="downlit sourceCode r">
-<code class="sourceCode R"><span><span class="co"># tests/testthat/test-cli.R — CLI output parity test</span></span>
-<span><span class="fu"><a href="https://testthat.r-lib.org/reference/test_that.html" class="external-link">test_that</a></span><span class="op">(</span><span class="st">"CLI produces same output as R functions"</span>, <span class="op">{</span></span>
-<span>    <span class="fu"><a href="https://testthat.r-lib.org/reference/skip.html" class="external-link">skip_on_cran</a></span><span class="op">(</span><span class="op">)</span>  <span class="co"># CLI tests may be slow</span></span>
-<span></span>
-<span>    <span class="co"># Create temp files</span></span>
-<span>    <span class="va">tmp_dir</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/base/tempfile.html" class="external-link">tempdir</a></span><span class="op">(</span><span class="op">)</span></span>
-<span>    <span class="va">counts_file</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/base/file.path.html" class="external-link">file.path</a></span><span class="op">(</span><span class="va">tmp_dir</span>, <span class="st">"counts.tsv"</span><span class="op">)</span></span>
-<span>    <span class="va">meta_file</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/base/file.path.html" class="external-link">file.path</a></span><span class="op">(</span><span class="va">tmp_dir</span>, <span class="st">"meta.tsv"</span><span class="op">)</span></span>
-<span>    <span class="va">output_dir</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/base/file.path.html" class="external-link">file.path</a></span><span class="op">(</span><span class="va">tmp_dir</span>, <span class="st">"cli_output"</span><span class="op">)</span></span>
-<span></span>
-<span>    <span class="co"># Create test data</span></span>
-<span>    <span class="fu"><a href="https://rdrr.io/r/utils/data.html" class="external-link">data</a></span><span class="op">(</span><span class="va">example_se</span>, package <span class="op">=</span> <span class="st">"ADS8192"</span><span class="op">)</span></span>
-<span>    <span class="va">counts</span> <span class="op">&lt;-</span> <span class="fu">SummarizedExperiment</span><span class="fu">::</span><span class="fu"><a href="https://rdrr.io/pkg/SummarizedExperiment/man/SummarizedExperiment-class.html" class="external-link">assay</a></span><span class="op">(</span><span class="va">example_se</span>, <span class="st">"counts"</span><span class="op">)</span></span>
-<span>    <span class="va">meta</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/base/as.data.frame.html" class="external-link">as.data.frame</a></span><span class="op">(</span><span class="fu">SummarizedExperiment</span><span class="fu">::</span><span class="fu"><a href="https://rdrr.io/pkg/SummarizedExperiment/man/SummarizedExperiment-class.html" class="external-link">colData</a></span><span class="op">(</span><span class="va">example_se</span><span class="op">)</span><span class="op">)</span></span>
-<span></span>
-<span>    <span class="fu"><a href="https://rdrr.io/r/utils/write.table.html" class="external-link">write.table</a></span><span class="op">(</span><span class="va">counts</span>, <span class="va">counts_file</span>, sep <span class="op">=</span> <span class="st">"\t"</span>, quote <span class="op">=</span> <span class="cn">FALSE</span><span class="op">)</span></span>
-<span>    <span class="fu"><a href="https://rdrr.io/r/utils/write.table.html" class="external-link">write.table</a></span><span class="op">(</span><span class="va">meta</span>, <span class="va">meta_file</span>, sep <span class="op">=</span> <span class="st">"\t"</span>, quote <span class="op">=</span> <span class="cn">FALSE</span><span class="op">)</span></span>
-<span></span>
-<span>    <span class="co"># Run via R</span></span>
-<span>    <span class="va">se</span> <span class="op">&lt;-</span> <span class="fu">SummarizedExperiment</span><span class="fu">::</span><span class="fu"><a href="https://rdrr.io/pkg/SummarizedExperiment/man/SummarizedExperiment-class.html" class="external-link">SummarizedExperiment</a></span><span class="op">(</span></span>
-<span>        assays <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/list.html" class="external-link">list</a></span><span class="op">(</span>counts <span class="op">=</span> <span class="va">counts</span><span class="op">)</span>,</span>
-<span>        colData <span class="op">=</span> <span class="va">meta</span></span>
-<span>    <span class="op">)</span></span>
-<span>    <span class="va">r_result</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/run_pca.html">run_pca</a></span><span class="op">(</span><span class="va">se</span>, n_top <span class="op">=</span> <span class="fl">50</span><span class="op">)</span></span>
-<span></span>
-<span>    <span class="co"># Run via CLI</span></span>
-<span>    <span class="fu">Rapp</span><span class="fu">::</span><span class="fu"><a href="https://rdrr.io/pkg/Rapp/man/run.html" class="external-link">run</a></span><span class="op">(</span><span class="fu"><a href="https://rdrr.io/r/base/system.file.html" class="external-link">system.file</a></span><span class="op">(</span><span class="st">"exec"</span>, <span class="st">"ADS8192"</span>, package <span class="op">=</span> <span class="st">"ADS8192"</span><span class="op">)</span>, <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span></span>
-<span>        <span class="st">"pca"</span>,</span>
-<span>        <span class="st">"--counts"</span>, <span class="va">counts_file</span>,</span>
-<span>        <span class="st">"--meta"</span>, <span class="va">meta_file</span>,</span>
-<span>        <span class="st">"--output"</span>, <span class="va">output_dir</span>,</span>
-<span>        <span class="st">"--n-top"</span>, <span class="st">"50"</span></span>
-<span>    <span class="op">)</span><span class="op">)</span></span>
-<span></span>
-<span>    <span class="co"># Load CLI output</span></span>
-<span>    <span class="va">cli_scores</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/utils/read.table.html" class="external-link">read.table</a></span><span class="op">(</span></span>
-<span>        <span class="fu"><a href="https://rdrr.io/r/base/file.path.html" class="external-link">file.path</a></span><span class="op">(</span><span class="va">output_dir</span>, <span class="st">"pca_scores.tsv"</span><span class="op">)</span>,</span>
-<span>        header <span class="op">=</span> <span class="cn">TRUE</span>,</span>
-<span>        sep <span class="op">=</span> <span class="st">"\t"</span></span>
-<span>    <span class="op">)</span></span>
-<span></span>
-<span>    <span class="co"># Compare dimensions</span></span>
-<span>    <span class="fu"><a href="https://testthat.r-lib.org/reference/equality-expectations.html" class="external-link">expect_equal</a></span><span class="op">(</span><span class="fu"><a href="https://rdrr.io/r/base/nrow.html" class="external-link">nrow</a></span><span class="op">(</span><span class="va">cli_scores</span><span class="op">)</span>, <span class="fu"><a href="https://rdrr.io/r/base/nrow.html" class="external-link">nrow</a></span><span class="op">(</span><span class="va">r_result</span><span class="op">$</span><span class="va">scores</span><span class="op">)</span><span class="op">)</span></span>
-<span>    <span class="fu"><a href="https://testthat.r-lib.org/reference/equality-expectations.html" class="external-link">expect_equal</a></span><span class="op">(</span><span class="fu"><a href="https://rdrr.io/r/base/nrow.html" class="external-link">ncol</a></span><span class="op">(</span><span class="va">cli_scores</span><span class="op">)</span>, <span class="fu"><a href="https://rdrr.io/r/base/nrow.html" class="external-link">ncol</a></span><span class="op">(</span><span class="va">r_result</span><span class="op">$</span><span class="va">scores</span><span class="op">)</span><span class="op">)</span></span>
-<span></span>
-<span>    <span class="co"># Compare PC values (within tolerance)</span></span>
+<p><strong>You do not need to implement this.</strong> Included only so
+you know the shape if you decide to add one later:</p>
+<div class="sourceCode" id="cb14"><pre class="downlit sourceCode r">
+<code class="sourceCode R"><span><span class="fu"><a href="https://testthat.r-lib.org/reference/test_that.html" class="external-link">test_that</a></span><span class="op">(</span><span class="st">"CLI produces same output as R functions"</span>, <span class="op">{</span></span>
+<span>    <span class="fu"><a href="https://testthat.r-lib.org/reference/skip.html" class="external-link">skip_on_cran</a></span><span class="op">(</span><span class="op">)</span></span>
+<span>    <span class="co"># ... write test counts/meta to tempfiles, call Rapp::run() on the CLI,</span></span>
+<span>    <span class="co">#     read the CLI output back in, then:</span></span>
 <span>    <span class="fu"><a href="https://testthat.r-lib.org/reference/equality-expectations.html" class="external-link">expect_equal</a></span><span class="op">(</span><span class="va">cli_scores</span><span class="op">$</span><span class="va">PC1</span>, <span class="va">r_result</span><span class="op">$</span><span class="va">scores</span><span class="op">$</span><span class="va">PC1</span>, tolerance <span class="op">=</span> <span class="fl">1e-10</span><span class="op">)</span></span>
-<span></span>
-<span>    <span class="co"># Cleanup</span></span>
-<span>    <span class="fu"><a href="https://rdrr.io/r/base/unlink.html" class="external-link">unlink</a></span><span class="op">(</span><span class="va">output_dir</span>, recursive <span class="op">=</span> <span class="cn">TRUE</span><span class="op">)</span></span>
 <span><span class="op">}</span><span class="op">)</span></span></code></pre></div>
+<p>Automated parity tests are valuable on long-lived projects where many
+hands touch the code. For this course, a manual comparison after any
+substantive change is enough.</p>
 <hr>
 </div>
 </div>
 <div class="section level2">
-<h2 id="part-6-release-checklist">Part 6: Release Checklist<a class="anchor" aria-label="anchor" href="#part-6-release-checklist"></a>
+<h2 id="part-4-release-discipline">Part 4: Release Discipline<a class="anchor" aria-label="anchor" href="#part-4-release-discipline"></a>
+</h2>
+<p>Before you tag a release, run through a short checklist. The goal is
+to catch problems in the last calm moment before users start relying on
+a version number.</p>
+<div class="sourceCode" id="cb15"><pre class="downlit sourceCode r">
+<code class="sourceCode R"><span><span class="fu">devtools</span><span class="fu">::</span><span class="fu">check</span><span class="op">(</span><span class="op">)</span>          <span class="co"># R CMD check, all clean</span></span>
+<span><span class="fu">devtools</span><span class="fu">::</span><span class="fu">test</span><span class="op">(</span><span class="op">)</span>           <span class="co"># tests pass</span></span>
+<span><span class="fu">pkgdown</span><span class="fu">::</span><span class="fu"><a href="https://pkgdown.r-lib.org/reference/build_site.html" class="external-link">build_site</a></span><span class="op">(</span><span class="op">)</span>      <span class="co"># docs build</span></span>
+<span><span class="fu">devtools</span><span class="fu">::</span><span class="fu">build_readme</span><span class="op">(</span><span class="op">)</span>   <span class="co"># README re-knits</span></span>
+<span><span class="fu">usethis</span><span class="fu">::</span><span class="fu">use_version</span><span class="op">(</span><span class="op">)</span>     <span class="co"># bump version + NEWS.md stub</span></span></code></pre></div>
+<p>Then:</p>
+<div class="sourceCode" id="cb16"><pre class="sourceCode bash"><code class="sourceCode bash"><span id="cb16-1"><a href="#cb16-1" tabindex="-1"></a><span class="fu">git</span> push</span>
+<span id="cb16-2"><a href="#cb16-2" tabindex="-1"></a><span class="fu">git</span> tag <span class="at">-a</span> v0.1.0 <span class="at">-m</span> <span class="st">"First release with CLI support"</span></span>
+<span id="cb16-3"><a href="#cb16-3" tabindex="-1"></a><span class="fu">git</span> push origin v0.1.0</span>
+<span id="cb16-4"><a href="#cb16-4" tabindex="-1"></a><span class="ex">gh</span> release create v0.1.0</span></code></pre></div>
+<p>Write short release notes that explicitly list <strong>what is new,
+what changed, and what (if anything) broke</strong>. Pipeline users scan
+release notes for flag and output-name changes before they upgrade.</p>
+<hr>
+</div>
+<div class="section level2">
+<h2 id="summary">Summary<a class="anchor" aria-label="anchor" href="#summary"></a>
+</h2>
+<p>Today we:</p>
+<ol style="list-style-type: decimal">
+<li>Confirmed the packaged <code>exec/</code> entry point installs with
+the rest of the package</li>
+<li>Installed launchers via <code>install_ADS8192_cli()</code> and
+verified discoverability on <code>PATH</code>
+</li>
+<li>Added brief CLI documentation to the README and Getting Started
+vignette</li>
+<li>Performed a clean-room install-from-GitHub test</li>
+<li>Manually verified output parity between R and CLI</li>
+<li>Ran through a short pre-release checklist</li>
+</ol>
+<div class="section level3">
+<h3 id="package-milestone">Package Milestone<a class="anchor" aria-label="anchor" href="#package-milestone"></a>
+</h3>
+<p><strong>The ADS8192 package installs from GitHub and exposes a
+working CLI end to end — install, launcher, run, output — in a clean R
+session.</strong></p>
+<hr>
+</div>
+<div class="section level3">
+<h3 id="debrief-reflection">Debrief &amp; Reflection<a class="anchor" aria-label="anchor" href="#debrief-reflection"></a>
+</h3>
+<p>Before moving on, make sure you can answer:</p>
+<ul>
+<li>Why is installation quality part of the user contract for automation
+tools?</li>
+<li>Which parts of your CLI output now count as backward-compatibility
+commitments?</li>
+<li>How do clean-room testing and output parity checks protect users
+from hidden assumptions in your development environment?</li>
+</ul>
+<hr>
+</div>
+</div>
+<div class="section level2">
+<h2 id="after-class-tasks">After-Class Tasks<a class="anchor" aria-label="anchor" href="#after-class-tasks"></a>
 </h2>
 <div class="section level3">
-<h3 id="pre-release-checks">Pre-Release Checks<a class="anchor" aria-label="anchor" href="#pre-release-checks"></a>
+<h3 id="micro-task-1-r-cmd-check">Micro-task 1: R CMD check<a class="anchor" aria-label="anchor" href="#micro-task-1-r-cmd-check"></a>
 </h3>
-<p>Before tagging a release:</p>
-<div class="sourceCode" id="cb22"><pre class="downlit sourceCode r">
-<code class="sourceCode R"><span><span class="co"># Run all checks</span></span>
-<span><span class="fu">devtools</span><span class="fu">::</span><span class="fu">check</span><span class="op">(</span><span class="op">)</span></span>
-<span></span>
-<span><span class="co"># Run tests</span></span>
-<span><span class="fu">devtools</span><span class="fu">::</span><span class="fu">test</span><span class="op">(</span><span class="op">)</span></span>
-<span></span>
-<span><span class="co"># Build documentation</span></span>
-<span><span class="fu">pkgdown</span><span class="fu">::</span><span class="fu"><a href="https://pkgdown.r-lib.org/reference/build_site.html" class="external-link">build_site</a></span><span class="op">(</span><span class="op">)</span></span>
-<span></span>
-<span><span class="co"># Verify README renders</span></span>
-<span><span class="fu">devtools</span><span class="fu">::</span><span class="fu">build_readme</span><span class="op">(</span><span class="op">)</span></span></code></pre></div>
+<p>Verify your package passes <code>devtools::check()</code> cleanly and
+that CI is green.</p>
 </div>
 <div class="section level3">
-<h3 id="bump-version">Bump Version<a class="anchor" aria-label="anchor" href="#bump-version"></a>
+<h3 id="micro-task-2-reproducibility-note-in-readme">Micro-task 2: Reproducibility Note in README<a class="anchor" aria-label="anchor" href="#micro-task-2-reproducibility-note-in-readme"></a>
 </h3>
-<div class="sourceCode" id="cb23"><pre class="downlit sourceCode r">
-<code class="sourceCode R"><span><span class="co"># Use usethis to update version</span></span>
-<span><span class="fu">usethis</span><span class="fu">::</span><span class="fu">use_version</span><span class="op">(</span><span class="st">"minor"</span><span class="op">)</span>  <span class="co"># 0.0.1 -&gt; 0.1.0</span></span></code></pre></div>
-</div>
-<div class="section level3">
-<h3 id="create-github-release">Create GitHub Release<a class="anchor" aria-label="anchor" href="#create-github-release"></a>
-</h3>
-<div class="sourceCode" id="cb24"><pre class="sourceCode bash"><code class="sourceCode bash"><span id="cb24-1"><a href="#cb24-1" tabindex="-1"></a><span class="co"># Tag the release</span></span>
-<span id="cb24-2"><a href="#cb24-2" tabindex="-1"></a><span class="fu">git</span> tag <span class="at">-a</span> v0.1.0 <span class="at">-m</span> <span class="st">"First release with CLI support"</span></span>
-<span id="cb24-3"><a href="#cb24-3" tabindex="-1"></a><span class="fu">git</span> push origin v0.1.0</span></code></pre></div>
-<p>On GitHub: 1. Go to Releases → Create a new release 2. Select tag
-v0.1.0 3. Add release notes:</p>
-<div class="sourceCode" id="cb25"><pre class="sourceCode markdown"><code class="sourceCode markdown"><span id="cb25-1"><a href="#cb25-1" tabindex="-1"></a><span class="fu">## ADS8192 v0.1.0</span></span>
-<span id="cb25-2"><a href="#cb25-2" tabindex="-1"></a></span>
-<span id="cb25-3"><a href="#cb25-3" tabindex="-1"></a><span class="fu">### Features</span></span>
-<span id="cb25-4"><a href="#cb25-4" tabindex="-1"></a><span class="ss">- </span>Core PCA analysis functions (<span class="in">`run_pca()`</span>, <span class="in">`plot_pca()`</span>)</span>
-<span id="cb25-5"><a href="#cb25-5" tabindex="-1"></a><span class="ss">- </span>Shiny app for interactive exploration (<span class="in">`run_app()`</span>)</span>
-<span id="cb25-6"><a href="#cb25-6" tabindex="-1"></a><span class="ss">- </span>Command-line interface (Rapp app in <span class="in">`exec/`</span>)</span>
-<span id="cb25-7"><a href="#cb25-7" tabindex="-1"></a><span class="ss">- </span>pkgdown documentation site</span>
-<span id="cb25-8"><a href="#cb25-8" tabindex="-1"></a></span>
-<span id="cb25-9"><a href="#cb25-9" tabindex="-1"></a><span class="fu">### Installation</span></span>
-<span id="cb25-10"><a href="#cb25-10" tabindex="-1"></a><span class="in">```r</span></span>
-<span id="cb25-11"><a href="#cb25-11" tabindex="-1"></a>remotes<span class="sc">::</span><span class="fu">install_github</span>(<span class="st">"you/ADS8192@v0.1.0"</span>)</span></code></pre></div>
+<p>Add a short “Reproducibility” section to the README with R version,
+any Bioconductor release you built against, and a pinned install
+example:</p>
+<div class="sourceCode" id="cb17"><pre class="sourceCode markdown"><code class="sourceCode markdown"><span id="cb17-1"><a href="#cb17-1" tabindex="-1"></a><span class="fu">## Reproducibility</span></span>
+<span id="cb17-2"><a href="#cb17-2" tabindex="-1"></a></span>
+<span id="cb17-3"><a href="#cb17-3" tabindex="-1"></a>Built with R 4.3.x, Bioconductor 3.18.</span>
+<span id="cb17-4"><a href="#cb17-4" tabindex="-1"></a></span>
+<span id="cb17-5"><a href="#cb17-5" tabindex="-1"></a><span class="in">```r</span></span>
+<span id="cb17-6"><a href="#cb17-6" tabindex="-1"></a><span class="co"># Install a specific version</span></span>
+<span id="cb17-7"><a href="#cb17-7" tabindex="-1"></a>remotes<span class="sc">::</span><span class="fu">install_github</span>(<span class="st">"you/ADS8192@v0.1.0"</span>)</span></code></pre></div>
 <pre><code>
----
+## Micro-task 3: Release Notes Template
 
-## Exercise C: Help Quality
+Draft release notes for your first tagged version. Cover: what is new, what changed, and what (if anything) is a breaking change for CLI users (renamed flags, renamed output columns, changed defaults).
 
-### Peer Review Test
-
-1. Pair up with a classmate
-2. Give them only your README and `--help` output
-3. Ask them to run the CLI on test data
-4. Note any confusion or questions
-5. Update documentation to address unclear points
-
-Questions to ask:
-- Could they install successfully?
-- Was the CLI invocation clear?
-- Did they understand what the outputs mean?
-- Any error messages that were confusing?
-
----
-
-# Summary
-
-Today we:
-
-1. Packaged the CLI as a Rapp app in `exec/`
-2. Installed launchers with `Rapp::install_pkg_cli_apps()`
-3. Updated documentation (README, pkgdown article)
-4. Performed clean-room installation testing
-5. Verified output parity between R and CLI
-6. Created a release checklist
-
-## Package Milestone
-
-OK - The package installs from GitHub and exposes both `run_app()` and a working Rapp-based CLI.
-
----
-
-## Debrief &amp; Reflection
-
-Before moving on, make sure you can answer:
-
-- Why is installation quality part of the user contract for automation tools?
-- Which parts of your CLI output now count as backward-compatibility commitments?
-- How do clean-room testing and output parity checks protect users from hidden assumptions in your development environment?
-
----
-
-# After-Class Tasks
-
-## Micro-task 1: R CMD check
-
-Verify your package passes `devtools::check()` and CI is green.
-
-## Micro-task 2: Reproducibility Section
-
-Add a "Reproducibility" section to README:
-
-```markdown
-## Reproducibility
-
-This package was developed with:
-- R version 4.3.x
-- Bioconductor 3.18
-
-### Installation
-
-```r
-# Install from GitHub
-remotes::install_github("you/ADS8192")
-
-# Or from a specific version
-remotes::install_github("you/ADS8192@v0.1.0")</code></pre>
-<div class="section level4">
-<h4 id="session-info">Session Info<a class="anchor" aria-label="anchor" href="#session-info"></a>
-</h4>
-<p>Run <code><a href="https://rdrr.io/r/utils/sessionInfo.html" class="external-link">sessionInfo()</a></code> after loading the package to see your
-environment.</p>
-<pre><code>
 ---
 
 # Final Package Structure
 </code></pre>
 <p>ADS8192/ ├── DESCRIPTION ├── NAMESPACE ├── LICENSE.md ├── README.Rmd
-├── README.md ├── NEWS.md # Changelog ├── R/ │ ├── data.R │ ├── pca.R │
-├── plotting.R │ ├── export.R │ ├── app_ui.R │ ├── app_server.R │ ├──
-run_app.R │ └── cli_install.R ├── exec/ │ └── ADS8192 ├── inst/ │ └──
+├── README.md ├── NEWS.md ├── R/ │ ├── data.R │ ├── pca.R │ ├──
+plotting.R │ ├── export.R │ ├── app_ui.R │ ├── app_server.R │ ├──
+run_app.R │ └── install_cli.R ├── exec/ │ └── ADS8192 ├── inst/ │ └──
 app/ │ └── app.R ├── data/ │ └── example_se.rda ├── data-raw/ │ └──
 example_se.R ├── man/ │ └── *.Rd ├── tests/ │ ├── testthat/ │ │ ├──
-test-data.R │ │ ├── test-pca.R │ │ ├── test-cli_install.R │ │ └── … │
-└── testthat.R ├── vignettes/ │ ├── getting-started.Rmd │ ├──
-shiny-app.Rmd │ └── cli.Rmd ├── _pkgdown.yml └── .github/ └── workflows/
-├── R-CMD-check.yaml └── pkgdown.yaml</p>
+test-data.R │ │ ├── test-pca.R │ │ └── … │ └── testthat.R ├── vignettes/
+│ ├── getting-started.Rmd │ └── shiny-app.Rmd ├── _pkgdown.yml └──
+.github/ └── workflows/ ├── R-CMD-check.yaml └── pkgdown.yaml</p>
 <pre><code>
 ---
 
@@ -847,7 +543,6 @@ sessionInfo()</code></pre>
 <span><span class="co">## [17] compiler_4.5.3    tools_4.5.3       ragg_1.5.2        bslib_0.10.0     </span></span>
 <span><span class="co">## [21] evaluate_1.0.5    yaml_2.3.12       otel_0.2.0        jsonlite_2.0.0   </span></span>
 <span><span class="co">## [25] rlang_1.2.0       fs_2.0.1          htmlwidgets_1.6.4</span></span></code></pre>
-</div>
 </div>
 </div>
   </main><aside class="col-md-3"><nav id="toc" aria-label="Table of contents"><h2>On this page</h2>

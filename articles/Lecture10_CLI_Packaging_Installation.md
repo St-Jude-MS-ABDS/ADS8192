@@ -1,31 +1,28 @@
 # Lecture 10: Lab – CLI Tool Development (R) – Packaging and Installation
 
-## Learning Objectives
+## Motivation
+
+For automated scientific tools, installation and release quality are
+part of the user experience. If a CLI only works in development mode on
+the author’s machine, it is not yet robust software.
+
+Clean installs, output parity checks, and release discipline save other
+people time. They catch hidden assumptions early, prevent interface
+drift, and make it much more likely that a pipeline user or collaborator
+will get the same result you saw during development.
+
+### Learning Objectives
 
 By the end of this session, you will be able to:
 
-1.  Add the CLI entry point to the package so it works after
-    installation
-2.  Update the GitHub repository and verify installation and CLI
-    execution in a clean session
+1.  Install your package from GitHub and verify the CLI runs in a clean
+    R session
+2.  Document the CLI in the package README and the Getting Started
+    vignette
 3.  Confirm that CLI outputs match the package’s R function outputs for
     the same inputs
 4.  Explain why clean-room testing, release discipline, and backward
     compatibility matter for automation users
-
-**Course Learning Outcomes (CLOs):** CLO 1, 2, 3, 5, 6
-
-### Motivation
-
-For automated scientific tools, installation and release quality are
-part of the user experience. If a CLI only works in development mode or
-only on the author’s machine, it is not yet robust software.
-
-This lecture matters because clean installs, output parity checks, and
-release discipline save other people time. They catch hidden assumptions
-early, prevent interface drift, and make it much more likely that a
-pipeline user or collaborator will get the same result you saw during
-development.
 
 ### Evaluation Checklist
 
@@ -38,7 +35,6 @@ Before you ship a CLI, ask:
 - Do CLI outputs match the package core for the same inputs?
 - Which file names, flags, and output columns now form part of the user
   contract?
-- What would break if you changed those interfaces in the next release?
 - Are release steps reproducible enough for someone else in the lab to
   repeat?
 
@@ -53,139 +49,79 @@ refactors, and which ones break their pipeline contract?
 
 ## Where We Are
 
-In Lecture 9, we built CLI functions that work during development and
-**exported a launcher installer** (`install_ADS8192_cli()`) so users can
-run the CLI directly from the terminal:
+In Lecture 9 we built the CLI **inside** the package:
 
-``` bash
-# Works in development mode
-Rapp exec/ADS8192 pca --help
+- `exec/ADS8192` — the Rapp app
+- `Rapp` declared in `DESCRIPTION`
+- `R/install_cli.R` — the exported `install_ADS8192_cli()` wrapper
 
-# Works after installing launchers (Lecture 9)
-ADS8192 pca --help
-```
-
-**Goal:** Verify that the full install-from-GitHub workflow works
-end-to-end — package installation, launcher installation, and CLI
-execution — in a clean R session.
+Everything worked through `Rapp exec/ADS8192` during development. The
+question now is: **does it still work after `remotes::install_github()`
+on a clean machine?** That is what makes it real software rather than a
+local script.
 
 ------------------------------------------------------------------------
 
-### Design Principle: Installation Is Part of the Product
+## Part 1: Installation and Discoverability
 
-If a tool only works on the developer’s machine, it is not ready for
-scientific use. Clean-room testing and output parity checks matter
-because they reveal hidden assumptions, missing dependencies, and
-accidental drift between interfaces before users discover them the hard
-way.
+### Package Entry Point (Recap)
 
-## Part 1: Package the CLI Entry Point
+Because you already created `exec/ADS8192` inside the package and added
+`Rapp` to `DESCRIPTION` in Lecture 9, the entry point is already
+packaged. Files in `exec/` are installed along with everything else when
+someone runs `remotes::install_github("you/ADS8192")`. No relocation
+step is needed.
 
-### Use Rapp’s `exec/` Directory
-
-Rapp CLI apps live in a top-level `exec/` directory. Files in `exec/`
-are installed with the package.
-
-#### Create the Directory (if needed)
-
-``` r
-dir.create("exec", recursive = TRUE)
-```
-
-#### Add the Rapp App
-
-Create `exec/ADS8192` (from Lecture 9). On Unix/Mac, mark it executable:
-
-``` bash
-chmod +x exec/ADS8192
-```
-
-> **Mac/Linux users:** You only need to run `chmod +x` once when you
-> first create the file. If you clone the repo fresh on another machine,
-> Git preserves the executable bit (if you committed it), so
-> collaborators won’t need to repeat this step. Check with
-> `git ls-files --stage exec/ADS8192` — you should see mode `100755`,
-> not `100644`.
-
-> **Required: trailing newline.** Rapp requires the script file to end
-> with a blank newline. Make sure `exec/ADS8192` has an extra blank line
-> at the very end of the file. Without it, Rapp may fail to parse the
-> last command correctly. In most editors this is the default behavior,
-> but it’s worth verifying.
-
-#### Declare the Dependency
-
-Add Rapp to DESCRIPTION so users have the runner available:
-
-``` r
-usethis::use_package("Rapp")
-```
-
-------------------------------------------------------------------------
-
-## Part 2: Make the CLI Discoverable
+One quick sanity check: `exec/ADS8192` must end with a blank newline or
+Rapp will fail to parse the last command. Open it and verify.
 
 ### Install CLI Launchers
 
-In Lecture 9 we exported an `install_ADS8192_cli()` function that wraps
-[`Rapp::install_pkg_cli_apps()`](https://rdrr.io/pkg/Rapp/man/install_pkg_cli_apps.html).
-Verify it works after a fresh install:
+After installation, the `exec/` directory lives inside the R library
+tree. Users should not have to type
+`Rapp /path/to/library/ADS8192/exec/ADS8192 pca` every time. Rapp
+provides **launchers** — lightweight wrapper scripts placed on `PATH` —
+for exactly this.
+
+Your `install_ADS8192_cli()` wrapper from Lecture 9 does the work:
 
 ``` r
-# Your exported wrapper (preferred)
 ADS8192::install_ADS8192_cli()
-
-# Or the direct Rapp call
+# or the direct Rapp call
 Rapp::install_pkg_cli_apps("ADS8192")
 ```
 
-### Where Rapp Installs Launchers
-
-The launchers are placed in a platform-specific directory:
+#### Where Launchers Land
 
 | Platform      | Launcher directory                    |
 |---------------|---------------------------------------|
-| macOS / Linux | `~/.local/bin/`                       |
 | Windows       | `%LOCALAPPDATA%\Programs\R\Rapp\bin\` |
+| macOS / Linux | `~/.local/bin/`                       |
 
-These directories should already be on your `PATH` after
-[`Rapp::install_pkg_cli_apps()`](https://rdrr.io/pkg/Rapp/man/install_pkg_cli_apps.html)
-runs — it handles `PATH` configuration automatically on first use. If
-the command is not found after installation, check:
+Rapp handles `PATH` configuration automatically on first use. If the
+command is not found after installation, verify:
 
-``` bash
-# Unix/Mac: verify the launcher exists
-ls ~/.local/bin/ADS8192
-
-# Windows (PowerShell)
+``` powershell
+# Windows (PowerShell): confirm the launcher exists and PATH resolves it
 Get-Command ADS8192
-
-# Check which ADS8192 is on PATH (Unix/Mac)
-which ADS8192
-
-# Check which ADS8192 is on PATH (Windows)
-where ADS8192
+where.exe ADS8192
 ```
 
-If multiple versions are installed or the wrong one is found, check that
-`~/.local/bin` (Unix) or the Rapp bin directory (Windows) appears before
-any other `ADS8192` on `PATH`. You can verify the Rapp install path
-with:
+You can also ask Rapp directly where it would install:
 
 ``` r
-# See where Rapp would install launchers
 Rapp::pkg_cli_apps_dir()
 ```
 
-After this, users can run:
+Once installed, users can run:
 
 ``` bash
 ADS8192 pca --help
 ```
 
-### Fallback: Run Directly from `exec/`
+#### Fallback: Run From `exec/`
 
-If launchers are not installed, you can still run the app directly:
+If launchers are not installed, you can still invoke the app directly:
 
 ``` bash
 Rapp exec/ADS8192 pca --help
@@ -197,196 +133,59 @@ Or from R:
 Rapp::run(system.file("exec", "ADS8192", package = "ADS8192"), c("pca", "--help"))
 ```
 
-#### Required: Export the Launcher Installer
+### Document the CLI
 
-In Lecture 9 you created `R/install_cli.R` with an exported wrapper.
-Make sure it is present and documented — this is a **rubric
-requirement**:
+Users should be able to find the CLI from your package’s front door. You
+only need two brief additions — no separate pkgdown article.
 
-``` r
-#' Install ADS8192 CLI launchers
-#'
-#' Places lightweight launcher scripts on the user's `PATH` so the
-#' ADS8192 CLI can be invoked directly from a terminal
-#' (e.g. `ADS8192 pca --help`).
-#'
-#' @inheritDotParams Rapp::install_pkg_cli_apps -package -lib.loc
-#' @export
-install_ADS8192_cli <- function(...) {
-    Rapp::install_pkg_cli_apps(package = "ADS8192", lib.loc = NULL, ...)
-}
-```
+#### README
 
-------------------------------------------------------------------------
-
-## Part 3: Documentation
-
-### Update README
-
-Add a CLI section:
+Add a short **Command Line Interface** section to the package
+`README.Rmd` (or `README.md`) with a one-line install step, a minimal
+invocation, and the fallback:
 
 ```` markdown
 ## Command Line Interface
 
-ADS8192 includes a command-line interface for pipeline integration.
-
-### Quick Start
-
-```bash
-# Install the launcher (one-time)
-Rscript -e "Rapp::install_pkg_cli_apps('ADS8192')"
-
-# Run PCA analysis
-ADS8192 pca \
-    --counts counts.tsv \
-    --meta samples.tsv \
-    --output results/ \
-    --n-top 500 \
-    --color-by treatment
-```
-
-### Fallback (No Launcher)
-
-```bash
-Rapp exec/ADS8192 pca --help
-```
-
-### Available Commands
-
-| Command | Description |
-|---------|-------------|
-| `pca` | Run PCA analysis and export results |
-| `validate` | Validate input files |
-
-Run `ADS8192 <command> --help` for detailed options.
-````
-
-### Add pkgdown Article
-
-Create `vignettes/cli.Rmd`:
-
-```` markdown
----
-title: "Command Line Interface"
-output: rmarkdown::html_vignette
-vignette: >
-  %\VignetteIndexEntry{Command Line Interface}
-  %\VignetteEngine{knitr::rmarkdown}
-  %\VignetteEncoding{UTF-8}
----
-
-## Overview
-
-The ADS8192 CLI allows you to run PCA analysis from the command line,
-making it easy to integrate into pipelines.
-
-## Installation
-
-After installing ADS8192, install the CLI launcher:
+ADS8192 includes a CLI for pipeline integration.
 
 ```r
-remotes::install_github("you/ADS8192")
-Rapp::install_pkg_cli_apps("ADS8192")
+# One-time launcher install
+ADS8192::install_ADS8192_cli()
 ```
-
-## Usage
-
-### Basic PCA Analysis
 
 ```bash
-ADS8192 pca \
-    --counts counts.tsv \
-    --meta samples.tsv \
-    --output results/
-```
+# Usage
+ADS8192 pca --counts counts.tsv --meta samples.tsv --output results/
 
-### Input File Formats
-
-**Counts matrix** (`--counts`):
-- Tab-separated or comma-separated
-- First column: gene IDs (row names)
-- Subsequent columns: sample counts
-- Header row with sample IDs
-
-```
-gene_id    sample1    sample2    sample3
-ENSG001    100        150        120
-ENSG002    50         75         60
-```
-
-**Metadata** (`--meta`):
-- Tab-separated or comma-separated
-- First column: sample IDs (must match counts columns)
-- Additional columns: sample attributes
-
-```
-sample_id    treatment    batch
-sample1      control      A
-sample2      treated      A
-sample3      treated      B
-```
-
-### Output Files
-
-| File | Description |
-|------|-------------|
-| `pca_scores.tsv` | PCA scores merged with sample metadata |
-| `pca_variance.tsv` | Variance explained by each PC |
-| `pca_plot.png` | PCA scatter plot (if `--color-by` specified) |
-
-### Full Options
-
-```
-ADS8192 pca --help
-```
-
-## Pipeline Integration
-
-### Snakemake
-
-```python
-rule pca:
-    input:
-        counts = "data/{sample}/counts.tsv",
-        meta = "data/{sample}/meta.tsv"
-    output:
-        directory("results/{sample}/pca/")
-    shell:
-        """
-        ADS8192 pca \
-            --counts {input.counts} \
-            --meta {input.meta} \
-            --output {output}
-        """
-```
-
-### Bash Loop
-
-```bash
-for dataset in data/*; do
-    name=$(basename "$dataset")
-    ADS8192 pca \
-        --counts "$dataset/counts.tsv" \
-        --meta "$dataset/meta.tsv" \
-        --output "results/$name/"
-done
+# Fallback (no launcher)
+Rapp exec/ADS8192 pca --help
 ```
 ````
+
+Knit the README (`devtools::build_readme()`) so the rendered `README.md`
+stays in sync.
+
+#### Getting Started Vignette
+
+In your existing `vignettes/getting-started.Rmd`, add a short “From the
+command line” subsection at the end — three or four lines showing the
+same install + one invocation. Pointing at the README is fine; the goal
+is that a reader of the vignette knows the CLI exists.
 
 ------------------------------------------------------------------------
 
-## Part 4: Clean Room Testing
+## Part 2: Clean-Room Testing
 
-### The Importance of Clean Testing
+`devtools::load_all()` makes your code available during development, but
+users **install** the package. You have to verify the installed path
+works.
 
-During development, `devtools::load_all()` makes your code available.
-But users install the package — we need to verify that works too.
-
-### Exercise A: Clean Room Test
+### Exercise A: Clean-Room Install
 
 #### Step 1: Install from GitHub
 
-In a fresh R session (restart R first!):
+Restart R first so nothing is loaded, then:
 
 ``` r
 # Remove any existing installation
@@ -396,347 +195,243 @@ remove.packages("ADS8192")
 remotes::install_github("you/ADS8192")
 ```
 
-#### Step 2: Verify Package Works
+#### Step 2: Verify the Package Loads
 
 ``` r
 library(ADS8192)
 
-# Test core functions
+# Core functions
 data(example_se)
 result <- run_pca(example_se)
 plot_pca(result, color_by = "treatment")
 
-# Test Shiny app launches (close it after)
-# run_app()
-
-# Install CLI launcher
-Rapp::install_pkg_cli_apps("ADS8192")
+# Install launchers
+ADS8192::install_ADS8192_cli()
 ```
 
-#### CLI Script: Namespace and Trailing Newline
+#### Step 3: Run the CLI from a Terminal
 
-Two common issues when testing the installed CLI for the first time:
-
-**Namespace issues:** Even though
-[`library(ADS8192)`](https://github.com/St-Jude-MS-ABDS/ADS8192) loads
-the package, some base R functions may not be found if the search path
-is not fully set up in the Rapp environment. Always use explicit
-namespacing in your CLI script:
+Create test inputs from R (cross-platform and avoids tab/spacing
+surprises):
 
 ``` r
-# In exec/ADS8192, load packages explicitly at the top
-suppressPackageStartupMessages({
-    library(ADS8192)
-    library(utils)    # for write.table, read.table
-    library(stats)    # for stats::var (used internally)
-})
-
-# And use fully-qualified calls for base functions where needed:
-utils::write.table(result$scores, scores_file, sep = "\t",
-                   row.names = FALSE, quote = FALSE)
-```
-
-**Trailing newline:** Rapp requires the `exec/ADS8192` file to end with
-a blank line. If you see a parsing error on the last command, add an
-extra newline at the end of the file.
-
-#### Step 3: Test CLI from Terminal
-
-First, create the test input files using R (this avoids tab/spacing
-issues with shell heredocs):
-
-``` r
-# Create test inputs using R (cross-platform reliable)
-dir.create("/tmp/cli_test", recursive = TRUE, showWarnings = FALSE)
+dir.create("cli_test", recursive = TRUE, showWarnings = FALSE)
 
 counts <- data.frame(
-  sample1 = c(100L, 50L, 200L, 30L, 80L),
-  sample2 = c(150L, 75L, 180L, 45L, 100L),
-  sample3 = c(120L, 60L, 210L, 35L, 90L),
-  sample4 = c(180L, 90L, 240L, 55L, 110L),
-  row.names = paste0("gene", 1:5)
+    sample1 = c(100L, 50L, 200L, 30L, 80L),
+    sample2 = c(150L, 75L, 180L, 45L, 100L),
+    sample3 = c(120L, 60L, 210L, 35L, 90L),
+    sample4 = c(180L, 90L, 240L, 55L, 110L),
+    row.names = paste0("gene", 1:5)
 )
-utils::write.table(counts, "/tmp/cli_test/counts.tsv",
+utils::write.table(counts, "cli_test/counts.tsv",
                    sep = "\t", quote = FALSE)
 
 meta <- data.frame(
-  treatment = c("control", "control", "treated", "treated"),
-  batch     = c("A", "B", "A", "B"),
-  row.names = paste0("sample", 1:4)
+    treatment = c("control", "control", "treated", "treated"),
+    batch     = c("A", "B", "A", "B"),
+    row.names = paste0("sample", 1:4)
 )
-utils::write.table(meta, "/tmp/cli_test/meta.tsv",
+utils::write.table(meta, "cli_test/meta.tsv",
                    sep = "\t", quote = FALSE)
 ```
 
-Then run the CLI from the terminal:
+Then from a terminal:
 
 ``` bash
-# Run CLI
 ADS8192 pca \
-    --counts /tmp/cli_test/counts.tsv \
-    --meta /tmp/cli_test/meta.tsv \
-    --output /tmp/cli_test/output/ \
+    --counts cli_test/counts.tsv \
+    --meta cli_test/meta.tsv \
+    --output cli_test/output/ \
     --n-top 5
 
-# Check outputs
-cat /tmp/cli_test/output/pca_scores.tsv
-cat /tmp/cli_test/output/pca_variance.tsv
+# Inspect outputs
+type cli_test\output\pca_scores.tsv
+type cli_test\output\pca_variance.tsv
 ```
+
+If the launcher is not yet on `PATH`, use the `Rapp exec/ADS8192 ...`
+fallback instead.
+
+**This single end-to-end run — install from GitHub, install launcher,
+run CLI on small inputs — is the core clean-room test.** If this passes,
+a collaborator who follows your README has a real chance of getting the
+same result.
 
 ------------------------------------------------------------------------
 
-## Part 5: Output Parity Testing
+## Part 3: Output Parity
 
-### What is Output Parity?
+A CLI is supposed to be a thin wrapper. That means: the same inputs
+should produce the same results whether you call
+[`run_pca()`](https://st-jude-ms-abds.github.io/ADS8192/reference/run_pca.md)
+in R or invoke the CLI.
 
-The CLI should produce the same results as calling the R functions
-directly.
+### Manual Parity Check
 
-### Exercise B: Verify Output Parity
+You do not need to write automated parity tests for this class — a
+manual comparison is enough to catch most regressions.
 
-#### Step 1: Run Analysis via R
+Run the analysis via R:
 
 ``` r
 library(ADS8192)
 
-# Load sample data
-counts <- read.table("/tmp/cli_test/counts.tsv", header = TRUE, row.names = 1, sep = "\t")
-meta <- read.table("/tmp/cli_test/meta.tsv", header = TRUE, row.names = 1, sep = "\t")
+counts <- utils::read.table("cli_test/counts.tsv",
+                            header = TRUE, row.names = 1, sep = "\t")
+meta   <- utils::read.table("cli_test/meta.tsv",
+                            header = TRUE, row.names = 1, sep = "\t")
 
-# Create SE and run PCA
 se <- SummarizedExperiment::SummarizedExperiment(
-    assays = list(counts = as.matrix(counts)),
+    assays  = list(counts = as.matrix(counts)),
     colData = meta
 )
-result <- run_pca(se, n_top = 5)
-
-# Get scores
-r_scores <- result$scores
+r_result <- run_pca(se, n_top = 5)
+r_scores <- r_result$scores
 ```
 
-#### Step 2: Compare with CLI Output
+Then load the CLI output and eyeball it:
 
 ``` r
-# Load CLI output
-cli_scores <- read.table(
-    "/tmp/cli_test/output/pca_scores.tsv",
-    header = TRUE,
-    sep = "\t"
+cli_scores <- utils::read.table(
+    "cli_test/output/pca_scores.tsv",
+    header = TRUE, sep = "\t"
 )
 
-# Compare structure
+# Column names should match
 print(names(r_scores))
 print(names(cli_scores))
 
-# Compare values (allowing for floating point differences)
+# Values should match within floating-point tolerance
 all.equal(r_scores$PC1, cli_scores$PC1)
 all.equal(r_scores$PC2, cli_scores$PC2)
 ```
 
-### Adding an Automated Test
+If [`all.equal()`](https://rdrr.io/r/base/all.equal.html) prints `TRUE`
+and the column names agree, parity is fine.
 
-Create `tests/testthat/test-cli.R`:
+### What an Automated Test Would Look Like
+
+**You do not need to implement this.** Included only so you know the
+shape if you decide to add one later:
 
 ``` r
-# tests/testthat/test-cli.R — CLI output parity test
 test_that("CLI produces same output as R functions", {
-    skip_on_cran()  # CLI tests may be slow
-
-    # Create temp files
-    tmp_dir <- tempdir()
-    counts_file <- file.path(tmp_dir, "counts.tsv")
-    meta_file <- file.path(tmp_dir, "meta.tsv")
-    output_dir <- file.path(tmp_dir, "cli_output")
-
-    # Create test data
-    data(example_se, package = "ADS8192")
-    counts <- SummarizedExperiment::assay(example_se, "counts")
-    meta <- as.data.frame(SummarizedExperiment::colData(example_se))
-
-    write.table(counts, counts_file, sep = "\t", quote = FALSE)
-    write.table(meta, meta_file, sep = "\t", quote = FALSE)
-
-    # Run via R
-    se <- SummarizedExperiment::SummarizedExperiment(
-        assays = list(counts = counts),
-        colData = meta
-    )
-    r_result <- run_pca(se, n_top = 50)
-
-    # Run via CLI
-    Rapp::run(system.file("exec", "ADS8192", package = "ADS8192"), c(
-        "pca",
-        "--counts", counts_file,
-        "--meta", meta_file,
-        "--output", output_dir,
-        "--n-top", "50"
-    ))
-
-    # Load CLI output
-    cli_scores <- read.table(
-        file.path(output_dir, "pca_scores.tsv"),
-        header = TRUE,
-        sep = "\t"
-    )
-
-    # Compare dimensions
-    expect_equal(nrow(cli_scores), nrow(r_result$scores))
-    expect_equal(ncol(cli_scores), ncol(r_result$scores))
-
-    # Compare PC values (within tolerance)
+    skip_on_cran()
+    # ... write test counts/meta to tempfiles, call Rapp::run() on the CLI,
+    #     read the CLI output back in, then:
     expect_equal(cli_scores$PC1, r_result$scores$PC1, tolerance = 1e-10)
-
-    # Cleanup
-    unlink(output_dir, recursive = TRUE)
 })
 ```
 
+Automated parity tests are valuable on long-lived projects where many
+hands touch the code. For this course, a manual comparison after any
+substantive change is enough.
+
 ------------------------------------------------------------------------
 
-## Part 6: Release Checklist
+## Part 4: Release Discipline
 
-### Pre-Release Checks
-
-Before tagging a release:
-
-``` r
-# Run all checks
-devtools::check()
-
-# Run tests
-devtools::test()
-
-# Build documentation
-pkgdown::build_site()
-
-# Verify README renders
-devtools::build_readme()
-```
-
-### Bump Version
+Before you tag a release, run through a short checklist. The goal is to
+catch problems in the last calm moment before users start relying on a
+version number.
 
 ``` r
-# Use usethis to update version
-usethis::use_version("minor")  # 0.0.1 -> 0.1.0
+devtools::check()          # R CMD check, all clean
+devtools::test()           # tests pass
+pkgdown::build_site()      # docs build
+devtools::build_readme()   # README re-knits
+usethis::use_version()     # bump version + NEWS.md stub
 ```
 
-### Create GitHub Release
+Then:
 
 ``` bash
-# Tag the release
+git push
 git tag -a v0.1.0 -m "First release with CLI support"
 git push origin v0.1.0
+gh release create v0.1.0
 ```
 
-On GitHub: 1. Go to Releases → Create a new release 2. Select tag v0.1.0
-3. Add release notes:
+Write short release notes that explicitly list **what is new, what
+changed, and what (if anything) broke**. Pipeline users scan release
+notes for flag and output-name changes before they upgrade.
+
+------------------------------------------------------------------------
+
+## Summary
+
+Today we:
+
+1.  Confirmed the packaged `exec/` entry point installs with the rest of
+    the package
+2.  Installed launchers via `install_ADS8192_cli()` and verified
+    discoverability on `PATH`
+3.  Added brief CLI documentation to the README and Getting Started
+    vignette
+4.  Performed a clean-room install-from-GitHub test
+5.  Manually verified output parity between R and CLI
+6.  Ran through a short pre-release checklist
+
+### Package Milestone
+
+**The ADS8192 package installs from GitHub and exposes a working CLI end
+to end — install, launcher, run, output — in a clean R session.**
+
+------------------------------------------------------------------------
+
+### Debrief & Reflection
+
+Before moving on, make sure you can answer:
+
+- Why is installation quality part of the user contract for automation
+  tools?
+- Which parts of your CLI output now count as backward-compatibility
+  commitments?
+- How do clean-room testing and output parity checks protect users from
+  hidden assumptions in your development environment?
+
+------------------------------------------------------------------------
+
+## After-Class Tasks
+
+### Micro-task 1: R CMD check
+
+Verify your package passes `devtools::check()` cleanly and that CI is
+green.
+
+### Micro-task 2: Reproducibility Note in README
+
+Add a short “Reproducibility” section to the README with R version, any
+Bioconductor release you built against, and a pinned install example:
 
 ``` markdown
-## ADS8192 v0.1.0
+## Reproducibility
 
-### Features
-- Core PCA analysis functions (`run_pca()`, `plot_pca()`)
-- Shiny app for interactive exploration (`run_app()`)
-- Command-line interface (Rapp app in `exec/`)
-- pkgdown documentation site
+Built with R 4.3.x, Bioconductor 3.18.
 
-### Installation
 ```r
+# Install a specific version
 remotes::install_github("you/ADS8192@v0.1.0")
 ```
 
-    ---
+    ## Micro-task 3: Release Notes Template
 
-    ## Exercise C: Help Quality
-
-    ### Peer Review Test
-
-    1. Pair up with a classmate
-    2. Give them only your README and `--help` output
-    3. Ask them to run the CLI on test data
-    4. Note any confusion or questions
-    5. Update documentation to address unclear points
-
-    Questions to ask:
-    - Could they install successfully?
-    - Was the CLI invocation clear?
-    - Did they understand what the outputs mean?
-    - Any error messages that were confusing?
-
-    ---
-
-    # Summary
-
-    Today we:
-
-    1. Packaged the CLI as a Rapp app in `exec/`
-    2. Installed launchers with `Rapp::install_pkg_cli_apps()`
-    3. Updated documentation (README, pkgdown article)
-    4. Performed clean-room installation testing
-    5. Verified output parity between R and CLI
-    6. Created a release checklist
-
-    ## Package Milestone
-
-    OK - The package installs from GitHub and exposes both `run_app()` and a working Rapp-based CLI.
-
-    ---
-
-    ## Debrief & Reflection
-
-    Before moving on, make sure you can answer:
-
-    - Why is installation quality part of the user contract for automation tools?
-    - Which parts of your CLI output now count as backward-compatibility commitments?
-    - How do clean-room testing and output parity checks protect users from hidden assumptions in your development environment?
-
-    ---
-
-    # After-Class Tasks
-
-    ## Micro-task 1: R CMD check
-
-    Verify your package passes `devtools::check()` and CI is green.
-
-    ## Micro-task 2: Reproducibility Section
-
-    Add a "Reproducibility" section to README:
-
-    ```markdown
-    ## Reproducibility
-
-    This package was developed with:
-    - R version 4.3.x
-    - Bioconductor 3.18
-
-    ### Installation
-
-    ```r
-    # Install from GitHub
-    remotes::install_github("you/ADS8192")
-
-    # Or from a specific version
-    remotes::install_github("you/ADS8192@v0.1.0")
-
-#### Session Info
-
-Run [`sessionInfo()`](https://rdrr.io/r/utils/sessionInfo.html) after
-loading the package to see your environment.
+    Draft release notes for your first tagged version. Cover: what is new, what changed, and what (if anything) is a breaking change for CLI users (renamed flags, renamed output columns, changed defaults).
 
     ---
 
     # Final Package Structure
 
 ADS8192/ ├── DESCRIPTION ├── NAMESPACE ├── LICENSE.md ├── README.Rmd ├──
-README.md ├── NEWS.md \# Changelog ├── R/ │ ├── data.R │ ├── pca.R │ ├──
-plotting.R │ ├── export.R │ ├── app_ui.R │ ├── app_server.R │ ├──
-run_app.R │ └── cli_install.R ├── exec/ │ └── ADS8192 ├── inst/ │ └──
-app/ │ └── app.R ├── data/ │ └── example_se.rda ├── data-raw/ │ └──
-example_se.R ├── man/ │ └── \*.Rd ├── tests/ │ ├── testthat/ │ │ ├──
-test-data.R │ │ ├── test-pca.R │ │ ├── test-cli_install.R │ │ └── … │
-└── testthat.R ├── vignettes/ │ ├── getting-started.Rmd │ ├──
-shiny-app.Rmd │ └── cli.Rmd ├── \_pkgdown.yml └── .github/ └──
-workflows/ ├── R-CMD-check.yaml └── pkgdown.yaml
+README.md ├── NEWS.md ├── R/ │ ├── data.R │ ├── pca.R │ ├── plotting.R │
+├── export.R │ ├── app_ui.R │ ├── app_server.R │ ├── run_app.R │ └──
+install_cli.R ├── exec/ │ └── ADS8192 ├── inst/ │ └── app/ │ └── app.R
+├── data/ │ └── example_se.rda ├── data-raw/ │ └── example_se.R ├── man/
+│ └── \*.Rd ├── tests/ │ ├── testthat/ │ │ ├── test-data.R │ │ ├──
+test-pca.R │ │ └── … │ └── testthat.R ├── vignettes/ │ ├──
+getting-started.Rmd │ └── shiny-app.Rmd ├── \_pkgdown.yml └── .github/
+└── workflows/ ├── R-CMD-check.yaml └── pkgdown.yaml
 
     ---
 
