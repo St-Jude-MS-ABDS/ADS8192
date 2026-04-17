@@ -26,12 +26,12 @@ Imports:
     stats,
     utils,
     shiny,
-    bslib
+    bslib,
+    Rapp
 Suggests:
     testthat (>= 3.0.0),
     airway,
     DT,
-    Rapp,
     knitr,
     rmarkdown,
     ComplexHeatmap,
