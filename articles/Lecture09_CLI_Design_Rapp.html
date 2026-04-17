@@ -241,6 +241,12 @@ subcommand support, and a clean path from script to CLI.</p>
 </h3>
 <div class="sourceCode" id="cb4"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="fu"><a href="https://rdrr.io/r/utils/install.packages.html" class="external-link">install.packages</a></span><span class="op">(</span><span class="st">"Rapp"</span><span class="op">)</span></span></code></pre></div>
+<p>We also need to add the <code>Rapp</code> <em>launcher</em> to our
+PATH.</p>
+<div class="sourceCode" id="cb5"><pre class="downlit sourceCode r">
+<code class="sourceCode R"><span><span class="fu">Rapp</span><span class="fu">::</span><span class="fu"><a href="https://rdrr.io/pkg/Rapp/man/install_pkg_cli_apps.html" class="external-link">install_pkg_cli_apps</a></span><span class="op">(</span><span class="st">"Rapp"</span><span class="op">)</span></span></code></pre></div>
+<p>This adds the <code>Rapp</code> command to your terminal, which you
+can use to run Rapp scripts during development.</p>
 </div>
 <div class="section level3">
 <h3 id="how-rapp-declares-a-cli">How Rapp Declares a CLI<a class="anchor" aria-label="anchor" href="#how-rapp-declares-a-cli"></a>
@@ -263,7 +269,7 @@ subcommand support, and a clean path from script to CLI.</p>
 subcommands</li>
 </ul>
 <p>You can add help metadata using <code>#|</code> annotations:</p>
-<div class="sourceCode" id="cb5"><pre class="downlit sourceCode r">
+<div class="sourceCode" id="cb6"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="co">#| description: Number of top variable genes</span></span>
 <span><span class="co">#| short: n</span></span>
 <span><span class="va">n_top</span> <span class="op">&lt;-</span> <span class="fl">500L</span></span></code></pre></div>
@@ -276,10 +282,10 @@ the flag follows.</p>
 <h3 id="rapp-script-structure">Rapp Script Structure<a class="anchor" aria-label="anchor" href="#rapp-script-structure"></a>
 </h3>
 <p>A complete Rapp script has this overall shape:</p>
-<div class="sourceCode" id="cb6"><pre class="downlit sourceCode r">
+<div class="sourceCode" id="cb7"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="co">#!/usr/bin/env Rapp         # Shebang marking this a Rapp executable</span></span>
 <span><span class="co">#| name: ADS8192            # CLI name (shown in --help)</span></span>
-<span><span class="co">#| title: ADS8192 PCA Tool</span></span>
+<span><span class="co">#| title: ADS8192 PCA Tool &amp; Toaster  # One-line title for help</span></span>
 <span><span class="co">#| description: PCA analysis for SummarizedExperiment data.</span></span>
 <span></span>
 <span><span class="co"># Load packages explicitly (runs before any command)</span></span>
@@ -329,14 +335,13 @@ integer, <code>TRUE</code> → logical, <code>""</code> → character.</li>
 <div class="section level2">
 <h2 id="part-3-add-the-cli-to-your-package">Part 3: Add the CLI to Your Package<a class="anchor" aria-label="anchor" href="#part-3-add-the-cli-to-your-package"></a>
 </h2>
-<p>You already have a package — the ADS8192 package you built in
-Lectures 5–8. The CLI lives inside that package from the start. No
-separate script directory, no “move it in later” step.</p>
+<p>You already have a package. The CLI lives inside that package from
+the start. No separate script directory, no “move it in later” step.</p>
 <div class="section level3">
 <h3 id="step-1-declare-rapp-as-a-dependency">Step 1: Declare Rapp as a Dependency<a class="anchor" aria-label="anchor" href="#step-1-declare-rapp-as-a-dependency"></a>
 </h3>
 <p>From the package root, in R:</p>
-<div class="sourceCode" id="cb7"><pre class="downlit sourceCode r">
+<div class="sourceCode" id="cb8"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="fu">usethis</span><span class="fu">::</span><span class="fu">use_package</span><span class="op">(</span><span class="st">"Rapp"</span><span class="op">)</span></span></code></pre></div>
 <p>This adds <code>Rapp</code> to <code>DESCRIPTION</code> under
 <code>Imports:</code>.</p>
@@ -347,10 +352,11 @@ separate script directory, no “move it in later” step.</p>
 <p>Rapp CLI apps live in the package’s top-level <code>exec/</code>
 directory. Files in <code>exec/</code> are installed with the package,
 so the CLI travels with it.</p>
-<div class="sourceCode" id="cb8"><pre class="downlit sourceCode r">
+<div class="sourceCode" id="cb9"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="fu"><a href="https://rdrr.io/r/base/files2.html" class="external-link">dir.create</a></span><span class="op">(</span><span class="st">"exec"</span><span class="op">)</span></span></code></pre></div>
-<p>Now create <code>exec/ADS8192</code> — the full Rapp script. Two
-things about this file matter before you write anything else:</p>
+<p>Now create <code>exec/ADS8192.R</code>. This defines your CLI. It is
+R code, but with some special annotations for Rapp. Two things about
+this file matter before you write anything else:</p>
 <ul>
 <li>
 <strong>Explicit namespacing.</strong> Even with
@@ -361,22 +367,23 @@ environment. Load base-R helper packages explicitly at the top
 the body.</li>
 <li>
 <strong>Trailing newline required.</strong> Rapp needs
-<code>exec/ADS8192</code> to end with a blank line. Most editors handle
-this by default — just verify. Without it, Rapp may fail to parse the
-last command.</li>
+<code>exec/ADS8192.R</code> to end with a blank line. Most editors
+handle this by default — just verify. Without it, Rapp may fail to parse
+the last command.</li>
 </ul>
 <p>Write the header and shared helpers first:</p>
-<div class="sourceCode" id="cb9"><pre class="downlit sourceCode r">
-<code class="sourceCode R"><span><span class="co"># exec/ADS8192 — header and helpers</span></span>
-<span><span class="co">#!/usr/bin/env Rapp</span></span>
+<div class="sourceCode" id="cb10"><pre class="downlit sourceCode r">
+<code class="sourceCode R"><span><span class="co">#!/usr/bin/env Rapp</span></span>
 <span><span class="co">#| name: ADS8192</span></span>
-<span><span class="co">#| title: ADS8192 PCA Tool</span></span>
+<span><span class="co">#| title: ADS8192 PCA Tool &amp; Toaster</span></span>
 <span><span class="co">#| description: PCA analysis for SummarizedExperiment data.</span></span>
 <span></span>
 <span><span class="fu"><a href="https://rdrr.io/r/base/message.html" class="external-link">suppressPackageStartupMessages</a></span><span class="op">(</span><span class="op">{</span></span>
 <span>    <span class="kw"><a href="https://rdrr.io/r/base/library.html" class="external-link">library</a></span><span class="op">(</span><span class="va"><a href="https://github.com/St-Jude-MS-ABDS/ADS8192" class="external-link">ADS8192</a></span><span class="op">)</span></span>
 <span>    <span class="kw"><a href="https://rdrr.io/r/base/library.html" class="external-link">library</a></span><span class="op">(</span><span class="va">utils</span><span class="op">)</span></span>
 <span>    <span class="kw"><a href="https://rdrr.io/r/base/library.html" class="external-link">library</a></span><span class="op">(</span><span class="va">stats</span><span class="op">)</span></span>
+<span>    <span class="kw"><a href="https://rdrr.io/r/base/library.html" class="external-link">library</a></span><span class="op">(</span><span class="va"><a href="https://ggplot2.tidyverse.org" class="external-link">ggplot2</a></span><span class="op">)</span></span>
+<span>    <span class="kw"><a href="https://rdrr.io/r/base/library.html" class="external-link">library</a></span><span class="op">(</span><span class="va"><a href="https://bioconductor.org/packages/SummarizedExperiment" class="external-link">SummarizedExperiment</a></span><span class="op">)</span></span>
 <span><span class="op">}</span><span class="op">)</span></span>
 <span></span>
 <span><span class="co"># Helper to read TSV/CSV (not exported; kept in CLI script)</span></span>
@@ -396,7 +403,7 @@ last command.</li>
 <p>The <code>pca</code> subcommand declares its arguments as R
 variables, validates inputs, reads files, calls the <strong>package core
 functions</strong>, and writes output:</p>
-<div class="sourceCode" id="cb10"><pre class="downlit sourceCode r">
+<div class="sourceCode" id="cb11"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="kw"><a href="https://rdrr.io/r/base/switch.html" class="external-link">switch</a></span><span class="op">(</span></span>
 <span>    <span class="st">""</span>,</span>
 <span></span>
@@ -437,7 +444,7 @@ functions</strong>, and writes output:</p>
 <span>        <span class="va">counts_df</span> <span class="op">&lt;-</span> <span class="fu">read_data_file</span><span class="op">(</span><span class="va">counts</span><span class="op">)</span></span>
 <span>        <span class="va">meta_df</span>   <span class="op">&lt;-</span> <span class="fu">read_data_file</span><span class="op">(</span><span class="va">meta</span><span class="op">)</span></span>
 <span></span>
-<span>        <span class="va">se</span> <span class="op">&lt;-</span> <span class="fu">SummarizedExperiment</span><span class="fu">::</span><span class="fu"><a href="https://rdrr.io/pkg/SummarizedExperiment/man/SummarizedExperiment-class.html" class="external-link">SummarizedExperiment</a></span><span class="op">(</span></span>
+<span>        <span class="va">se</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/pkg/SummarizedExperiment/man/SummarizedExperiment-class.html" class="external-link">SummarizedExperiment</a></span><span class="op">(</span></span>
 <span>            assays  <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/list.html" class="external-link">list</a></span><span class="op">(</span>counts <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/matrix.html" class="external-link">as.matrix</a></span><span class="op">(</span><span class="va">counts_df</span><span class="op">)</span><span class="op">)</span>,</span>
 <span>            colData <span class="op">=</span> <span class="va">meta_df</span></span>
 <span>        <span class="op">)</span></span>
@@ -448,7 +455,9 @@ functions</strong>, and writes output:</p>
 <span>        <span class="kw">if</span> <span class="op">(</span><span class="va">color_by</span> <span class="op">!=</span> <span class="st">""</span><span class="op">)</span> <span class="op">{</span></span>
 <span>            <span class="va">plot_file</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/base/file.path.html" class="external-link">file.path</a></span><span class="op">(</span><span class="va">output</span>, <span class="st">"pca_plot.png"</span><span class="op">)</span></span>
 <span>            <span class="va">p</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/plot_pca.html">plot_pca</a></span><span class="op">(</span><span class="va">result</span>, color_by <span class="op">=</span> <span class="va">color_by</span><span class="op">)</span></span>
-<span>            <span class="fu">ggplot2</span><span class="fu">::</span><span class="fu"><a href="https://ggplot2.tidyverse.org/reference/ggsave.html" class="external-link">ggsave</a></span><span class="op">(</span><span class="va">plot_file</span>, <span class="va">p</span>, width <span class="op">=</span> <span class="fl">8</span>, height <span class="op">=</span> <span class="fl">6</span>, dpi <span class="op">=</span> <span class="fl">150</span><span class="op">)</span></span>
+<span>            <span class="fu"><a href="https://rdrr.io/r/grDevices/png.html" class="external-link">png</a></span><span class="op">(</span><span class="va">plot_file</span>, width <span class="op">=</span> <span class="fl">8</span>, height <span class="op">=</span> <span class="fl">6</span>, units <span class="op">=</span> <span class="st">"in"</span>, res <span class="op">=</span> <span class="fl">300</span><span class="op">)</span></span>
+<span>            <span class="fu"><a href="https://rdrr.io/r/base/print.html" class="external-link">print</a></span><span class="op">(</span><span class="va">p</span><span class="op">)</span></span>
+<span>            <span class="fu"><a href="https://rdrr.io/r/grDevices/dev.html" class="external-link">dev.off</a></span><span class="op">(</span><span class="op">)</span></span>
 <span>            <span class="fu"><a href="https://rdrr.io/r/base/message.html" class="external-link">message</a></span><span class="op">(</span><span class="st">"Saved: "</span>, <span class="va">plot_file</span><span class="op">)</span></span>
 <span>        <span class="op">}</span></span>
 <span></span>
@@ -458,92 +467,54 @@ functions</strong>, and writes output:</p>
 <p>Note how thin this is: the CLI reads files, builds an SE, calls
 <code><a href="../reference/run_pca.html">run_pca()</a></code> and <code><a href="../reference/plot_pca.html">plot_pca()</a></code> from the package, and
 writes output. No analysis logic lives in the CLI script.</p>
-<p><strong>DRY check:</strong> the CLI calls <code><a href="../reference/run_pca.html">run_pca()</a></code> and
-<code><a href="../reference/plot_pca.html">plot_pca()</a></code> — it does not call <code><a href="https://rdrr.io/r/stats/prcomp.html" class="external-link">prcomp()</a></code>
-directly. If you find yourself duplicating analysis logic here, move it
-into the package and call it from both places.</p>
 </div>
 <div class="section level3">
-<h3 id="step-4-export-a-launcher-installer">Step 4: Export a Launcher Installer<a class="anchor" aria-label="anchor" href="#step-4-export-a-launcher-installer"></a>
+<h3 id="step-4-run-it-and-check-errors">Step 4: Run It and Check Errors<a class="anchor" aria-label="anchor" href="#step-4-run-it-and-check-errors"></a>
 </h3>
-<p>Running <code>Rapp exec/ADS8192 pca --help</code> works during
-development, but after a user installs your package, the
-<code>exec/</code> directory lives inside the R library tree. Rapp
-solves this with <strong>launchers</strong> — lightweight shell scripts
-(<code>.bat</code> on Windows) that live on <code>PATH</code> and
-forward to the installed Rapp app.</p>
-<p>Create <code>R/install_cli.R</code>:</p>
-<div class="sourceCode" id="cb11"><pre class="downlit sourceCode r">
-<code class="sourceCode R"><span><span class="co">#' Install ADS8192 CLI launchers</span></span>
-<span><span class="co">#'</span></span>
-<span><span class="co">#' Places lightweight launcher scripts on the user's `PATH` so the</span></span>
-<span><span class="co">#' ADS8192 CLI can be invoked directly from a terminal</span></span>
-<span><span class="co">#' (e.g. `ADS8192 pca --help`).</span></span>
-<span><span class="co">#'</span></span>
-<span><span class="co">#' @inheritDotParams Rapp::install_pkg_cli_apps -package -lib.loc</span></span>
-<span><span class="co">#' @export</span></span>
-<span><span class="va">install_ADS8192_cli</span> <span class="op">&lt;-</span> <span class="kw">function</span><span class="op">(</span><span class="va">...</span><span class="op">)</span> <span class="op">{</span></span>
-<span>    <span class="fu">Rapp</span><span class="fu">::</span><span class="fu"><a href="https://rdrr.io/pkg/Rapp/man/install_pkg_cli_apps.html" class="external-link">install_pkg_cli_apps</a></span><span class="op">(</span>package <span class="op">=</span> <span class="st">"ADS8192"</span>, lib.loc <span class="op">=</span> <span class="cn">NULL</span>, <span class="va">...</span><span class="op">)</span></span>
-<span><span class="op">}</span></span></code></pre></div>
-<p>Then <code>devtools::document()</code> to generate the Rd and export
-entry. Users will later run:</p>
-<div class="sourceCode" id="cb12"><pre class="downlit sourceCode r">
-<code class="sourceCode R"><span><span class="fu">remotes</span><span class="fu">::</span><span class="fu">install_github</span><span class="op">(</span><span class="st">"you/ADS8192"</span><span class="op">)</span></span>
-<span><span class="fu">ADS8192</span><span class="fu">::</span><span class="fu">install_ADS8192_cli</span><span class="op">(</span><span class="op">)</span></span></code></pre></div>
-<p>…and then invoke the CLI directly from a terminal. Installation
-logistics are the focus of Lecture 10.</p>
-</div>
-<div class="section level3">
-<h3 id="step-5-run-it-and-check-errors">Step 5: Run It and Check Errors<a class="anchor" aria-label="anchor" href="#step-5-run-it-and-check-errors"></a>
-</h3>
-<p>During development, run the CLI directly via <code>Rapp</code>
-(launchers come in Lecture 10):</p>
-<div class="sourceCode" id="cb13"><pre class="sourceCode bash"><code class="sourceCode bash"><span id="cb13-1"><a href="#cb13-1" tabindex="-1"></a><span class="co"># Show top-level and subcommand help</span></span>
-<span id="cb13-2"><a href="#cb13-2" tabindex="-1"></a><span class="ex">Rapp</span> exec/ADS8192 <span class="at">--help</span></span>
-<span id="cb13-3"><a href="#cb13-3" tabindex="-1"></a><span class="ex">Rapp</span> exec/ADS8192 pca <span class="at">--help</span></span></code></pre></div>
-<p>Create tiny test inputs from R so your command has something to chew
-on:</p>
-<div class="sourceCode" id="cb14"><pre class="downlit sourceCode r">
+<p>During development, run the CLI directly from the terminal via
+<code>Rapp</code>:</p>
+<div class="sourceCode" id="cb12"><pre class="sourceCode bash"><code class="sourceCode bash"><span id="cb12-1"><a href="#cb12-1" tabindex="-1"></a><span class="co"># Show top-level and subcommand help</span></span>
+<span id="cb12-2"><a href="#cb12-2" tabindex="-1"></a><span class="ex">Rapp</span> exec/ADS8192.R <span class="at">--help</span></span>
+<span id="cb12-3"><a href="#cb12-3" tabindex="-1"></a><span class="ex">Rapp</span> exec/ADS8192.R pca <span class="at">--help</span></span></code></pre></div>
+<p>Create test inputs from R so your command has something to chew on. A
+small synthetic dataset with a treatment effect is enough to exercise
+<code>--n-top</code> and <code>--color-by</code>:</p>
+<div class="sourceCode" id="cb13"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="fu"><a href="https://rdrr.io/r/base/files2.html" class="external-link">dir.create</a></span><span class="op">(</span><span class="st">"tests/testdata"</span>, recursive <span class="op">=</span> <span class="cn">TRUE</span>, showWarnings <span class="op">=</span> <span class="cn">FALSE</span><span class="op">)</span></span>
 <span></span>
-<span><span class="va">counts</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/base/data.frame.html" class="external-link">data.frame</a></span><span class="op">(</span></span>
-<span>    sample1 <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="fl">100L</span>, <span class="fl">50L</span>, <span class="fl">200L</span>, <span class="fl">30L</span>, <span class="fl">80L</span><span class="op">)</span>,</span>
-<span>    sample2 <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="fl">150L</span>, <span class="fl">75L</span>, <span class="fl">180L</span>, <span class="fl">45L</span>, <span class="fl">100L</span><span class="op">)</span>,</span>
-<span>    sample3 <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="fl">120L</span>, <span class="fl">60L</span>, <span class="fl">210L</span>, <span class="fl">35L</span>, <span class="fl">90L</span><span class="op">)</span>,</span>
-<span>    sample4 <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="fl">180L</span>, <span class="fl">90L</span>, <span class="fl">240L</span>, <span class="fl">55L</span>, <span class="fl">110L</span><span class="op">)</span>,</span>
-<span>    row.names <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/paste.html" class="external-link">paste0</a></span><span class="op">(</span><span class="st">"gene"</span>, <span class="fl">1</span><span class="op">:</span><span class="fl">5</span><span class="op">)</span></span>
-<span><span class="op">)</span></span>
-<span><span class="fu">utils</span><span class="fu">::</span><span class="fu"><a href="https://rdrr.io/r/utils/write.table.html" class="external-link">write.table</a></span><span class="op">(</span><span class="va">counts</span>, <span class="st">"tests/testdata/counts.tsv"</span>,</span>
-<span>                   sep <span class="op">=</span> <span class="st">"\t"</span>, quote <span class="op">=</span> <span class="cn">FALSE</span><span class="op">)</span></span>
+<span><span class="fu"><a href="https://rdrr.io/r/base/Random.html" class="external-link">set.seed</a></span><span class="op">(</span><span class="fl">1</span><span class="op">)</span></span>
+<span><span class="va">n_genes</span>   <span class="op">&lt;-</span> <span class="fl">1000L</span></span>
+<span><span class="va">n_samples</span> <span class="op">&lt;-</span> <span class="fl">8L</span></span>
+<span><span class="va">sample_ids</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/base/sprintf.html" class="external-link">sprintf</a></span><span class="op">(</span><span class="st">"sample%02d"</span>, <span class="fu"><a href="https://rdrr.io/r/base/seq.html" class="external-link">seq_len</a></span><span class="op">(</span><span class="va">n_samples</span><span class="op">)</span><span class="op">)</span></span>
+<span><span class="va">gene_ids</span>   <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/base/sprintf.html" class="external-link">sprintf</a></span><span class="op">(</span><span class="st">"gene%04d"</span>, <span class="fu"><a href="https://rdrr.io/r/base/seq.html" class="external-link">seq_len</a></span><span class="op">(</span><span class="va">n_genes</span><span class="op">)</span><span class="op">)</span></span>
 <span></span>
 <span><span class="va">meta</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/base/data.frame.html" class="external-link">data.frame</a></span><span class="op">(</span></span>
-<span>    treatment <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="st">"control"</span>, <span class="st">"control"</span>, <span class="st">"treated"</span>, <span class="st">"treated"</span><span class="op">)</span>,</span>
-<span>    batch     <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="st">"A"</span>, <span class="st">"B"</span>, <span class="st">"A"</span>, <span class="st">"B"</span><span class="op">)</span>,</span>
-<span>    row.names <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/paste.html" class="external-link">paste0</a></span><span class="op">(</span><span class="st">"sample"</span>, <span class="fl">1</span><span class="op">:</span><span class="fl">4</span><span class="op">)</span></span>
+<span>    treatment <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/rep.html" class="external-link">rep</a></span><span class="op">(</span><span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="st">"control"</span>, <span class="st">"treated"</span><span class="op">)</span>, each <span class="op">=</span> <span class="va">n_samples</span> <span class="op">/</span> <span class="fl">2</span><span class="op">)</span>,</span>
+<span>    row.names <span class="op">=</span> <span class="va">sample_ids</span></span>
 <span><span class="op">)</span></span>
+<span></span>
+<span><span class="co"># Random baseline counts, then bump the first 100 genes in treated samples</span></span>
+<span><span class="va">counts</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/base/matrix.html" class="external-link">matrix</a></span><span class="op">(</span><span class="fu"><a href="https://rdrr.io/r/base/sample.html" class="external-link">sample</a></span><span class="op">(</span><span class="fl">1</span><span class="op">:</span><span class="fl">100</span>, <span class="va">n_genes</span> <span class="op">*</span> <span class="va">n_samples</span>, replace <span class="op">=</span> <span class="cn">TRUE</span><span class="op">)</span>,</span>
+<span>                 nrow <span class="op">=</span> <span class="va">n_genes</span>,</span>
+<span>                 dimnames <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/list.html" class="external-link">list</a></span><span class="op">(</span><span class="va">gene_ids</span>, <span class="va">sample_ids</span><span class="op">)</span><span class="op">)</span></span>
+<span></span>
+<span><span class="va">treated</span> <span class="op">&lt;-</span> <span class="va">meta</span><span class="op">$</span><span class="va">treatment</span> <span class="op">==</span> <span class="st">"treated"</span></span>
+<span><span class="va">counts</span><span class="op">[</span><span class="fl">1</span><span class="op">:</span><span class="fl">100</span>, <span class="va">treated</span><span class="op">]</span> <span class="op">&lt;-</span> <span class="va">counts</span><span class="op">[</span><span class="fl">1</span><span class="op">:</span><span class="fl">100</span>, <span class="va">treated</span><span class="op">]</span> <span class="op">+</span> <span class="fl">100</span></span>
+<span></span>
+<span><span class="fu">utils</span><span class="fu">::</span><span class="fu"><a href="https://rdrr.io/r/utils/write.table.html" class="external-link">write.table</a></span><span class="op">(</span><span class="va">counts</span>, <span class="st">"tests/testdata/counts.tsv"</span>,</span>
+<span>                   sep <span class="op">=</span> <span class="st">"\t"</span>, quote <span class="op">=</span> <span class="cn">FALSE</span><span class="op">)</span></span>
 <span><span class="fu">utils</span><span class="fu">::</span><span class="fu"><a href="https://rdrr.io/r/utils/write.table.html" class="external-link">write.table</a></span><span class="op">(</span><span class="va">meta</span>, <span class="st">"tests/testdata/meta.tsv"</span>,</span>
 <span>                   sep <span class="op">=</span> <span class="st">"\t"</span>, quote <span class="op">=</span> <span class="cn">FALSE</span><span class="op">)</span></span></code></pre></div>
-<p>Happy path:</p>
-<div class="sourceCode" id="cb15"><pre class="sourceCode bash"><code class="sourceCode bash"><span id="cb15-1"><a href="#cb15-1" tabindex="-1"></a><span class="ex">Rapp</span> exec/ADS8192 pca <span class="dt">\</span></span>
-<span id="cb15-2"><a href="#cb15-2" tabindex="-1"></a>    <span class="at">--counts</span> tests/testdata/counts.tsv <span class="dt">\</span></span>
-<span id="cb15-3"><a href="#cb15-3" tabindex="-1"></a>    <span class="at">--meta</span> tests/testdata/meta.tsv <span class="dt">\</span></span>
-<span id="cb15-4"><a href="#cb15-4" tabindex="-1"></a>    <span class="at">--output</span> tests/testdata/output/ <span class="dt">\</span></span>
-<span id="cb15-5"><a href="#cb15-5" tabindex="-1"></a>    <span class="at">--n-top</span> 5</span></code></pre></div>
+<p>You could also save your example dataset from the package to
+<code>tests/testdata/</code> and use that.</p>
+<p>Happy path — use a realistic <code>--n-top</code> and exercise
+<code>--color-by</code>:</p>
+<div class="sourceCode" id="cb14"><pre class="sourceCode bash"><code class="sourceCode bash"><span id="cb14-1"><a href="#cb14-1" tabindex="-1"></a><span class="ex">Rapp</span> exec/ADS8192.R pca <span class="at">--counts</span> tests/testdata/counts.tsv <span class="at">--meta</span> tests/testdata/meta.tsv <span class="at">--output</span> tests/testdata/output/ <span class="at">--n-top</span> 500 <span class="at">--color-by</span> treatment</span></code></pre></div>
 <p>Error path (missing file) — confirm a non-zero exit code:</p>
-<div class="sourceCode" id="cb16"><pre class="sourceCode bash"><code class="sourceCode bash"><span id="cb16-1"><a href="#cb16-1" tabindex="-1"></a><span class="ex">Rapp</span> exec/ADS8192 pca <span class="at">--counts</span> nope.tsv <span class="at">--meta</span> meta.tsv <span class="at">--output</span> out/</span>
-<span id="cb16-2"><a href="#cb16-2" tabindex="-1"></a><span class="bu">echo</span> %ERRORLEVEL%    <span class="co"># Windows: should print 1</span></span></code></pre></div>
+<div class="sourceCode" id="cb15"><pre class="sourceCode bash"><code class="sourceCode bash"><span id="cb15-1"><a href="#cb15-1" tabindex="-1"></a><span class="ex">Rapp</span> exec/ADS8192.R pca <span class="at">--counts</span> nope.tsv <span class="at">--meta</span> meta.tsv <span class="at">--output</span> out/</span>
+<span id="cb15-2"><a href="#cb15-2" tabindex="-1"></a><span class="bu">echo</span> %ERRORLEVEL%    <span class="co"># Windows: should print 1</span></span></code></pre></div>
 <p>If you see <code>Error: File not found: nope.tsv</code> and a
 non-zero exit code, the CLI is failing the way a pipeline expects.</p>
-<p>You can also drive the CLI from an R session while iterating — it
-avoids spawning a new R process on every run:</p>
-<div class="sourceCode" id="cb17"><pre class="downlit sourceCode r">
-<code class="sourceCode R"><span><span class="fu">Rapp</span><span class="fu">::</span><span class="fu"><a href="https://rdrr.io/pkg/Rapp/man/run.html" class="external-link">run</a></span><span class="op">(</span><span class="st">"exec/ADS8192"</span>, <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span></span>
-<span>    <span class="st">"pca"</span>,</span>
-<span>    <span class="st">"--counts"</span>, <span class="st">"tests/testdata/counts.tsv"</span>,</span>
-<span>    <span class="st">"--meta"</span>,   <span class="st">"tests/testdata/meta.tsv"</span>,</span>
-<span>    <span class="st">"--output"</span>, <span class="st">"tests/testdata/output/"</span>,</span>
-<span>    <span class="st">"--n-top"</span>,  <span class="st">"5"</span></span>
-<span><span class="op">)</span><span class="op">)</span></span></code></pre></div>
 <hr>
 </div>
 </div>
@@ -620,7 +591,7 @@ reproducible defaults, exit codes, machine-readable output</li>
 <li>Introduced Rapp and its <code>switch("")</code> subcommand
 idiom</li>
 <li>Added a Rapp app to the existing ADS8192 package
-(<code>exec/ADS8192</code>, <code>Rapp</code> in
+(<code>exec/ADS8192.R</code>, <code>Rapp</code> in
 <code>DESCRIPTION</code>)</li>
 <li>Exported a launcher installer
 (<code>install_ADS8192_cli()</code>)</li>
@@ -632,7 +603,7 @@ idiom</li>
 </h3>
 <p><strong>The ADS8192 package now has a working CLI in
 <code>exec/</code> and an exported launcher installer.</strong> Users
-can call <code>Rapp exec/ADS8192 pca</code> today; Lecture 10 covers
+can call <code>Rapp exec/ADS8192.R pca</code> today; Lecture 10 covers
 installed use, clean-room testing, and output parity.</p>
 <hr>
 </div>
@@ -674,7 +645,7 @@ alongside <code>pca</code>.</p>
 <p>Add a <code>testthat</code> snapshot test that captures the column
 names of <code>result$scores</code>. Future changes to output structure
 will fail the test until you deliberately review the snapshot:</p>
-<div class="sourceCode" id="cb18"><pre class="downlit sourceCode r">
+<div class="sourceCode" id="cb16"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="fu"><a href="https://testthat.r-lib.org/reference/test_that.html" class="external-link">test_that</a></span><span class="op">(</span><span class="st">"pca output columns are stable"</span>, <span class="op">{</span></span>
 <span>    <span class="fu"><a href="https://rdrr.io/r/utils/data.html" class="external-link">data</a></span><span class="op">(</span><span class="va">example_se</span>, package <span class="op">=</span> <span class="st">"ADS8192"</span><span class="op">)</span></span>
 <span>    <span class="va">result</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/run_pca.html">run_pca</a></span><span class="op">(</span><span class="va">example_se</span>, n_top <span class="op">=</span> <span class="fl">50</span><span class="op">)</span></span>
@@ -702,25 +673,25 @@ with <code><a href="https://testthat.r-lib.org/reference/snapshot_accept.html" c
 <div class="section level2">
 <h2 id="cli-quick-reference">CLI Quick Reference<a class="anchor" aria-label="anchor" href="#cli-quick-reference"></a>
 </h2>
-<div class="sourceCode" id="cb19"><pre class="sourceCode bash"><code class="sourceCode bash"><span id="cb19-1"><a href="#cb19-1" tabindex="-1"></a><span class="co"># During development</span></span>
-<span id="cb19-2"><a href="#cb19-2" tabindex="-1"></a><span class="ex">Rapp</span> exec/ADS8192 <span class="at">--help</span></span>
-<span id="cb19-3"><a href="#cb19-3" tabindex="-1"></a><span class="ex">Rapp</span> exec/ADS8192 pca <span class="at">--help</span></span>
-<span id="cb19-4"><a href="#cb19-4" tabindex="-1"></a></span>
-<span id="cb19-5"><a href="#cb19-5" tabindex="-1"></a><span class="ex">Rapp</span> exec/ADS8192 pca <span class="dt">\</span></span>
-<span id="cb19-6"><a href="#cb19-6" tabindex="-1"></a>    <span class="at">--counts</span> counts.tsv <span class="dt">\</span></span>
-<span id="cb19-7"><a href="#cb19-7" tabindex="-1"></a>    <span class="at">--meta</span> samples.tsv <span class="dt">\</span></span>
-<span id="cb19-8"><a href="#cb19-8" tabindex="-1"></a>    <span class="at">--output</span> results/ <span class="dt">\</span></span>
-<span id="cb19-9"><a href="#cb19-9" tabindex="-1"></a>    <span class="at">--n-top</span> 500 <span class="dt">\</span></span>
-<span id="cb19-10"><a href="#cb19-10" tabindex="-1"></a>    <span class="at">--color-by</span> treatment</span>
-<span id="cb19-11"><a href="#cb19-11" tabindex="-1"></a></span>
-<span id="cb19-12"><a href="#cb19-12" tabindex="-1"></a><span class="co"># Check exit code (Windows)</span></span>
-<span id="cb19-13"><a href="#cb19-13" tabindex="-1"></a><span class="bu">echo</span> %ERRORLEVEL%</span></code></pre></div>
+<div class="sourceCode" id="cb17"><pre class="sourceCode bash"><code class="sourceCode bash"><span id="cb17-1"><a href="#cb17-1" tabindex="-1"></a><span class="co"># During development</span></span>
+<span id="cb17-2"><a href="#cb17-2" tabindex="-1"></a><span class="ex">Rapp</span> exec/ADS8192.R <span class="at">--help</span></span>
+<span id="cb17-3"><a href="#cb17-3" tabindex="-1"></a><span class="ex">Rapp</span> exec/ADS8192.R pca <span class="at">--help</span></span>
+<span id="cb17-4"><a href="#cb17-4" tabindex="-1"></a></span>
+<span id="cb17-5"><a href="#cb17-5" tabindex="-1"></a><span class="ex">Rapp</span> exec/ADS8192.R pca <span class="dt">\</span></span>
+<span id="cb17-6"><a href="#cb17-6" tabindex="-1"></a>    <span class="at">--counts</span> counts.tsv <span class="dt">\</span></span>
+<span id="cb17-7"><a href="#cb17-7" tabindex="-1"></a>    <span class="at">--meta</span> samples.tsv <span class="dt">\</span></span>
+<span id="cb17-8"><a href="#cb17-8" tabindex="-1"></a>    <span class="at">--output</span> results/ <span class="dt">\</span></span>
+<span id="cb17-9"><a href="#cb17-9" tabindex="-1"></a>    <span class="at">--n-top</span> 500 <span class="dt">\</span></span>
+<span id="cb17-10"><a href="#cb17-10" tabindex="-1"></a>    <span class="at">--color-by</span> treatment</span>
+<span id="cb17-11"><a href="#cb17-11" tabindex="-1"></a></span>
+<span id="cb17-12"><a href="#cb17-12" tabindex="-1"></a><span class="co"># Check exit code (Windows)</span></span>
+<span id="cb17-13"><a href="#cb17-13" tabindex="-1"></a><span class="bu">echo</span> %ERRORLEVEL%</span></code></pre></div>
 <hr>
 </div>
 <div class="section level2">
 <h2 id="session-info">Session Info<a class="anchor" aria-label="anchor" href="#session-info"></a>
 </h2>
-<div class="sourceCode" id="cb20"><pre class="downlit sourceCode r">
+<div class="sourceCode" id="cb18"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="fu"><a href="https://rdrr.io/r/utils/sessionInfo.html" class="external-link">sessionInfo</a></span><span class="op">(</span><span class="op">)</span></span></code></pre></div>
 <pre><code><span><span class="co">## R version 4.5.3 (2026-03-11)</span></span>
 <span><span class="co">## Platform: x86_64-pc-linux-gnu</span></span>
