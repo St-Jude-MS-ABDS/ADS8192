@@ -139,6 +139,9 @@ Rscript -e "Rapp::install_pkg_cli_apps('ADS8192')"
 
 # Run PCA from the terminal
 ADS8192 pca --counts counts.tsv --meta samples.tsv --output results/ --color-by treatment
+
+# Make toast (demo subcommand)
+ADS8192 toast --bread sourdough --buttered
 ```
 
 ## Links

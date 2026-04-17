@@ -1,6 +1,6 @@
 #!/usr/bin/env Rapp
 #| name: ADS8192
-#| title: ADS8192 PCA Tool
+#| title: ADS8192 PCA Tool & Toaster
 #| description: PCA analysis for SummarizedExperiment data (ADS 8192 reference implementation).
 
 suppressPackageStartupMessages(library(ADS8192))
@@ -82,43 +82,20 @@ switch(
         message("Done.")
     },
 
-    #| title: Validate input files
-    #| description: Check that input files exist, parse correctly, and report dimensions.
-    validate = {
-        #| description: Path to counts matrix (TSV/CSV)
-        #| short: c
-        counts <- ""
+    #| title: Make toast
+    #| description: Make a slice of toast from the bread of your choice.
+    toast = {
+        #| description: Type of bread to use
+        #| short: b
+        bread <- ""
 
-        #| description: Path to sample metadata (TSV/CSV)
-        #| short: m
-        meta <- ""
+        #| description: Butter the toast
+        buttered <- FALSE
 
-        # Validation
-        if (counts == "" || meta == "") {
-            stop("--counts and --meta are required", call. = FALSE)
-        }
-        if (!file.exists(counts)) {
-            stop("File not found: ", counts, call. = FALSE)
-        }
-        if (!file.exists(meta)) {
-            stop("File not found: ", meta, call. = FALSE)
+        if (bread == "") {
+            stop("--bread is required", call. = FALSE)
         }
 
-        # Parse and report
-        counts_df <- read_data_file(counts)
-        meta_df <- read_data_file(meta)
-
-        message("Counts dimensions: ", nrow(counts_df), " genes x ",
-                ncol(counts_df), " samples")
-        message("Metadata rows: ", nrow(meta_df))
-        message("Metadata columns: ",
-                paste(colnames(meta_df), collapse = ", "))
-
-        if (!all(colnames(counts_df) %in% rownames(meta_df))) {
-            stop("Sample IDs in counts do not match metadata row names",
-                 call. = FALSE)
-        }
-
-        message("All sample IDs match. Inputs look valid.")
+        message(make_toast(bread = bread, buttered = buttered))
     }
 )
