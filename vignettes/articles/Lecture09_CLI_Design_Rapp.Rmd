@@ -133,6 +133,15 @@ TSV for tabular data, JSON for structured output. Avoid clever formatting that a
 install.packages("Rapp")
 ```
 
+We also need to add the `Rapp` *launcher* to our PATH.
+
+```{r install-launcher}
+
+Rapp::install_pkg_cli_apps("Rapp")
+```
+
+This adds the `Rapp` command to your terminal, which you can use to run Rapp scripts during development. 
+
 ## How Rapp Declares a CLI
 
 Rapp infers CLI structure from normal R code:
@@ -159,7 +168,7 @@ A complete Rapp script has this overall shape:
 ```{r rapp-structure, eval=FALSE}
 #!/usr/bin/env Rapp         # Shebang marking this a Rapp executable
 #| name: ADS8192            # CLI name (shown in --help)
-#| title: ADS8192 PCA Tool
+#| title: ADS8192 PCA Tool & Toaster  # One-line title for help
 #| description: PCA analysis for SummarizedExperiment data.
 
 # Load packages explicitly (runs before any command)
@@ -200,7 +209,7 @@ Key structural points:
 
 # Part 3: Add the CLI to Your Package
 
-You already have a package — the ADS8192 package you built in Lectures 5–8. The CLI lives inside that package from the start. No separate script directory, no "move it in later" step.
+You already have a package. The CLI lives inside that package from the start. No separate script directory, no "move it in later" step.
 
 ## Step 1: Declare Rapp as a Dependency
 
@@ -220,24 +229,25 @@ Rapp CLI apps live in the package's top-level `exec/` directory. Files in `exec/
 dir.create("exec")
 ```
 
-Now create `exec/ADS8192` — the full Rapp script. Two things about this file matter before you write anything else:
+Now create `exec/ADS8192.R`. This defines your CLI. It is R code, but with some special annotations for Rapp. Two things about this file matter before you write anything else:
 
 - **Explicit namespacing.** Even with `library(ADS8192)`, the Rapp script runs in a minimal environment. Load base-R helper packages explicitly at the top (`library(utils)`, `library(stats)`), and use `utils::write.table()` / `utils::read.table()` in the body.
-- **Trailing newline required.** Rapp needs `exec/ADS8192` to end with a blank line. Most editors handle this by default — just verify. Without it, Rapp may fail to parse the last command.
+- **Trailing newline required.** Rapp needs `exec/ADS8192.R` to end with a blank line. Most editors handle this by default — just verify. Without it, Rapp may fail to parse the last command.
 
 Write the header and shared helpers first:
 
 ```{r rapp-header, eval=FALSE}
-# exec/ADS8192 — header and helpers
 #!/usr/bin/env Rapp
 #| name: ADS8192
-#| title: ADS8192 PCA Tool
+#| title: ADS8192 PCA Tool & Toaster
 #| description: PCA analysis for SummarizedExperiment data.
 
 suppressPackageStartupMessages({
     library(ADS8192)
     library(utils)
     library(stats)
+    library(ggplot2)
+    library(SummarizedExperiment)
 })
 
 # Helper to read TSV/CSV (not exported; kept in CLI script)
@@ -297,7 +307,7 @@ switch(
         counts_df <- read_data_file(counts)
         meta_df   <- read_data_file(meta)
 
-        se <- SummarizedExperiment::SummarizedExperiment(
+        se <- SummarizedExperiment(
             assays  = list(counts = as.matrix(counts_df)),
             colData = meta_df
         )
@@ -308,7 +318,9 @@ switch(
         if (color_by != "") {
             plot_file <- file.path(output, "pca_plot.png")
             p <- plot_pca(result, color_by = color_by)
-            ggplot2::ggsave(plot_file, p, width = 8, height = 6, dpi = 150)
+            png(plot_file, width = 8, height = 6, units = "in", res = 300)
+            print(p)
+            dev.off()
             message("Saved: ", plot_file)
         }
 
@@ -319,101 +331,62 @@ switch(
 
 Note how thin this is: the CLI reads files, builds an SE, calls `run_pca()` and `plot_pca()` from the package, and writes output. No analysis logic lives in the CLI script.
 
-**DRY check:** the CLI calls `run_pca()` and `plot_pca()` — it does not call `prcomp()` directly. If you find yourself duplicating analysis logic here, move it into the package and call it from both places.
+## Step 4: Run It and Check Errors
 
-## Step 4: Export a Launcher Installer
-
-Running `Rapp exec/ADS8192 pca --help` works during development, but after a user installs your package, the `exec/` directory lives inside the R library tree. Rapp solves this with **launchers** — lightweight shell scripts (`.bat` on Windows) that live on `PATH` and forward to the installed Rapp app.
-
-Create `R/install_cli.R`:
-
-```{r install-helper}
-#' Install ADS8192 CLI launchers
-#'
-#' Places lightweight launcher scripts on the user's `PATH` so the
-#' ADS8192 CLI can be invoked directly from a terminal
-#' (e.g. `ADS8192 pca --help`).
-#'
-#' @inheritDotParams Rapp::install_pkg_cli_apps -package -lib.loc
-#' @export
-install_ADS8192_cli <- function(...) {
-    Rapp::install_pkg_cli_apps(package = "ADS8192", lib.loc = NULL, ...)
-}
-```
-
-Then `devtools::document()` to generate the Rd and export entry. Users will later run:
-
-```r
-remotes::install_github("you/ADS8192")
-ADS8192::install_ADS8192_cli()
-```
-
-…and then invoke the CLI directly from a terminal. Installation logistics are the focus of Lecture 10.
-
-## Step 5: Run It and Check Errors
-
-During development, run the CLI directly via `Rapp` (launchers come in Lecture 10):
+During development, run the CLI directly from the terminal via `Rapp`:
 
 ```bash
 # Show top-level and subcommand help
-Rapp exec/ADS8192 --help
-Rapp exec/ADS8192 pca --help
+Rapp exec/ADS8192.R --help
+Rapp exec/ADS8192.R pca --help
 ```
 
-Create tiny test inputs from R so your command has something to chew on:
+Create test inputs from R so your command has something to chew on. A small synthetic dataset with a treatment effect is enough to exercise `--n-top` and `--color-by`:
 
 ```{r create-test-data, eval=FALSE}
 dir.create("tests/testdata", recursive = TRUE, showWarnings = FALSE)
 
-counts <- data.frame(
-    sample1 = c(100L, 50L, 200L, 30L, 80L),
-    sample2 = c(150L, 75L, 180L, 45L, 100L),
-    sample3 = c(120L, 60L, 210L, 35L, 90L),
-    sample4 = c(180L, 90L, 240L, 55L, 110L),
-    row.names = paste0("gene", 1:5)
-)
-utils::write.table(counts, "tests/testdata/counts.tsv",
-                   sep = "\t", quote = FALSE)
+set.seed(1)
+n_genes   <- 1000L
+n_samples <- 8L
+sample_ids <- sprintf("sample%02d", seq_len(n_samples))
+gene_ids   <- sprintf("gene%04d", seq_len(n_genes))
 
 meta <- data.frame(
-    treatment = c("control", "control", "treated", "treated"),
-    batch     = c("A", "B", "A", "B"),
-    row.names = paste0("sample", 1:4)
+    treatment = rep(c("control", "treated"), each = n_samples / 2),
+    row.names = sample_ids
 )
+
+# Random baseline counts, then bump the first 100 genes in treated samples
+counts <- matrix(sample(1:100, n_genes * n_samples, replace = TRUE),
+                 nrow = n_genes,
+                 dimnames = list(gene_ids, sample_ids))
+
+treated <- meta$treatment == "treated"
+counts[1:100, treated] <- counts[1:100, treated] + 100
+
+utils::write.table(counts, "tests/testdata/counts.tsv",
+                   sep = "\t", quote = FALSE)
 utils::write.table(meta, "tests/testdata/meta.tsv",
                    sep = "\t", quote = FALSE)
 ```
 
-Happy path:
+You could also save your example dataset from the package to `tests/testdata/` and use that.
+
+Happy path — use a realistic `--n-top` and exercise `--color-by`:
 
 ```bash
-Rapp exec/ADS8192 pca \
-    --counts tests/testdata/counts.tsv \
-    --meta tests/testdata/meta.tsv \
-    --output tests/testdata/output/ \
-    --n-top 5
+Rapp exec/ADS8192.R pca --counts tests/testdata/counts.tsv --meta tests/testdata/meta.tsv --output tests/testdata/output/ --n-top 500 --color-by treatment
 ```
 
 Error path (missing file) — confirm a non-zero exit code:
 
 ```bash
-Rapp exec/ADS8192 pca --counts nope.tsv --meta meta.tsv --output out/
+Rapp exec/ADS8192.R pca --counts nope.tsv --meta meta.tsv --output out/
 echo %ERRORLEVEL%    # Windows: should print 1
 ```
 
 If you see `Error: File not found: nope.tsv` and a non-zero exit code, the CLI is failing the way a pipeline expects.
-
-You can also drive the CLI from an R session while iterating — it avoids spawning a new R process on every run:
-
-```r
-Rapp::run("exec/ADS8192", c(
-    "pca",
-    "--counts", "tests/testdata/counts.tsv",
-    "--meta",   "tests/testdata/meta.tsv",
-    "--output", "tests/testdata/output/",
-    "--n-top",  "5"
-))
-```
 
 ---
 
@@ -448,14 +421,14 @@ Today we:
 
 1. Learned five CLI design principles: help text, explicit I/O, reproducible defaults, exit codes, machine-readable output
 2. Introduced Rapp and its `switch("")` subcommand idiom
-3. Added a Rapp app to the existing ADS8192 package (`exec/ADS8192`, `Rapp` in `DESCRIPTION`)
+3. Added a Rapp app to the existing ADS8192 package (`exec/ADS8192.R`, `Rapp` in `DESCRIPTION`)
 4. Exported a launcher installer (`install_ADS8192_cli()`)
 5. Ran the CLI during development and checked error behavior
 6. Treated argument and output names as a stability contract
 
 ## Package Milestone
 
-**The ADS8192 package now has a working CLI in `exec/` and an exported launcher installer.** Users can call `Rapp exec/ADS8192 pca` today; Lecture 10 covers installed use, clean-room testing, and output parity.
+**The ADS8192 package now has a working CLI in `exec/` and an exported launcher installer.** Users can call `Rapp exec/ADS8192.R pca` today; Lecture 10 covers installed use, clean-room testing, and output parity.
 
 ---
 
@@ -507,10 +480,10 @@ Before Lecture 10, skim the Rapp documentation section on how snake_case → keb
 
 ```bash
 # During development
-Rapp exec/ADS8192 --help
-Rapp exec/ADS8192 pca --help
+Rapp exec/ADS8192.R --help
+Rapp exec/ADS8192.R pca --help
 
-Rapp exec/ADS8192 pca \
+Rapp exec/ADS8192.R pca \
     --counts counts.tsv \
     --meta samples.tsv \
     --output results/ \
