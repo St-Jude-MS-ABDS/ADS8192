@@ -138,8 +138,10 @@ Even alone:
 
 - **Reversible.** A branch can be abandoned or force-pushed freely.
   `main` can’t.
-- **Reviewable.** The PR page is a diff viewer that scales better than
-  `git diff` on 40 files.
+- **Reviewable.** The PR page allows you to more clearly see what
+  changes are being made and review them in a conversation with the
+  contributor, requesting additional fixes or changes, getting
+  clarification on approach rationale, etc.
 - **CI-gated.** Your GitHub Actions workflow (from Lecture 6) runs on
   the PR. You find out about a broken test *before* `main` is broken,
   not after.
@@ -161,8 +163,8 @@ Even alone:
 
 Open a **draft PR** when you want CI to run and the conversation to
 start but you aren’t asking for a merge yet. It’s the right place for
-“does this approach look reasonable?” questions — earlier is cheaper
-than later.
+“does this approach look reasonable?” questions. Asking that
+questionearlier is cheaper than later.
 
 ### CI as the First Reviewer
 
@@ -173,11 +175,11 @@ for review.
 
 ------------------------------------------------------------------------
 
-## Part 3: Code Review — The Highest-Leverage Habit
+## Part 3: Code Review
 
-A **code review** is one person reading another person’s proposed diff
-and leaving comments. On GitHub this happens on the PR’s “Files changed”
-tab.
+A **code review** is one person reading another person’s proposed
+changes and leaving comments. On GitHub this happens on the PR’s “Files
+changed” tab.
 
 Review is the single highest-leverage habit in collaborative software.
 It isn’t just about catching bugs.
@@ -197,27 +199,26 @@ Roughly in order:
 5.  **Surprises.** Anything a user of this function would not expect —
     silent behavior changes, new dependencies, changed defaults.
 
-Style and formatting are the *least* important category. A good reviewer
-flags blockers, not nits.
+Style and formatting are the *least* important category. Try not to
+nitpick, especially if the PR is from a first-time contributor making a
+meaningful contribution. You don’t want to discourage anyone from
+contributing, after all, that is work you don’t have to do yourself.
 
 ### How to Give a Good Review
 
 - **Ask before demanding.** “Is there a reason we aren’t using `X`
   here?” beats “use `X`.”
 - **Separate blockers from suggestions.** Prefix non-blocking comments
-  with “nit:” or “optional:” so the author knows what must change before
-  merge.
+  with “optional:” so the author knows what must change before merge.
 - **Be specific.** “This is confusing” is not useful; “I expected
   `n_top` to default to all features, not 500” is.
-- **Approve when the remaining items are nits.** Don’t hold up a merge
-  over taste.
 
 ### How to Receive a Good Review
 
-- **Assume good faith.** The reviewer is trying to help, not attack your
-  code.
-- **Push follow-up commits.** Don’t squash away the review conversation
-  mid-flight.
+- **Assume good faith.** The reviewer is trying to help, not attack you
+  personally. Take feedback objectively.
+- **Push follow-up commits.** Try to fix the issues raised and push
+  updates promptly.
 - **Resolve threads you address.** Leave threads you disagree with open
   and reply with why.
 - **Separate follow-ups into new issues.** “Good point, that’s a bigger
@@ -225,8 +226,8 @@ flags blockers, not nits.
 
 ### Benefits Beyond Bug Catching
 
-Bugs caught is the easiest benefit to see, but not the biggest. The
-deeper wins:
+Bugs caught is the easiest benefit to see, but not necessarily the
+largest or most impactful. Less obvious wins include:
 
 - **Knowledge diffusion.** After a review, at least two people
   understand that code.
@@ -235,7 +236,7 @@ deeper wins:
 - **Shared ownership.** Code reviewed by the team belongs to the team.
 - **Durable rationale.** The review conversation is attached to the diff
   forever — future archaeologists reading `git blame` can click through
-  and see *why*.
+  and see *why* changes were made.
 
 ### Self-Review: The Solo Dev’s Version
 
@@ -246,6 +247,9 @@ half-renamed variables, and changes you didn’t mean to commit.
 Self-review catches a meaningful fraction of what a second reviewer
 would, at zero coordination cost.
 
+Having AI review your code is also effective at finding many obvious
+issues.
+
 ------------------------------------------------------------------------
 
 ## Part 4: Supporting Features, Briefly
@@ -254,11 +258,7 @@ These aren’t the main event, but they’re worth knowing exist.
 
 **Protected `main` branch.** A repo setting that requires PRs (not
 direct pushes) and optionally requires passing CI and approving reviews
-before merge. Turn this on as soon as you have even one collaborator.
-
-**CODEOWNERS.** A file that auto-requests reviews from specific people
-when paths they own are touched. Useful once the project is big enough
-that “who should review this?” is a non-obvious question.
+before merge. This is helpful to turn on once you have a team.
 
 **Releases and tags.** A GitHub release is a human-readable wrapper
 around a Git tag. Tagged releases are the stable handle collaborators
@@ -270,8 +270,9 @@ pipeline users scan them before upgrading.
 aren’t bugs or feature requests. Keeps the issue tracker focused on
 actionable work.
 
-**Projects.** Kanban-style boards over issues and PRs. Useful when you
-have enough in flight that a list view stops helping.
+**Projects.** Kanban-style boards over issues and PRs. Useful for
+longer-term projects that need more phased planning and group
+contributions.
 
 ------------------------------------------------------------------------
 
@@ -298,8 +299,7 @@ is how silent behavior changes leak into releases.
 
 Today we covered, at a high level:
 
-1.  **Issues** as the project’s shared memory — useful solo,
-    indispensable on a team
+1.  **Issues** as the project’s shared memory
 2.  **Branches and pull requests** as proposals, with CI as an automated
     first reviewer
 3.  **Code review** as the highest-leverage collaboration habit,
@@ -322,8 +322,7 @@ Before moving on, make sure you can answer:
 - Why do issues matter on a project where you are the only contributor?
 - What does a pull request give you that a direct commit to `main` does
   not?
-- What is the biggest benefit of code review, and why isn’t it “catching
-  bugs”?
+- What are other benefits of code review beyond “catching bugs”?
 
 ------------------------------------------------------------------------
 

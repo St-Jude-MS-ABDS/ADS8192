@@ -234,8 +234,10 @@ place to discuss that diff before it lands.</p>
 <strong>Reversible.</strong> A branch can be abandoned or
 force-pushed freely. <code>main</code> can’t.</li>
 <li>
-<strong>Reviewable.</strong> The PR page is a diff viewer that
-scales better than <code>git diff</code> on 40 files.</li>
+<strong>Reviewable.</strong> The PR page allows you to more clearly
+see what changes are being made and review them in a conversation with
+the contributor, requesting additional fixes or changes, getting
+clarification on approach rationale, etc.</li>
 <li>
 <strong>CI-gated.</strong> Your GitHub Actions workflow (from
 Lecture 6) runs on the PR. You find out about a broken test
@@ -270,8 +272,8 @@ bottom.</li>
 </h3>
 <p>Open a <strong>draft PR</strong> when you want CI to run and the
 conversation to start but you aren’t asking for a merge yet. It’s the
-right place for “does this approach look reasonable?” questions —
-earlier is cheaper than later.</p>
+right place for “does this approach look reasonable?” questions. Asking
+that questionearlier is cheaper than later.</p>
 </div>
 <div class="section level3">
 <h3 id="ci-as-the-first-reviewer">CI as the First Reviewer<a class="anchor" aria-label="anchor" href="#ci-as-the-first-reviewer"></a>
@@ -284,11 +286,11 @@ settle, then ask for review.</p>
 </div>
 </div>
 <div class="section level2">
-<h2 id="part-3-code-review-the-highest-leverage-habit">Part 3: Code Review — The Highest-Leverage Habit<a class="anchor" aria-label="anchor" href="#part-3-code-review-the-highest-leverage-habit"></a>
+<h2 id="part-3-code-review">Part 3: Code Review<a class="anchor" aria-label="anchor" href="#part-3-code-review"></a>
 </h2>
 <p>A <strong>code review</strong> is one person reading another person’s
-proposed diff and leaving comments. On GitHub this happens on the PR’s
-“Files changed” tab.</p>
+proposed changes and leaving comments. On GitHub this happens on the
+PR’s “Files changed” tab.</p>
 <p>Review is the single highest-leverage habit in collaborative
 software. It isn’t just about catching bugs.</p>
 <div class="section level3">
@@ -313,8 +315,11 @@ change would notice if it broke this?</li>
 not expect — silent behavior changes, new dependencies, changed
 defaults.</li>
 </ol>
-<p>Style and formatting are the <em>least</em> important category. A
-good reviewer flags blockers, not nits.</p>
+<p>Style and formatting are the <em>least</em> important category. Try
+not to nitpick, especially if the PR is from a first-time contributor
+making a meaningful contribution. You don’t want to discourage anyone
+from contributing, after all, that is work you don’t have to do
+yourself.</p>
 </div>
 <div class="section level3">
 <h3 id="how-to-give-a-good-review">How to Give a Good Review<a class="anchor" aria-label="anchor" href="#how-to-give-a-good-review"></a>
@@ -325,15 +330,12 @@ good reviewer flags blockers, not nits.</p>
 using <code>X</code> here?” beats “use <code>X</code>.”</li>
 <li>
 <strong>Separate blockers from suggestions.</strong> Prefix
-non-blocking comments with “nit:” or “optional:” so the author knows
-what must change before merge.</li>
+non-blocking comments with “optional:” so the author knows what must
+change before merge.</li>
 <li>
 <strong>Be specific.</strong> “This is confusing” is not useful; “I
 expected <code>n_top</code> to default to all features, not 500”
 is.</li>
-<li>
-<strong>Approve when the remaining items are nits.</strong> Don’t
-hold up a merge over taste.</li>
 </ul>
 </div>
 <div class="section level3">
@@ -342,10 +344,10 @@ hold up a merge over taste.</li>
 <ul>
 <li>
 <strong>Assume good faith.</strong> The reviewer is trying to help,
-not attack your code.</li>
+not attack you personally. Take feedback objectively.</li>
 <li>
-<strong>Push follow-up commits.</strong> Don’t squash away the
-review conversation mid-flight.</li>
+<strong>Push follow-up commits.</strong> Try to fix the issues
+raised and push updates promptly.</li>
 <li>
 <strong>Resolve threads you address.</strong> Leave threads you
 disagree with open and reply with why.</li>
@@ -357,8 +359,8 @@ that’s a bigger change — filed as #58” is a legitimate response.</li>
 <div class="section level3">
 <h3 id="benefits-beyond-bug-catching">Benefits Beyond Bug Catching<a class="anchor" aria-label="anchor" href="#benefits-beyond-bug-catching"></a>
 </h3>
-<p>Bugs caught is the easiest benefit to see, but not the biggest. The
-deeper wins:</p>
+<p>Bugs caught is the easiest benefit to see, but not necessarily the
+largest or most impactful. Less obvious wins include:</p>
 <ul>
 <li>
 <strong>Knowledge diffusion.</strong> After a review, at least two
@@ -372,7 +374,8 @@ to the team.</li>
 <li>
 <strong>Durable rationale.</strong> The review conversation is
 attached to the diff forever — future archaeologists reading
-<code>git blame</code> can click through and see <em>why</em>.</li>
+<code>git blame</code> can click through and see <em>why</em> changes
+were made.</li>
 </ul>
 </div>
 <div class="section level3">
@@ -383,6 +386,8 @@ merging. Pretend you didn’t write it. You’ll find a surprising number of
 leftover <code><a href="https://rdrr.io/r/base/print.html" class="external-link">print()</a></code> calls, half-renamed variables, and changes
 you didn’t mean to commit. Self-review catches a meaningful fraction of
 what a second reviewer would, at zero coordination cost.</p>
+<p>Having AI review your code is also effective at finding many obvious
+issues.</p>
 <hr>
 </div>
 </div>
@@ -392,12 +397,8 @@ what a second reviewer would, at zero coordination cost.</p>
 <p>These aren’t the main event, but they’re worth knowing exist.</p>
 <p><strong>Protected <code>main</code> branch.</strong> A repo setting
 that requires PRs (not direct pushes) and optionally requires passing CI
-and approving reviews before merge. Turn this on as soon as you have
-even one collaborator.</p>
-<p><strong>CODEOWNERS.</strong> A file that auto-requests reviews from
-specific people when paths they own are touched. Useful once the project
-is big enough that “who should review this?” is a non-obvious
-question.</p>
+and approving reviews before merge. This is helpful to turn on once you
+have a team.</p>
 <p><strong>Releases and tags.</strong> A GitHub release is a
 human-readable wrapper around a Git tag. Tagged releases are the stable
 handle collaborators install —
@@ -408,8 +409,8 @@ pipeline users scan them before upgrading.</p>
 questions that aren’t bugs or feature requests. Keeps the issue tracker
 focused on actionable work.</p>
 <p><strong>Projects.</strong> Kanban-style boards over issues and PRs.
-Useful when you have enough in flight that a list view stops
-helping.</p>
+Useful for longer-term projects that need more phased planning and group
+contributions.</p>
 <hr>
 </div>
 <div class="section level2">
@@ -460,8 +461,7 @@ is how silent behavior changes leak into releases.</p>
 <p>Today we covered, at a high level:</p>
 <ol style="list-style-type: decimal">
 <li>
-<strong>Issues</strong> as the project’s shared memory — useful
-solo, indispensable on a team</li>
+<strong>Issues</strong> as the project’s shared memory</li>
 <li>
 <strong>Branches and pull requests</strong> as proposals, with CI as
 an automated first reviewer</li>
@@ -489,8 +489,7 @@ it.</p>
 contributor?</li>
 <li>What does a pull request give you that a direct commit to
 <code>main</code> does not?</li>
-<li>What is the biggest benefit of code review, and why isn’t it
-“catching bugs”?</li>
+<li>What are other benefits of code review beyond “catching bugs”?</li>
 </ul>
 <hr>
 </div>
