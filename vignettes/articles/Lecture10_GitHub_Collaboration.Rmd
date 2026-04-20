@@ -216,7 +216,7 @@ Today we covered, at a high level:
 1. **Issues** as the project's shared memory
 2. **Branches and pull requests** as proposals, with CI as an automated first reviewer
 3. **Code review** as the highest-leverage collaboration habit, including self-review for solo work
-4. **Supporting features** — protected branches, CODEOWNERS, releases, discussions, projects
+4. **Supporting features** — protected branches, releases, discussions, projects
 5. **Matching process to stakes** — neither over- nor under-engineering the workflow
 
 None of this is technically hard. It's a set of norms, and the payoff is that your code stays understandable by more than one person and your project's history stays legible after you stop paying attention to it.

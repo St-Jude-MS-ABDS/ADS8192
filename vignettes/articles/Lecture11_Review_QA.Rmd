@@ -1,5 +1,5 @@
 ---
-title: "Lecture 11: Review / Q&A (Homework 1 Support)"
+title: "Lecture 11: Unit 1 Review"
 author: "Jared Andrews"
 date: "April 20, 2026"
 output:
@@ -19,644 +19,136 @@ knitr::opts_chunk$set(
 )
 ```
 
-# Learning Objectives
+# Motivation
+
+Unit 1 focused around a singular process - taking an analysis you would normally stuff into an R script, and turning it into a generic R package that other people can install, run, trust, and maintain. We also demonstrated how to build different interfaces on tops of the core package for different audiences and use cases: a Shiny app for interactive use, and a CLI for pipeline inclusion and automation.
+
+We covered key concepts of software engineering along the way: data structures, packaging, documentation, testing, UI design, and version control. Each lecture introduced concepts and processes that you will see repeatedly in real scientific software, regardless of the domain or language.
+
+This review session is a chance to see those ideas next to each other and understand how they compose.
+
+## Learning Objectives
 
 By the end of this session, you will be able to:
 
-1. Identify and resolve remaining blockers for Homework 1 submission
-2. Apply a systematic debugging workflow (reproduce → isolate → fix → test → document)
-3. Validate the end-to-end deliverable: install from GitHub, run core functions, run Shiny app, run CLI, and view pkgdown site
-4. Synthesize the durable software-design heuristics from Unit 1 and use them during peer review
-
-
-
-## Motivation
-
-Robust scientific software is evaluated end to end: can someone else install it, understand it, trust its outputs, and debug it when something goes wrong? A review session matters because it forces you to look at the project the way a real user, collaborator, or reviewer would.
-
-This lecture is important because systematic debugging and peer review save time. They help you find hidden assumptions, inconsistent interfaces, and weak documentation before those problems become lost hours for someone else or become embarrassing failures late in a project.
-
-## Evaluation Checklist
-
-As you review a package at the end of Unit 1, ask:
-
-- Does the project reuse strong existing infrastructure instead of rebuilding it unnecessarily?
-- Is there one clear analysis core with thin interfaces layered on top?
-- Are public contracts documented, tested, and stable across interfaces?
-- Can another user install and run it from a clean environment?
-- Are validation and error messages placed at the right boundaries?
-- Would a future collaborator understand what is core logic versus interface glue?
+1. Describe the key concepts and processes from each lecture
+2. Address any issues remaining with homework 1
+3. Recognize these same patterns and processes covered in Unit 1 when you encounter them in real scientific software
 
 ---
 
-# Unit 1 Design Synthesis
+# Lecture 4 — Data Structures & R Ecosystems
 
-The specific tools in this unit matter, but the durable ideas matter more:
+The unit began with data, because the shape of your inputs and outputs constrains everything downstream. If your functions accept and return well-defined objects, they are easier to test, easier to hand off, and easier to compose.
 
-- **Reuse strong ecosystems first.** Start by evaluating existing packages, containers, and infrastructure before writing custom replacements.
-- **One core, many interfaces.** Keep analysis logic separate from Shiny, CLI, and documentation layers.
-- **Public contracts matter.** Function signatures, file outputs, and help text become promises to users.
-- **Tests protect behavior.** They exist to catch regressions and make refactoring safe.
-- **Packaging is a distribution boundary.** It forces dependencies, documentation, and installability into the open.
-- **Validate at the boundary.** Friendly errors in functions, apps, and CLIs are part of the product.
-- **Clean-room thinking reveals truth.** If the project only works on your machine, it is not done.
+**Key ideas:**
 
----
-
-# Homework 1 Requirements Recap
-
-## What You're Submitting
-
-A GitHub repository containing an R package that:
-
-| Component | Status | Check |
-|-----------|--------|-------|
-| **Package structure** | Valid R package | `devtools::check()` passes |
-| **Core functions** | `run_pca()`, `plot_pca()`, etc. | Functions work on test data |
-| **Documentation** | roxygen2 + README | `?function` works |
-| **Tests** | testthat | `devtools::test()` passes |
-| **pkgdown site** | Builds successfully | `pkgdown::build_site()` works |
-| **Shiny app** | `run_app()` | App launches and works |
-| **CLI** | `sePCA` (Rapp CLI) | CLI runs from fresh install |
-| **GitHub** | Public repo | `install_github()` works |
+- **Reuse before you build.** Before inventing a new data structure, check whether a well-maintained one already fits. The "wheel reinvention" checklist asks about problem fit, data model alignment, interoperability, and maintenance burden.
+- **Invariants provide safety.** A gene with `start > end` is not a valid gene, it is a bug. Validity checks turn that domain rule into something the class enforces for you.
+- **S4 class system advantages and drawback.** Typed slots, `setValidity()`, `setGeneric()`, and `setMethod()` give you classes that catch contract violations at construction time. Method dispatch and verbose syntax can be hurdles.
+- **CRAN vs. Bioconductor differences.** Bioconductor enforces shared base classes and release cadences so that ecosystems of packages interoperate. CRAN is not domain-specific and has looser requirements, so it has more diversity but less interoperability.
+- **`SummarizedExperiment` & friends are simple and powerful.** Assays (the matrices), `rowData` (feature metadata), and `colData` (sample metadata) travel together. Subset one, the others follow. Writing your functions against this structure is how they become composable with the rest of the ecosystem.
 
 ---
 
-# Part 1: Readiness Checklist
+# Lecture 5 — Package Development with devtools
 
-## Run the Checklist
+This lecture introduced the core workflow of package development, which is how you turn working code into a generic package that other people can install, understand, and trust. The process is not technically hard, but it is a lot of moving pieces to keep track of. We introduced `usethis` and `devtools` as ways to handle much of the scaffolding and busywork.
 
-Everyone run through this checklist right now. Mark each item ✅ or ❌:
+**Key ideas:**
 
-### 1. R CMD check
-
-Does your package build properly? Do all tests pass?
-
-```{r checklist-2}
-devtools::check()
-
-# Goal: 0 errors, 0 warnings
-# NOTEs are usually acceptable, but check them for anything important or easily addressed
-```
-
-### 2. Documentation
-
-```{r checklist-3}
-# Help files work?
-?run_pca
-?plot_pca
-
-# Package help?
-?ADS8192
-```
-
-### 3. Tests
-
-Do you have tests that cover your core functionality? Do they pass?
-
-```{r checklist-4}
-devtools::test()
-
-# Goal: All tests pass
-```
-
-### 4. pkgdown Site
-
-Does your site exist, have reference pages for exported functions, a landing page with basic installation, and at least one vignette?
-
-Is it linked from your Github repo/README?
-
-### 5. Shiny App
-
-```{r checklist-6}
-library(ADS8192)
-run_app()
-
-# Or with your own data:
-# run_app(se = my_se)
-
-# Check:
-# - App launches without error
-# - Plots render
-# - Inputs change the plot
-# - Assay selector is populated
-```
-
-### 6. CLI
-
-```bash
-# From terminal
-ADS8192 pca --help
-
-# If launchers are not installed
-# Rapp exec/ADS8192 pca --help
-```
-
-### 7. Install from GitHub
-
-In a fresh R session, try installing your package from Github:
-
-```{r checklist-1}
-# Install from GitHub (replace with your username/repo)
-remotes::install_github("YOUR-USERNAME/YOUR-PACKAGE")
-
-# Then ensure it loads
-library(ADS8192)
-```
+- **Why packages are useful.** Portability, explicit dependencies, formal documentation, and testability. The moment a second person needs your code, a package is cheaper than a script.
+- **DESCRIPTION - package metadata.** It declares name, version, license, authors, and which packages are required vs. suggested. Semantic versioning (`MAJOR.MINOR.PATCH`) and licensing overviews explained important aspects of package management.
+- **roxygen2 is a pipeline.** Docstrings above each function become `.Rd` help files and the `NAMESPACE`. One source of truth; the build step handles the rest.
+- **Namespacing.** `@importFrom pkg fun` or fully-qualified `pkg::fun()` calls keep it obvious where every symbol comes from. Loose `library()` calls inside package code are a big no-no.
+- **`usethis` + `devtools` as muscle memory.** `create_package()`, `use_git()`, `use_github()`, `use_package()`, `document()`, `load_all()`, `check()`. These are not are not necessary, but they can help you get a working package very quickly.
+- **The feature ritual.** *Implement → Document → Test → Check → Commit.* Doing these in order, every time, can help you avoid many issues.
 
 ---
 
-# Part 2: Triage (10 min)
+# Lecture 6 — Documentation & Testing (pkgdown, testthat)
 
-## Categorize Your Blockers
+Full documentation and a test suite are huge steps toward making your package trustworthy. They are also the parts of the process that are most often skipped, because they are not strictly necessary to get something working. If somebody else will ever use the code (say, you in six months), take the time to do these steps.
 
-Based on your checklist results, identify which category your issues fall into:
+**Key ideas:**
 
-| Category | Examples |
-|----------|----------|
-| **Package/Check** | R CMD check errors, missing NAMESPACE entries, dependency issues |
-| **Documentation** | Missing roxygen2 tags, broken examples, README issues |
-| **Tests/CI** | Failing tests, CI not running, test setup issues |
-| **pkgdown** | Site build errors, missing vignettes, config issues |
-| **Shiny** | App crashes, missing dependencies, broken reactivity |
-| **CLI** | Argument parsing, file I/O, exit codes |
-
-## Form Groups
-
-We'll form debugging groups by category. Join the group matching your primary blocker.
+- **Test public behavior, not implementation.** Tests that pin down internal details turn every refactor into a busywork session. Tests that pin down what the function *promises* protect users while leaving you free to rewrite the insides.
+- **Arrange–act–assert.** Each `test_that()` block sets up inputs, calls the function, and makes expectations. 
+- **TDD as a design tool.** Writing the failing test first forces you to design the interface before you write the implementation. It is worth doing even occasionally just for that effect.
+- **pkgdown is documentation-as-website.** README, function reference, vignettes, and custom articles all assemble automatically into a navigable site. A pkgdown site is often the first real thing a potential user interacts with.
+- **CI gates.** GitHub Actions workflows (`check-standard`, `pkgdown`) run the full test suite across operating systems and R versions on every push. "It works on my machine" stops being a defense.
+- **Vignettes are long-form tutorials.** They show how the pieces of the package fit together in a real workflow, which function references alone can never do.
 
 ---
 
-# Part 3: Debugging Playbook
+# Lecture 7 — Shiny and Reactivity
 
-## The Systematic Approach
+We saw how providing an interactive Shiny interface on top of your package can make it accessible to a wider audience. Shiny's reactive programming model is powerful but can be confusing at first, because it is a different way of thinking about code execution. Understanding the reactivity graph and the different types of reactive expressions is key to building Shiny apps that are efficient and bug-free.
 
-```
-┌─────────────┐     ┌─────────────┐     ┌─────────────┐
-│  Reproduce  │ ──→ │   Isolate   │ ──→ │     Fix     │
-└─────────────┘     └─────────────┘     └─────────────┘
-        │                                       │
-        └───────────────────────────────────────┘
-                         ↓
-                 ┌─────────────┐     ┌─────────────┐
-                 │    Test     │ ──→ │  Document   │
-                 └─────────────┘     └─────────────┘
-```
+**Key ideas:**
 
-### 1. Reproduce
-
-Can you reliably trigger the error?
-
-```{r reproduce}
-# Write down exact steps:
-# 1. Restart R
-# 2. Run: library(sePCA)
-# 3. Run: run_pca(example_se)
-# 4. Error appears: "could not find function..."
-```
-
-### 2. Isolate
-
-What's the minimal code that triggers it?
-
-```{r isolate}
-# Start removing parts until you find the core issue
-# Does this work?
-library(SummarizedExperiment)
-SummarizedExperiment(...)
-
-# Does this fail?
-sePCA::run_pca(...)
-```
-
-### 3. Fix
-
-Apply the fix:
-
-```{r fix}
-# Common fixes by error type
-
-# "could not find function X" 
-# → Add @importFrom or use pkg::fun()
-
-# "missing argument" 
-# → Add @param tags in roxygen
-
-# "no visible binding for global variable"
-# → Use .data$variable in ggplot aes()
-```
-
-### 4. Test
-
-Verify the fix:
-
-```{r test}
-# Run the minimal reproduction case
-# Confirm error is gone
-# Run full test suite
-devtools::test()
-```
-
-### 5. Document
-
-Record what you learned:
-
-```{r document}
-# Add a comment explaining the fix
-# Update documentation if needed
-# Commit with descriptive message:
-# "Fix: Add SummarizedExperiment to Imports for run_pca()"
-```
+- **The reactivity graph.** Inputs are sources, `reactive()` expressions are conductors, and `render*()` / `output$*` are endpoints. Shiny walks that graph lazily: nothing recomputes until an endpoint asks for it.
+- **`reactive()` vs. `observe()`.** `reactive()` caches a value and only recomputes when a dependency changes. `observe()` runs side effects. Confusing the two is the most common source of surprising Shiny bugs.
+- **`eventReactive()` gates computation.** Long or expensive work should wait for an explicit trigger (a button press, a file upload), not fire on every keystroke.
+- **`isolate()` reads without subscribing.** Useful when you want a value but do not want changes to it to retrigger your code.
+- **Validate inputs.** `validate()` + `need()` produce friendly, inline error messages instead of red-flash stack traces. 
 
 ---
 
-# Common Issues and Fixes
+# Lecture 8 — Shiny Packaging & Deployment
 
-## Package/Check Errors
+An `app.R` sitting in a folder is not reproducible. Packaging the app *inside* the R package makes it installable, versionable, and testable alongside the rest of the code. We talked about how to structure the app code, where to put dependencies, what to test, and how to deploy to different platforms. The details of deployment will depend on your organization's infrastructure, but the general principles of packaging and testing apply everywhere.
 
-### "could not find function X"
+**Key ideas:**
 
-**Problem:** Function from another package isn't available.
-
-**Fix:**
-
-```{r fix-missing-function}
-# Option 1: Explicit namespace
-SummarizedExperiment::assay(se, "counts")
-
-# Option 2: Import via roxygen2
-#' @importFrom SummarizedExperiment assay
-```
-
-### "no visible binding for global variable"
-
-**Problem:** ggplot2 aesthetics trigger R CMD check notes.
-
-**Fix:**
-
-```{r fix-binding}
-# Instead of:
-ggplot(data, aes(x = PC1, y = PC2))
-
-# Use:
-ggplot(data, aes(x = .data$PC1, y = .data$PC2))
-
-# Or add to package (in R/globals.R):
-utils::globalVariables(c("PC1", "PC2"))
-```
-
-### Missing imports in DESCRIPTION
-
-**Fix:**
-
-```{r fix-imports}
-# Add missing packages
-usethis::use_package("ggplot2")
-usethis::use_package("SummarizedExperiment")
-```
+- **The `app_ui()` / `app_server()` / `run_app()` pattern.** UI and server become package functions in `R/`. `run_app()` is the user-facing entry point; user need only install the package to install the app.
+- **Dependencies live in DESCRIPTION.** Shiny, bslib, DT, and any other packages the app needs get declared the same way every other dependency does. No hidden `library()` calls.
+- **What to test.** Test the core analysis functions, not the reactive plumbing. Reactive behavior is hard to test and tends to churn; analysis behavior is stable and tests pay for themselves. `shinytest2` exists for smoke tests when you need them.
+- **Deployment is a distribution boundary.** Posit Connect Cloud (free tier), Posit Connect (self-hosted), and Shiny Server each want slightly different scaffolding, typically `inst/app/app.R` plus a `manifest.json` produced by `rsconnect::writeManifest()`. 
 
 ---
 
-## Documentation Issues
+# Lecture 9 — CLI Design with Rapp
 
-### "Undocumented arguments"
+A CLI allows your package functionality to be easily slotted into pipelines, batch jobs, and HPC clusters. It allows users to call your code from different contexts without needing to know R.
 
-**Fix:** Add missing `@param` tags:
+**Key ideas:**
 
-```{r fix-params}
-#' @param se A SummarizedExperiment object
-#' @param n_top Number of top variable genes
-```
-
-### Examples fail
-
-**Fix:** Wrap long-running or interactive examples:
-
-```{r fix-examples}
-#' @examples
-#' \dontrun{
-#' # This example takes a while
-#' run_pca(large_dataset)
-#' }
-#'
-#' \donttest{
-#' # This is tested but not on CRAN
-#' run_app()
-#' }
-```
+- **When a CLI earns its keep.** Automation, batch jobs, HPC, reproducible scripts. If a human will always be clicking a button, build the Shiny app; if the call site is another program, build the CLI.
+- **Make the contract explicit.** File-based inputs and outputs (not stdin for data). Defaults you can live with. Exit codes that mean something: `0` success, `1` runtime error, `2` invalid arguments. Machine-readable output formats (TSV/JSON) for downstream consumption.
+- **Rapp conventions.** Subcommands come from `switch("")`. Typed variable declarations (`n_top <- 500L`) become CLI flags (`--n-top`). `#|` annotations provide help text. The CLI script lives in `exec/` and ships with the package.
+- **Launchers with one command.** `Rapp::install_pkg_cli_apps("YourPkg")` places executables on the user's PATH. Install the package, install the launchers, call the tool by name.
+- **The thin-wrapper rule.** The CLI script parses arguments, reads files into objects, calls exported package functions, writes outputs. No analysis logic. If you find yourself computing something in the CLI script that is not also a package function, extract it.
+- **Version your CLI contracts.** Argument names, subcommand shapes, and output schemas are public promises. Breaking changes belong in `NEWS.md` and bump the MAJOR version.
 
 ---
 
-## Test Issues
+# Lecture 10 — GitHub as a Collaboration Platform
 
-### Test can't find package functions
+Git tracks your project history. GitHub provides a place to discuss what should change, propose a change, review it, and remember why it happened. These features are useful even when you work alone, because future-you is a collaborator.
 
-**Fix:** Make sure you're using the package correctly in tests:
+**Key ideas:**
 
-```{r fix-test-loading}
-# tests/testthat/test-pca.R
-
-# Functions should be available without library()
-# But you may need to load package data:
-test_that("run_pca works", {
-    data(example_se, package = "sePCA")  # Explicit package
-    result <- run_pca(example_se)
-    expect_s3_class(result$scores, "data.frame")
-})
-```
-
-### Tests fail on CI but pass locally
-
-**Possible causes:**
-
-1. Missing Suggests dependency
-2. Different R version
-3. Missing system dependency
-4. Hardcoded paths
-
-**Fix:** Check CI logs and ensure all test dependencies are in Suggests.
+- **Issues are shared memory.** Bugs, feature ideas, design questions. They let you close a browser tab and come back next week without losing context. Cross-linking (`#123`, `Fixes #47`) weaves issues, PRs, and commits into a single narrative.
+- **Branches + PRs are proposals.** A PR is a place for CI to validate the change, for you (or a reviewer) to look at the diff with fresh eyes, and for the rationale to get recorded. Direct pushes to `main` skip all three.
+- **Self-review, even solo.** Reading your own PR diff before merging catches debug prints, stray files, and changes you did not mean to make. It costs a minute and saves hours.
+- **Code review is knowledge diffusion.** Catching bugs is the obvious benefit. The larger ones are onboarding, durable rationale, and shared ownership of the codebase.
+- **Calibrate process to stakes.** A typo fix does not need a PR. A change to a released interface does. Judgment about which is which is itself a skill the unit was trying to build.
+- **The supporting cast.** Protected `main`, releases and tags, discussions, and projects are all tools for keeping a project legible as it grows.
 
 ---
 
-## pkgdown Issues
+#General Themes
 
-### Site won't build
+Several ideas spanned several lectures and are worth highlighting together here:
 
-**Common fixes:**
+- **One core, many interfaces.** The analysis logic lives in exported package functions. Shiny and the CLI are thin layers that call them.
+- **Public contracts are promises.** Function signatures, CLI arguments, file outputs, and help text are commitments to users. Changing them is a versioned event.
+- **Tests protect behavior.** Their job is to catch regressions and make refactoring safe, not to describe how the code works today.
+- **Documentation is essential for adoption.** Given the tooling available, there is no excuse for poor documentation.
+- **Validation enables trust.** Friendly errors in functions, apps, and CLIs are part of the product.
+- **Clean-room thinking reveals issues.** If the project only works on your machine, it is not done.
 
-```{r fix-pkgdown}
-# Check pkgdown config is valid YAML
-yaml::read_yaml("_pkgdown.yml")
-
-# Rebuild from scratch
-pkgdown::clean_site()
-pkgdown::build_site()
-
-# Check for vignette issues
-devtools::build_vignettes()
-```
-
-### Missing reference pages
-
-**Fix:** Ensure functions are exported:
-
-```{r fix-export}
-#' @export
-run_pca <- function(...) {
-  ...
-}
-```
-
----
-
-## Shiny Issues
-
-### App crashes on startup
-
-**Debug approach:**
-
-```{r debug-shiny}
-# Run with error tracing
-options(shiny.error = browser)
-run_app()
-
-# Or with custom data:
-# run_app(se = my_se)
-
-# Or check the app components separately
-app_ui()      # Does UI build?
-# Server can't be tested as easily, but:
-devtools::load_all()  # Make sure package loads
-```
-
-### Reactivity not working
-
-**Common causes:**
-
-```{r debug-reactivity}
-# Forgot parentheses on reactive
-output$plot <- renderPlot({
-    plot_pca(pca_result)  # WRONG: missing ()
-    plot_pca(pca_result())  # RIGHT
-})
-
-# Wrong input name
-input$n_top  # Check this matches UI: numericInput("n_top", ...)
-```
-
----
-
-## CLI Issues
-
-### Arguments not parsing
-
-**Debug:**
-
-```{r debug-cli}
-# Test the CLI directly from R
-Rapp::run(
-    system.file("exec", "sePCA", package = "sePCA"),
-    c("pca", "--counts", "test.tsv", "--meta", "meta.tsv", "--output", "out/")
-)
-```
-
-### Files not found
-
-**Check:**
-
-```{r debug-files}
-# Are you using absolute paths?
-# Relative paths are relative to working directory!
-getwd()
-
-# Better: require absolute paths
-normalizePath(args$counts)
-```
-
----
-
-# Part 4: Show and Tell (20 min)
-
-## Share Your Wins
-
-2-3 volunteers will demo:
-
-1. What problem they had
-2. How they diagnosed it
-3. What the fix was
-
-## Capture Patterns
-
-As we discuss, we'll build a shared FAQ:
-
-```markdown
-## FAQ: Common Issues and Fixes
-
-### Q: My function works locally but not after install
-A: Make sure you're not using `devtools::load_all()` logic. Test with 
-a fresh `remotes::install_github()` install.
-
-### Q: R CMD check complains about global variables
-A: Use `.data$varname` in ggplot2 aes() calls, or add `globalVariables()`.
-
-### Q: CI fails but local passes
-A: Check that all dependencies are in DESCRIPTION. Look at the CI log
-for the specific error.
-
-... (add more as we discuss)
-```
-
----
-
-# Part 5: Peer Review Exercise
-
-## Exercise A: Minimal Bug Report
-
-For one unresolved blocker, write an issue-style bug report:
-
-```markdown
-## Bug: [Short description]
-
-### Expected behavior
-[What should happen]
-
-### Actual behavior
-[What actually happens]
-
-### Steps to reproduce
-1. Start a fresh R session
-2. Run: `library(sePCA)`
-3. Run: `run_pca(example_se)`
-4. See error: [error message]
-
-### Environment
-```r
-sessionInfo()
-# Paste output here
-```
-
-### Additional context
-[Screenshots, log files, etc.]
-```
-
-## Exercise B: Swap and Review
-
-1. Pair up with a classmate
-2. Give them your GitHub repo URL
-3. They attempt to:
-   - Install from GitHub
-   - Run the README example
-   - Run `run_app()`
-   - Run the CLI
-
-4. They file one constructive GitHub issue:
-   - Be specific about what doesn't work
-   - Include exact error messages
-   - Suggest a fix if you can
-
----
-
-# Final Submission Checklist
-
-## Before You Submit
-
-```markdown
-## HW1 Submission Checklist
-
-### Package Basics
-- [ ] Package installs from GitHub without errors
-- [ ] `devtools::check()` passes with 0 errors, 0 warnings
-- [ ] All exported functions have roxygen2 documentation
-- [ ] README exists and renders on GitHub
-
-### Core Functionality
-- [ ] `run_pca()` returns list with `pca` and `scores`
-- [ ] `plot_pca()` returns a ggplot object
-
-### Testing
-- [ ] At least 5 test expectations across 2+ files
-- [ ] All tests pass with `devtools::test()`
-- [ ] CI runs on GitHub (Actions badge shows)
-
-### Shiny App
-- [ ] `run_app()` launches without errors
-- [ ] Plot updates when inputs change
-- [ ] App can be run from fresh R session
-
-### CLI
-- [ ] `exec/sePCA` exists in the package
-- [ ] `Rapp::install_pkg_cli_apps("sePCA")` installs a launcher
-- [ ] `--help` shows usage information
-- [ ] PCA command produces output files
-
-### Documentation
-- [ ] pkgdown site builds successfully
-- [ ] At least one vignette/article exists
-- [ ] README has installation and quick start
-
-### Final Verification
-- [ ] From fresh R: `remotes::install_github("user/repo")` works
-- [ ] From fresh R: `library(pkg); run_app()` works
-- [ ] From terminal: CLI produces expected outputs
-```
-
-## Optional Enhancements
-
-- [ ] Tag a release (v0.1.0)
-- [ ] Deploy Shiny app to shinyapps.io
-- [ ] Deploy pkgdown site to GitHub Pages
-- [ ] Add CI badges to README
-
----
-
-## Debrief & Reflection
-
-Before submission, make sure you can answer:
-
-- Which parts of your project are intentionally simple teaching implementations, and where would you reuse existing scientific software in real work?
-- What are the strongest user-facing contracts in your package, and how do tests and clean-room checks protect them?
-- If another team had to maintain this project next semester, would they understand the boundary between core analysis logic and interface glue?
-
----
-
-# Summary
-
-Today we:
-
-1. Ran a comprehensive readiness checklist
-2. Triaged issues by category
-3. Applied systematic debugging workflows
-4. Shared solutions and built a FAQ
-5. Practiced peer code review
-6. Finalized submission checklists
-
-## You're Ready!
-
-If you've completed the checklist, your package is ready for submission.
-
----
-
-# Resources
-
-## Getting Help
-
-- **Stack Overflow**: Tag with `r`, `r-package-devel`
-- **RStudio Community**: https://community.rstudio.com/
-- **R-pkg-devel mailing list**: For package development questions
-- **Course Slack/Discord**: Ask classmates!
-
-## Essential References
-
-- **R Packages book**: https://r-pkgs.org/
-- **Mastering Shiny**: https://mastering-shiny.org/
-- **pkgdown docs**: https://pkgdown.r-lib.org/
-- **testthat docs**: https://testthat.r-lib.org/
-
-## Example Packages to Study
-
-- **usethis**: Great example of devtools conventions
-- **ggplot2**: Excellent documentation
-- **shiny**: See how they structure the app
 
 ---
 
