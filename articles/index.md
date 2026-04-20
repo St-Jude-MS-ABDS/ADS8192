@@ -30,5 +30,5 @@
   Basics](https://st-jude-ms-abds.github.io/ADS8192/articles/Lecture09_CLI_Design_Rapp.md):
 - [Lecture 10: GitHub as a Collaboration
   Platform](https://st-jude-ms-abds.github.io/ADS8192/articles/Lecture10_GitHub_Collaboration.md):
-- [Lecture 11: Review / Q&A (Homework 1
-  Support)](https://st-jude-ms-abds.github.io/ADS8192/articles/Lecture11_Review_QA.md):
+- [Lecture 11: Unit 1
+  Review](https://st-jude-ms-abds.github.io/ADS8192/articles/Lecture11_Review_QA.md):

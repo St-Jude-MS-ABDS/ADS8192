@@ -5,13 +5,13 @@
 <meta charset="utf-8">
 <meta http-equiv="X-UA-Compatible" content="IE=edge">
 <meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
-<title>Lecture 11: Review / Q&amp;A (Homework 1 Support) • ADS8192</title>
+<title>Lecture 11: Unit 1 Review • ADS8192</title>
 <script src="../lightswitch.js"></script><script src="../deps/jquery-3.6.0/jquery-3.6.0.min.js"></script><meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
 <link href="../deps/bootstrap-5.3.1/bootstrap.min.css" rel="stylesheet">
 <script src="../deps/bootstrap-5.3.1/bootstrap.bundle.min.js"></script><link href="../deps/font-awesome-6.5.2/css/all.min.css" rel="stylesheet">
 <link href="../deps/font-awesome-6.5.2/css/v4-shims.min.css" rel="stylesheet">
 <script src="../deps/headroom-0.11.0/headroom.min.js"></script><script src="../deps/headroom-0.11.0/jQuery.headroom.min.js"></script><script src="../deps/bootstrap-toc-1.0.1/bootstrap-toc.min.js"></script><script src="../deps/clipboard.js-2.0.11/clipboard.min.js"></script><script src="../deps/search-1.0.0/autocomplete.jquery.min.js"></script><script src="../deps/search-1.0.0/fuse.min.js"></script><script src="../deps/search-1.0.0/mark.min.js"></script><!-- pkgdown --><script src="../pkgdown.js"></script><link href="../extra.css" rel="stylesheet">
-<meta property="og:title" content="Lecture 11: Review / Q&amp;A (Homework 1 Support)">
+<meta property="og:title" content="Lecture 11: Unit 1 Review">
 </head>
 <body>
     <a href="#main" class="visually-hidden-focusable">Skip to contents</a>
@@ -69,7 +69,7 @@
 <div class="row">
   <main id="main" class="col-md-9"><div class="page-header">
 
-      <h1>Lecture 11: Review / Q&amp;A (Homework 1 Support)</h1>
+      <h1>Lecture 11: Unit 1 Review</h1>
                         <h4 data-toc-skip class="author">Jared
 Andrews</h4>
             
@@ -82,808 +82,344 @@ Andrews</h4>
     
     
 <div class="section level2">
-<h2 id="learning-objectives">Learning Objectives<a class="anchor" aria-label="anchor" href="#learning-objectives"></a>
+<h2 id="motivation">Motivation<a class="anchor" aria-label="anchor" href="#motivation"></a>
 </h2>
+<p>Unit 1 focused around a singular process - taking an analysis you
+would normally stuff into an R script, and turning it into a generic R
+package that other people can install, run, trust, and maintain. We also
+demonstrated how to build different interfaces on tops of the core
+package for different audiences and use cases: a Shiny app for
+interactive use, and a CLI for pipeline inclusion and automation.</p>
+<p>We covered key concepts of software engineering along the way: data
+structures, packaging, documentation, testing, UI design, and version
+control. Each lecture introduced concepts and processes that you will
+see repeatedly in real scientific software, regardless of the domain or
+language.</p>
+<p>This review session is a chance to see those ideas next to each other
+and understand how they compose.</p>
+<div class="section level3">
+<h3 id="learning-objectives">Learning Objectives<a class="anchor" aria-label="anchor" href="#learning-objectives"></a>
+</h3>
 <p>By the end of this session, you will be able to:</p>
 <ol style="list-style-type: decimal">
-<li>Identify and resolve remaining blockers for Homework 1
-submission</li>
-<li>Apply a systematic debugging workflow (reproduce → isolate → fix →
-test → document)</li>
-<li>Validate the end-to-end deliverable: install from GitHub, run core
-functions, run Shiny app, run CLI, and view pkgdown site</li>
-<li>Synthesize the durable software-design heuristics from Unit 1 and
-use them during peer review</li>
+<li>Describe the key concepts and processes from each lecture</li>
+<li>Address any issues remaining with homework 1</li>
+<li>Recognize these same patterns and processes covered in Unit 1 when
+you encounter them in real scientific software</li>
 </ol>
-<div class="section level3">
-<h3 id="motivation">Motivation<a class="anchor" aria-label="anchor" href="#motivation"></a>
-</h3>
-<p>Robust scientific software is evaluated end to end: can someone else
-install it, understand it, trust its outputs, and debug it when
-something goes wrong? A review session matters because it forces you to
-look at the project the way a real user, collaborator, or reviewer
-would.</p>
-<p>This lecture is important because systematic debugging and peer
-review save time. They help you find hidden assumptions, inconsistent
-interfaces, and weak documentation before those problems become lost
-hours for someone else or become embarrassing failures late in a
-project.</p>
-</div>
-<div class="section level3">
-<h3 id="evaluation-checklist">Evaluation Checklist<a class="anchor" aria-label="anchor" href="#evaluation-checklist"></a>
-</h3>
-<p>As you review a package at the end of Unit 1, ask:</p>
-<ul>
-<li>Does the project reuse strong existing infrastructure instead of
-rebuilding it unnecessarily?</li>
-<li>Is there one clear analysis core with thin interfaces layered on
-top?</li>
-<li>Are public contracts documented, tested, and stable across
-interfaces?</li>
-<li>Can another user install and run it from a clean environment?</li>
-<li>Are validation and error messages placed at the right
-boundaries?</li>
-<li>Would a future collaborator understand what is core logic versus
-interface glue?</li>
-</ul>
 <hr>
 </div>
 </div>
 <div class="section level2">
-<h2 id="unit-1-design-synthesis">Unit 1 Design Synthesis<a class="anchor" aria-label="anchor" href="#unit-1-design-synthesis"></a>
+<h2 id="lecture-4-data-structures-r-ecosystems">Lecture 4 — Data Structures &amp; R Ecosystems<a class="anchor" aria-label="anchor" href="#lecture-4-data-structures-r-ecosystems"></a>
 </h2>
-<p>The specific tools in this unit matter, but the durable ideas matter
-more:</p>
+<p>The unit began with data, because the shape of your inputs and
+outputs constrains everything downstream. If your functions accept and
+return well-defined objects, they are easier to test, easier to hand
+off, and easier to compose.</p>
+<p><strong>Key ideas:</strong></p>
 <ul>
 <li>
-<strong>Reuse strong ecosystems first.</strong> Start by evaluating
-existing packages, containers, and infrastructure before writing custom
-replacements.</li>
+<strong>Reuse before you build.</strong> Before inventing a new data
+structure, check whether a well-maintained one already fits. The “wheel
+reinvention” checklist asks about problem fit, data model alignment,
+interoperability, and maintenance burden.</li>
 <li>
-<strong>One core, many interfaces.</strong> Keep analysis logic
-separate from Shiny, CLI, and documentation layers.</li>
+<strong>Invariants provide safety.</strong> A gene with
+<code>start &gt; end</code> is not a valid gene, it is a bug. Validity
+checks turn that domain rule into something the class enforces for
+you.</li>
 <li>
-<strong>Public contracts matter.</strong> Function signatures, file
-outputs, and help text become promises to users.</li>
+<strong>S4 class system advantages and drawback.</strong> Typed
+slots, <code><a href="https://rdrr.io/r/methods/validObject.html" class="external-link">setValidity()</a></code>, <code><a href="https://rdrr.io/r/methods/setGeneric.html" class="external-link">setGeneric()</a></code>, and
+<code><a href="https://rdrr.io/r/methods/setMethod.html" class="external-link">setMethod()</a></code> give you classes that catch contract violations
+at construction time. Method dispatch and verbose syntax can be
+hurdles.</li>
 <li>
-<strong>Tests protect behavior.</strong> They exist to catch
-regressions and make refactoring safe.</li>
+<strong>CRAN vs. Bioconductor differences.</strong> Bioconductor
+enforces shared base classes and release cadences so that ecosystems of
+packages interoperate. CRAN is not domain-specific and has looser
+requirements, so it has more diversity but less interoperability.</li>
 <li>
-<strong>Packaging is a distribution boundary.</strong> It forces
-dependencies, documentation, and installability into the open.</li>
+<strong><code>SummarizedExperiment</code> &amp; friends are simple
+and powerful.</strong> Assays (the matrices), <code>rowData</code>
+(feature metadata), and <code>colData</code> (sample metadata) travel
+together. Subset one, the others follow. Writing your functions against
+this structure is how they become composable with the rest of the
+ecosystem.</li>
+</ul>
+<hr>
+</div>
+<div class="section level2">
+<h2 id="lecture-5-package-development-with-devtools">Lecture 5 — Package Development with devtools<a class="anchor" aria-label="anchor" href="#lecture-5-package-development-with-devtools"></a>
+</h2>
+<p>This lecture introduced the core workflow of package development,
+which is how you turn working code into a generic package that other
+people can install, understand, and trust. The process is not
+technically hard, but it is a lot of moving pieces to keep track of. We
+introduced <code>usethis</code> and <code>devtools</code> as ways to
+handle much of the scaffolding and busywork.</p>
+<p><strong>Key ideas:</strong></p>
+<ul>
 <li>
-<strong>Validate at the boundary.</strong> Friendly errors in
+<strong>Why packages are useful.</strong> Portability, explicit
+dependencies, formal documentation, and testability. The moment a second
+person needs your code, a package is cheaper than a script.</li>
+<li>
+<strong>DESCRIPTION - package metadata.</strong> It declares name,
+version, license, authors, and which packages are required
+vs. suggested. Semantic versioning (<code>MAJOR.MINOR.PATCH</code>) and
+licensing overviews explained important aspects of package
+management.</li>
+<li>
+<strong>roxygen2 is a pipeline.</strong> Docstrings above each
+function become <code>.Rd</code> help files and the
+<code>NAMESPACE</code>. One source of truth; the build step handles the
+rest.</li>
+<li>
+<strong>Namespacing.</strong> <code>@importFrom pkg fun</code> or
+fully-qualified <code>pkg::fun()</code> calls keep it obvious where
+every symbol comes from. Loose <code><a href="https://rdrr.io/r/base/library.html" class="external-link">library()</a></code> calls inside
+package code are a big no-no.</li>
+<li>
+<strong><code>usethis</code> + <code>devtools</code> as muscle
+memory.</strong> <code>create_package()</code>, <code>use_git()</code>,
+<code>use_github()</code>, <code>use_package()</code>,
+<code>document()</code>, <code>load_all()</code>, <code>check()</code>.
+These are not are not necessary, but they can help you get a working
+package very quickly.</li>
+<li>
+<strong>The feature ritual.</strong> <em>Implement → Document → Test
+→ Check → Commit.</em> Doing these in order, every time, can help you
+avoid many issues.</li>
+</ul>
+<hr>
+</div>
+<div class="section level2">
+<h2 id="lecture-6-documentation-testing-pkgdown-testthat">Lecture 6 — Documentation &amp; Testing (pkgdown, testthat)<a class="anchor" aria-label="anchor" href="#lecture-6-documentation-testing-pkgdown-testthat"></a>
+</h2>
+<p>Full documentation and a test suite are huge steps toward making your
+package trustworthy. They are also the parts of the process that are
+most often skipped, because they are not strictly necessary to get
+something working. If somebody else will ever use the code (say, you in
+six months), take the time to do these steps.</p>
+<p><strong>Key ideas:</strong></p>
+<ul>
+<li>
+<strong>Test public behavior, not implementation.</strong> Tests
+that pin down internal details turn every refactor into a busywork
+session. Tests that pin down what the function <em>promises</em> protect
+users while leaving you free to rewrite the insides.</li>
+<li>
+<strong>Arrange–act–assert.</strong> Each <code><a href="https://testthat.r-lib.org/reference/test_that.html" class="external-link">test_that()</a></code>
+block sets up inputs, calls the function, and makes expectations.</li>
+<li>
+<strong>TDD as a design tool.</strong> Writing the failing test
+first forces you to design the interface before you write the
+implementation. It is worth doing even occasionally just for that
+effect.</li>
+<li>
+<strong>pkgdown is documentation-as-website.</strong> README,
+function reference, vignettes, and custom articles all assemble
+automatically into a navigable site. A pkgdown site is often the first
+real thing a potential user interacts with.</li>
+<li>
+<strong>CI gates.</strong> GitHub Actions workflows
+(<code>check-standard</code>, <code>pkgdown</code>) run the full test
+suite across operating systems and R versions on every push. “It works
+on my machine” stops being a defense.</li>
+<li>
+<strong>Vignettes are long-form tutorials.</strong> They show how
+the pieces of the package fit together in a real workflow, which
+function references alone can never do.</li>
+</ul>
+<hr>
+</div>
+<div class="section level2">
+<h2 id="lecture-7-shiny-and-reactivity">Lecture 7 — Shiny and Reactivity<a class="anchor" aria-label="anchor" href="#lecture-7-shiny-and-reactivity"></a>
+</h2>
+<p>We saw how providing an interactive Shiny interface on top of your
+package can make it accessible to a wider audience. Shiny’s reactive
+programming model is powerful but can be confusing at first, because it
+is a different way of thinking about code execution. Understanding the
+reactivity graph and the different types of reactive expressions is key
+to building Shiny apps that are efficient and bug-free.</p>
+<p><strong>Key ideas:</strong></p>
+<ul>
+<li>
+<strong>The reactivity graph.</strong> Inputs are sources,
+<code><a href="https://rdrr.io/pkg/shiny/man/reactive.html" class="external-link">reactive()</a></code> expressions are conductors, and
+<code>render*()</code> / <code>output$*</code> are endpoints. Shiny
+walks that graph lazily: nothing recomputes until an endpoint asks for
+it.</li>
+<li>
+<strong><code><a href="https://rdrr.io/pkg/shiny/man/reactive.html" class="external-link">reactive()</a></code> vs. <code><a href="https://rdrr.io/pkg/shiny/man/observe.html" class="external-link">observe()</a></code>.</strong>
+<code><a href="https://rdrr.io/pkg/shiny/man/reactive.html" class="external-link">reactive()</a></code> caches a value and only recomputes when a
+dependency changes. <code><a href="https://rdrr.io/pkg/shiny/man/observe.html" class="external-link">observe()</a></code> runs side effects. Confusing
+the two is the most common source of surprising Shiny bugs.</li>
+<li>
+<strong><code><a href="https://rdrr.io/pkg/shiny/man/observeEvent.html" class="external-link">eventReactive()</a></code> gates computation.</strong>
+Long or expensive work should wait for an explicit trigger (a button
+press, a file upload), not fire on every keystroke.</li>
+<li>
+<strong><code><a href="https://rdrr.io/pkg/shiny/man/isolate.html" class="external-link">isolate()</a></code> reads without subscribing.</strong>
+Useful when you want a value but do not want changes to it to retrigger
+your code.</li>
+<li>
+<strong>Validate inputs.</strong> <code><a href="https://rdrr.io/pkg/shiny/man/validate.html" class="external-link">validate()</a></code> +
+<code><a href="https://rdrr.io/pkg/shiny/man/validate.html" class="external-link">need()</a></code> produce friendly, inline error messages instead of
+red-flash stack traces.</li>
+</ul>
+<hr>
+</div>
+<div class="section level2">
+<h2 id="lecture-8-shiny-packaging-deployment">Lecture 8 — Shiny Packaging &amp; Deployment<a class="anchor" aria-label="anchor" href="#lecture-8-shiny-packaging-deployment"></a>
+</h2>
+<p>An <code>app.R</code> sitting in a folder is not reproducible.
+Packaging the app <em>inside</em> the R package makes it installable,
+versionable, and testable alongside the rest of the code. We talked
+about how to structure the app code, where to put dependencies, what to
+test, and how to deploy to different platforms. The details of
+deployment will depend on your organization’s infrastructure, but the
+general principles of packaging and testing apply everywhere.</p>
+<p><strong>Key ideas:</strong></p>
+<ul>
+<li>
+<strong>The <code>app_ui()</code> / <code>app_server()</code> /
+<code><a href="../reference/run_app.html">run_app()</a></code> pattern.</strong> UI and server become package
+functions in <code>R/</code>. <code><a href="../reference/run_app.html">run_app()</a></code> is the user-facing
+entry point; user need only install the package to install the app.</li>
+<li>
+<strong>Dependencies live in DESCRIPTION.</strong> Shiny, bslib, DT,
+and any other packages the app needs get declared the same way every
+other dependency does. No hidden <code><a href="https://rdrr.io/r/base/library.html" class="external-link">library()</a></code> calls.</li>
+<li>
+<strong>What to test.</strong> Test the core analysis functions, not
+the reactive plumbing. Reactive behavior is hard to test and tends to
+churn; analysis behavior is stable and tests pay for themselves.
+<code>shinytest2</code> exists for smoke tests when you need them.</li>
+<li>
+<strong>Deployment is a distribution boundary.</strong> Posit
+Connect Cloud (free tier), Posit Connect (self-hosted), and Shiny Server
+each want slightly different scaffolding, typically
+<code>inst/app/app.R</code> plus a <code>manifest.json</code> produced
+by <code>rsconnect::writeManifest()</code>.</li>
+</ul>
+<hr>
+</div>
+<div class="section level2">
+<h2 id="lecture-9-cli-design-with-rapp">Lecture 9 — CLI Design with Rapp<a class="anchor" aria-label="anchor" href="#lecture-9-cli-design-with-rapp"></a>
+</h2>
+<p>A CLI allows your package functionality to be easily slotted into
+pipelines, batch jobs, and HPC clusters. It allows users to call your
+code from different contexts without needing to know R.</p>
+<p><strong>Key ideas:</strong></p>
+<ul>
+<li>
+<strong>When a CLI earns its keep.</strong> Automation, batch jobs,
+HPC, reproducible scripts. If a human will always be clicking a button,
+build the Shiny app; if the call site is another program, build the
+CLI.</li>
+<li>
+<strong>Make the contract explicit.</strong> File-based inputs and
+outputs (not stdin for data). Defaults you can live with. Exit codes
+that mean something: <code>0</code> success, <code>1</code> runtime
+error, <code>2</code> invalid arguments. Machine-readable output formats
+(TSV/JSON) for downstream consumption.</li>
+<li>
+<strong>Rapp conventions.</strong> Subcommands come from
+<code>switch("")</code>. Typed variable declarations
+(<code>n_top &lt;- 500L</code>) become CLI flags (<code>--n-top</code>).
+<code>#|</code> annotations provide help text. The CLI script lives in
+<code>exec/</code> and ships with the package.</li>
+<li>
+<strong>Launchers with one command.</strong>
+<code>Rapp::install_pkg_cli_apps("YourPkg")</code> places executables on
+the user’s PATH. Install the package, install the launchers, call the
+tool by name.</li>
+<li>
+<strong>The thin-wrapper rule.</strong> The CLI script parses
+arguments, reads files into objects, calls exported package functions,
+writes outputs. No analysis logic. If you find yourself computing
+something in the CLI script that is not also a package function, extract
+it.</li>
+<li>
+<strong>Version your CLI contracts.</strong> Argument names,
+subcommand shapes, and output schemas are public promises. Breaking
+changes belong in <code>NEWS.md</code> and bump the MAJOR version.</li>
+</ul>
+<hr>
+</div>
+<div class="section level2">
+<h2 id="lecture-10-github-as-a-collaboration-platform">Lecture 10 — GitHub as a Collaboration Platform<a class="anchor" aria-label="anchor" href="#lecture-10-github-as-a-collaboration-platform"></a>
+</h2>
+<p>Git tracks your project history. GitHub provides a place to discuss
+what should change, propose a change, review it, and remember why it
+happened. These features are useful even when you work alone, because
+future-you is a collaborator.</p>
+<p><strong>Key ideas:</strong></p>
+<ul>
+<li>
+<strong>Issues are shared memory.</strong> Bugs, feature ideas,
+design questions. They let you close a browser tab and come back next
+week without losing context. Cross-linking (<code>#123</code>,
+<code>Fixes #47</code>) weaves issues, PRs, and commits into a single
+narrative.</li>
+<li>
+<strong>Branches + PRs are proposals.</strong> A PR is a place for
+CI to validate the change, for you (or a reviewer) to look at the diff
+with fresh eyes, and for the rationale to get recorded. Direct pushes to
+<code>main</code> skip all three.</li>
+<li>
+<strong>Self-review, even solo.</strong> Reading your own PR diff
+before merging catches debug prints, stray files, and changes you did
+not mean to make. It costs a minute and saves hours.</li>
+<li>
+<strong>Code review is knowledge diffusion.</strong> Catching bugs
+is the obvious benefit. The larger ones are onboarding, durable
+rationale, and shared ownership of the codebase.</li>
+<li>
+<strong>Calibrate process to stakes.</strong> A typo fix does not
+need a PR. A change to a released interface does. Judgment about which
+is which is itself a skill the unit was trying to build.</li>
+<li>
+<strong>The supporting cast.</strong> Protected <code>main</code>,
+releases and tags, discussions, and projects are all tools for keeping a
+project legible as it grows.</li>
+</ul>
+<hr>
+<p>#General Themes</p>
+<p>Several ideas spanned several lectures and are worth highlighting
+together here:</p>
+<ul>
+<li>
+<strong>One core, many interfaces.</strong> The analysis logic lives
+in exported package functions. Shiny and the CLI are thin layers that
+call them.</li>
+<li>
+<strong>Public contracts are promises.</strong> Function signatures,
+CLI arguments, file outputs, and help text are commitments to users.
+Changing them is a versioned event.</li>
+<li>
+<strong>Tests protect behavior.</strong> Their job is to catch
+regressions and make refactoring safe, not to describe how the code
+works today.</li>
+<li>
+<strong>Documentation is essential for adoption.</strong> Given the
+tooling available, there is no excuse for poor documentation.</li>
+<li>
+<strong>Validation enables trust.</strong> Friendly errors in
 functions, apps, and CLIs are part of the product.</li>
 <li>
-<strong>Clean-room thinking reveals truth.</strong> If the project
+<strong>Clean-room thinking reveals issues.</strong> If the project
 only works on your machine, it is not done.</li>
 </ul>
 <hr>
 </div>
 <div class="section level2">
-<h2 id="homework-1-requirements-recap">Homework 1 Requirements Recap<a class="anchor" aria-label="anchor" href="#homework-1-requirements-recap"></a>
-</h2>
-<div class="section level3">
-<h3 id="what-youre-submitting">What You’re Submitting<a class="anchor" aria-label="anchor" href="#what-youre-submitting"></a>
-</h3>
-<p>A GitHub repository containing an R package that:</p>
-<table class="table">
-<colgroup>
-<col width="42%">
-<col width="30%">
-<col width="26%">
-</colgroup>
-<thead><tr class="header">
-<th>Component</th>
-<th>Status</th>
-<th>Check</th>
-</tr></thead>
-<tbody>
-<tr class="odd">
-<td><strong>Package structure</strong></td>
-<td>Valid R package</td>
-<td>
-<code>devtools::check()</code> passes</td>
-</tr>
-<tr class="even">
-<td><strong>Core functions</strong></td>
-<td>
-<code><a href="../reference/run_pca.html">run_pca()</a></code>, <code><a href="../reference/plot_pca.html">plot_pca()</a></code>, etc.</td>
-<td>Functions work on test data</td>
-</tr>
-<tr class="odd">
-<td><strong>Documentation</strong></td>
-<td>roxygen2 + README</td>
-<td>
-<code>?function</code> works</td>
-</tr>
-<tr class="even">
-<td><strong>Tests</strong></td>
-<td>testthat</td>
-<td>
-<code>devtools::test()</code> passes</td>
-</tr>
-<tr class="odd">
-<td><strong>pkgdown site</strong></td>
-<td>Builds successfully</td>
-<td>
-<code><a href="https://pkgdown.r-lib.org/reference/build_site.html" class="external-link">pkgdown::build_site()</a></code> works</td>
-</tr>
-<tr class="even">
-<td><strong>Shiny app</strong></td>
-<td><code><a href="../reference/run_app.html">run_app()</a></code></td>
-<td>App launches and works</td>
-</tr>
-<tr class="odd">
-<td><strong>CLI</strong></td>
-<td>
-<code>sePCA</code> (Rapp CLI)</td>
-<td>CLI runs from fresh install</td>
-</tr>
-<tr class="even">
-<td><strong>GitHub</strong></td>
-<td>Public repo</td>
-<td>
-<code>install_github()</code> works</td>
-</tr>
-</tbody>
-</table>
-<hr>
-</div>
-</div>
-<div class="section level2">
-<h2 id="part-1-readiness-checklist">Part 1: Readiness Checklist<a class="anchor" aria-label="anchor" href="#part-1-readiness-checklist"></a>
-</h2>
-<div class="section level3">
-<h3 id="run-the-checklist">Run the Checklist<a class="anchor" aria-label="anchor" href="#run-the-checklist"></a>
-</h3>
-<p>Everyone run through this checklist right now. Mark each item ✅ or
-❌:</p>
-<div class="section level4">
-<h4 id="r-cmd-check">1. R CMD check<a class="anchor" aria-label="anchor" href="#r-cmd-check"></a>
-</h4>
-<p>Does your package build properly? Do all tests pass?</p>
-<div class="sourceCode" id="cb1"><pre class="downlit sourceCode r">
-<code class="sourceCode R"><span><span class="fu">devtools</span><span class="fu">::</span><span class="fu">check</span><span class="op">(</span><span class="op">)</span></span>
-<span></span>
-<span><span class="co"># Goal: 0 errors, 0 warnings</span></span>
-<span><span class="co"># NOTEs are usually acceptable, but check them for anything important or easily addressed</span></span></code></pre></div>
-</div>
-<div class="section level4">
-<h4 id="documentation">2. Documentation<a class="anchor" aria-label="anchor" href="#documentation"></a>
-</h4>
-<div class="sourceCode" id="cb2"><pre class="downlit sourceCode r">
-<code class="sourceCode R"><span><span class="co"># Help files work?</span></span>
-<span><span class="op">?</span><span class="va">run_pca</span></span>
-<span><span class="op">?</span><span class="va">plot_pca</span></span>
-<span></span>
-<span><span class="co"># Package help?</span></span>
-<span><span class="op">?</span><span class="va">ADS8192</span></span></code></pre></div>
-</div>
-<div class="section level4">
-<h4 id="tests">3. Tests<a class="anchor" aria-label="anchor" href="#tests"></a>
-</h4>
-<p>Do you have tests that cover your core functionality? Do they
-pass?</p>
-<div class="sourceCode" id="cb3"><pre class="downlit sourceCode r">
-<code class="sourceCode R"><span><span class="fu">devtools</span><span class="fu">::</span><span class="fu">test</span><span class="op">(</span><span class="op">)</span></span>
-<span></span>
-<span><span class="co"># Goal: All tests pass</span></span></code></pre></div>
-</div>
-<div class="section level4">
-<h4 id="pkgdown-site">4. pkgdown Site<a class="anchor" aria-label="anchor" href="#pkgdown-site"></a>
-</h4>
-<p>Does your site exist, have reference pages for exported functions, a
-landing page with basic installation, and at least one vignette?</p>
-<p>Is it linked from your Github repo/README?</p>
-</div>
-<div class="section level4">
-<h4 id="shiny-app">5. Shiny App<a class="anchor" aria-label="anchor" href="#shiny-app"></a>
-</h4>
-<div class="sourceCode" id="cb4"><pre class="downlit sourceCode r">
-<code class="sourceCode R"><span><span class="kw"><a href="https://rdrr.io/r/base/library.html" class="external-link">library</a></span><span class="op">(</span><span class="va"><a href="https://github.com/St-Jude-MS-ABDS/ADS8192" class="external-link">ADS8192</a></span><span class="op">)</span></span>
-<span><span class="fu"><a href="../reference/run_app.html">run_app</a></span><span class="op">(</span><span class="op">)</span></span>
-<span></span>
-<span><span class="co"># Or with your own data:</span></span>
-<span><span class="co"># run_app(se = my_se)</span></span>
-<span></span>
-<span><span class="co"># Check:</span></span>
-<span><span class="co"># - App launches without error</span></span>
-<span><span class="co"># - Plots render</span></span>
-<span><span class="co"># - Inputs change the plot</span></span>
-<span><span class="co"># - Assay selector is populated</span></span></code></pre></div>
-</div>
-<div class="section level4">
-<h4 id="cli">6. CLI<a class="anchor" aria-label="anchor" href="#cli"></a>
-</h4>
-<div class="sourceCode" id="cb5"><pre class="sourceCode bash"><code class="sourceCode bash"><span id="cb5-1"><a href="#cb5-1" tabindex="-1"></a><span class="co"># From terminal</span></span>
-<span id="cb5-2"><a href="#cb5-2" tabindex="-1"></a><span class="ex">ADS8192</span> pca <span class="at">--help</span></span>
-<span id="cb5-3"><a href="#cb5-3" tabindex="-1"></a></span>
-<span id="cb5-4"><a href="#cb5-4" tabindex="-1"></a><span class="co"># If launchers are not installed</span></span>
-<span id="cb5-5"><a href="#cb5-5" tabindex="-1"></a><span class="co"># Rapp exec/ADS8192 pca --help</span></span></code></pre></div>
-</div>
-<div class="section level4">
-<h4 id="install-from-github">7. Install from GitHub<a class="anchor" aria-label="anchor" href="#install-from-github"></a>
-</h4>
-<p>In a fresh R session, try installing your package from Github:</p>
-<div class="sourceCode" id="cb6"><pre class="downlit sourceCode r">
-<code class="sourceCode R"><span><span class="co"># Install from GitHub (replace with your username/repo)</span></span>
-<span><span class="fu">remotes</span><span class="fu">::</span><span class="fu">install_github</span><span class="op">(</span><span class="st">"YOUR-USERNAME/YOUR-PACKAGE"</span><span class="op">)</span></span>
-<span></span>
-<span><span class="co"># Then ensure it loads</span></span>
-<span><span class="kw"><a href="https://rdrr.io/r/base/library.html" class="external-link">library</a></span><span class="op">(</span><span class="va"><a href="https://github.com/St-Jude-MS-ABDS/ADS8192" class="external-link">ADS8192</a></span><span class="op">)</span></span></code></pre></div>
-<hr>
-</div>
-</div>
-</div>
-<div class="section level2">
-<h2 id="part-2-triage-10-min">Part 2: Triage (10 min)<a class="anchor" aria-label="anchor" href="#part-2-triage-10-min"></a>
-</h2>
-<div class="section level3">
-<h3 id="categorize-your-blockers">Categorize Your Blockers<a class="anchor" aria-label="anchor" href="#categorize-your-blockers"></a>
-</h3>
-<p>Based on your checklist results, identify which category your issues
-fall into:</p>
-<table class="table">
-<colgroup>
-<col width="50%">
-<col width="50%">
-</colgroup>
-<thead><tr class="header">
-<th>Category</th>
-<th>Examples</th>
-</tr></thead>
-<tbody>
-<tr class="odd">
-<td><strong>Package/Check</strong></td>
-<td>R CMD check errors, missing NAMESPACE entries, dependency
-issues</td>
-</tr>
-<tr class="even">
-<td><strong>Documentation</strong></td>
-<td>Missing roxygen2 tags, broken examples, README issues</td>
-</tr>
-<tr class="odd">
-<td><strong>Tests/CI</strong></td>
-<td>Failing tests, CI not running, test setup issues</td>
-</tr>
-<tr class="even">
-<td><strong>pkgdown</strong></td>
-<td>Site build errors, missing vignettes, config issues</td>
-</tr>
-<tr class="odd">
-<td><strong>Shiny</strong></td>
-<td>App crashes, missing dependencies, broken reactivity</td>
-</tr>
-<tr class="even">
-<td><strong>CLI</strong></td>
-<td>Argument parsing, file I/O, exit codes</td>
-</tr>
-</tbody>
-</table>
-</div>
-<div class="section level3">
-<h3 id="form-groups">Form Groups<a class="anchor" aria-label="anchor" href="#form-groups"></a>
-</h3>
-<p>We’ll form debugging groups by category. Join the group matching your
-primary blocker.</p>
-<hr>
-</div>
-</div>
-<div class="section level2">
-<h2 id="part-3-debugging-playbook">Part 3: Debugging Playbook<a class="anchor" aria-label="anchor" href="#part-3-debugging-playbook"></a>
-</h2>
-<div class="section level3">
-<h3 id="the-systematic-approach">The Systematic Approach<a class="anchor" aria-label="anchor" href="#the-systematic-approach"></a>
-</h3>
-<pre><code>┌─────────────┐     ┌─────────────┐     ┌─────────────┐
-│  Reproduce  │ ──→ │   Isolate   │ ──→ │     Fix     │
-└─────────────┘     └─────────────┘     └─────────────┘
-        │                                       │
-        └───────────────────────────────────────┘
-                         ↓
-                 ┌─────────────┐     ┌─────────────┐
-                 │    Test     │ ──→ │  Document   │
-                 └─────────────┘     └─────────────┘</code></pre>
-<div class="section level4">
-<h4 id="reproduce">1. Reproduce<a class="anchor" aria-label="anchor" href="#reproduce"></a>
-</h4>
-<p>Can you reliably trigger the error?</p>
-<div class="sourceCode" id="cb8"><pre class="downlit sourceCode r">
-<code class="sourceCode R"><span><span class="co"># Write down exact steps:</span></span>
-<span><span class="co"># 1. Restart R</span></span>
-<span><span class="co"># 2. Run: library(sePCA)</span></span>
-<span><span class="co"># 3. Run: run_pca(example_se)</span></span>
-<span><span class="co"># 4. Error appears: "could not find function..."</span></span></code></pre></div>
-</div>
-<div class="section level4">
-<h4 id="isolate">2. Isolate<a class="anchor" aria-label="anchor" href="#isolate"></a>
-</h4>
-<p>What’s the minimal code that triggers it?</p>
-<div class="sourceCode" id="cb9"><pre class="downlit sourceCode r">
-<code class="sourceCode R"><span><span class="co"># Start removing parts until you find the core issue</span></span>
-<span><span class="co"># Does this work?</span></span>
-<span><span class="kw"><a href="https://rdrr.io/r/base/library.html" class="external-link">library</a></span><span class="op">(</span><span class="va"><a href="https://bioconductor.org/packages/SummarizedExperiment" class="external-link">SummarizedExperiment</a></span><span class="op">)</span></span>
-<span><span class="fu"><a href="https://rdrr.io/pkg/SummarizedExperiment/man/SummarizedExperiment-class.html" class="external-link">SummarizedExperiment</a></span><span class="op">(</span><span class="va">...</span><span class="op">)</span></span>
-<span></span>
-<span><span class="co"># Does this fail?</span></span>
-<span><span class="fu">sePCA</span><span class="fu">::</span><span class="fu">run_pca</span><span class="op">(</span><span class="va">...</span><span class="op">)</span></span></code></pre></div>
-</div>
-<div class="section level4">
-<h4 id="fix">3. Fix<a class="anchor" aria-label="anchor" href="#fix"></a>
-</h4>
-<p>Apply the fix:</p>
-<div class="sourceCode" id="cb10"><pre class="downlit sourceCode r">
-<code class="sourceCode R"><span><span class="co"># Common fixes by error type</span></span>
-<span></span>
-<span><span class="co"># "could not find function X" </span></span>
-<span><span class="co"># → Add @importFrom or use pkg::fun()</span></span>
-<span></span>
-<span><span class="co"># "missing argument" </span></span>
-<span><span class="co"># → Add @param tags in roxygen</span></span>
-<span></span>
-<span><span class="co"># "no visible binding for global variable"</span></span>
-<span><span class="co"># → Use .data$variable in ggplot aes()</span></span></code></pre></div>
-</div>
-<div class="section level4">
-<h4 id="test">4. Test<a class="anchor" aria-label="anchor" href="#test"></a>
-</h4>
-<p>Verify the fix:</p>
-<div class="sourceCode" id="cb11"><pre class="downlit sourceCode r">
-<code class="sourceCode R"><span><span class="co"># Run the minimal reproduction case</span></span>
-<span><span class="co"># Confirm error is gone</span></span>
-<span><span class="co"># Run full test suite</span></span>
-<span><span class="fu">devtools</span><span class="fu">::</span><span class="fu">test</span><span class="op">(</span><span class="op">)</span></span></code></pre></div>
-</div>
-<div class="section level4">
-<h4 id="document">5. Document<a class="anchor" aria-label="anchor" href="#document"></a>
-</h4>
-<p>Record what you learned:</p>
-<div class="sourceCode" id="cb12"><pre class="downlit sourceCode r">
-<code class="sourceCode R"><span><span class="co"># Add a comment explaining the fix</span></span>
-<span><span class="co"># Update documentation if needed</span></span>
-<span><span class="co"># Commit with descriptive message:</span></span>
-<span><span class="co"># "Fix: Add SummarizedExperiment to Imports for run_pca()"</span></span></code></pre></div>
-<hr>
-</div>
-</div>
-</div>
-<div class="section level2">
-<h2 id="common-issues-and-fixes">Common Issues and Fixes<a class="anchor" aria-label="anchor" href="#common-issues-and-fixes"></a>
-</h2>
-<div class="section level3">
-<h3 id="packagecheck-errors">Package/Check Errors<a class="anchor" aria-label="anchor" href="#packagecheck-errors"></a>
-</h3>
-<div class="section level4">
-<h4 id="could-not-find-function-x">“could not find function X”<a class="anchor" aria-label="anchor" href="#could-not-find-function-x"></a>
-</h4>
-<p><strong>Problem:</strong> Function from another package isn’t
-available.</p>
-<p><strong>Fix:</strong></p>
-<div class="sourceCode" id="cb13"><pre class="downlit sourceCode r">
-<code class="sourceCode R"><span><span class="co"># Option 1: Explicit namespace</span></span>
-<span><span class="fu">SummarizedExperiment</span><span class="fu">::</span><span class="fu"><a href="https://rdrr.io/pkg/SummarizedExperiment/man/SummarizedExperiment-class.html" class="external-link">assay</a></span><span class="op">(</span><span class="va">se</span>, <span class="st">"counts"</span><span class="op">)</span></span>
-<span></span>
-<span><span class="co"># Option 2: Import via roxygen2</span></span>
-<span><span class="co">#' @importFrom SummarizedExperiment assay</span></span></code></pre></div>
-</div>
-<div class="section level4">
-<h4 id="no-visible-binding-for-global-variable">“no visible binding for global variable”<a class="anchor" aria-label="anchor" href="#no-visible-binding-for-global-variable"></a>
-</h4>
-<p><strong>Problem:</strong> ggplot2 aesthetics trigger R CMD check
-notes.</p>
-<p><strong>Fix:</strong></p>
-<div class="sourceCode" id="cb14"><pre class="downlit sourceCode r">
-<code class="sourceCode R"><span><span class="co"># Instead of:</span></span>
-<span><span class="fu"><a href="https://ggplot2.tidyverse.org/reference/ggplot.html" class="external-link">ggplot</a></span><span class="op">(</span><span class="va">data</span>, <span class="fu"><a href="https://ggplot2.tidyverse.org/reference/aes.html" class="external-link">aes</a></span><span class="op">(</span>x <span class="op">=</span> <span class="va">PC1</span>, y <span class="op">=</span> <span class="va">PC2</span><span class="op">)</span><span class="op">)</span></span>
-<span></span>
-<span><span class="co"># Use:</span></span>
-<span><span class="fu"><a href="https://ggplot2.tidyverse.org/reference/ggplot.html" class="external-link">ggplot</a></span><span class="op">(</span><span class="va">data</span>, <span class="fu"><a href="https://ggplot2.tidyverse.org/reference/aes.html" class="external-link">aes</a></span><span class="op">(</span>x <span class="op">=</span> <span class="va">.data</span><span class="op">$</span><span class="va">PC1</span>, y <span class="op">=</span> <span class="va">.data</span><span class="op">$</span><span class="va">PC2</span><span class="op">)</span><span class="op">)</span></span>
-<span></span>
-<span><span class="co"># Or add to package (in R/globals.R):</span></span>
-<span><span class="fu">utils</span><span class="fu">::</span><span class="fu"><a href="https://rdrr.io/r/utils/globalVariables.html" class="external-link">globalVariables</a></span><span class="op">(</span><span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="st">"PC1"</span>, <span class="st">"PC2"</span><span class="op">)</span><span class="op">)</span></span></code></pre></div>
-</div>
-<div class="section level4">
-<h4 id="missing-imports-in-description">Missing imports in DESCRIPTION<a class="anchor" aria-label="anchor" href="#missing-imports-in-description"></a>
-</h4>
-<p><strong>Fix:</strong></p>
-<div class="sourceCode" id="cb15"><pre class="downlit sourceCode r">
-<code class="sourceCode R"><span><span class="co"># Add missing packages</span></span>
-<span><span class="fu">usethis</span><span class="fu">::</span><span class="fu">use_package</span><span class="op">(</span><span class="st">"ggplot2"</span><span class="op">)</span></span>
-<span><span class="fu">usethis</span><span class="fu">::</span><span class="fu">use_package</span><span class="op">(</span><span class="st">"SummarizedExperiment"</span><span class="op">)</span></span></code></pre></div>
-<hr>
-</div>
-</div>
-<div class="section level3">
-<h3 id="documentation-issues">Documentation Issues<a class="anchor" aria-label="anchor" href="#documentation-issues"></a>
-</h3>
-<div class="section level4">
-<h4 id="undocumented-arguments">“Undocumented arguments”<a class="anchor" aria-label="anchor" href="#undocumented-arguments"></a>
-</h4>
-<p><strong>Fix:</strong> Add missing <code>@param</code> tags:</p>
-<div class="sourceCode" id="cb16"><pre class="downlit sourceCode r">
-<code class="sourceCode R"><span><span class="co">#' @param se A SummarizedExperiment object</span></span>
-<span><span class="co">#' @param n_top Number of top variable genes</span></span></code></pre></div>
-</div>
-<div class="section level4">
-<h4 id="examples-fail">Examples fail<a class="anchor" aria-label="anchor" href="#examples-fail"></a>
-</h4>
-<p><strong>Fix:</strong> Wrap long-running or interactive examples:</p>
-<div class="sourceCode" id="cb17"><pre class="downlit sourceCode r">
-<code class="sourceCode R"><span><span class="co">#' @examples</span></span>
-<span><span class="co">#' \dontrun{</span></span>
-<span><span class="co">#' # This example takes a while</span></span>
-<span><span class="co">#' run_pca(large_dataset)</span></span>
-<span><span class="co">#' }</span></span>
-<span><span class="co">#'</span></span>
-<span><span class="co">#' \donttest{</span></span>
-<span><span class="co">#' # This is tested but not on CRAN</span></span>
-<span><span class="co">#' run_app()</span></span>
-<span><span class="co">#' }</span></span></code></pre></div>
-<hr>
-</div>
-</div>
-<div class="section level3">
-<h3 id="test-issues">Test Issues<a class="anchor" aria-label="anchor" href="#test-issues"></a>
-</h3>
-<div class="section level4">
-<h4 id="test-cant-find-package-functions">Test can’t find package functions<a class="anchor" aria-label="anchor" href="#test-cant-find-package-functions"></a>
-</h4>
-<p><strong>Fix:</strong> Make sure you’re using the package correctly in
-tests:</p>
-<div class="sourceCode" id="cb18"><pre class="downlit sourceCode r">
-<code class="sourceCode R"><span><span class="co"># tests/testthat/test-pca.R</span></span>
-<span></span>
-<span><span class="co"># Functions should be available without library()</span></span>
-<span><span class="co"># But you may need to load package data:</span></span>
-<span><span class="fu"><a href="https://testthat.r-lib.org/reference/test_that.html" class="external-link">test_that</a></span><span class="op">(</span><span class="st">"run_pca works"</span>, <span class="op">{</span></span>
-<span>    <span class="fu"><a href="https://rdrr.io/r/utils/data.html" class="external-link">data</a></span><span class="op">(</span><span class="va">example_se</span>, package <span class="op">=</span> <span class="st">"sePCA"</span><span class="op">)</span>  <span class="co"># Explicit package</span></span>
-<span>    <span class="va">result</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/run_pca.html">run_pca</a></span><span class="op">(</span><span class="va">example_se</span><span class="op">)</span></span>
-<span>    <span class="fu"><a href="https://testthat.r-lib.org/reference/inheritance-expectations.html" class="external-link">expect_s3_class</a></span><span class="op">(</span><span class="va">result</span><span class="op">$</span><span class="va">scores</span>, <span class="st">"data.frame"</span><span class="op">)</span></span>
-<span><span class="op">}</span><span class="op">)</span></span></code></pre></div>
-</div>
-<div class="section level4">
-<h4 id="tests-fail-on-ci-but-pass-locally">Tests fail on CI but pass locally<a class="anchor" aria-label="anchor" href="#tests-fail-on-ci-but-pass-locally"></a>
-</h4>
-<p><strong>Possible causes:</strong></p>
-<ol style="list-style-type: decimal">
-<li>Missing Suggests dependency</li>
-<li>Different R version</li>
-<li>Missing system dependency</li>
-<li>Hardcoded paths</li>
-</ol>
-<p><strong>Fix:</strong> Check CI logs and ensure all test dependencies
-are in Suggests.</p>
-<hr>
-</div>
-</div>
-<div class="section level3">
-<h3 id="pkgdown-issues">pkgdown Issues<a class="anchor" aria-label="anchor" href="#pkgdown-issues"></a>
-</h3>
-<div class="section level4">
-<h4 id="site-wont-build">Site won’t build<a class="anchor" aria-label="anchor" href="#site-wont-build"></a>
-</h4>
-<p><strong>Common fixes:</strong></p>
-<div class="sourceCode" id="cb19"><pre class="downlit sourceCode r">
-<code class="sourceCode R"><span><span class="co"># Check pkgdown config is valid YAML</span></span>
-<span><span class="fu">yaml</span><span class="fu">::</span><span class="fu"><a href="https://yaml.r-lib.org/reference/read_yaml.html" class="external-link">read_yaml</a></span><span class="op">(</span><span class="st">"_pkgdown.yml"</span><span class="op">)</span></span>
-<span></span>
-<span><span class="co"># Rebuild from scratch</span></span>
-<span><span class="fu">pkgdown</span><span class="fu">::</span><span class="fu"><a href="https://pkgdown.r-lib.org/reference/clean.html" class="external-link">clean_site</a></span><span class="op">(</span><span class="op">)</span></span>
-<span><span class="fu">pkgdown</span><span class="fu">::</span><span class="fu"><a href="https://pkgdown.r-lib.org/reference/build_site.html" class="external-link">build_site</a></span><span class="op">(</span><span class="op">)</span></span>
-<span></span>
-<span><span class="co"># Check for vignette issues</span></span>
-<span><span class="fu">devtools</span><span class="fu">::</span><span class="fu">build_vignettes</span><span class="op">(</span><span class="op">)</span></span></code></pre></div>
-</div>
-<div class="section level4">
-<h4 id="missing-reference-pages">Missing reference pages<a class="anchor" aria-label="anchor" href="#missing-reference-pages"></a>
-</h4>
-<p><strong>Fix:</strong> Ensure functions are exported:</p>
-<div class="sourceCode" id="cb20"><pre class="downlit sourceCode r">
-<code class="sourceCode R"><span><span class="co">#' @export</span></span>
-<span><span class="va">run_pca</span> <span class="op">&lt;-</span> <span class="kw">function</span><span class="op">(</span><span class="va">...</span><span class="op">)</span> <span class="op">{</span></span>
-<span>  <span class="va">...</span></span>
-<span><span class="op">}</span></span></code></pre></div>
-<hr>
-</div>
-</div>
-<div class="section level3">
-<h3 id="shiny-issues">Shiny Issues<a class="anchor" aria-label="anchor" href="#shiny-issues"></a>
-</h3>
-<div class="section level4">
-<h4 id="app-crashes-on-startup">App crashes on startup<a class="anchor" aria-label="anchor" href="#app-crashes-on-startup"></a>
-</h4>
-<p><strong>Debug approach:</strong></p>
-<div class="sourceCode" id="cb21"><pre class="downlit sourceCode r">
-<code class="sourceCode R"><span><span class="co"># Run with error tracing</span></span>
-<span><span class="fu"><a href="https://rdrr.io/r/base/options.html" class="external-link">options</a></span><span class="op">(</span>shiny.error <span class="op">=</span> <span class="va">browser</span><span class="op">)</span></span>
-<span><span class="fu"><a href="../reference/run_app.html">run_app</a></span><span class="op">(</span><span class="op">)</span></span>
-<span></span>
-<span><span class="co"># Or with custom data:</span></span>
-<span><span class="co"># run_app(se = my_se)</span></span>
-<span></span>
-<span><span class="co"># Or check the app components separately</span></span>
-<span><span class="fu">app_ui</span><span class="op">(</span><span class="op">)</span>      <span class="co"># Does UI build?</span></span>
-<span><span class="co"># Server can't be tested as easily, but:</span></span>
-<span><span class="fu">devtools</span><span class="fu">::</span><span class="fu">load_all</span><span class="op">(</span><span class="op">)</span>  <span class="co"># Make sure package loads</span></span></code></pre></div>
-</div>
-<div class="section level4">
-<h4 id="reactivity-not-working">Reactivity not working<a class="anchor" aria-label="anchor" href="#reactivity-not-working"></a>
-</h4>
-<p><strong>Common causes:</strong></p>
-<div class="sourceCode" id="cb22"><pre class="downlit sourceCode r">
-<code class="sourceCode R"><span><span class="co"># Forgot parentheses on reactive</span></span>
-<span><span class="va">output</span><span class="op">$</span><span class="va">plot</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/pkg/shiny/man/renderPlot.html" class="external-link">renderPlot</a></span><span class="op">(</span><span class="op">{</span></span>
-<span>    <span class="fu"><a href="../reference/plot_pca.html">plot_pca</a></span><span class="op">(</span><span class="va">pca_result</span><span class="op">)</span>  <span class="co"># WRONG: missing ()</span></span>
-<span>    <span class="fu"><a href="../reference/plot_pca.html">plot_pca</a></span><span class="op">(</span><span class="fu">pca_result</span><span class="op">(</span><span class="op">)</span><span class="op">)</span>  <span class="co"># RIGHT</span></span>
-<span><span class="op">}</span><span class="op">)</span></span>
-<span></span>
-<span><span class="co"># Wrong input name</span></span>
-<span><span class="va">input</span><span class="op">$</span><span class="va">n_top</span>  <span class="co"># Check this matches UI: numericInput("n_top", ...)</span></span></code></pre></div>
-<hr>
-</div>
-</div>
-<div class="section level3">
-<h3 id="cli-issues">CLI Issues<a class="anchor" aria-label="anchor" href="#cli-issues"></a>
-</h3>
-<div class="section level4">
-<h4 id="arguments-not-parsing">Arguments not parsing<a class="anchor" aria-label="anchor" href="#arguments-not-parsing"></a>
-</h4>
-<p><strong>Debug:</strong></p>
-<div class="sourceCode" id="cb23"><pre class="downlit sourceCode r">
-<code class="sourceCode R"><span><span class="co"># Test the CLI directly from R</span></span>
-<span><span class="fu">Rapp</span><span class="fu">::</span><span class="fu"><a href="https://rdrr.io/pkg/Rapp/man/run.html" class="external-link">run</a></span><span class="op">(</span></span>
-<span>    <span class="fu"><a href="https://rdrr.io/r/base/system.file.html" class="external-link">system.file</a></span><span class="op">(</span><span class="st">"exec"</span>, <span class="st">"sePCA"</span>, package <span class="op">=</span> <span class="st">"sePCA"</span><span class="op">)</span>,</span>
-<span>    <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="st">"pca"</span>, <span class="st">"--counts"</span>, <span class="st">"test.tsv"</span>, <span class="st">"--meta"</span>, <span class="st">"meta.tsv"</span>, <span class="st">"--output"</span>, <span class="st">"out/"</span><span class="op">)</span></span>
-<span><span class="op">)</span></span></code></pre></div>
-</div>
-<div class="section level4">
-<h4 id="files-not-found">Files not found<a class="anchor" aria-label="anchor" href="#files-not-found"></a>
-</h4>
-<p><strong>Check:</strong></p>
-<div class="sourceCode" id="cb24"><pre class="downlit sourceCode r">
-<code class="sourceCode R"><span><span class="co"># Are you using absolute paths?</span></span>
-<span><span class="co"># Relative paths are relative to working directory!</span></span>
-<span><span class="fu"><a href="https://rdrr.io/r/base/getwd.html" class="external-link">getwd</a></span><span class="op">(</span><span class="op">)</span></span>
-<span></span>
-<span><span class="co"># Better: require absolute paths</span></span>
-<span><span class="fu"><a href="https://rdrr.io/r/base/normalizePath.html" class="external-link">normalizePath</a></span><span class="op">(</span><span class="va">args</span><span class="op">$</span><span class="va">counts</span><span class="op">)</span></span></code></pre></div>
-<hr>
-</div>
-</div>
-</div>
-<div class="section level2">
-<h2 id="part-4-show-and-tell-20-min">Part 4: Show and Tell (20 min)<a class="anchor" aria-label="anchor" href="#part-4-show-and-tell-20-min"></a>
-</h2>
-<div class="section level3">
-<h3 id="share-your-wins">Share Your Wins<a class="anchor" aria-label="anchor" href="#share-your-wins"></a>
-</h3>
-<p>2-3 volunteers will demo:</p>
-<ol style="list-style-type: decimal">
-<li>What problem they had</li>
-<li>How they diagnosed it</li>
-<li>What the fix was</li>
-</ol>
-</div>
-<div class="section level3">
-<h3 id="capture-patterns">Capture Patterns<a class="anchor" aria-label="anchor" href="#capture-patterns"></a>
-</h3>
-<p>As we discuss, we’ll build a shared FAQ:</p>
-<div class="sourceCode" id="cb25"><pre class="sourceCode markdown"><code class="sourceCode markdown"><span id="cb25-1"><a href="#cb25-1" tabindex="-1"></a><span class="fu">## FAQ: Common Issues and Fixes</span></span>
-<span id="cb25-2"><a href="#cb25-2" tabindex="-1"></a></span>
-<span id="cb25-3"><a href="#cb25-3" tabindex="-1"></a><span class="fu">### Q: My function works locally but not after install</span></span>
-<span id="cb25-4"><a href="#cb25-4" tabindex="-1"></a>A: Make sure you're not using <span class="in">`devtools::load_all()`</span> logic. Test with </span>
-<span id="cb25-5"><a href="#cb25-5" tabindex="-1"></a>a fresh <span class="in">`remotes::install_github()`</span> install.</span>
-<span id="cb25-6"><a href="#cb25-6" tabindex="-1"></a></span>
-<span id="cb25-7"><a href="#cb25-7" tabindex="-1"></a><span class="fu">### Q: R CMD check complains about global variables</span></span>
-<span id="cb25-8"><a href="#cb25-8" tabindex="-1"></a>A: Use <span class="in">`.data$varname`</span> in ggplot2 aes() calls, or add <span class="in">`globalVariables()`</span>.</span>
-<span id="cb25-9"><a href="#cb25-9" tabindex="-1"></a></span>
-<span id="cb25-10"><a href="#cb25-10" tabindex="-1"></a><span class="fu">### Q: CI fails but local passes</span></span>
-<span id="cb25-11"><a href="#cb25-11" tabindex="-1"></a>A: Check that all dependencies are in DESCRIPTION. Look at the CI log</span>
-<span id="cb25-12"><a href="#cb25-12" tabindex="-1"></a>for the specific error.</span>
-<span id="cb25-13"><a href="#cb25-13" tabindex="-1"></a></span>
-<span id="cb25-14"><a href="#cb25-14" tabindex="-1"></a>... (add more as we discuss)</span></code></pre></div>
-<hr>
-</div>
-</div>
-<div class="section level2">
-<h2 id="part-5-peer-review-exercise">Part 5: Peer Review Exercise<a class="anchor" aria-label="anchor" href="#part-5-peer-review-exercise"></a>
-</h2>
-<div class="section level3">
-<h3 id="exercise-a-minimal-bug-report">Exercise A: Minimal Bug Report<a class="anchor" aria-label="anchor" href="#exercise-a-minimal-bug-report"></a>
-</h3>
-<p>For one unresolved blocker, write an issue-style bug report:</p>
-<div class="sourceCode" id="cb26"><pre class="sourceCode markdown"><code class="sourceCode markdown"><span id="cb26-1"><a href="#cb26-1" tabindex="-1"></a><span class="fu">## Bug: [Short description]</span></span>
-<span id="cb26-2"><a href="#cb26-2" tabindex="-1"></a></span>
-<span id="cb26-3"><a href="#cb26-3" tabindex="-1"></a><span class="fu">### Expected behavior</span></span>
-<span id="cb26-4"><a href="#cb26-4" tabindex="-1"></a><span class="co">[</span><span class="ot">What should happen</span><span class="co">]</span></span>
-<span id="cb26-5"><a href="#cb26-5" tabindex="-1"></a></span>
-<span id="cb26-6"><a href="#cb26-6" tabindex="-1"></a><span class="fu">### Actual behavior</span></span>
-<span id="cb26-7"><a href="#cb26-7" tabindex="-1"></a><span class="co">[</span><span class="ot">What actually happens</span><span class="co">]</span></span>
-<span id="cb26-8"><a href="#cb26-8" tabindex="-1"></a></span>
-<span id="cb26-9"><a href="#cb26-9" tabindex="-1"></a><span class="fu">### Steps to reproduce</span></span>
-<span id="cb26-10"><a href="#cb26-10" tabindex="-1"></a><span class="ss">1. </span>Start a fresh R session</span>
-<span id="cb26-11"><a href="#cb26-11" tabindex="-1"></a><span class="ss">2. </span>Run: <span class="in">`library(sePCA)`</span></span>
-<span id="cb26-12"><a href="#cb26-12" tabindex="-1"></a><span class="ss">3. </span>Run: <span class="in">`run_pca(example_se)`</span></span>
-<span id="cb26-13"><a href="#cb26-13" tabindex="-1"></a><span class="ss">4. </span>See error: <span class="co">[</span><span class="ot">error message</span><span class="co">]</span></span>
-<span id="cb26-14"><a href="#cb26-14" tabindex="-1"></a></span>
-<span id="cb26-15"><a href="#cb26-15" tabindex="-1"></a><span class="fu">### Environment</span></span>
-<span id="cb26-16"><a href="#cb26-16" tabindex="-1"></a><span class="in">```r</span></span>
-<span id="cb26-17"><a href="#cb26-17" tabindex="-1"></a><span class="fu">sessionInfo</span>()</span>
-<span id="cb26-18"><a href="#cb26-18" tabindex="-1"></a><span class="co"># Paste output here</span></span></code></pre></div>
-<div class="section level4">
-<h4 id="additional-context">Additional context<a class="anchor" aria-label="anchor" href="#additional-context"></a>
-</h4>
-<p>[Screenshots, log files, etc.]</p>
-<pre><code>
-## Exercise B: Swap and Review
-
-1. Pair up with a classmate
-2. Give them your GitHub repo URL
-3. They attempt to:
-   - Install from GitHub
-   - Run the README example
-   - Run `run_app()`
-   - Run the CLI
-
-4. They file one constructive GitHub issue:
-   - Be specific about what doesn't work
-   - Include exact error messages
-   - Suggest a fix if you can
-
----
-
-# Final Submission Checklist
-
-## Before You Submit
-
-```markdown
-## HW1 Submission Checklist
-
-### Package Basics
-- [ ] Package installs from GitHub without errors
-- [ ] `devtools::check()` passes with 0 errors, 0 warnings
-- [ ] All exported functions have roxygen2 documentation
-- [ ] README exists and renders on GitHub
-
-### Core Functionality
-- [ ] `run_pca()` returns list with `pca` and `scores`
-- [ ] `plot_pca()` returns a ggplot object
-
-### Testing
-- [ ] At least 5 test expectations across 2+ files
-- [ ] All tests pass with `devtools::test()`
-- [ ] CI runs on GitHub (Actions badge shows)
-
-### Shiny App
-- [ ] `run_app()` launches without errors
-- [ ] Plot updates when inputs change
-- [ ] App can be run from fresh R session
-
-### CLI
-- [ ] `exec/sePCA` exists in the package
-- [ ] `Rapp::install_pkg_cli_apps("sePCA")` installs a launcher
-- [ ] `--help` shows usage information
-- [ ] PCA command produces output files
-
-### Documentation
-- [ ] pkgdown site builds successfully
-- [ ] At least one vignette/article exists
-- [ ] README has installation and quick start
-
-### Final Verification
-- [ ] From fresh R: `remotes::install_github("user/repo")` works
-- [ ] From fresh R: `library(pkg); run_app()` works
-- [ ] From terminal: CLI produces expected outputs</code></pre>
-</div>
-</div>
-<div class="section level3">
-<h3 id="optional-enhancements">Optional Enhancements<a class="anchor" aria-label="anchor" href="#optional-enhancements"></a>
-</h3>
-<ul class="task-list">
-<li><label><input type="checkbox">Tag a release (v0.1.0)</label></li>
-<li><label><input type="checkbox">Deploy Shiny app to
-shinyapps.io</label></li>
-<li><label><input type="checkbox">Deploy pkgdown site to GitHub
-Pages</label></li>
-<li><label><input type="checkbox">Add CI badges to README</label></li>
-</ul>
-<hr>
-</div>
-<div class="section level3">
-<h3 id="debrief-reflection">Debrief &amp; Reflection<a class="anchor" aria-label="anchor" href="#debrief-reflection"></a>
-</h3>
-<p>Before submission, make sure you can answer:</p>
-<ul>
-<li>Which parts of your project are intentionally simple teaching
-implementations, and where would you reuse existing scientific software
-in real work?</li>
-<li>What are the strongest user-facing contracts in your package, and
-how do tests and clean-room checks protect them?</li>
-<li>If another team had to maintain this project next semester, would
-they understand the boundary between core analysis logic and interface
-glue?</li>
-</ul>
-<hr>
-</div>
-</div>
-<div class="section level2">
-<h2 id="summary">Summary<a class="anchor" aria-label="anchor" href="#summary"></a>
-</h2>
-<p>Today we:</p>
-<ol style="list-style-type: decimal">
-<li>Ran a comprehensive readiness checklist</li>
-<li>Triaged issues by category</li>
-<li>Applied systematic debugging workflows</li>
-<li>Shared solutions and built a FAQ</li>
-<li>Practiced peer code review</li>
-<li>Finalized submission checklists</li>
-</ol>
-<div class="section level3">
-<h3 id="youre-ready">You’re Ready!<a class="anchor" aria-label="anchor" href="#youre-ready"></a>
-</h3>
-<p>If you’ve completed the checklist, your package is ready for
-submission.</p>
-<hr>
-</div>
-</div>
-<div class="section level2">
-<h2 id="resources">Resources<a class="anchor" aria-label="anchor" href="#resources"></a>
-</h2>
-<div class="section level3">
-<h3 id="getting-help">Getting Help<a class="anchor" aria-label="anchor" href="#getting-help"></a>
-</h3>
-<ul>
-<li>
-<strong>Stack Overflow</strong>: Tag with <code>r</code>,
-<code>r-package-devel</code>
-</li>
-<li>
-<strong>RStudio Community</strong>: <a href="https://community.rstudio.com/" class="external-link uri">https://community.rstudio.com/</a>
-</li>
-<li>
-<strong>R-pkg-devel mailing list</strong>: For package development
-questions</li>
-<li>
-<strong>Course Slack/Discord</strong>: Ask classmates!</li>
-</ul>
-</div>
-<div class="section level3">
-<h3 id="essential-references">Essential References<a class="anchor" aria-label="anchor" href="#essential-references"></a>
-</h3>
-<ul>
-<li>
-<strong>R Packages book</strong>: <a href="https://r-pkgs.org/" class="external-link uri">https://r-pkgs.org/</a>
-</li>
-<li>
-<strong>Mastering Shiny</strong>: <a href="https://mastering-shiny.org/" class="external-link uri">https://mastering-shiny.org/</a>
-</li>
-<li>
-<strong>pkgdown docs</strong>: <a href="https://pkgdown.r-lib.org/" class="external-link uri">https://pkgdown.r-lib.org/</a>
-</li>
-<li>
-<strong>testthat docs</strong>: <a href="https://testthat.r-lib.org/" class="external-link uri">https://testthat.r-lib.org/</a>
-</li>
-</ul>
-</div>
-<div class="section level3">
-<h3 id="example-packages-to-study">Example Packages to Study<a class="anchor" aria-label="anchor" href="#example-packages-to-study"></a>
-</h3>
-<ul>
-<li>
-<strong>usethis</strong>: Great example of devtools conventions</li>
-<li>
-<strong>ggplot2</strong>: Excellent documentation</li>
-<li>
-<strong>shiny</strong>: See how they structure the app</li>
-</ul>
-<hr>
-</div>
-</div>
-<div class="section level2">
 <h2 id="session-info">Session Info<a class="anchor" aria-label="anchor" href="#session-info"></a>
 </h2>
-<div class="sourceCode" id="cb28"><pre class="downlit sourceCode r">
+<div class="sourceCode" id="cb1"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="fu"><a href="https://rdrr.io/r/utils/sessionInfo.html" class="external-link">sessionInfo</a></span><span class="op">(</span><span class="op">)</span></span></code></pre></div>
 <pre><code><span><span class="co">## R version 4.5.3 (2026-03-11)</span></span>
 <span><span class="co">## Platform: x86_64-pc-linux-gnu</span></span>
@@ -912,7 +448,7 @@ questions</li>
 <span><span class="co">## [13] pkgdown_2.2.0     textshaping_1.0.5 jquerylib_0.1.4   systemfonts_1.3.2</span></span>
 <span><span class="co">## [17] compiler_4.5.3    tools_4.5.3       ragg_1.5.2        bslib_0.10.0     </span></span>
 <span><span class="co">## [21] evaluate_1.0.5    yaml_2.3.12       otel_0.2.0        jsonlite_2.0.0   </span></span>
-<span><span class="co">## [25] rlang_1.2.0       fs_2.0.1          htmlwidgets_1.6.4</span></span></code></pre>
+<span><span class="co">## [25] rlang_1.2.0       fs_2.1.0          htmlwidgets_1.6.4</span></span></code></pre>
 </div>
   </main><aside class="col-md-3"><nav id="toc" aria-label="Table of contents"><h2>On this page</h2>
     </nav></aside>
