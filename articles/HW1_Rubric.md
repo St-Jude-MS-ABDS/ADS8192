@@ -160,10 +160,7 @@ At least one vignette exists and renders on pkgdown site
 
 **Checklist:**
 
-`Rapp exec/<app> --help` shows help text during development
-
-An exported `install_*_cli()` function exists and installs launchers
-(see
+Installing the launcher works (see
 [`Rapp::install_pkg_cli_apps()`](https://rdrr.io/pkg/Rapp/man/install_pkg_cli_apps.html))
 
 After running the launcher installer, the CLI works directly from the
