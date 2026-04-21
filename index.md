@@ -71,7 +71,7 @@ tools — all benefit from the same tested core.
 | Interactive applications                | `shiny`, `bslib`, `DT`, reactive programming                                                                                     |
 | CLI design                              | `Rapp` (argument parsing, subcommands, launcher installation)                                                                    |
 | Visualization                           | `ggplot2`, `ComplexHeatmap`                                                                                                      |
-| Reproducibility & collaboration         | Git/GitHub, GitHub Actions CI/CD, `data-raw/` scripts, tagged releases                                                           |
+| Reproducibility & collaboration         | Git/GitHub, GitHub Actions CI/CD, `data-raw/` scripts, tagged releases, issues, pull requests, code review                       |
 
 ### Unit Objectives
 
@@ -117,16 +117,16 @@ All lectures are available as pkgdown articles on the [course
 site](https://st-jude-ms-abds.github.io/ADS8192/). Source `.Rmd` files
 live in `vignettes/articles/`.
 
-| \#  | Topic                                   | What Students Learn                                                                                                                                               |
-|-----|-----------------------------------------|-------------------------------------------------------------------------------------------------------------------------------------------------------------------|
-| 04  | Data Structures & R Ecosystems          | Build an S4 class from scratch; differences in CRAN/Bioconductor; guts of a `SummarizedExperiments`; translating raw code to composable functions                 |
-| 05  | Package Development (devtools)          | Turn functions into a valid R package; `DESCRIPTION`, `NAMESPACE`, `roxygen2` exports/imports, `devtools::check()`                                                |
-| 06  | Package Development (pkgdown, testthat) | Write `testthat` tests (happy path + error cases); build and deploy a `pkgdown` documentation site                                                                |
-| 07  | Shiny Reactivity                        | Understand the reactive graph; build a UI with `bslib`; connect inputs → reactive expressions → outputs                                                           |
-| 08  | Shiny Packaging & Deployment            | Embed a Shiny app inside an R package ([`run_app()`](https://st-jude-ms-abds.github.io/ADS8192/reference/run_app.md)); deploy to Posit Connect                    |
-| 09  | CLI Design (Rapp)                       | Design a CLI with `Rapp`; argument types, defaults, help text; call package functions from `exec/` scripts                                                        |
-| 10  | CLI Packaging & Installation            | Ship the CLI with the package; [`Rapp::install_pkg_cli_apps()`](https://rdrr.io/pkg/Rapp/man/install_pkg_cli_apps.html); launcher functions; README documentation |
-| 11  | Review & Q/A                            | Systematic debugging workflow; end-to-end validation of all deliverables before submission                                                                        |
+| \#  | Topic                                                 | What Students Learn                                                                                                                                               |
+|-----|-------------------------------------------------------|-------------------------------------------------------------------------------------------------------------------------------------------------------------------|
+| 04  | Data Structures & R Ecosystems                        | Build an S4 class from scratch; differences in CRAN/Bioconductor; guts of a `SummarizedExperiment`; translating raw code to composable functions                  |
+| 05  | R Package Development (devtools)                      | Turn functions into a valid R package; `DESCRIPTION`, `NAMESPACE`, `roxygen2` exports/imports, `devtools::check()`                                                |
+| 06  | R Package Documentation & Testing (pkgdown, testthat) | Write `testthat` tests (happy path + error cases); build and deploy a `pkgdown` documentation site; CI/CD with GitHub Actions                                     |
+| 07  | Shiny Reactivity & App Design                         | Understand the reactive graph; build a UI with `bslib`; connect inputs → reactive expressions → outputs; input validation                                         |
+| 08  | Shiny Packaging & Deployment                          | Embed a Shiny app inside an R package ([`run_app()`](https://st-jude-ms-abds.github.io/ADS8192/reference/run_app.md)); app documentation; deploy to Posit Connect |
+| 09  | CLI Design & Development (Rapp)                       | Design a CLI with `Rapp`; argument types, defaults, help text; call package functions from `exec/` scripts; pipeline integration                                  |
+| 10  | GitHub Collaboration                                  | Issues, pull requests, and code review; branch-based workflows; when lightweight vs. heavier process is appropriate                                               |
+| 11  | Unit 1 Review                                         | Synthesis of all lectures; systematic debugging; end-to-end validation of all deliverables before submission                                                      |
 
 Each lecture includes working code examples (using the `airway`
 dataset), in-class exercises, discussion prompts, and after-class
